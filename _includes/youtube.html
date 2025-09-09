@@ -1,39 +1,65 @@
-{%- assign u = include.url | default: '' -%}
-{%- assign id = '' -%}
+{%- assign _u = include.url | default: '' -%}
+{%- assign _id = '' -%}
 
-{%- if u != '' -%}
-  {%- if u contains 'youtu.be/' -%}
-    {%- assign id = u | split:'youtu.be/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
-  {%- elsif u contains '/embed/' -%}
-    {%- assign id = u | split:'/embed/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
-  {%- elsif u contains '/shorts/' -%}
-    {%- assign id = u | split:'/shorts/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
-  {%- elsif u contains 'v=' -%}
-    {%- assign id = u | split:'v=' | last | split:'&' | first | split:'#' | first -%}
+{%- if _u != '' -%}
+  {%- if _u contains 'youtu.be/' -%}
+    {%- assign _id = _u | split:'youtu.be/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+  {%- elsif _u contains '/embed/' -%}
+    {%- assign _id = _u | split:'/embed/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+  {%- elsif _u contains '/shorts/' -%}
+    {%- assign _id = _u | split:'/shorts/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+  {%- elsif _u contains 'v=' -%}
+    {%- assign _id = _u | split:'v=' | last | split:'&' | first | split:'#' | first -%}
   {%- endif -%}
 {%- endif -%}
-{%- if id == '' and include.id -%}{%- assign id = include.id -%}{%- endif -%}
+{%- if _id == '' and include.id -%}{%- assign _id = include.id -%}{%- endif -%}
 
-{%- assign params = 'rel=0' -%}
+{%- assign _params = 'rel=0' -%}
 {%- if include.start and include.start != '' -%}
-  {%- assign params = params | append:'&start=' | append:include.start -%}
-{%- elsif u contains 't=' -%}
-  {%- assign t = u | split:'t=' | last | split:'&' | first | split:'#' | first -%}
-  {%- assign params = params | append:'&start=' | append:t -%}
+  {%- assign _params = _params | append:'&start=' | append:include.start -%}
+{%- elsif _u contains 't=' -%}
+  {%- assign _t = _u | split:'t=' | last | split:'&' | first | split:'#' | first -%}
+  {%- assign _params = _params | append:'&start=' | append:_t -%}
 {%- endif -%}
 
-{%- assign w = include.w | default: include.width | default:'100%' -%}
-{%- unless w contains 'px' or w contains '%' or w contains 'rem' or w contains 'vw' -%}
-  {%- assign w = w | append:'px' -%}
+{%- assign _w = include.w | default: include.width | default:'100%' -%}
+{%- unless _w contains 'px' or _w contains '%' or _w contains 'rem' or _w contains 'vw' -%}
+  {%- assign _w = _w | append:'px' -%}
 {%- endunless -%}
 
-{%- assign h = include.h | default: include.height | default:'' -%}
-{%- if h != '' -%}
-  {%- unless h contains 'px' or h contains '%' or h contains 'rem' or h contains 'vh' -%}
-    {%- assign h = h | append:'px' -%}
-  {%- endunless -%}
+{%- assign _h_raw = include.h | default: include.height | default:'' -%}
+{%- if _h_raw == '' -%}
+  {%- assign _h = '' -%}
+{%- elsif _h_raw contains 'px' or _h_raw contains '%' or _h_raw contains 'rem' or _h_raw contains 'vh' -%}
+  {%- assign _h = _h_raw -%}
+{%- else -%}
+  {%- assign _h = _h_raw | append:'px' -%}
 {%- endif -%}
 
-{%- assign ratio = include.ratio | default:'16:9' -%}
-{%- case ratio -%}
-  {%- when '4:3'  -%}{%- assig
+{%- assign _ratio = include.ratio | default:'16:9' -%}
+{%- assign _pt = '56.25%' -%}
+{%- if _ratio == '4:3' -%}{%- assign _pt = '75%' -%}
+{%- elsif _ratio == '1:1' -%}{%- assign _pt = '100%' -%}
+{%- elsif _ratio == '21:9' -%}{%- assign _pt = '42.857%' -%}
+{%- elsif _ratio == '3:2' -%}{%- assign _pt = '66.6667%' -%}
+{%- endif -%}
+
+{%- if _id != '' -%}
+  {%- if _h != '' -%}
+<div class="my-6 rounded-xl overflow-hidden shadow mx-auto" style="position:relative; width:{{ _w }}; height:{{ _h }};">
+  <iframe src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
+          title="{{ include.title | default: 'YouTube video' }}" loading="lazy" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen style="position:absolute; inset:0; width:100%; height:100%;"></iframe>
+</div>
+  {%- else -%}
+<div class="my-6 rounded-xl overflow-hidden shadow mx-auto" style="width:{{ _w }};">
+  <div style="position:relative; width:100%; padding-top:{{ _pt }};">
+    <iframe src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
+            title="{{ include.title | default: 'YouTube video' }}" loading="lazy" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen style="position:absolute; inset:0; width:100%; height:100%;"></iframe>
+  </div>
+</div>
+  {%- endif -%}
+{%- endif -%}
