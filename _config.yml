@@ -4,7 +4,7 @@
 url: "https://woonyong-kr.github.io"       # 절대 사이트 URL (OG/사이트맵/링크 생성에 사용)
 baseurl: ""                                # 루트 사이트면 "" (프로젝트 사이트면 "/저장소명")
 permalink: pretty                          # 문서 URL 끝에 슬래시 형태(/pretty/). 날짜·확장자 제거
-title: "Jekyll Atlantic"                   # <title> 기본값
+title: "그냥 개발"                          # <title> 기본값
 description: ""                            # 사이트 전역 설명(없으면 미표시)
 lang: ko                                   # <html lang="ko">
 timezone: "Asia/Seoul"                     # 날짜 렌더링 기준 타임존
@@ -37,7 +37,7 @@ google_analytics_id: false                 # GA4 ID 예: "G-XXXX" (false면 비�
 # ─────────────────────────────────────────────────────────
 logo:
   logo_desktop_image: assets/images/logo/logo.svg           # 데스크톱 로고 이미지 경로
-  logo_desktop_text: "Jekyll <strong>Atlantic</strong>"     # 로고 옆 텍스트(HTML 허용)
+  logo_desktop_text: "그냥 <strong>개발</strong>"            # 로고 옆 텍스트(HTML 허용)
   logo_mobile_image: assets/images/logo/logo-mobile.svg     # 모바일 로고 이미지
   logo_mobile_text: ""                                      # 모바일에서 보조 텍스트
   logo_desktop_height: "36px"                               # 데스크톱 로고 높이
