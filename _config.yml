@@ -56,7 +56,7 @@ seo:
 # ─────────────────────────────────────────────────────────
 plugins:
   - jekyll-environment-variables          # 환경변수 사용 보조
-  - jekyll-postcss                        # PostCSS(=Tailwind 파이프라인) 사용
+  #- jekyll-postcss                        # PostCSS(=Tailwind 파이프라인) 사용
   - jekyll-paginate                       # 블로그 목록 페이지네이션
 
 # ─────────────────────────────────────────────────────────

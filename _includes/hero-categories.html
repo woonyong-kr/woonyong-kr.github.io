@@ -1,10 +1,13 @@
 {%- assign _names = site.categories | map: "first" | sort_natural -%}
 
-<div class="mx-auto lg:w-10/12 py-20 md:py-24">
-  <div class="flex flex-wrap justify-center gap-2">
-    {%- for name in _names -%}
-      {%- assign category = name -%}  {# include 안에서 'category'가 문자열이 되도록 보장 #}
-      {% include category-badge.html %}
-    {%- endfor -%}
+<div class="container mx-auto px-6 md:px-4">
+  <!-- 기존 py-6 / md:py-12 대비 ↑ 크게 -->
+  <div class="py-10 md:py-20 lg:py-24">
+    <div class="flex flex-wrap justify-center gap-2">
+      {%- for name in _names -%}
+        {%- assign category = name -%}
+        {% include category-badge.html %}
+      {%- endfor -%}
+    </div>
   </div>
 </div>

@@ -1,22 +1,18 @@
-const defaultTheme = require("tailwindcss/defaultTheme");
-
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  purge: ["./_includes/**/*.html", "./_layouts/**/*.html", "./blog/*.html", "./_posts/*.html", "./*.html"],
-  darkMode: false,
+  content: [
+    "./_includes/**/*.{html,md}",
+    "./_layouts/**/*.{html,md}",
+    "./collections/**/*.{html,md}",
+    "./_posts/**/*.{html,md}",
+    "./blog/**/*.html",
+    "./*.{html,md}",
+    "./assets/js/**/*.js"
+  ],
+  darkMode: "media", // 필요 시 'class' 또는 false
   theme: {
-    screens: {
-      sm: "640px",
-      md: "768px",
-      lg: "1024px",
-      xl: "1280px",
-    },
-  },
-  variants: {
-    extend: {
-      grayscale: ["hover", "focus"],
-      margin: ["last"],
-    },
-    container: [],
+    screens: { sm: "640px", md: "768px", lg: "1024px", xl: "1280px" },
+    extend: {},
   },
   plugins: [require("@tailwindcss/typography")],
 };

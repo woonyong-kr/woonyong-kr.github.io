@@ -1,16 +1,24 @@
 {
-  "name": "jekyll-atlantic",
+  "name": "woonyong-kr.github.io",
+  "private": true,
   "version": "1.0.0",
-  "description": "A Jekyll Tailwind starter blog",
-  "dependencies": {
-    "@tailwindcss/typography": "^0.4.1",
-    "autoprefixer": "^10.2.6",
-    "cssnano": "^5.0.6",
-    "postcss": "^8.3.6",
-    "postcss-import": "^14.0.2",
-    "postcss-nested": "^5.0.6",
-    "tailwindcss": "^2.2.4"
+  "description": "Jekyll + Tailwind v4 (CLI) setup",
+  "scripts": {
+    "build:css": "tailwindcss -i ./assets/css/style.css -o ./assets/css/site.css",
+    "watch:css": "tailwindcss -i ./assets/css/style.css -o ./assets/css/site.css --watch",
+    "serve": "bundle exec jekyll serve --livereload --incremental",
+    "clean": "bundle exec jekyll clean",
+    "build": "npm run build:css && bundle exec jekyll build",
+    "start": "npm-run-all -p watch:css serve"
   },
-  "author": "rob@zerostatic.io",
-  "license": "MIT"
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@tailwindcss/typography": "^0.5.13",
+    "cssnano": "^6.0.3",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.47",
+    "postcss-nested": "^6.2.0",
+    "tailwindcss": "^4.1.13"
+  }
 }
