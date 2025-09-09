@@ -1,6 +1,6 @@
 <div class="flex flex-col md:flex-row w-full lg:w-10/12">
 
-  {%- if post.thumbnail -%}
+  {% if post.thumbnail %}
     <div class="md:mr-4 mb-2 md:mb-0 md:w-4/12">
       <a class="bg-gray-100" href="{{ post.url | relative_url }}">
         <img
@@ -11,17 +11,17 @@
           loading="lazy" />
       </a>
     </div>
-  {%- endif -%}
+  {% endif %}
 
   <div class="flex-1">
     <div class="flex items-center">
-      {%- if post.authors -%}
+      {% if post.authors %}
         <div class="flex ml-4">
-          {%- for author in post.authors -%}
+          {% for author in post.authors %}
             {% include author.html author=author show_author_name=false %}
-          {%- endfor -%}
+          {% endfor %}
         </div>
-      {%- endif -%}
+      {% endif %}
       <div class="text-sm font-medium text-gray-700">
         {{ post.date | date_to_long_string }}
       </div>
@@ -31,6 +31,17 @@
       <h2 class="text-2xl font-semibold mb-1">{{ post.title }}</h2>
     </a>
 
-    {%- assign summary_text = post.description | default: post.excerpt | strip_html | strip_newlines | truncate: 160 -%}
-    {%- if summary_text -%}
-      <p class="text-base font-light text-gray
+    {% assign summary_text = post.description | default: post.excerpt | strip_html | strip_newlines | truncate: 160 %}
+    {% if summary_text %}
+      <p class="text-base font-light text-gray-600 mb-4">{{ summary_text }}</p>
+    {% endif %}
+
+    {% if post.categories %}
+      <div class="mb-2">
+        {% for category in post.categories %}
+          {% include category-badge.html %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
