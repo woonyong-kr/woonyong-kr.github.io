@@ -1,22 +1,37 @@
+{%- assign home_url = '/' | relative_url -%}
+
 <div class="logo hidden md:block">
-  <a class="flex items-center hover:opacity-70 transition duration-300 ease-in-out" href="{{ site.baseurl }}">
+  <a class="flex items-center hover:opacity-70 transition duration-300 ease-in-out"
+     href="{{ home_url }}"
+     aria-label="{{ site.title | default: 'Home' }}로 이동">
     {% if site.logo.logo_desktop_image %}
-    <img class="mr-2" height="{{ site.logo.logo_desktop_height }}" width="{{ site.logo.logo_desktop_width }}"
-      alt="{{ site.title }} Logo" src="{{ site.logo.logo_desktop_image | relative_url }}" />
+      <img
+        class="mr-2"
+        height="{{ site.logo.logo_desktop_height | default: '36px' }}"
+        width="{{ site.logo.logo_desktop_width  | default: '36px' }}"
+        alt=""
+        src="{{ site.logo.logo_desktop_image | relative_url }}" />
     {% endif %}
-    {% if site.logo.logo_desktop_text %}
-    <h2 class="text-2xl font-sans font-semibold">{{ site.logo.logo_desktop_text }}</h2>
-    {% endif %}
+    <h2 class="text-2xl font-sans font-semibold">
+      {{ site.logo.logo_desktop_text | default: site.title }}
+    </h2>
   </a>
 </div>
+
 <div class="logo-mobile block md:hidden">
-  <a class="flex items-center hover:opacity-70 transition duration-300 ease-in-out" href="{{ site.baseurl }}">
+  <a class="flex items-center hover:opacity-70 transition duration-300 ease-in-out"
+     href="{{ home_url }}"
+     aria-label="{{ site.title | default: 'Home' }}로 이동">
     {% if site.logo.logo_mobile_image %}
-    <img height="{{ site.logo.logo_mobile_height }}" width="{{ site.logo.logo_mobile_width }}"
-      alt="{{ site.title }} Logo" src="{{ site.logo.logo_mobile_image | relative_url }}" />
+      <img
+        height="{{ site.logo.logo_mobile_height | default: '36px' }}"
+        width="{{ site.logo.logo_mobile_width  | default: '36px' }}"
+        alt=""
+        src="{{ site.logo.logo_mobile_image | relative_url }}" />
     {% endif %}
-    {% if site.logo.logo_mobile_text %}
-    <h2 class="text-2xl font-sans font-semibold">{{ site.logo.logo_mobile_text }}</h2>
+    {% assign mobile_text = site.logo.logo_mobile_text | default: site.logo.logo_desktop_text | default: site.title %}
+    {% if mobile_text %}
+      <h2 class="text-2xl font-sans font-semibold">{{ mobile_text }}</h2>
     {% endif %}
   </a>
 </div>
