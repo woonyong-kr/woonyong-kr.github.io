@@ -21,9 +21,7 @@ kramdown:
   hard_wrap: false
 
 sass:
-  indentWidth: 4
-  style: compact
-  precision: 10
+  style: compressed
 
 google_analytics_id: false     # 예: "G-XXXX" 로 교체
 
@@ -99,4 +97,3 @@ exclude:
   - .liquidrc
   - postcss.config.js
   - tailwind.config.js
-  - netlify.toml
