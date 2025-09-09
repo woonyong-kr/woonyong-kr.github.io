@@ -1,25 +1,38 @@
-# NPM
-node_modules
-npm-debug.log
-
-# Jekyll
-_site
+# ── Jekyll build artifacts
 _site/
-.sass-cache/
 .jekyll-cache/
 .jekyll-metadata
-Gemfile.lock
-**/Gemfile.lock
+.sass-cache/
 
-# Temporary files
-tmp
+# ── Ruby Bundler (로컬 벤더 경로 사용 시)
+.bundle/
+vendor/bundle/
+
+# ── Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── OS junk
 .DS_Store
-Desktop.ini
-._*
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 .Spotlight-V100
 .Trashes
-.idea
+._*
 
-# vscode files
-.vscode
+# ── Editors / IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.code-workspace
+.history/
+
+# ── Temp / cache
+tmp/
+.cache/
