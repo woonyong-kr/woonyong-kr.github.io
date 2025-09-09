@@ -1,16 +1,15 @@
 ---
 layout: default
 title: "blog"
-heading: "Blog"
 ---
 
-{% include heading.html heading=page.heading %}
+{% include hero-categories.html %}
 
 <main class="py-6">
   {% for post in paginator.posts %}
-  <div class="mb-12">
-    {% include summary.html post=post %}
-  </div>
+    <div class="mb-12">
+      {% include summary.html post=post %}
+    </div>
   {% endfor %}
 </main>
 
