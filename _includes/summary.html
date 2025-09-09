@@ -1,3 +1,5 @@
+{%- assign df = site.date_format | default: "%Y.%-m.%-d" -%}
+
 <div class="flex flex-col md:flex-row w-full lg:w-10/12">
 
   {% if post.thumbnail %}
@@ -23,7 +25,7 @@
         </div>
       {% endif %}
       <div class="text-sm font-medium text-gray-700">
-        {{ post.date | date_to_long_string }}
+        {{ post.date | date: df }}
       </div>
     </div>
 

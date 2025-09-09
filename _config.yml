@@ -8,6 +8,7 @@ title: "Jekyll Atlantic"                   # <title> 기본값
 description: ""                            # 사이트 전역 설명(없으면 미표시)
 lang: ko                                   # <html lang="ko">
 timezone: "Asia/Seoul"                     # 날짜 렌더링 기준 타임존
+date_format: "%Y.%-m.%-d"                  # 날짜 표시 형식 
 
 # ─────────────────────────────────────────────────────────
 # Feature toggles  ─ 전역 기능 토글
