@@ -1,88 +1,100 @@
 # ─────────────────────────────────────────────────────────
-# Site basics
+# Site basics  ─ 사이트 기본 설정
 # ─────────────────────────────────────────────────────────
-url: "https://woonyong-kr.github.io"
-baseurl: "" 
-permalink: pretty
-title: "Jekyll Atlantic"
-description: ""
-lang: ko
-timezone: "Asia/Seoul"
+url: "https://woonyong-kr.github.io"     # 절대 사이트 URL (OG/사이트맵/링크 생성에 사용)
+baseurl: ""                               # 루트 사이트면 "" (프로젝트 사이트면 "/저장소명")
+permalink: pretty                         # 문서 URL 끝에 슬래시 형태(/pretty/). 날짜·확장자 제거
+title: "Jekyll Atlantic"                  # <title> 기본값
+description: ""                           # 사이트 전역 설명(없으면 미표시)
+lang: ko                                   # <html lang="ko">
+timezone: "Asia/Seoul"                     # 날짜 렌더링 기준 타임존
 
 # ─────────────────────────────────────────────────────────
-# Build settings
+# Feature toggles  ─ 전역 기능 토글
 # ─────────────────────────────────────────────────────────
-collections_dir: collections
-markdown: kramdown
-highlighter: rouge
+show_hero: false                           # 상단 히어로 배너(큰 대표 이미지) 전역 기본값 (false=꺼짐)
+show_og:   false                           # OG/Twitter 카드용 대표 이미지 메타태그 전역 기본값 (false=꺼짐)
+
+# ─────────────────────────────────────────────────────────
+# Build settings  ─ 빌드/마크다운/하이라이트
+# ─────────────────────────────────────────────────────────
+collections_dir: collections               # 포스트 등 컬렉션이 들어가는 상위 폴더
+markdown: kramdown                         # 마크다운 파서
+highlighter: rouge                         # 코드 하이라이터(클라이언트 사이드 CSS와 함께 동작)
 
 kramdown:
-  input: GFM
-  hard_wrap: false
+  input: GFM                               # GitHub Flavored Markdown 문법
+  hard_wrap: false                         # 줄바꿈 처리 방식 (false 권장)
 
 sass:
-  style: compressed
+  style: compressed                        # SCSS 빌드 결과 압축(또는 expanded 사용 가능)
 
-google_analytics_id: false     # 예: "G-XXXX" 로 교체
+google_analytics_id: false                 # GA4 ID 예: "G-XXXX" (false면 비활성)
 
 # ─────────────────────────────────────────────────────────
-# Branding
+# Branding  ─ 로고/브랜딩
 # ─────────────────────────────────────────────────────────
 logo:
-  logo_desktop_image: assets/images/logo/logo.svg
-  logo_desktop_text: "Jekyll <strong>Atlantic</strong>"
-  logo_mobile_image: assets/images/logo/logo-mobile.svg
-  logo_mobile_text: ""
-  logo_desktop_height: "36px"
-  logo_desktop_width: "36px"
-  logo_mobile_height: "36px"
-  logo_mobile_width: "36px"
+  logo_desktop_image: assets/images/logo/logo.svg           # 데스크톱 로고 이미지 경로
+  logo_desktop_text: "Jekyll <strong>Atlantic</strong>"     # 로고 옆 텍스트(HTML 허용)
+  logo_mobile_image: assets/images/logo/logo-mobile.svg     # 모바일 로고 이미지
+  logo_mobile_text: ""                                      # 모바일에서 보조 텍스트
+  logo_desktop_height: "36px"                               # 데스크톱 로고 높이
+  logo_desktop_width: "36px"                                # 데스크톱 로고 너비
+  logo_mobile_height: "36px"                                # 모바일 로고 높이
+  logo_mobile_width: "36px"                                 # 모바일 로고 너비
 
 seo:
-  meta_twitter_site: "@zerostaticio"
-  meta_twitter_creator: "@zerostaticio"
+  meta_twitter_site: "@zerostaticio"                        # twitter:site 메타
+  meta_twitter_creator: "@zerostaticio"                     # twitter:creator 메타
   meta_og_image: "https://www.zerostatic.io/theme/jekyll-atlantic/jekyll-atlantic-screenshot.png"
+  # ↑ 전역 OG 이미지(페이지에 image가 없을 때 대체). show_og=false면 미출력(조건문 필요)
 
 # ─────────────────────────────────────────────────────────
-# Plugins
+# Plugins  ─ Jekyll 플러그인
 # ─────────────────────────────────────────────────────────
 plugins:
-  - jekyll-environment-variables
-  - jekyll-postcss
-  - jekyll-paginate
+  - jekyll-environment-variables          # 환경변수 사용 보조
+  - jekyll-postcss                        # PostCSS(=Tailwind 파이프라인) 사용
+  - jekyll-paginate                       # 블로그 목록 페이지네이션
 
 # ─────────────────────────────────────────────────────────
-# Blog
+# Blog  ─ 블로그 컬렉션/URL/페이지네이션
 # ─────────────────────────────────────────────────────────
-paginate: 3
-paginate_path: /blog/page:num/
+paginate: 8                                # /blog 목록에서 페이지당 포스트 수
+paginate_path: /blog/page:num/             # 페이지네이션 URL 패턴
 
 collections:
   posts:
-    output: true
-    permalink: /blog/:path/
+    output: true                           # 포스트를 정적 파일로 출력
+    permalink: /blog/:path/                # 포스트 개별 URL 패턴
 
+# defaults: 특정 범위(scope)에 기본 front-matter 값을 부여
 defaults:
   - scope:
-      path: ""
-      type: posts
+      path: ""                             # 전체 사이트
+      type: posts                          # posts 컬렉션에만 적용
     values:
-      layout: post
+      layout: post                         # 글의 기본 레이아웃
+      show_hero: false                     # 글 단위 기본: 히어로 끔 (필요 시 포스트에서 true로)
+      show_og:   false                     # 글 단위 기본: OG 이미지 끔 (필요 시 포스트에서 true로)
+
   - scope:
-      path: "images"
+      path: "images"                       # /images 이하 리소스에 메타 부여(테마에서 사용 시)
     values:
       image: true
+
   - scope:
-      path: "categories"
+      path: "categories"                   # /categories 아래 카테고리 페이지
     values:
       layout: category
-      permalink: /category/:basename/
+      permalink: /category/:basename/      # 각 카테고리 페이지의 URL
 
 # ─────────────────────────────────────────────────────────
-# Excludes (사이트 출력물에서 제외)
+# Excludes  ─ 사이트 출력물에서 제외(레포에는 남음)
 # ─────────────────────────────────────────────────────────
 exclude:
-  - Gemfile
+  - Gemfile                                # 빌드 산출물에 포함하지 않음
   - Gemfile.lock
   - node_modules
   - yarn.lock
