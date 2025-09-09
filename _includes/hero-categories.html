@@ -1,12 +1,10 @@
-{%- assign _cats = site.categories | sort_natural: "first" -%}
+{%- assign _names = site.categories | map: "first" | sort_natural -%}
 
 <div class="mx-auto lg:w-10/12 py-20 md:py-24">
-  <div class="flex justify-center">
-    <div class="flex flex-wrap justify-center gap-2">
-      {%- for pair in _cats -%}
-        {%- assign category = pair[0] -%} {# include에서 기대하는 변수명에 맞춰 셋업 #}
-        {% include category-badge.html %}
-      {%- endfor -%}
-    </div>
+  <div class="flex flex-wrap justify-center gap-2">
+    {%- for name in _names -%}
+      {%- assign category = name -%}  {# include 안에서 'category'가 문자열이 되도록 보장 #}
+      {% include category-badge.html %}
+    {%- endfor -%}
   </div>
 </div>
