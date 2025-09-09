@@ -1,24 +1,49 @@
 {%- comment -%}
-Usage:
-  {% include youtube.html id="dQw4w9WgXcQ" %}
-  {% include youtube.html url="https://youtu.be/dQw4w9WgXcQ" start="60" title="데모" %}
+Usage (권장):
   {% include youtube.html url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" %}
+  {% include youtube.html url="https://youtu.be/dQw4w9WgXcQ?t=60" %}
+선택 옵션:
+  - start="60"  # 초 단위 시작점 (url의 t 파라미터보다 우선)
+  - title="영상 제목"
+참고: url 파싱은 다음 형태를 지원합니다
+  - https://youtu.be/VIDEO_ID
+  - https://www.youtube.com/watch?v=VIDEO_ID
+  - https://www.youtube.com/embed/VIDEO_ID
+  - https://www.youtube.com/shorts/VIDEO_ID
 {%- endcomment -%}
 
-{%- assign _id = include.id | default: '' -%}
+{%- assign _id = '' -%}
 
-{%- if _id == '' and include.url -%}
+{%- if include.url -%}
   {%- assign u = include.url -%}
   {%- if u contains 'youtu.be/' -%}
-    {%- assign _id = u | split:'youtu.be/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'youtu.be/'  | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+  {%- elsif u contains '/embed/' -%}
+    {%- assign _id = u | split:'/embed/'    | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+  {%- elsif u contains '/shorts/' -%}
+    {%- assign _id = u | split:'/shorts/'   | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
   {%- elsif u contains 'v=' -%}
-    {%- assign _id = u | split:'v=' | last     | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'v='         | last | split:'&' | first | split:'#' | first -%}
   {%- endif -%}
 {%- endif -%}
 
-{%- assign _params = 'rel=0' -%}
+{%- comment -%} fallback: id 파라미터도 허용 {%- endcomment -%}
+{%- if _id == '' and include.id -%}
+  {%- assign _id = include.id -%}
+{%- endif -%}
+
+{%- comment -%} 시작 시점: start 옵션이 우선, 없으면 url의 t= 값을 사용(숫자일 때 권장) {%- endcomment -%}
+{%- assign _start = '' -%}
 {%- if include.start and include.start != '' -%}
-  {%- assign _params = _params | append: '&start=' | append: include.start -%}
+  {%- assign _start = include.start -%}
+{%- elsif include.url and include.url contains 't=' -%}
+  {%- assign _t = include.url | split:'t=' | last | split:'&' | first | split:'#' | first -%}
+  {%- assign _start = _t -%}
+{%- endif -%}
+
+{%- assign _params = 'rel=0' -%}
+{%- if _start != '' -%}
+  {%- assign _params = _params | append: '&start=' | append: _start -%}
 {%- endif -%}
 
 {%- if _id != '' -%}
@@ -34,5 +59,5 @@ Usage:
     ></iframe>
   </div>
 {%- else -%}
-  <!-- youtube include: no video id resolved -->
+  <!-- youtube include: no video id resolved (url='{{ include.url }}') -->
 {%- endif -%}
