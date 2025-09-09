@@ -1,17 +1,35 @@
-baseurl: "/"
+# ─────────────────────────────────────────────────────────
+# Site basics
+# ─────────────────────────────────────────────────────────
+url: "https://woonyong-kr.github.io"
+baseurl: "" 
 permalink: pretty
 title: "Jekyll Atlantic"
+description: ""
+lang: ko
+timezone: "Asia/Seoul"
+
+# ─────────────────────────────────────────────────────────
+# Build settings
+# ─────────────────────────────────────────────────────────
 collections_dir: collections
 markdown: kramdown
 highlighter: rouge
+
+kramdown:
+  input: GFM
+  hard_wrap: false
 
 sass:
   indentWidth: 4
   style: compact
   precision: 10
 
-google_analytics_id: false # replace with "UA-XXXX"
+google_analytics_id: false     # 예: "G-XXXX" 로 교체
 
+# ─────────────────────────────────────────────────────────
+# Branding
+# ─────────────────────────────────────────────────────────
 logo:
   logo_desktop_image: assets/images/logo/logo.svg
   logo_desktop_text: "Jekyll <strong>Atlantic</strong>"
@@ -27,11 +45,17 @@ seo:
   meta_twitter_creator: "@zerostaticio"
   meta_og_image: "https://www.zerostatic.io/theme/jekyll-atlantic/jekyll-atlantic-screenshot.png"
 
+# ─────────────────────────────────────────────────────────
+# Plugins
+# ─────────────────────────────────────────────────────────
 plugins:
   - jekyll-environment-variables
   - jekyll-postcss
   - jekyll-paginate
 
+# ─────────────────────────────────────────────────────────
+# Blog
+# ─────────────────────────────────────────────────────────
 paginate: 3
 paginate_path: /blog/page:num/
 
@@ -56,6 +80,9 @@ defaults:
       layout: category
       permalink: /category/:basename/
 
+# ─────────────────────────────────────────────────────────
+# Excludes (사이트 출력물에서 제외)
+# ─────────────────────────────────────────────────────────
 exclude:
   - Gemfile
   - Gemfile.lock
