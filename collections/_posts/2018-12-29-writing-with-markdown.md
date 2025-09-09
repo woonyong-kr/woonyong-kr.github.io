@@ -7,6 +7,7 @@ categories: ["Development", "Javascript", "Web Design"]
 tags: ["Writing"]
 description: Learn how to use Markdown to write blog posts. Understand front-matter and how it is used in templates.
 thumbnail: "assets/images/unsplash-CTivHyiTbFw-640x360.jpeg"
+show_hero: true
 show_og: true
 image: "assets/images/unsplash-CTivHyiTbFw-640x360.jpeg"
 ---
