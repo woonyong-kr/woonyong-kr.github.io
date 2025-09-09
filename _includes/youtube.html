@@ -1,63 +1,92 @@
 {%- comment -%}
-Usage (권장):
-  {% include youtube.html url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" %}
-  {% include youtube.html url="https://youtu.be/dQw4w9WgXcQ?t=60" %}
-선택 옵션:
-  - start="60"  # 초 단위 시작점 (url의 t 파라미터보다 우선)
-  - title="영상 제목"
-참고: url 파싱은 다음 형태를 지원합니다
-  - https://youtu.be/VIDEO_ID
-  - https://www.youtube.com/watch?v=VIDEO_ID
-  - https://www.youtube.com/embed/VIDEO_ID
-  - https://www.youtube.com/shorts/VIDEO_ID
+YouTube embed include (no {% raw %} needed)
+
+Usage:
+  {% include youtube.html url="https://www.youtube.com/watch?v=VIDEO_ID" %}
+  {% include youtube.html url="https://youtu.be/VIDEO_ID?t=60" %}
+  {% include youtube.html url="https://youtu.be/VIDEO_ID" start="60" %}
+  {% include youtube.html url="https://youtu.be/VIDEO_ID" w="800" h="450" %}
+  {% include youtube.html url="https://youtu.be/VIDEO_ID" ratio="4:3" %}
 {%- endcomment -%}
 
 {%- assign _id = '' -%}
+{%- assign u = include.url | default: '' -%}
 
-{%- if include.url -%}
-  {%- assign u = include.url -%}
+{%- if u != '' -%}
   {%- if u contains 'youtu.be/' -%}
-    {%- assign _id = u | split:'youtu.be/'  | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'youtu.be/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
   {%- elsif u contains '/embed/' -%}
-    {%- assign _id = u | split:'/embed/'    | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'/embed/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
   {%- elsif u contains '/shorts/' -%}
-    {%- assign _id = u | split:'/shorts/'   | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'/shorts/' | last | split:'?' | first | split:'&' | first | split:'#' | first -%}
   {%- elsif u contains 'v=' -%}
-    {%- assign _id = u | split:'v='         | last | split:'&' | first | split:'#' | first -%}
+    {%- assign _id = u | split:'v=' | last | split:'&' | first | split:'#' | first -%}
   {%- endif -%}
 {%- endif -%}
-
-{%- comment -%} fallback: id 파라미터도 허용 {%- endcomment -%}
-{%- if _id == '' and include.id -%}
-  {%- assign _id = include.id -%}
-{%- endif -%}
-
-{%- comment -%} 시작 시점: start 옵션이 우선, 없으면 url의 t= 값을 사용(숫자일 때 권장) {%- endcomment -%}
-{%- assign _start = '' -%}
-{%- if include.start and include.start != '' -%}
-  {%- assign _start = include.start -%}
-{%- elsif include.url and include.url contains 't=' -%}
-  {%- assign _t = include.url | split:'t=' | last | split:'&' | first | split:'#' | first -%}
-  {%- assign _start = _t -%}
-{%- endif -%}
+{%- if _id == '' and include.id -%}{%- assign _id = include.id -%}{%- endif -%}
 
 {%- assign _params = 'rel=0' -%}
-{%- if _start != '' -%}
-  {%- assign _params = _params | append: '&start=' | append: _start -%}
+{%- if include.start and include.start != '' -%}
+  {%- assign _params = _params | append: '&start=' | append: include.start -%}
+{%- elsif u contains 't=' -%}
+  {%- assign _t = u | split:'t=' | last | split:'&' | first | split:'#' | first -%}
+  {%- assign _params = _params | append: '&start=' | append: _t -%}
 {%- endif -%}
 
+{%- assign _w = include.w | default: include.width | default: '100%' -%}
+{%- unless _w contains 'px' or _w contains '%' or _w contains 'rem' or _w contains 'vw' -%}{%- assign _w = _w | append:'px' -%}{%- endunless -%}
+
+{%- assign _h = include.h | default: include.height | default: '' -%}
+{%- if _h != '' -%}
+  {%- unless _h contains 'px' or _h contains '%' or _h contains 'rem' or _h contains 'vh' -%}{%- assign _h = _h | append:'px' -%}{%- endunless -%}
+{%- endif -%}
+
+{%- assign _ratio = include.ratio | default:'16:9' -%}
+{%- case _ratio -%}
+  {%- when '4:3'  -%}{%- assign _pt = '75%' -%}
+  {%- when '1:1'  -%}{%- assign _pt = '100%' -%}
+  {%- when '21:9' -%}{%- assign _pt = '42.857%' -%}
+  {%- when '3:2'  -%}{%- assign _pt = '66.6667%' -%}
+  {%- else -%}{%- assign _pt = '56.25%' -%}
+{%- endcase -%}
+
+{%- comment -%}
+site.time은 일부 환경에서 정의되지 않을 수 있으므로, 없으면 'now'로 대체
+{%- endcomment -%}
+{%- if site.time -%}
+  {%- assign _time = site.time | date: '%s' -%}
+{%- else -%}
+  {%- assign _time = 'now' -%}
+{%- endif -%}
+{%- assign _uid = 'yt-' | append: _id | append: '-' | append: _time -%}
+
 {%- if _id != '' -%}
-  <div class="relative w-full pt-[56.25%] my-6 rounded-xl overflow-hidden shadow">
-    <iframe
-      class="absolute inset-0 w-full h-full"
-      src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
-      title="{{ include.title | default: 'YouTube video' }}"
-      frameborder="0"
-      loading="lazy"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-    ></iframe>
-  </div>
+  {%- if _h != '' -%}
+    <!-- Fixed size -->
+    <style>
+      .yt-wrap[data-yt="{{ _uid }}"] { width: {{ _w }}; height: {{ _h }}; position: relative; }
+      .yt-wrap[data-yt="{{ _uid }}"] iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+    </style>
+    <div class="yt-wrap my-6 rounded-xl overflow-hidden shadow mx-auto" data-yt="{{ _uid }}">
+      <iframe src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
+              title="{{ include.title | default: 'YouTube video' }}" frameborder="0" loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen></iframe>
+    </div>
+  {%- else -%}
+    <!-- Responsive ratio -->
+    <style>
+      .yt-wrap[data-yt="{{ _uid }}"] { width: {{ _w }}; position: relative; }
+      .yt-wrap[data-yt="{{ _uid }}"]::before { content:""; display:block; padding-top: {{ _pt }}; }
+      .yt-wrap[data-yt="{{ _uid }}"] iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+    </style>
+    <div class="yt-wrap my-6 rounded-xl overflow-hidden shadow mx-auto" data-yt="{{ _uid }}">
+      <iframe src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
+              title="{{ include.title | default: 'YouTube video' }}" frameborder="0" loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen></iframe>
+    </div>
+  {%- endif -%}
 {%- else -%}
   <!-- youtube include: no video id resolved (url='{{ include.url }}') -->
 {%- endif -%}
