@@ -3,37 +3,40 @@ Usage:
   {% include youtube.html id="dQw4w9WgXcQ" %}
   {% include youtube.html url="https://youtu.be/dQw4w9WgXcQ" start="60" title="데모 영상" %}
 Notes:
-  - url/ id 둘 중 하나만 주면 됩니다.
+  - url 또는 id 중 하나만 주면 됩니다.
   - start는 초 단위(선택).
 {%- endcomment -%}
 
-{%- assign _id = include.id -%}
+{%- assign _id = '' -%}
 
-{%- if include.url and not _id -%}
+{%- if include.url -%}
   {%- assign _u = include.url
       | replace: 'https://youtu.be/', ''
       | replace: 'http://youtu.be/', ''
       | replace: 'https://www.youtube.com/watch?v=', ''
       | replace: 'http://www.youtube.com/watch?v=', ''
       | replace: 'https://youtube.com/watch?v=', ''
-      | replace: 'http://youtube.com/watch?v=', ''
-  -%}
+      | replace: 'http://youtube.com/watch?v=', '' -%}
   {%- assign _id = _u | split:'?' | first | split:'&' | first -%}
+{%- elsif include.id -%}
+  {%- assign _id = include.id -%}
 {%- endif -%}
 
-{%- assign _params = 'rel=0' -%}
-{%- if include.start -%}
-  {%- assign _params = _params | append: '&start=' | append: include.start -%}
-{%- endif -%}
+{%- if _id and _id != '' -%}
+  {%- assign _params = 'rel=0' -%}
+  {%- if include.start -%}
+    {%- assign _params = _params | append: '&start=' | append: include.start -%}
+  {%- endif -%}
 
-<div class="relative w-full pt-[56.25%] my-6 rounded-xl overflow-hidden shadow">
-  <iframe
-    class="absolute inset-0 w-full h-full"
-    src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
-    title="{{ include.title | default: 'YouTube video' }}"
-    frameborder="0"
-    loading="lazy"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-  ></iframe>
-</div>
+  <div class="relative w-full pt-[56.25%] my-6 rounded-xl overflow-hidden shadow">
+    <iframe
+      class="absolute inset-0 w-full h-full"
+      src="https://www.youtube-nocookie.com/embed/{{ _id }}?{{ _params }}"
+      title="{{ include.title | default: 'YouTube video' }}"
+      frameborder="0"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
+  </div>
+{%- endif -%}
