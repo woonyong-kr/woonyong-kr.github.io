@@ -14,14 +14,19 @@
   {%- endif -%}
 </title>
 
-{%- assign meta_desc = page.meta_description | default: page.description -%}
+{%- assign meta_desc = page.meta_description | default: page.description | default: site.description -%}
 {%- if meta_desc -%}
   <meta name="description" content="{{ meta_desc | strip_newlines | escape }}" />
 {%- endif -%}
 
 {%- assign og_title = page.meta_title | default: page.title | default: site.title -%}
+{%- if page.layout == 'post' -%}
+  <meta property="og:type" content="article" />
+{%- else -%}
+  <meta property="og:type" content="website" />
+{%- endif -%}
 <meta property="og:title" content="{{ og_title | escape }}" />
-<meta property="og:type" content="website" />
+<meta property="og:site_name" content="{{ site.title | escape }}" />
 <meta property="og:url" content="{{ page.url | absolute_url }}" />
 {%- if meta_desc -%}
   <meta property="og:description" content="{{ meta_desc | strip_newlines | escape }}" />
@@ -38,9 +43,16 @@
   <meta name="twitter:card" content="summary" />
 {%- endif -%}
 
+<meta name="twitter:title" content="{{ og_title | escape }}" />
+{%- if meta_desc -%}<meta name="twitter:description" content="{{ meta_desc | strip_newlines | escape }}" />{%- endif -%}
+
 {%- if site.seo.meta_twitter_site -%}
   <meta name="twitter:site" content="{{ site.seo.meta_twitter_site }}" />
 {%- endif -%}
 {%- if site.seo.meta_twitter_creator -%}
   <meta name="twitter:creator" content="{{ site.seo.meta_twitter_creator }}" />
 {%- endif -%}
+
+<link rel="canonical" href="{{ page.url | absolute_url }}" />
+{%- if page.noindex -%}<meta name="robots" content="noindex,nofollow" />{%- endif -%}
+{%- if page.date -%}<meta property="article:published_time" content="{{ page.date | date_to_xmlschema }}" />{%- endif -%}
