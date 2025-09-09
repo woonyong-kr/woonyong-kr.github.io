@@ -36,7 +36,7 @@ google_analytics_id: false                 # GA4 ID 예: "G-XXXX" (false면 비�
 # ─────────────────────────────────────────────────────────
 logo:
   logo_desktop_image: assets/images/logo/logo.svg           # 데스크톱 로고 이미지 경로
-  logo_desktop_text: "제길 그냥 <strong>개발</strong>이다"     # 로고 옆 텍스트(HTML 허용)
+  logo_desktop_text: "Jekyll <strong>Atlantic</strong>"     # 로고 옆 텍스트(HTML 허용)
   logo_mobile_image: assets/images/logo/logo-mobile.svg     # 모바일 로고 이미지
   logo_mobile_text: ""                                      # 모바일에서 보조 텍스트
   logo_desktop_height: "36px"                               # 데스크톱 로고 높이
