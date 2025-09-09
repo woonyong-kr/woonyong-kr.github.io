@@ -50,6 +50,9 @@ From 2012, a group of people including Jeff Atwood and John MacFarlane launched 
 
 In 2017, GitHub released a formal specification of their GitHub Flavored Markdown (GFM) that is based on CommonMark. It follows the CommonMark specification exactly except for tables, strikethrough, autolinks and task lists, which the GitHub spec has added as extensions.
 
+![대체텍스트]({{ '/assets/images/unsplash-CTivHyiTbFw-640x360.jpeg' | relative_url }})
+
+![]({{ '/assets/images/unsplash-CTivHyiTbFw-640x360.jpeg' | relative_url }})
 
 ### Markdown Extra
 
