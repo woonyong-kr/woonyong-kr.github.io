@@ -14,7 +14,16 @@ layout: default
   </div>
 {% endif %}
 
-<img width="1600" height="900" src="{{ page.image }}"/>
+{%- assign use_hero = page.show_hero | default: site.show_hero | default: false -%}
+{%- if use_hero and page.image -%}
+  <figure class="mb-8">
+    <img
+      src="{{ page.image | relative_url }}"
+      width="1600" height="900"
+      alt="{{ page.title }}"
+      class="w-full h-auto" />
+  </figure>
+{%- endif -%}
 
 <div class="flex flex-col md:flex-row py-6 md:py-12">
 

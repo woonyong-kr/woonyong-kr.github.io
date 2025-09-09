@@ -45,9 +45,9 @@ logo:
   logo_mobile_width: "36px"                                 # 모바일 로고 너비
 
 seo:
-  meta_twitter_site: "@zerostaticio"                        # twitter:site 메타
-  meta_twitter_creator: "@zerostaticio"                     # twitter:creator 메타
-  meta_og_image: "https://www.zerostatic.io/theme/jekyll-atlantic/jekyll-atlantic-screenshot.png"
+  meta_twitter_site: "@woonyong-kr"                        # twitter:site 메타
+  meta_twitter_creator: "@woonyong-kr"                     # twitter:creator 메타
+  meta_og_image: ""
   # ↑ 전역 OG 이미지(페이지에 image가 없을 때 대체). show_og=false면 미출력(조건문 필요)
 
 # ─────────────────────────────────────────────────────────

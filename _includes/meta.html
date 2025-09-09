@@ -1,35 +1,46 @@
+{%- comment -%}
+  Meta / SEO for Jekyll Atlantic
+  - OG/트위터 이미지는 show_og (page -> site) 토글로 제어
+  - 이미지 off면 twitter:card = summary, on이면 summary_large_image
+{%- endcomment -%}
+
 <title>
-  {% if page.meta_title %}
+  {%- if page.meta_title -%}
     {{ page.meta_title }}
-    {% elsif page.title %}
-    {{ page.title }}
-    -
-    {{ site.title}}
-  {% else %}
+  {%- elsif page.title -%}
+    {{ page.title }} - {{ site.title }}
+  {%- else -%}
     {{ site.title }}
-  {% endif %}
+  {%- endif -%}
 </title>
 
-{% if page.meta_description %}
-  <meta name="description" content="{{ page.meta_description }}"/>
-  {% elsif page.description %}
-  <meta name="description" content="{{ page.description }}"/>
-{% endif %}
+{%- assign meta_desc = page.meta_description | default: page.description -%}
+{%- if meta_desc -%}
+  <meta name="description" content="{{ meta_desc | strip_newlines | escape }}" />
+{%- endif -%}
 
-{% if page.meta_title %}<meta property="og:title" content="{{ page.meta_title }}"/>
-{% else %}<meta property="og:title" content="{{ page.title }}"/>
-{% endif %}
-<meta content="website" property="og:type"/>
-<meta property="og:url" content="{{ page.url }}"/>
-{% if page.image %}
-  <meta property="og:image" content="{{ page.image | absolute_url }}"/>
-  {% elsif site.seo.meta_og_image %}
-  <meta property="og:image" content="{{ site.seo.meta_og_image | absolute_url }}"/>
-{% endif %}
-{% if page.description %}<meta property="og:description" content="{{ page.description }}"/>
-{% endif %}
-<meta content="summary" name="twitter:card"/>
-{% if site.seo.meta_twitter_site %}<meta name="twitter:site" content="{{ site.seo.meta_twitter_site }}"/>
-{% endif %}
-{% if site.seo.meta_twitter_creator %}<meta name="twitter:creator" content="{{ site.seo.meta_twitter_creator }}"/>
-{% endif %}
+{%- assign og_title = page.meta_title | default: page.title | default: site.title -%}
+<meta property="og:title" content="{{ og_title | escape }}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ page.url | absolute_url }}" />
+{%- if meta_desc -%}
+  <meta property="og:description" content="{{ meta_desc | strip_newlines | escape }}" />
+{%- endif -%}
+
+{%- assign use_og = page.show_og | default: site.show_og | default: false -%}
+{%- if use_og and (page.image or site.seo.meta_og_image) -%}
+  {%- assign og_img = page.image | default: site.seo.meta_og_image -%}
+  <meta property="og:image" content="{{ og_img | absolute_url }}" />
+  <meta property="og:image:alt" content="{{ og_title | escape }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{{ og_img | absolute_url }}" />
+{%- else -%}
+  <meta name="twitter:card" content="summary" />
+{%- endif -%}
+
+{%- if site.seo.meta_twitter_site -%}
+  <meta name="twitter:site" content="{{ site.seo.meta_twitter_site }}" />
+{%- endif -%}
+{%- if site.seo.meta_twitter_creator -%}
+  <meta name="twitter:creator" content="{{ site.seo.meta_twitter_creator }}" />
+{%- endif -%}
