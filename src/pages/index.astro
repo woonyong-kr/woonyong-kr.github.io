@@ -22,47 +22,54 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
 <Layout>
   <Header />
-  <main id="main-content" data-layout="index" class="app-layout">
-    <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
+  <main id="main-content" data-layout="index" class="content-layout pb-16">
+    <section id="hero" class="surface-panel mt-10 overflow-hidden px-7 py-9 sm:px-10 sm:py-12">
+      <p class="text-sm font-semibold tracking-[0.24em] text-accent uppercase">
+        Developer Notes
+      </p>
+      <h1 class="mt-5 inline-block text-4xl font-black tracking-[-0.06em] sm:text-[3.6rem]">
         작게 만들고, 자주 배포합니다.
       </h1>
-      <a
-        target="_blank"
-        href={withBase("/rss.xml")}
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
-
-      <p>
+      <p class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
         프론트엔드 구현, 배포 자동화, 작은 제품 실험에서 배운 것을 정리합니다.
         문서보다 현장 메모에 가깝고, 빠르게 만들고 꾸준히 다듬는 과정을
         남기는 블로그입니다.
       </p>
-      <p class="mt-2">
-        이 블로그는 AstroPaper를 기반으로 커스터마이징했고, GitHub Pages로
-        배포됩니다. 소스 코드는
+      <div class="mt-8 flex flex-wrap items-center gap-3">
         <LinkButton
-          class="underline decoration-dashed underline-offset-4 hover:text-accent"
+          class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-strong hover:text-white"
+          href={withBase("/posts/")}
+        >
+          글 보러가기
+        </LinkButton>
+        <LinkButton
+          class="rounded-full border border-border bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-accent/25 hover:text-accent"
           href="https://github.com/woonyong-kr/blog"
         >
-          GitHub
+          소스 보기
         </LinkButton>
-        에서 볼 수 있습니다.
-      </p>
+        <a
+          target="_blank"
+          href={withBase("/rss.xml")}
+          class="rounded-full border border-border bg-surface p-3 text-soft transition hover:border-accent/25 hover:text-foreground"
+          aria-label="rss feed"
+          title="RSS Feed"
+        >
+          <IconRss
+            width={20}
+            height={20}
+            class="stroke-current stroke-3 rtl:-rotate-90"
+          />
+          <span class="sr-only">RSS Feed</span>
+        </a>
+      </div>
       {
         // only display if at least one social link is enabled
         SOCIALS.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">연결:</div>
+          <div class="mt-8 flex max-sm:flex-col sm:items-center">
+            <div class="me-2 mb-1 text-sm font-medium text-soft whitespace-nowrap sm:mb-0">
+              연결
+            </div>
             <Socials />
           </div>
         )
@@ -74,11 +81,10 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
         <section
           id="featured"
           class:list={[
-            "pt-12 pb-6",
-            { "border-b border-border": recentPosts.length > 0 },
+            "pt-12 pb-2",
           ]}
         >
-          <h2 class="text-2xl font-semibold tracking-wide">추천 글</h2>
+          <h2 class="text-2xl font-bold tracking-[-0.03em]">추천 글</h2>
           <ul>
             {featuredPosts.map(data => (
               <Card variant="h3" {...data} />
@@ -90,8 +96,8 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
     {
       recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">최근 글</h2>
+        <section id="recent-posts" class="pt-10 pb-6">
+          <h2 class="text-2xl font-bold tracking-[-0.03em]">최근 글</h2>
           <ul>
             {recentPosts.map(
               (data, index) =>
@@ -103,7 +109,10 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
     }
 
     <div class="my-8 text-center">
-      <LinkButton href={withBase("/posts/")}>
+      <LinkButton
+        href={withBase("/posts/")}
+        class="rounded-full border border-border bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-accent/25 hover:text-accent"
+      >
         전체 글 보기
         <IconArrowRight class="inline-block rtl:-rotate-180" />
       </LinkButton>

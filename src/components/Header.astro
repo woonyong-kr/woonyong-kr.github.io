@@ -22,41 +22,30 @@ const isActive = (path: string) => {
 
   return currentPath === path || currentPathArray[0] === pathArray[0];
 };
+
+const navLinkClass =
+  "rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-surface-muted hover:text-foreground";
+const iconLinkClass =
+  "rounded-full border border-border bg-surface p-2.5 text-soft transition hover:border-accent/25 hover:text-foreground";
 ---
 
 <a
   id="skip-to-content"
   href="#main-content"
-  class="absolute start-16 -top-full z-50 bg-background px-3 py-2 text-accent backdrop-blur-lg transition-all focus:top-4"
+  class="absolute start-16 -top-full z-50 rounded-full bg-surface px-4 py-2 text-accent shadow-sm backdrop-blur-lg transition-all focus:top-4"
 >
   Skip to content
 </a>
 
-<header
-  class="app-layout flex flex-col items-center justify-between sm:flex-row"
->
-  <div
-    id="top-nav-wrap"
-    class:list={[
-      "py-4 sm:py-6",
-      "border-b border-border",
-      "relative w-full bg-background",
-      "flex items-baseline justify-between sm:items-center",
-    ]}
-  >
-    <a
-      href={withBase("/")}
-      class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none"
-    >
+<header class="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
+  <div class="app-layout relative flex min-h-[5rem] items-center justify-between gap-6">
+    <a href={withBase("/")} class="text-[1.9rem] font-black tracking-[-0.06em] text-foreground">
       {SITE.title}
     </a>
-    <nav
-      id="nav-menu"
-      class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"
-    >
+    <nav id="nav-menu" class="flex items-center gap-2">
       <button
         id="menu-btn"
-        class="focus-outline self-end p-2 sm:hidden"
+        class="focus-outline rounded-full border border-border bg-surface p-2.5 text-foreground shadow-sm md:hidden"
         aria-label="Open Menu"
         aria-expanded="false"
         aria-controls="menu-items"
@@ -67,53 +56,61 @@ const isActive = (path: string) => {
       <ul
         id="menu-items"
         class:list={[
-          "mt-4 grid w-44 grid-cols-2 place-content-center gap-2",
-          "[&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-3 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:hover:text-accent sm:[&>li>a]:px-2 sm:[&>li>a]:py-1",
-          "hidden",
-          "sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0",
+          "absolute top-full right-5 mt-3 hidden w-[15.5rem] flex-col gap-2 rounded-[1.5rem] border border-border bg-surface p-3 shadow-[var(--shadow)]",
+          "md:static md:mt-0 md:flex md:w-auto md:flex-row md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none",
         ]}
       >
-        <li class="col-span-2">
-          <a href={withBase("/posts")} class:list={{ "active-nav": isActive("/posts") }}>
+        <li>
+          <a
+            href={withBase("/posts")}
+            class:list={[navLinkClass, { "active-nav": isActive("/posts") }]}
+          >
             글
           </a>
         </li>
-        <li class="col-span-2">
-          <a href={withBase("/tags")} class:list={{ "active-nav": isActive("/tags") }}>
+        <li>
+          <a
+            href={withBase("/tags")}
+            class:list={[navLinkClass, { "active-nav": isActive("/tags") }]}
+          >
             태그
           </a>
         </li>
-        <li class="col-span-2">
-          <a href={withBase("/about")} class:list={{ "active-nav": isActive("/about") }}>
+        <li>
+          <a
+            href={withBase("/about")}
+            class:list={[navLinkClass, { "active-nav": isActive("/about") }]}
+          >
             소개
           </a>
         </li>
         {
           SITE.showArchives && (
-            <li class="col-span-2">
+            <li>
               <LinkButton
                 href={withBase("/archives")}
                 class:list={[
-                  "focus-outline flex justify-center p-3 sm:p-1",
+                  iconLinkClass,
                   {
-                    "active-nav [&>svg]:stroke-accent": isActive("/archives"),
+                    "active-nav text-foreground [&>svg]:stroke-accent":
+                      isActive("/archives"),
                   },
                 ]}
                 title="Archives"
                 aria-label="archives"
               >
-                <IconArchive class="hidden sm:inline-block" />
-                <span class="sm:sr-only">Archives</span>
+                <IconArchive class="inline-block" />
+                <span class="md:sr-only">Archives</span>
               </LinkButton>
             </li>
           )
         }
-        <li class="col-span-1 flex items-center justify-center">
+        <li>
           <LinkButton
             href={withBase("/search")}
             class:list={[
-              "focus-outline flex p-3 sm:p-1",
-              { "[&>svg]:stroke-accent": isActive("/search") },
+              iconLinkClass,
+              { "text-foreground [&>svg]:stroke-accent": isActive("/search") },
             ]}
             title="Search"
             aria-label="search"
@@ -124,10 +121,10 @@ const isActive = (path: string) => {
         </li>
         {
           SITE.lightAndDarkMode && (
-            <li class="col-span-1 flex items-center justify-center">
+            <li>
               <button
                 id="theme-btn"
-                class="focus-outline relative size-12 p-4 sm:size-8 hover:[&>svg]:stroke-accent"
+                class="focus-outline relative size-11 rounded-full border border-border bg-surface p-3 text-soft shadow-sm hover:text-foreground md:size-10"
                 title="Toggles light & dark"
                 aria-label="auto"
                 aria-live="polite"

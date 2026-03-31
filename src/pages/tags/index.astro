@@ -15,8 +15,8 @@ let tags = getUniqueTags(posts);
 
 <Layout title={`Tags | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="태그" pageDesc="글에 사용한 태그를 한곳에서 둘러볼 수 있습니다.">
-    <ul class="flex flex-wrap gap-6">
+  <Main pageTitle="태그" pageDesc="주제별로 글을 빠르게 둘러볼 수 있도록 태그를 모아두었습니다.">
+    <ul class="flex flex-wrap gap-3">
       {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} />)}
     </ul>
   </Main>

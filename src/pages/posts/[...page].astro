@@ -20,7 +20,10 @@ const { page } = Astro.props;
 
 <Layout title={`Posts | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="글" pageDesc="작성한 개발 기록을 시간순으로 모아둔 목록입니다.">
+  <Main
+    pageTitle="글"
+    pageDesc="배포, 프론트엔드 구현, 작업 메모를 카드형 목록으로 정리했습니다."
+  >
     <ul>
       {page.data.map(data => <Card {...data} />)}
     </ul>
