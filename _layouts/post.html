@@ -32,7 +32,7 @@ layout: default
     {% if page.tags and page.tags.size > 0 %}
       <div class="post-head__tags">
         {% for tag in page.tags %}
-          <span class="tag-chip">{{ tag }}</span>
+          <a class="tag-chip" href="{{ '/' | relative_url }}?tag={{ tag | uri_escape }}">{{ tag }}</a>
         {% endfor %}
       </div>
     {% endif %}
