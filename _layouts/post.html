@@ -52,14 +52,28 @@ layout: default
     <nav class="post-navigation" aria-label="이전 다음 글">
       {% if page.previous %}
         <a class="post-navigation__item" href="{{ page.previous.url | relative_url }}">
-          <span class="post-navigation__label">이전 글</span>
-          <strong class="post-navigation__title">{{ page.previous.title }}</strong>
+          <span class="post-navigation__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 11H7.83l5.58-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z" fill="currentColor"></path>
+            </svg>
+          </span>
+          <span class="post-navigation__content">
+            <span class="post-navigation__label">이전 포스트</span>
+            <strong class="post-navigation__title">{{ page.previous.title }}</strong>
+          </span>
         </a>
       {% endif %}
       {% if page.next %}
         <a class="post-navigation__item post-navigation__item--next" href="{{ page.next.url | relative_url }}">
-          <span class="post-navigation__label">다음 글</span>
-          <strong class="post-navigation__title">{{ page.next.title }}</strong>
+          <span class="post-navigation__content">
+            <span class="post-navigation__label">다음 포스트</span>
+            <strong class="post-navigation__title">{{ page.next.title }}</strong>
+          </span>
+          <span class="post-navigation__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 11h12.17l-5.58-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4z" fill="currentColor"></path>
+            </svg>
+          </span>
         </a>
       {% endif %}
     </nav>
