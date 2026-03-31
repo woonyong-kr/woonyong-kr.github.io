@@ -559,6 +559,11 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--primary1);
   font-size: 1rem;
   font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tag-chip:hover {
+  background: rgba(18, 184, 134, 0.12);
 }
 
 .post-card__meta {

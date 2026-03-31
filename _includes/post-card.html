@@ -29,7 +29,7 @@
   {% if post.tags and post.tags.size > 0 %}
     <div class="post-card__tags">
       {% for tag in post.tags %}
-        <span class="tag-chip">{{ tag }}</span>
+        <a class="tag-chip" href="{{ '/' | relative_url }}?tag={{ tag | uri_escape }}">{{ tag }}</a>
       {% endfor %}
     </div>
   {% endif %}
