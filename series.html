@@ -24,13 +24,11 @@ body_class: series-list
     {% endfor %}
     <article class="series-card">
       <a href="{{ '/' | relative_url }}?series={{ series_key | uri_escape }}">
-        <div class="series-card__image">
-          {% if featured_post.thumbnail %}
+        {% if featured_post.thumbnail %}
+          <div class="series-card__image">
             <img src="{{ featured_post.thumbnail | relative_url }}" alt="{{ series_info.title }}">
-          {% else %}
-            <img src="{{ '/assets/images/rogo.svg' | relative_url }}" alt="{{ series_info.title }}">
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
         <h3 class="series-card__title">{{ series_info.title }}</h3>
         <p class="series-card__meta">
           <span class="series-card__count">{{ series_posts.size }}개의 포스트</span>

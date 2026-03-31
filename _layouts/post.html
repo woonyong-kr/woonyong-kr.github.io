@@ -36,6 +36,12 @@ layout: default
         {% endfor %}
       </div>
     {% endif %}
+
+    {% if page.thumbnail %}
+      <div class="post-head__thumbnail">
+        <img src="{{ page.thumbnail | relative_url }}" alt="{{ page.title }}">
+      </div>
+    {% endif %}
   </header>
 
   <section class="prose">
