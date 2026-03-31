@@ -5,6 +5,8 @@ layout: default
   {% include profile.html %}
   {% include tabs.html active=page.active_tab %}
 
+  {% assign page_size = 12 %}
+  {% assign post_index_url = '/posts.json' | relative_url %}
   {% assign sorted_tags = site.tags | sort %}
   <section class="content-section content-section--posts">
     <div class="tag-pills">
@@ -77,7 +79,7 @@ layout: default
       </div>
 
       <p class="posts-panel__summary" data-post-summary hidden></p>
-      {% include post-list.html posts=site.posts %}
+      {% include post-list.html posts=site.posts limit=page_size page_size=page_size index_url=post_index_url %}
       <div class="posts-panel__sentinel" data-post-sentinel hidden aria-hidden="true"></div>
       <p class="posts-panel__more" data-post-more hidden>스크롤하면 더 많은 글을 볼 수 있습니다.</p>
       <p class="posts-panel__empty" data-post-empty hidden>조건에 맞는 글이 없습니다.</p>

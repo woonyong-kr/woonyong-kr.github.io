@@ -1,6 +1,6 @@
 (function () {
   var THEME_STORAGE_KEY = "velog-theme";
-  var PAGE_SIZE = 12;
+  var DEFAULT_PAGE_SIZE = 12;
 
   function getStoredTheme() {
     try {
@@ -54,6 +54,15 @@
     return String(value || "").trim().toLowerCase();
   }
 
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function updateUrl(state) {
     var nextUrl = new URL(window.location.href);
 
@@ -80,6 +89,29 @@
 
   function getSearchKeyword() {
     return String(new URLSearchParams(window.location.search).get("q") || "").trim();
+  }
+
+  function buildListUrl(basePath, state) {
+    var nextUrl = new URL(basePath, window.location.origin);
+
+    if (state.tag) {
+      nextUrl.searchParams.set("tag", state.tag);
+    }
+
+    if (state.series) {
+      nextUrl.searchParams.set("series", state.series);
+    }
+
+    if (state.q) {
+      nextUrl.searchParams.set("q", state.q);
+    }
+
+    return nextUrl.pathname + nextUrl.search;
+  }
+
+  function getPageSize(postList) {
+    var rawValue = Number(postList && postList.getAttribute("data-page-size"));
+    return rawValue > 0 ? rawValue : DEFAULT_PAGE_SIZE;
   }
 
   function setupThemeToggle() {
@@ -138,14 +170,83 @@
     searchInput.addEventListener("input", updateSearchState);
   }
 
+  function readPostsFromDom(postList) {
+    return Array.prototype.slice.call(postList.querySelectorAll("[data-post-card]")).map(function (card) {
+      var title = card.querySelector(".post-card__title");
+      var titleLink = card.querySelector(".post-card__title-link");
+      var description = card.querySelector(".post-card__description");
+      var series = card.querySelector(".post-card__series");
+      var thumbnail = card.querySelector(".post-card__thumbnail img");
+      var metaItems = Array.prototype.slice.call(card.querySelectorAll(".post-card__meta span"));
+      var tags = card.getAttribute("data-tags");
+
+      return {
+        title: title ? title.textContent.trim() : "",
+        url: titleLink ? titleLink.getAttribute("href") : "",
+        description: description ? description.textContent.trim() : "",
+        thumbnail: thumbnail ? thumbnail.getAttribute("src") : "",
+        tags: tags ? tags.split("|").filter(Boolean) : [],
+        series_key: card.getAttribute("data-series-key") || "",
+        series_title: card.getAttribute("data-series-label") || (series ? series.textContent.trim() : ""),
+        date_label: metaItems[0] ? metaItems[0].textContent.trim() : "",
+        reading_time_label: metaItems[2] ? metaItems[2].textContent.trim() : "",
+        search: card.getAttribute("data-search") || "",
+      };
+    });
+  }
+
+  function renderPostCard(post, basePath) {
+    var article = document.createElement("article");
+    var title = escapeHtml(post.title);
+    var url = escapeHtml(post.url);
+    var description = escapeHtml(post.description);
+    var seriesTitle = escapeHtml(post.series_title);
+    var tags = Array.isArray(post.tags) ? post.tags : [];
+    var thumbnail = post.thumbnail ? escapeHtml(post.thumbnail) : "";
+    var dateLabel = escapeHtml(post.date_label);
+    var readingTimeLabel = escapeHtml(post.reading_time_label);
+    var tagsHtml = tags
+      .map(function (tag) {
+        return '<a class="tag-chip" href="' + escapeHtml(buildListUrl(basePath, { tag: tag })) + '">' + escapeHtml(tag) + "</a>";
+      })
+      .join("");
+
+    article.className = "post-card";
+    article.innerHTML =
+      (thumbnail
+        ? '<a class="post-card__thumbnail" href="' +
+          url +
+          '"><img src="' +
+          thumbnail +
+          '" alt="' +
+          title +
+          '" loading="lazy" decoding="async"></a>'
+        : "") +
+      (seriesTitle ? '<p class="post-card__series">' + seriesTitle + "</p>" : "") +
+      '<a class="post-card__title-link" href="' +
+      url +
+      '"><h2 class="post-card__title">' +
+      title +
+      "</h2></a>" +
+      (description ? '<p class="post-card__description">' + description + "</p>" : "") +
+      (tagsHtml ? '<div class="post-card__tags">' + tagsHtml + "</div>" : "") +
+      '<div class="post-card__meta"><span>' +
+      dateLabel +
+      '</span><span class="post-card__dot">·</span><span>' +
+      readingTimeLabel +
+      "</span></div>";
+
+    return article;
+  }
+
   function setupPostFilters() {
     var searchForm = document.querySelector("[data-search-form]");
     var searchInput = document.querySelector("[data-post-search]");
-    var postCards = Array.prototype.slice.call(document.querySelectorAll("[data-post-card]"));
+    var postList = document.querySelector("[data-post-list]");
     var sentinel = document.querySelector("[data-post-sentinel]");
     var more = document.querySelector("[data-post-more]");
 
-    if (!searchInput || postCards.length === 0) {
+    if (!searchInput || !postList) {
       return;
     }
 
@@ -158,53 +259,31 @@
       series: normalizeValue(params.get("series")),
       q: String(params.get("q") || "").trim(),
     };
-    var tagLabels = {};
-    var seriesLabels = {};
-    var matchedCards = [];
-    var visibleLimit = PAGE_SIZE;
+    var basePath = searchForm && searchForm.getAttribute("action") ? searchForm.getAttribute("action") : window.location.pathname;
+    var pageSize = getPageSize(postList);
+    var fallbackPosts = readPostsFromDom(postList);
+    var allPosts = null;
+    var loadingPromise = null;
+    var matchedPosts = [];
+    var visibleLimit = pageSize;
 
-    tagLinks.forEach(function (link) {
-      var key = normalizeValue(link.getAttribute("data-tag-filter"));
-      var label = link.getAttribute("data-tag-label");
-
-      if (key && label && !tagLabels[key]) {
-        tagLabels[key] = label;
-      }
-    });
-
-    postCards.forEach(function (card) {
-      var key = normalizeValue(card.getAttribute("data-series-key"));
-      var label = card.getAttribute("data-series-label");
-
-      if (key && label && !seriesLabels[key]) {
-        seriesLabels[key] = label;
-      }
-    });
+    if (state.tag || state.series || state.q) {
+      postList.innerHTML = "";
+    }
 
     searchInput.value = state.q;
 
     function updateTagLinks() {
       tagLinks.forEach(function (link) {
-        var tagFilter = normalizeValue(link.getAttribute("data-tag-filter"));
+        var rawTagFilter = link.getAttribute("data-tag-filter") || "";
+        var tagFilter = normalizeValue(rawTagFilter);
         var isActive = tagFilter ? tagFilter === state.tag : !state.tag;
-        var targetUrl = new URL(link.href, window.location.origin);
 
         link.classList.toggle("is-active", isActive);
-        targetUrl.searchParams.delete("series");
-
-        if (state.q) {
-          targetUrl.searchParams.set("q", state.q);
-        } else {
-          targetUrl.searchParams.delete("q");
-        }
-
-        if (tagFilter) {
-          targetUrl.searchParams.set("tag", link.getAttribute("data-tag-filter"));
-        } else {
-          targetUrl.searchParams.delete("tag");
-        }
-
-        link.href = targetUrl.pathname + targetUrl.search;
+        link.href = buildListUrl(basePath, {
+          tag: rawTagFilter,
+          q: state.q,
+        });
       });
     }
 
@@ -218,7 +297,7 @@
         if (visibleCount === 0) {
           summary.textContent = "검색 결과가 없습니다.";
         } else {
-          summary.innerHTML = '총 <strong>' + visibleCount + '개</strong>의 포스트를 찾았습니다.';
+          summary.innerHTML = '총 <strong>' + visibleCount + "개</strong>의 포스트를 찾았습니다.";
         }
         return;
       }
@@ -227,7 +306,7 @@
     }
 
     function updatePaginationState() {
-      var hasMore = matchedCards.length > visibleLimit;
+      var hasMore = matchedPosts.length > visibleLimit;
 
       if (more) {
         more.hidden = !hasMore;
@@ -238,53 +317,105 @@
       }
     }
 
-    function renderVisibleCards() {
-      postCards.forEach(function (card) {
-        card.hidden = true;
+    function renderVisiblePosts() {
+      var fragment = document.createDocumentFragment();
+
+      postList.innerHTML = "";
+
+      matchedPosts.slice(0, visibleLimit).forEach(function (post) {
+        fragment.appendChild(renderPostCard(post, basePath));
       });
 
-      matchedCards.forEach(function (card, index) {
-        card.hidden = index >= visibleLimit;
-      });
+      postList.appendChild(fragment);
 
       if (empty) {
-        empty.hidden = matchedCards.length !== 0;
+        empty.hidden = matchedPosts.length !== 0;
       }
 
-      updateSummary(matchedCards.length);
+      updateSummary(matchedPosts.length);
       updateTagLinks();
       updatePaginationState();
     }
 
-    function applyFilters() {
-      visibleLimit = PAGE_SIZE;
-      matchedCards = [];
+    function filterPosts(posts) {
+      var query = normalizeValue(state.q);
 
-      postCards.forEach(function (card) {
-        var tagValues = normalizeValue(card.getAttribute("data-tags")).split("|");
-        var seriesKey = normalizeValue(card.getAttribute("data-series-key"));
-        var searchText = normalizeValue(card.getAttribute("data-search"));
-        var query = normalizeValue(state.q);
+      return posts.filter(function (post) {
+        var tagValues = Array.isArray(post.tags) ? post.tags.map(normalizeValue) : [];
+        var seriesKey = normalizeValue(post.series_key);
+        var searchText = normalizeValue(
+          post.search ||
+            [post.title, post.description, Array.isArray(post.tags) ? post.tags.join(" ") : "", post.series_title]
+              .join(" ")
+              .trim()
+        );
         var matchesTag = !state.tag || tagValues.indexOf(state.tag) !== -1;
         var matchesSeries = !state.series || seriesKey === state.series;
         var matchesQuery = !query || searchText.indexOf(query) !== -1;
-        var isVisible = matchesTag && matchesSeries && matchesQuery;
 
-        if (isVisible) {
-          matchedCards.push(card);
-        }
+        return matchesTag && matchesSeries && matchesQuery;
       });
+    }
 
-      renderVisibleCards();
+    function ensurePostIndexLoaded() {
+      var indexUrl;
+
+      if (allPosts) {
+        return Promise.resolve(allPosts);
+      }
+
+      if (loadingPromise) {
+        return loadingPromise;
+      }
+
+      indexUrl = postList.getAttribute("data-post-index-url");
+      if (!indexUrl) {
+        allPosts = readPostsFromDom(postList);
+        return Promise.resolve(allPosts);
+      }
+
+      postList.setAttribute("aria-busy", "true");
+      loadingPromise = window
+        .fetch(indexUrl, { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("Failed to load post index.");
+          }
+
+          return response.json();
+        })
+        .then(function (payload) {
+          allPosts = payload && Array.isArray(payload.posts) ? payload.posts : [];
+          return allPosts;
+        })
+        .catch(function () {
+          allPosts = fallbackPosts;
+          return allPosts;
+        })
+        .then(function (posts) {
+          postList.removeAttribute("aria-busy");
+          return posts;
+        });
+
+      return loadingPromise;
+    }
+
+    function applyFilters() {
+      visibleLimit = pageSize;
+
+      return ensurePostIndexLoaded().then(function (posts) {
+        matchedPosts = filterPosts(posts);
+        renderVisiblePosts();
+      });
     }
 
     function loadMorePosts() {
-      if (matchedCards.length <= visibleLimit) {
+      if (matchedPosts.length <= visibleLimit) {
         return;
       }
 
-      visibleLimit += PAGE_SIZE;
-      renderVisibleCards();
+      visibleLimit += pageSize;
+      renderVisiblePosts();
     }
 
     if (searchForm) {

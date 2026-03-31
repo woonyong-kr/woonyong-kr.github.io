@@ -6,13 +6,15 @@ active_tab: series
 permalink: /series/
 body_class: series-list
 ---
+{% assign series_groups = site.posts | where_exp: "post", "post.series" | group_by: "series" %}
 {% assign has_series = false %}
-{% for pair in site.data.series %}
-  {% assign series_key = pair[0] %}
-  {% assign series_info = pair[1] %}
-  {% assign series_posts = site.posts | where: "series", series_key %}
-  {% if series_posts.size > 0 %}
-    {% assign has_series = true %}
+{% if series_groups.size > 0 %}
+  {% assign has_series = true %}
+{% endif %}
+{% for group in series_groups %}
+  {% assign series_key = group.name %}
+  {% assign series_info = site.data.series[series_key] %}
+  {% assign series_posts = group.items %}
     {% assign featured_post = series_posts | first %}
     {% assign latest_timestamp = featured_post.updated_at | default: featured_post.date | date: "%s" %}
     {% for series_post in series_posts %}
@@ -26,10 +28,15 @@ body_class: series-list
       <a href="{{ '/' | relative_url }}?series={{ series_key | uri_escape }}">
         {% if featured_post.thumbnail %}
           <div class="series-card__image">
-            <img src="{{ featured_post.thumbnail | relative_url }}" alt="{{ series_info.title }}">
+            <img
+              src="{{ featured_post.thumbnail | relative_url }}"
+              alt="{{ series_info.title | default: series_key }}"
+              loading="lazy"
+              decoding="async"
+            >
           </div>
         {% endif %}
-        <h3 class="series-card__title">{{ series_info.title }}</h3>
+        <h3 class="series-card__title">{{ series_info.title | default: series_key }}</h3>
         <p class="series-card__meta">
           <span class="series-card__count">{{ series_posts.size }}개의 포스트</span>
           <span class="series-card__dot">·</span>
@@ -37,7 +44,6 @@ body_class: series-list
         </p>
       </a>
     </article>
-  {% endif %}
 {% endfor %}
 {% unless has_series %}
   <p class="page-empty">아직 시리즈가 없습니다.</p>
