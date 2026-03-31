@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title>DEV LOG 09</title>
+  <desc>Dummy thumbnail 09 for markdown and pagination samples.</desc>
+  <rect width="1280" height="720" rx="40" fill="#ebfbee"/>
+  <rect x="72" y="72" width="1136" height="576" rx="32" fill="white" stroke="#40c057" stroke-width="8"/>
+  <rect x="120" y="120" width="420" height="36" rx="18" fill="#40c057" opacity="0.9"/>
+  <rect x="120" y="188" width="260" height="18" rx="9" fill="#2b8a3e" opacity="0.2"/>
+  <rect x="120" y="248" width="280" height="280" rx="24" fill="#2b8a3e"/>
+  <rect x="456" y="248" width="280" height="124" rx="24" fill="#40c057"/>
+  <rect x="776" y="248" width="364" height="48" rx="24" fill="#2b8a3e" opacity="0.18"/>
+  <rect x="776" y="328" width="292" height="36" rx="18" fill="#40c057" opacity="0.9"/>
+  <rect x="456" y="404" width="684" height="48" rx="24" fill="#2b8a3e" opacity="0.12"/>
+  <rect x="456" y="484" width="512" height="48" rx="24" fill="#2b8a3e" opacity="0.12"/>
+  <text x="120" y="600" fill="#2b8a3e" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700">DEV LOG 09</text>
+</svg>

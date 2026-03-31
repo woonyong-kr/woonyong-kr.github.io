@@ -1,5 +1,5 @@
 {% assign posts = include.posts %}
-<div class="post-list">
+<div class="post-list" data-post-list>
   {% for post in posts %}
     {% include post-card.html post=post %}
   {% endfor %}
