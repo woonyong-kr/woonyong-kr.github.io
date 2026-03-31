@@ -2,6 +2,7 @@
 title: 배포 자동화를 단순하게 유지하는 메모
 description: 블로그 자동화에서 중요한 것은 최신 기술보다 실패했을 때 바로 복구 가능한 파이프라인이라는 내용을 정리했습니다.
 date: 2026-03-28 20:15:00 +0900
+thumbnail: /assets/images/posts/automation-notes.svg
 tags:
   - Automation
   - CI
@@ -10,6 +11,8 @@ series: shipping-fast
 ---
 
 자동화는 한 번 넣으면 계속 남습니다. 그래서 처음부터 복잡하게 만들기보다, 사람이 읽기 쉬운 단계로 유지하는 것이 더 중요합니다.
+
+<img src="{{ '/assets/images/posts/automation-notes.svg' | relative_url }}" alt="자동화 파이프라인을 상징하는 더미 대시보드 일러스트">
 
 ## 설치 단계는 의존성을 숨기지 않는다
 

@@ -3,6 +3,7 @@ title: 작게 배포하고 빠르게 배우는 블로그 시작기
 description: Jenkins와 GitHub Pages를 묶을 때 처음부터 크게 설계하지 않고, 작은 배포 루프로 시작하는 이유를 정리했습니다.
 date: 2026-03-14 09:30:00 +0900
 updated_at: 2026-03-31 15:20:00 +0900
+thumbnail: /assets/images/posts/ship-small-fast.svg
 tags:
   - Jenkins
   - GitHub Pages
@@ -11,6 +12,8 @@ series: shipping-fast
 ---
 
 블로그를 열 때 가장 먼저 본 것은 기술 스택보다 **끊기지 않는 배포 흐름**이었습니다.
+
+<img src="{{ '/assets/images/posts/ship-small-fast.svg' | relative_url }}" alt="배포 파이프라인을 상징하는 더미 일러스트">
 
 새 글을 올릴 때마다 빌드 방법을 다시 떠올려야 하거나, 실패했을 때 복구 경로가 불분명하면 결국 글 쓰는 리듬이 깨집니다. 그래서 시작 단계에서는 기능을 많이 넣기보다 아래 세 가지를 먼저 고정하는 편이 좋습니다.
 

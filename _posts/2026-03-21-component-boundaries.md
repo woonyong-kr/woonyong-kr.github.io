@@ -2,6 +2,7 @@
 title: 컴포넌트 경계를 잡을 때 먼저 보는 세 가지
 description: 화면을 예쁘게 나누는 기준보다 상태와 책임을 어디에 둘지 먼저 정하면 구현이 훨씬 단단해집니다.
 date: 2026-03-21 11:00:00 +0900
+thumbnail: /assets/images/posts/component-boundaries.svg
 tags:
   - Frontend
   - Architecture
@@ -10,6 +11,8 @@ series: component-architecture
 ---
 
 컴포넌트를 나눌 때 흔히 `재사용 가능할까?`를 먼저 묻습니다. 물론 중요하지만, 실제로 더 오래 남는 기준은 아래 세 가지였습니다.
+
+<img src="{{ '/assets/images/posts/component-boundaries.svg' | relative_url }}" alt="컴포넌트 경계를 상징하는 더미 레이아웃 일러스트">
 
 ## 1. 누가 상태를 소유하는가
 

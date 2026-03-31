@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Component Boundaries Article Image</title>
+  <desc id="desc">Abstract layout blocks showing component boundaries and structure.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8f9fa"/>
+      <stop offset="100%" stop-color="#eef2f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="86" y="82" width="1028" height="466" rx="40" fill="#ffffff"/>
+  <rect x="146" y="134" width="908" height="70" rx="24" fill="#212529"/>
+  <circle cx="198" cy="169" r="12" fill="#20c997"/>
+  <circle cx="234" cy="169" r="12" fill="#63e6be"/>
+  <circle cx="270" cy="169" r="12" fill="#96f2d7"/>
+  <rect x="146" y="242" width="250" height="246" rx="26" fill="#e9ecef"/>
+  <rect x="432" y="242" width="340" height="114" rx="26" fill="#20c997"/>
+  <rect x="432" y="374" width="340" height="114" rx="26" fill="#f1f3f5"/>
+  <rect x="808" y="242" width="246" height="246" rx="26" fill="#212529"/>
+  <rect x="183" y="282" width="176" height="16" rx="8" fill="#868e96"/>
+  <rect x="183" y="318" width="138" height="16" rx="8" fill="#adb5bd"/>
+  <rect x="183" y="354" width="164" height="16" rx="8" fill="#adb5bd"/>
+  <rect x="183" y="390" width="118" height="16" rx="8" fill="#adb5bd"/>
+  <rect x="468" y="278" width="182" height="18" rx="9" fill="#ffffff"/>
+  <rect x="468" y="314" width="240" height="16" rx="8" fill="#d3f9d8" opacity="0.9"/>
+  <rect x="468" y="410" width="186" height="18" rx="9" fill="#495057"/>
+  <rect x="468" y="446" width="248" height="16" rx="8" fill="#868e96"/>
+  <path d="M860 290h142" stroke="#63e6be" stroke-width="18" stroke-linecap="round"/>
+  <path d="M860 334h102" stroke="#63e6be" stroke-width="18" stroke-linecap="round" opacity="0.75"/>
+  <path d="M860 378h142" stroke="#63e6be" stroke-width="18" stroke-linecap="round" opacity="0.5"/>
+  <path d="M604 372v-58" stroke="#12b886" stroke-width="10" stroke-linecap="round"/>
+  <path d="M580 338l24-24 24 24" fill="none" stroke="#12b886" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+</svg>
