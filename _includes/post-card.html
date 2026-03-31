@@ -1,21 +1,24 @@
 {% assign post = include.post %}
 {% assign series = site.data.series[post.series] %}
 {% assign reading_time = post.content | strip_html | number_of_words | divided_by: 220 | plus: 1 %}
-<article class="post-card">
+{% capture search_text %}{{ post.title }} {{ post.description }} {{ post.tags | join: ' ' }} {% if series %}{{ series.title }}{% endif %}{% endcapture %}
+<article
+  class="post-card"
+  data-post-card
+  data-tags="{{ post.tags | join: '|' | downcase | escape }}"
+  data-series-key="{{ post.series | default: '' | downcase | escape }}"
+  data-series-label="{% if series %}{{ series.title | escape }}{% endif %}"
+  data-search="{{ search_text | strip | downcase | escape }}"
+>
   {% if post.thumbnail %}
     <a class="post-card__thumbnail" href="{{ post.url | relative_url }}">
       <img src="{{ post.thumbnail | relative_url }}" alt="{{ post.title }}">
     </a>
   {% endif %}
 
-  <div class="post-card__eyebrow">
-    {% if series %}
-      <span class="post-card__type">시리즈</span>
-      <span class="post-card__context">{{ series.title }}</span>
-    {% else %}
-      <span class="post-card__type post-card__type--default">일반 글</span>
-    {% endif %}
-  </div>
+  {% if series %}
+    <p class="post-card__series">{{ series.title }}</p>
+  {% endif %}
 
   <a class="post-card__title-link" href="{{ post.url | relative_url }}">
     <h2 class="post-card__title">{{ post.title }}</h2>

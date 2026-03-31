@@ -5,10 +5,7 @@ layout: default
   {% include profile.html %}
   {% include tabs.html active=page.active_tab %}
 
-  <section class="content-section">
-    <header class="section-header">
-      <h2>{{ page.title }}</h2>
-    </header>
+  <section class="content-section{% if page.active_tab %} content-section--{{ page.active_tab }}{% endif %}">
     <div class="{% if page.body_class %}{{ page.body_class }}{% else %}page-panel{% endif %}">
       {{ content }}
     </div>
