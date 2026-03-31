@@ -7,7 +7,8 @@ pipeline {
 
   environment {
     PAGES_BRANCH = 'gh-pages'
-    PUBLISH_DIR = 'dist'
+    PUBLISH_DIR = '_site'
+    BUNDLE_PATH = 'vendor/bundle'
   }
 
   stages {
@@ -15,7 +16,7 @@ pipeline {
       steps {
         sh '''
           set -eu
-          npm ci
+          BUNDLE_FORCE_RUBY_PLATFORM=true bundle install --path "$BUNDLE_PATH" --jobs=4 --retry=3
         '''
       }
     }
@@ -24,7 +25,7 @@ pipeline {
       steps {
         sh '''
           set -eu
-          npm run build
+          BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
           test -d "$PUBLISH_DIR"
           test -f "$PUBLISH_DIR/index.html"
         '''

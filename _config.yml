@@ -1,0 +1,38 @@
+title: woonyong.log
+description: 프론트엔드, 자동화, 배포를 차분하게 기록하는 개발 블로그
+url: "https://woonyong-kr.github.io"
+baseurl: "/blog"
+lang: ko-KR
+timezone: Asia/Seoul
+markdown: kramdown
+highlighter: rouge
+permalink: /:title/
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - Jenkinsfile
+  - LICENSE
+  - NOTICE.md
+  - README.md
+  - vendor

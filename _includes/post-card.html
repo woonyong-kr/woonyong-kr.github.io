@@ -1,0 +1,32 @@
+{% assign post = include.post %}
+{% assign series = site.data.series[post.series] %}
+{% assign reading_time = post.content | strip_html | number_of_words | divided_by: 220 | plus: 1 %}
+<article class="post-card">
+  {% if post.thumbnail %}
+    <a class="post-card__thumbnail" href="{{ post.url | relative_url }}">
+      <img src="{{ post.thumbnail | relative_url }}" alt="{{ post.title }}">
+    </a>
+  {% endif %}
+
+  <a class="post-card__title-link" href="{{ post.url | relative_url }}">
+    <h2 class="post-card__title">{{ post.title }}</h2>
+  </a>
+
+  <p class="post-card__description">{{ post.description }}</p>
+
+  {% if post.tags and post.tags.size > 0 %}
+    <div class="post-card__tags">
+      {% for tag in post.tags %}
+        <span class="tag-chip">{{ tag }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="post-card__meta">
+    <span>{{ post.date | date: "%Y년 %-m월 %-d일" }}</span>
+    <span class="post-card__dot">·</span>
+    <span>{{ reading_time }}분 읽기</span>
+    <span class="post-card__dot">·</span>
+    <span>{% if series %}{{ series.title }}{% else %}독립 글{% endif %}</span>
+  </div>
+</article>

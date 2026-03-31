@@ -1,0 +1,19 @@
+---
+layout: default
+---
+<div class="velog-layout">
+  {% include profile.html %}
+  {% include tabs.html active=page.active_tab %}
+
+  <section class="content-section">
+    <header class="section-header">
+      <h2>{{ page.title }}</h2>
+      {% if page.description %}
+        <p>{{ page.description }}</p>
+      {% endif %}
+    </header>
+    <div class="{% if page.body_class %}{{ page.body_class }}{% else %}page-panel{% endif %}">
+      {{ content }}
+    </div>
+  </section>
+</div>

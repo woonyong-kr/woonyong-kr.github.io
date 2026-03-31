@@ -1,0 +1,44 @@
+---
+layout: default
+---
+{% assign reading_time = content | strip_html | number_of_words | divided_by: 220 | plus: 1 %}
+{% assign series = site.data.series[page.series] %}
+<article class="post-view">
+  <a class="post-view__back" href="{{ '/' | relative_url }}">글 목록으로 돌아가기</a>
+
+  <header class="post-head">
+    {% if series %}
+      <p class="post-head__series">{{ series.title }}</p>
+    {% endif %}
+    <h1 class="post-head__title">{{ page.title }}</h1>
+    <p class="post-head__description">{{ page.description }}</p>
+
+    <div class="post-head__author">
+      <img
+        class="post-head__avatar"
+        src="{{ site.data.profile.avatar }}"
+        alt="{{ site.data.profile.display_name }}"
+        width="48"
+        height="48"
+      >
+      <div class="post-head__meta-block">
+        <strong>{{ site.data.profile.display_name }}</strong>
+        <span>
+          {{ page.date | date: "%Y년 %-m월 %-d일" }} · {{ reading_time }}분 읽기{% if page.updated_at %} · 수정 {{ page.updated_at | date: "%Y년 %-m월 %-d일" }}{% endif %}
+        </span>
+      </div>
+    </div>
+
+    {% if page.tags and page.tags.size > 0 %}
+      <div class="post-head__tags">
+        {% for tag in page.tags %}
+          <span class="tag-chip">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </header>
+
+  <section class="prose">
+    {{ content }}
+  </section>
+</article>
