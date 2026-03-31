@@ -11,7 +11,13 @@ const breadcrumbList = currentUrlPath.split("/").slice(1);
 // if breadcrumb is Home > Posts > 1 <etc>
 // replace Posts with Posts (page number)
 if (breadcrumbList[0] === "posts") {
-  breadcrumbList.splice(0, 2, `Posts (page ${breadcrumbList[1] || 1})`);
+  breadcrumbList.splice(
+    0,
+    2,
+    Number(breadcrumbList[1] || 1) > 1
+      ? `글 (페이지 ${breadcrumbList[1]})`
+      : "글"
+  );
 }
 
 // if breadcrumb is Home > Tags > [tag] > [page] <etc>
@@ -20,37 +26,42 @@ if (breadcrumbList[0] === "tags" && !isNaN(Number(breadcrumbList[2]))) {
   breadcrumbList.splice(
     1,
     3,
-    `${breadcrumbList[1]} ${Number(breadcrumbList[2]) === 1 ? "" : "(page " + breadcrumbList[2] + ")"}`
+    `${breadcrumbList[1]} ${Number(breadcrumbList[2]) === 1 ? "" : "(페이지 " + breadcrumbList[2] + ")"}`
   );
 }
+
+const labelMap: Record<string, string> = {
+  posts: "글",
+  tags: "태그",
+  about: "소개",
+  archives: "아카이브",
+  search: "검색",
+};
 ---
 
-<nav class="app-layout mt-8 mb-1" aria-label="breadcrumb">
-  <ul
-    class="font-light [&>li]:inline [&>li:not(:last-child)>a]:hover:opacity-100"
-  >
+<nav class="content-layout mt-8 mb-4" aria-label="breadcrumb">
+  <ul class="flex flex-wrap items-center gap-2 text-sm text-soft">
     <li>
-      <a href={withBase("/")} class="opacity-80">홈</a>
-      <span aria-hidden="true" class="opacity-80">&raquo;</span>
+      <a href={withBase("/")} class="transition hover:text-foreground">홈</a>
+      <span aria-hidden="true">/</span>
     </li>
     {
       breadcrumbList.map((breadcrumb, index) =>
         index + 1 === breadcrumbList.length ? (
           <li>
-            <span
-              class:list={["capitalize opacity-75", { lowercase: index > 0 }]}
-              aria-current="page"
-            >
-              {/* make the last part lowercase in Home > Tags > some-tag */}
-              {decodeURIComponent(breadcrumb)}
+            <span class="font-medium text-muted-foreground" aria-current="page">
+              {labelMap[decodeURIComponent(breadcrumb)] ?? decodeURIComponent(breadcrumb)}
             </span>
           </li>
         ) : (
           <li>
-            <a href={withBase(`/${breadcrumb}/`)} class="capitalize opacity-70">
-              {breadcrumb}
+            <a
+              href={withBase(`/${breadcrumb}/`)}
+              class="transition hover:text-foreground"
+            >
+              {labelMap[breadcrumb] ?? breadcrumb}
             </a>
-            <span aria-hidden="true">&raquo;</span>
+            <span aria-hidden="true">/</span>
           </li>
         )
       )
