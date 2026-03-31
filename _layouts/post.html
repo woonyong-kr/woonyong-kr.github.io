@@ -11,7 +11,9 @@ layout: default
       <p class="post-head__series">{{ series.title }}</p>
     {% endif %}
     <h1 class="post-head__title">{{ page.title }}</h1>
-    <p class="post-head__description">{{ page.description }}</p>
+    {% if page.description %}
+      <p class="post-head__description">{{ page.description }}</p>
+    {% endif %}
 
     <div class="post-head__author">
       <img
@@ -39,7 +41,7 @@ layout: default
 
     {% if page.thumbnail %}
       <div class="post-head__thumbnail">
-        <img src="{{ page.thumbnail | relative_url }}" alt="{{ page.title }}">
+        <img src="{{ page.thumbnail | relative_url }}" alt="{{ page.title }}" decoding="async">
       </div>
     {% endif %}
   </header>

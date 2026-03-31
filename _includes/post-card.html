@@ -12,7 +12,7 @@
 >
   {% if post.thumbnail %}
     <a class="post-card__thumbnail" href="{{ post.url | relative_url }}">
-      <img src="{{ post.thumbnail | relative_url }}" alt="{{ post.title }}">
+      <img src="{{ post.thumbnail | relative_url }}" alt="{{ post.title }}" loading="lazy" decoding="async">
     </a>
   {% endif %}
 
@@ -24,7 +24,9 @@
     <h2 class="post-card__title">{{ post.title }}</h2>
   </a>
 
-  <p class="post-card__description">{{ post.description }}</p>
+  {% if post.description %}
+    <p class="post-card__description">{{ post.description }}</p>
+  {% endif %}
 
   {% if post.tags and post.tags.size > 0 %}
     <div class="post-card__tags">
