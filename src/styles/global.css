@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "./typography.css";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root,
+html[data-theme="light"] {
+  --background: #f8fafb;
+  --foreground: #1f2933;
+  --accent: #12b886;
+  --muted: #e8edf0;
+  --border: #dfe7eb;
+}
+
+html[data-theme="dark"] {
+  --background: #111827;
+  --foreground: #e5edf5;
+  --accent: #34d399;
+  --muted: #1f2937;
+  --border: #2c3a4d;
+}
+
+@theme inline {
+  --font-app:
+    "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-accent/75;
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-muted) transparent;
+  }
+  html {
+    @apply overflow-y-scroll scroll-smooth;
+  }
+  body {
+    @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/20 selection:text-foreground;
+    background-image:
+      radial-gradient(circle at top, rgba(18, 184, 134, 0.08), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(248, 250, 251, 1));
+  }
+  a,
+  button {
+    @apply outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility max-w-app {
+  @apply max-w-3xl;
+}
+
+@utility app-layout {
+  @apply mx-auto w-full max-w-app px-4;
+}
+
+.active-nav {
+  @apply underline decoration-wavy decoration-2 underline-offset-8;
+}
+
+/* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
+/* Anything that has been anchored to should have extra scroll margin */
+:target {
+  scroll-margin-block: 1rem;
+}
