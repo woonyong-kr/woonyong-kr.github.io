@@ -8,6 +8,23 @@ markdown: kramdown
 highlighter: rouge
 permalink: /:title/
 
+analytics:
+  google:
+    measurement_id: ""
+
+comments:
+  provider: ""
+  disqus:
+    shortname: ""
+
+search:
+  provider: local
+  algolia:
+    app_id: ""
+    api_key: ""
+    index_name: ""
+    insights: false
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag

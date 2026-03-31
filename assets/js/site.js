@@ -170,6 +170,73 @@
     searchInput.addEventListener("input", updateSearchState);
   }
 
+  function setupAlgoliaSearch() {
+    var algoliaContainer = document.querySelector("[data-algolia-search]");
+
+    if (!algoliaContainer || typeof window.docsearch !== "function") {
+      return;
+    }
+
+    window.docsearch({
+      container: algoliaContainer,
+      appId: algoliaContainer.getAttribute("data-app-id"),
+      apiKey: algoliaContainer.getAttribute("data-api-key"),
+      indexName: algoliaContainer.getAttribute("data-index-name"),
+      insights: algoliaContainer.getAttribute("data-insights") === "true",
+      placeholder: "검색어를 입력하세요",
+      translations: {
+        button: {
+          buttonText: "검색어를 입력하세요",
+          buttonAriaLabel: "검색",
+        },
+        modal: {
+          searchBox: {
+            searchInputLabel: "검색",
+            clearButtonTitle: "지우기",
+            clearButtonAriaLabel: "검색어 지우기",
+            closeButtonText: "닫기",
+            closeButtonAriaLabel: "검색 닫기",
+            placeholderText: "검색어를 입력하세요",
+          },
+          startScreen: {
+            recentSearchesTitle: "최근 검색",
+            noRecentSearchesText: "최근 검색이 없습니다.",
+            saveRecentSearchButtonTitle: "검색 저장",
+            removeRecentSearchButtonTitle: "최근 검색 삭제",
+            favoriteSearchesTitle: "즐겨찾기",
+            removeFavoriteSearchButtonTitle: "즐겨찾기 삭제",
+          },
+          errorScreen: {
+            titleText: "검색 결과를 불러오지 못했습니다.",
+            helpText: "잠시 후 다시 시도해 주세요.",
+          },
+          noResultsScreen: {
+            noResultsText: "검색 결과가 없습니다.",
+            suggestedQueryText: "다른 키워드로 다시 검색해 보세요.",
+            reportMissingResultsText: "찾는 결과가 없나요?",
+            reportMissingResultsLinkText: "문의하기",
+          },
+          footer: {
+            selectText: "선택",
+            selectKeyAriaLabel: "엔터 키",
+            navigateText: "이동",
+            navigateUpKeyAriaLabel: "위 화살표 키",
+            navigateDownKeyAriaLabel: "아래 화살표 키",
+            closeText: "닫기",
+            closeKeyAriaLabel: "Esc 키",
+            searchByText: "검색 제공",
+          },
+        },
+      },
+      navigator: {
+        navigate: function (_args) {
+          var itemUrl = _args.itemUrl;
+          window.location.assign(itemUrl);
+        },
+      },
+    });
+  }
+
   function readPostsFromDom(postList) {
     return Array.prototype.slice.call(postList.querySelectorAll("[data-post-card]")).map(function (card) {
       var title = card.querySelector(".post-card__title");
@@ -246,7 +313,7 @@
     var sentinel = document.querySelector("[data-post-sentinel]");
     var more = document.querySelector("[data-post-more]");
 
-    if (!searchInput || !postList) {
+    if (!postList) {
       return;
     }
 
@@ -257,7 +324,7 @@
     var state = {
       tag: normalizeValue(params.get("tag")),
       series: normalizeValue(params.get("series")),
-      q: String(params.get("q") || "").trim(),
+      q: searchInput ? String(params.get("q") || "").trim() : "",
     };
     var basePath = searchForm && searchForm.getAttribute("action") ? searchForm.getAttribute("action") : window.location.pathname;
     var pageSize = getPageSize(postList);
@@ -276,7 +343,9 @@
       postList.innerHTML = "";
     }
 
-    searchInput.value = state.q;
+    if (searchInput) {
+      searchInput.value = state.q;
+    }
 
     function updateTagLinks() {
       tagLinks.forEach(function (link) {
@@ -297,7 +366,7 @@
         return;
       }
 
-      if (state.q) {
+      if (searchInput && state.q) {
         summary.hidden = false;
         if (visibleCount === 0) {
           summary.textContent = "검색 결과가 없습니다.";
@@ -438,7 +507,7 @@
       renderVisiblePosts();
     }
 
-    if (searchForm) {
+    if (searchForm && searchInput) {
       searchForm.addEventListener("submit", function (event) {
         event.preventDefault();
         state.q = searchInput.value.trim();
@@ -447,15 +516,17 @@
       });
     }
 
-    var debounceTimer = 0;
-    searchInput.addEventListener("input", function () {
-      state.q = searchInput.value.trim();
-      applyFilters();
-      window.clearTimeout(debounceTimer);
-      debounceTimer = window.setTimeout(function () {
-        updateUrl(state);
-      }, 200);
-    });
+    if (searchInput) {
+      var debounceTimer = 0;
+      searchInput.addEventListener("input", function () {
+        state.q = searchInput.value.trim();
+        applyFilters();
+        window.clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(function () {
+          updateUrl(state);
+        }, 200);
+      });
+    }
 
     if (sentinel) {
       if ("IntersectionObserver" in window) {
@@ -499,6 +570,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    setupAlgoliaSearch();
     setupSearchForm();
     setupThemeToggle();
     setupSystemThemeSync();
