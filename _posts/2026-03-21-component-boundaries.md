@@ -12,8 +12,6 @@ series: component-architecture
 
 컴포넌트를 나눌 때 흔히 `재사용 가능할까?`를 먼저 묻습니다. 물론 중요하지만, 실제로 더 오래 남는 기준은 아래 세 가지였습니다.
 
-<img src="{{ '/assets/images/posts/component-boundaries.svg' | relative_url }}" alt="컴포넌트 경계를 상징하는 더미 레이아웃 일러스트">
-
 ## 1. 누가 상태를 소유하는가
 
 상태가 자주 바뀌는 화면일수록 컴포넌트 경계는 마크업보다 상태 소유권에 맞춰야 합니다.

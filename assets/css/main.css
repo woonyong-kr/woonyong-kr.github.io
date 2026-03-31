@@ -680,6 +680,17 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin-top: 2rem;
 }
 
+.post-head__thumbnail {
+  margin-top: 2rem;
+}
+
+.post-head__thumbnail img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 1rem;
+}
+
 .post-navigation {
   margin-top: 4rem;
   display: grid;

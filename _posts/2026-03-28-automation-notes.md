@@ -12,8 +12,6 @@ series: shipping-fast
 
 자동화는 한 번 넣으면 계속 남습니다. 그래서 처음부터 복잡하게 만들기보다, 사람이 읽기 쉬운 단계로 유지하는 것이 더 중요합니다.
 
-<img src="{{ '/assets/images/posts/automation-notes.svg' | relative_url }}" alt="자동화 파이프라인을 상징하는 더미 대시보드 일러스트">
-
 ## 설치 단계는 의존성을 숨기지 않는다
 
 파이프라인 초반부에서 무엇이 설치되는지 명확하게 보여야 합니다.
