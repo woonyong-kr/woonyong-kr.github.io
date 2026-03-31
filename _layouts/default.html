@@ -4,11 +4,12 @@
     {% include head.html %}
   </head>
   <body>
+    {% assign asset_version = site.time | date: "%s" %}
     {% include header.html %}
     <main>
       {{ content }}
     </main>
     {% include footer.html %}
-    <script src="{{ '/assets/js/site.js' | relative_url }}"></script>
+    <script src="{{ '/assets/js/site.js' | relative_url }}?v={{ asset_version }}"></script>
   </body>
 </html>
