@@ -1,0 +1,6 @@
+shipping-fast:
+  title: 작게 배포하고 빠르게 배우기
+  description: 작은 릴리즈와 짧은 피드백 루프로 제품을 다듬는 배포 메모입니다.
+component-architecture:
+  title: 화면을 나누는 기준
+  description: 컴포넌트 경계, 상태 배치, 책임 분리를 실제 화면 설계 기준으로 정리합니다.

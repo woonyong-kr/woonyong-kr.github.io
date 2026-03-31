@@ -1,0 +1,6 @@
+{% assign posts = include.posts %}
+<div class="post-list">
+  {% for post in posts %}
+    {% include post-card.html post=post %}
+  {% endfor %}
+</div>
