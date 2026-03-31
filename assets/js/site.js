@@ -262,12 +262,17 @@
     var basePath = searchForm && searchForm.getAttribute("action") ? searchForm.getAttribute("action") : window.location.pathname;
     var pageSize = getPageSize(postList);
     var fallbackPosts = readPostsFromDom(postList);
+    var postIndexUrl = postList.getAttribute("data-post-index-url");
     var allPosts = null;
     var loadingPromise = null;
     var matchedPosts = [];
     var visibleLimit = pageSize;
 
-    if (state.tag || state.series || state.q) {
+    function hasActiveFilters() {
+      return Boolean(state.tag || state.series || state.q);
+    }
+
+    if (hasActiveFilters()) {
       postList.innerHTML = "";
     }
 
@@ -307,6 +312,10 @@
 
     function updatePaginationState() {
       var hasMore = matchedPosts.length > visibleLimit;
+
+      if (!allPosts && !hasActiveFilters()) {
+        hasMore = Boolean(postIndexUrl) && fallbackPosts.length === pageSize;
+      }
 
       if (more) {
         more.hidden = !hasMore;
@@ -358,8 +367,6 @@
     }
 
     function ensurePostIndexLoaded() {
-      var indexUrl;
-
       if (allPosts) {
         return Promise.resolve(allPosts);
       }
@@ -368,15 +375,14 @@
         return loadingPromise;
       }
 
-      indexUrl = postList.getAttribute("data-post-index-url");
-      if (!indexUrl) {
+      if (!postIndexUrl) {
         allPosts = readPostsFromDom(postList);
         return Promise.resolve(allPosts);
       }
 
       postList.setAttribute("aria-busy", "true");
       loadingPromise = window
-        .fetch(indexUrl, { credentials: "same-origin" })
+        .fetch(postIndexUrl, { credentials: "same-origin" })
         .then(function (response) {
           if (!response.ok) {
             throw new Error("Failed to load post index.");
@@ -410,6 +416,20 @@
     }
 
     function loadMorePosts() {
+      if (!allPosts) {
+        ensurePostIndexLoaded().then(function (posts) {
+          matchedPosts = filterPosts(posts);
+          if (matchedPosts.length <= visibleLimit) {
+            updatePaginationState();
+            return;
+          }
+
+          visibleLimit += pageSize;
+          renderVisiblePosts();
+        });
+        return;
+      }
+
       if (matchedPosts.length <= visibleLimit) {
         return;
       }
@@ -464,7 +484,18 @@
       }
     }
 
-    applyFilters();
+    updateTagLinks();
+    updatePaginationState();
+
+    if (hasActiveFilters()) {
+      applyFilters();
+      return;
+    }
+
+    matchedPosts = fallbackPosts.slice(0, visibleLimit);
+    if (empty) {
+      empty.hidden = fallbackPosts.length !== 0;
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
