@@ -57,18 +57,6 @@ layout: default
         </ul>
       </aside>
 
-      <div class="posts-panel__toolbar">
-        <label class="posts-search" aria-label="글 검색">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0-2a8.5 8.5 0 1 0 5.326 15.126l4.024 4.024 1.414-1.414-4.024-4.024A8.5 8.5 0 0 0 10.5 2Z"
-              fill="currentColor"
-            ></path>
-          </svg>
-          <input type="search" placeholder="검색어를 입력하세요" data-post-search>
-        </label>
-      </div>
-
       <p class="posts-panel__summary" data-post-summary hidden></p>
       {% include post-list.html posts=site.posts %}
       <p class="posts-panel__empty" data-post-empty hidden>조건에 맞는 글이 없습니다.</p>

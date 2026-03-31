@@ -37,6 +37,10 @@
     history.replaceState(null, "", nextUrl.pathname + nextUrl.search);
   }
 
+  function getSearchKeyword() {
+    return String(new URLSearchParams(window.location.search).get("q") || "").trim();
+  }
+
   function setupThemeToggle() {
     var toggle = document.querySelector("[data-theme-toggle]");
     if (!toggle) {
@@ -49,7 +53,19 @@
     });
   }
 
+  function setupSearchForm() {
+    var searchForm = document.querySelector("[data-search-form]");
+    var searchInput = document.querySelector("[data-post-search]");
+
+    if (!searchForm || !searchInput) {
+      return;
+    }
+
+    searchInput.value = getSearchKeyword();
+  }
+
   function setupPostFilters() {
+    var searchForm = document.querySelector("[data-search-form]");
     var searchInput = document.querySelector("[data-post-search]");
     var postCards = Array.prototype.slice.call(document.querySelectorAll("[data-post-card]"));
 
@@ -129,6 +145,16 @@
         filters.push("태그: " + (tagLabels[state.tag] || state.tag));
       }
 
+      if (state.q && !state.tag && !state.series) {
+        summary.hidden = false;
+        if (visibleCount === 0) {
+          summary.textContent = "검색 결과가 없습니다.";
+        } else {
+          summary.innerHTML = '총 <strong>' + visibleCount + '개</strong>의 포스트를 찾았습니다.';
+        }
+        return;
+      }
+
       if (state.q) {
         filters.push('검색: "' + state.q + '"');
       }
@@ -168,16 +194,30 @@
       updateTagLinks();
     }
 
+    if (searchForm) {
+      searchForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        state.q = searchInput.value.trim();
+        updateUrl(state);
+        applyFilters();
+      });
+    }
+
+    var debounceTimer = 0;
     searchInput.addEventListener("input", function () {
       state.q = searchInput.value.trim();
-      updateUrl(state);
       applyFilters();
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(function () {
+        updateUrl(state);
+      }, 200);
     });
 
     applyFilters();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    setupSearchForm();
     setupThemeToggle();
     setupPostFilters();
   });
