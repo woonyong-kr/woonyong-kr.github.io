@@ -8,6 +8,15 @@
     </a>
   {% endif %}
 
+  <div class="post-card__eyebrow">
+    {% if series %}
+      <span class="post-card__type">시리즈</span>
+      <span class="post-card__context">{{ series.title }}</span>
+    {% else %}
+      <span class="post-card__type post-card__type--default">일반 글</span>
+    {% endif %}
+  </div>
+
   <a class="post-card__title-link" href="{{ post.url | relative_url }}">
     <h2 class="post-card__title">{{ post.title }}</h2>
   </a>
@@ -26,7 +35,5 @@
     <span>{{ post.date | date: "%Y년 %-m월 %-d일" }}</span>
     <span class="post-card__dot">·</span>
     <span>{{ reading_time }}분 읽기</span>
-    <span class="post-card__dot">·</span>
-    <span>{% if series %}{{ series.title }}{% else %}독립 글{% endif %}</span>
   </div>
 </article>

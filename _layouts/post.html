@@ -41,4 +41,21 @@ layout: default
   <section class="prose">
     {{ content }}
   </section>
+
+  {% if page.previous or page.next %}
+    <nav class="post-navigation" aria-label="이전 다음 글">
+      {% if page.previous %}
+        <a class="post-navigation__item" href="{{ page.previous.url | relative_url }}">
+          <span class="post-navigation__label">이전 글</span>
+          <strong class="post-navigation__title">{{ page.previous.title }}</strong>
+        </a>
+      {% endif %}
+      {% if page.next %}
+        <a class="post-navigation__item post-navigation__item--next" href="{{ page.next.url | relative_url }}">
+          <span class="post-navigation__label">다음 글</span>
+          <strong class="post-navigation__title">{{ page.next.title }}</strong>
+        </a>
+      {% endif %}
+    </nav>
+  {% endif %}
 </article>

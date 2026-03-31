@@ -286,53 +286,6 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--text2);
 }
 
-.profile__actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.profile__icon-link {
-  color: var(--text3);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-}
-
-.profile__icon-link + .profile__icon-link {
-  margin-left: 1rem;
-}
-
-.profile__icon-link:hover {
-  color: var(--text1);
-}
-
-.profile__icon-link svg {
-  width: 2rem;
-  height: 2rem;
-}
-
-.profile__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.25rem;
-  padding: 0 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--primary1);
-  color: var(--primary1);
-  font-weight: 600;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.profile__cta:hover {
-  background: var(--primary1);
-  color: var(--button-text);
-}
-
 .velog-tabs {
   margin-top: 4.5rem;
   margin-bottom: 4.5rem;
@@ -376,17 +329,10 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .section-header h2 {
-  margin: 0 0 0.75rem;
+  margin: 0;
   font-size: 3rem;
   line-height: 1.25;
   letter-spacing: -0.03em;
-}
-
-.section-header p {
-  margin: 0;
-  color: var(--text2);
-  font-size: 1.125rem;
-  line-height: 1.6;
 }
 
 .post-list {
@@ -420,6 +366,38 @@ html[data-theme="dark"] .theme-toggle__moon {
   font-size: 1.5rem;
   color: var(--text1);
   word-break: break-word;
+}
+
+.post-card__eyebrow {
+  margin-bottom: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.post-card__type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(18, 184, 134, 0.12);
+  color: var(--primary1);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.post-card__type--default {
+  background: var(--bg-element2);
+  color: var(--text2);
+}
+
+.post-card__context {
+  color: var(--text2);
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .post-card__description {
@@ -462,50 +440,32 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin-top: 2rem;
 }
 
-.series-list {
+.series-groups {
   margin-top: 2rem;
-  display: grid;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
 }
 
-.series-card {
-  border: 1px solid var(--border4);
-  border-radius: 1.25rem;
-  background: var(--bg-element1);
-  box-shadow: 0 12px 32px var(--shadow-color);
-  overflow: hidden;
+.series-group {
+  position: relative;
 }
 
-.series-card__top {
-  padding: 2rem;
+.series-group__header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
 }
 
-.series-card__eyebrow {
-  margin: 0 0 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--primary1);
-}
-
-.series-card h3 {
+.series-group__title {
   margin: 0;
   font-size: 1.5rem;
   line-height: 1.35;
+  color: var(--text1);
 }
 
-.series-card__description {
-  margin: 0.75rem 0 0;
-  color: var(--text2);
-  line-height: 1.6;
-}
-
-.series-card__count {
+.series-group__count {
   flex-shrink: 0;
   padding: 0.5rem 0.875rem;
   border-radius: 999px;
@@ -514,30 +474,8 @@ html[data-theme="dark"] .theme-toggle__moon {
   font-weight: 600;
 }
 
-.series-card__posts {
-  border-top: 1px solid var(--border4);
-}
-
-.series-post {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 2rem;
-}
-
-.series-post + .series-post {
-  border-top: 1px solid var(--border4);
-}
-
-.series-post strong {
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.series-post span {
-  flex-shrink: 0;
-  color: var(--text3);
-  font-size: 0.875rem;
+.series-group .post-list {
+  margin-top: 1rem;
 }
 
 .post-view {
@@ -605,6 +543,51 @@ html[data-theme="dark"] .theme-toggle__moon {
 
 .post-head__tags {
   margin-top: 2rem;
+}
+
+.post-navigation {
+  margin-top: 4rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.post-navigation__item {
+  min-height: 7rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border4);
+  border-radius: 1rem;
+  background: var(--bg-element1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.post-navigation__item:hover {
+  border-color: var(--primary1);
+  transform: translateY(-2px);
+}
+
+.post-navigation__item:only-child {
+  grid-column: 1 / -1;
+}
+
+.post-navigation__item--next {
+  text-align: right;
+}
+
+.post-navigation__label {
+  color: var(--text3);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.post-navigation__title {
+  color: var(--text1);
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .prose {
@@ -772,16 +755,6 @@ html[data-theme="dark"] .theme-toggle__moon {
     justify-content: flex-start;
   }
 
-  .profile__actions {
-    margin-top: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .profile__cta {
-    width: 100%;
-  }
-
   .velog-tabs {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
@@ -808,7 +781,6 @@ html[data-theme="dark"] .theme-toggle__moon {
     font-size: 2.25rem;
   }
 
-  .section-header p,
   .post-head__description,
   .prose {
     font-size: 1rem;
@@ -820,6 +792,21 @@ html[data-theme="dark"] .theme-toggle__moon {
 
   .post-card__title {
     font-size: 1rem;
+  }
+
+  .post-card__eyebrow {
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .post-card__type {
+    min-height: 1.5rem;
+    padding: 0.2rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .post-card__context {
+    font-size: 0.8125rem;
   }
 
   .post-card__description {
@@ -834,18 +821,21 @@ html[data-theme="dark"] .theme-toggle__moon {
   }
 
   .post-card__meta,
-  .series-post span,
   .post-head__meta-block span,
   .site-footer__inner {
     font-size: 0.75rem;
   }
 
-  .series-card__top,
-  .series-post {
-    padding: 1rem;
+  .series-group__header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .series-card h3 {
+  .series-group__title {
     font-size: 1.25rem;
+  }
+
+  .post-navigation {
+    grid-template-columns: 1fr;
   }
 }
