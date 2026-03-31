@@ -135,17 +135,7 @@
         return;
       }
 
-      var filters = [];
-
-      if (state.series) {
-        filters.push("시리즈: " + (seriesLabels[state.series] || state.series));
-      }
-
-      if (state.tag) {
-        filters.push("태그: " + (tagLabels[state.tag] || state.tag));
-      }
-
-      if (state.q && !state.tag && !state.series) {
+      if (state.q) {
         summary.hidden = false;
         if (visibleCount === 0) {
           summary.textContent = "검색 결과가 없습니다.";
@@ -155,15 +145,7 @@
         return;
       }
 
-      if (state.q) {
-        filters.push('검색: "' + state.q + '"');
-      }
-
-      summary.hidden = filters.length === 0;
-
-      if (filters.length > 0) {
-        summary.textContent = filters.join(" · ") + " · " + visibleCount + "개의 글";
-      }
+      summary.hidden = true;
     }
 
     function applyFilters() {
