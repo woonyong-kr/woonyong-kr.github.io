@@ -1,17 +1,45 @@
 {% assign asset_version = site.time | date: "%s" %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#ffffff">
-<link rel="icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}" type="image/svg+xml">
+<meta name="theme-color" content="#ffffff" data-theme-color>
+<meta name="apple-mobile-web-app-status-bar-style" content="default" data-apple-status-bar>
+<link rel="icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}" type="image/svg+xml" sizes="any">
+<link rel="shortcut icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}">
+<link rel="mask-icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}" color="#12b886">
 <link rel="alternate" type="application/atom+xml" href="{{ '/feed.xml' | relative_url }}" title="{{ site.title }}">
 <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}?v={{ asset_version }}">
 <script>
   (function () {
+    function applyTheme(theme) {
+      var safeTheme = theme === "dark" ? "dark" : "light";
+      var color = safeTheme === "dark" ? "#121212" : "#ffffff";
+      var themeColorMeta = document.querySelector("[data-theme-color]");
+      var appleStatusMeta = document.querySelector("[data-apple-status-bar]");
+
+      document.documentElement.setAttribute("data-theme", safeTheme);
+
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute("content", color);
+      }
+
+      if (appleStatusMeta) {
+        appleStatusMeta.setAttribute("content", safeTheme === "dark" ? "black" : "default");
+      }
+    }
+
     try {
-      var theme = localStorage.getItem("velog-theme") || "light";
-      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+      var storedTheme = localStorage.getItem("velog-theme");
+      var hasStoredTheme = storedTheme === "light" || storedTheme === "dark";
+      var theme = hasStoredTheme
+        ? storedTheme
+        : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+
+      applyTheme(theme);
     } catch (error) {
-      document.documentElement.setAttribute("data-theme", "light");
+      applyTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     }
   })();
 </script>

@@ -1,6 +1,20 @@
 shipping-fast:
   title: 작게 배포하고 빠르게 배우기
-  description: 작은 릴리즈와 짧은 피드백 루프로 제품을 다듬는 배포 메모입니다.
 component-architecture:
   title: 화면을 나누는 기준
-  description: 컴포넌트 경계, 상태 배치, 책임 분리를 실제 화면 설계 기준으로 정리합니다.
+react-labs:
+  title: React 실험 노트
+design-systems:
+  title: 디자인 시스템 운영 메모
+ci-cd-playbook:
+  title: CI/CD 플레이북
+observability-notes:
+  title: 관측 가능성 로그북
+testing-handbook:
+  title: 테스트 핸드북
+data-fetching:
+  title: 데이터 페칭 레시피
+accessibility-lab:
+  title: 접근성 실험실
+browser-performance:
+  title: 브라우저 성능 메모

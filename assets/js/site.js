@@ -1,12 +1,53 @@
 (function () {
-  function setTheme(theme) {
-    var safeTheme = theme === "dark" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", safeTheme);
+  var THEME_STORAGE_KEY = "velog-theme";
+  var PAGE_SIZE = 12;
+
+  function getStoredTheme() {
     try {
-      localStorage.setItem("velog-theme", safeTheme);
+      var storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function getSystemTheme() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function updateThemeMeta(theme) {
+    var themeColorMeta = document.querySelector("[data-theme-color]");
+    var appleStatusMeta = document.querySelector("[data-apple-status-bar]");
+    var safeTheme = theme === "dark" ? "dark" : "light";
+
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute("content", safeTheme === "dark" ? "#121212" : "#ffffff");
+    }
+
+    if (appleStatusMeta) {
+      appleStatusMeta.setAttribute("content", safeTheme === "dark" ? "black" : "default");
+    }
+  }
+
+  function applyTheme(theme, persist) {
+    var safeTheme = theme === "dark" ? "dark" : "light";
+
+    document.documentElement.setAttribute("data-theme", safeTheme);
+    updateThemeMeta(safeTheme);
+
+    if (persist !== true) {
+      return;
+    }
+
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
     } catch (error) {
       return;
     }
+  }
+
+  function setTheme(theme) {
+    applyTheme(theme, true);
   }
 
   function normalizeValue(value) {
@@ -53,6 +94,28 @@
     });
   }
 
+  function setupSystemThemeSync() {
+    if (!window.matchMedia) {
+      return;
+    }
+
+    var mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function syncTheme() {
+      if (getStoredTheme()) {
+        return;
+      }
+
+      applyTheme(mediaQuery.matches ? "dark" : "light");
+    }
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncTheme);
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(syncTheme);
+    }
+  }
+
   function setupSearchForm() {
     var searchForm = document.querySelector("[data-search-form]");
     var searchInput = document.querySelector("[data-post-search]");
@@ -68,6 +131,8 @@
     var searchForm = document.querySelector("[data-search-form]");
     var searchInput = document.querySelector("[data-post-search]");
     var postCards = Array.prototype.slice.call(document.querySelectorAll("[data-post-card]"));
+    var sentinel = document.querySelector("[data-post-sentinel]");
+    var more = document.querySelector("[data-post-more]");
 
     if (!searchInput || postCards.length === 0) {
       return;
@@ -84,6 +149,8 @@
     };
     var tagLabels = {};
     var seriesLabels = {};
+    var matchedCards = [];
+    var visibleLimit = PAGE_SIZE;
 
     tagLinks.forEach(function (link) {
       var key = normalizeValue(link.getAttribute("data-tag-filter"));
@@ -148,8 +215,39 @@
       summary.hidden = true;
     }
 
+    function updatePaginationState() {
+      var hasMore = matchedCards.length > visibleLimit;
+
+      if (more) {
+        more.hidden = !hasMore;
+      }
+
+      if (sentinel) {
+        sentinel.hidden = !hasMore;
+      }
+    }
+
+    function renderVisibleCards() {
+      postCards.forEach(function (card) {
+        card.hidden = true;
+      });
+
+      matchedCards.forEach(function (card, index) {
+        card.hidden = index >= visibleLimit;
+      });
+
+      if (empty) {
+        empty.hidden = matchedCards.length !== 0;
+      }
+
+      updateSummary(matchedCards.length);
+      updateTagLinks();
+      updatePaginationState();
+    }
+
     function applyFilters() {
-      var visibleCount = 0;
+      visibleLimit = PAGE_SIZE;
+      matchedCards = [];
 
       postCards.forEach(function (card) {
         var tagValues = normalizeValue(card.getAttribute("data-tags")).split("|");
@@ -161,19 +259,21 @@
         var matchesQuery = !query || searchText.indexOf(query) !== -1;
         var isVisible = matchesTag && matchesSeries && matchesQuery;
 
-        card.hidden = !isVisible;
-
         if (isVisible) {
-          visibleCount += 1;
+          matchedCards.push(card);
         }
       });
 
-      if (empty) {
-        empty.hidden = visibleCount !== 0;
+      renderVisibleCards();
+    }
+
+    function loadMorePosts() {
+      if (matchedCards.length <= visibleLimit) {
+        return;
       }
 
-      updateSummary(visibleCount);
-      updateTagLinks();
+      visibleLimit += PAGE_SIZE;
+      renderVisibleCards();
     }
 
     if (searchForm) {
@@ -195,12 +295,40 @@
       }, 200);
     });
 
+    if (sentinel) {
+      if ("IntersectionObserver" in window) {
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                loadMorePosts();
+              }
+            });
+          },
+          { rootMargin: "320px 0px" }
+        );
+
+        observer.observe(sentinel);
+      } else {
+        window.addEventListener(
+          "scroll",
+          function () {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 320) {
+              loadMorePosts();
+            }
+          },
+          { passive: true }
+        );
+      }
+    }
+
     applyFilters();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     setupSearchForm();
     setupThemeToggle();
+    setupSystemThemeSync();
     setupPostFilters();
   });
 })();
