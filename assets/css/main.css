@@ -407,12 +407,13 @@ html[data-theme="dark"] .theme-toggle__moon {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
+  color: var(--text3);
   transition: color 0.125s ease-in;
 }
 
 .posts-search:focus-within,
 .posts-search.is-active {
-  border-color: var(--text3);
+  border-color: var(--text2);
   color: var(--text2);
 }
 
