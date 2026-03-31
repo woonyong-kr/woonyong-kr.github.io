@@ -4,31 +4,19 @@ title: 시리즈
 description: 연속된 주제로 묶인 글을 한곳에서 볼 수 있습니다.
 active_tab: series
 permalink: /series/
-body_class: series-list
+body_class: series-groups
 ---
 {% for pair in site.data.series %}
   {% assign series_key = pair[0] %}
   {% assign series_info = pair[1] %}
   {% assign series_posts = site.posts | where: "series", series_key %}
   {% if series_posts.size > 0 %}
-    <section class="series-card">
-      <div class="series-card__top">
-        <div>
-          <p class="series-card__eyebrow">Series</p>
-          <h3>{{ series_info.title }}</h3>
-          <p class="series-card__description">{{ series_info.description }}</p>
-        </div>
-        <span class="series-card__count">{{ series_posts.size }}편</span>
+    <section class="series-group">
+      <div class="series-group__header">
+        <h3 class="series-group__title">{{ series_info.title }}</h3>
+        <span class="series-group__count">{{ series_posts.size }}편</span>
       </div>
-
-      <div class="series-card__posts">
-        {% for post in series_posts %}
-          <a class="series-post" href="{{ post.url | relative_url }}">
-            <strong>{{ post.title }}</strong>
-            <span>{{ post.date | date: "%Y년 %-m월 %-d일" }}</span>
-          </a>
-        {% endfor %}
-      </div>
+      {% include post-list.html posts=series_posts %}
     </section>
   {% endif %}
 {% endfor %}
