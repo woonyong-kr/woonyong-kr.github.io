@@ -42,6 +42,33 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
 - 스타일과 스크립트: `assets/`
 - Jenkins 배포: `Jenkinsfile`
 
+## 선택 연동
+
+`_config.yml`에서 아래 값을 채우면 조건부로 기능이 켜집니다.
+
+```yml
+analytics:
+  google:
+    measurement_id: ""
+
+comments:
+  provider: ""
+  disqus:
+    shortname: ""
+
+search:
+  provider: local
+  algolia:
+    app_id: ""
+    api_key: ""
+    index_name: ""
+    insights: false
+```
+
+- Google Analytics: `analytics.google.measurement_id`
+- Disqus 댓글: `comments.provider: disqus`, `comments.disqus.shortname`
+- Algolia 검색: `search.provider: algolia`와 `search.algolia.*`
+
 ## 참고
 
 - GitHub Pages 프로젝트 페이지 경로 `/blog/`를 기준으로 `baseurl`이 설정되어 있습니다.

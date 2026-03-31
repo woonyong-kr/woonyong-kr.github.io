@@ -1,4 +1,17 @@
 {% assign asset_version = site.time | date: "%s" %}
+{% assign algolia_provider = site.search.provider | default: "local" %}
+{% assign algolia_app_id = site.search.algolia.app_id | default: "" %}
+{% assign algolia_api_key = site.search.algolia.api_key | default: "" %}
+{% assign algolia_index_name = site.search.algolia.index_name | default: "" %}
+{% assign algolia_enabled = false %}
+{% if algolia_provider == "algolia" and algolia_app_id != "" and algolia_api_key != "" and algolia_index_name != "" %}
+  {% assign algolia_enabled = true %}
+{% endif %}
+{% assign algolia_page_enabled = false %}
+{% if algolia_enabled and page.url == "/" %}
+  {% assign algolia_page_enabled = true %}
+{% endif %}
+{% assign ga_measurement_id = site.analytics.google.measurement_id | default: "" %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff" data-theme-color>
@@ -8,6 +21,10 @@
 <link rel="apple-touch-icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}">
 <link rel="mask-icon" href="{{ '/assets/images/rogo.svg' | relative_url }}?v={{ asset_version }}" color="#12b886">
 <link rel="alternate" type="application/atom+xml" href="{{ '/feed.xml' | relative_url }}" title="{{ site.title }}">
+{% if algolia_page_enabled %}
+  <link rel="preconnect" href="https://{{ algolia_app_id }}-dsn.algolia.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@4">
+{% endif %}
 <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}?v={{ asset_version }}">
 <script>
   (function () {
@@ -43,4 +60,15 @@
     }
   })();
 </script>
+{% if ga_measurement_id != "" and jekyll.environment == "production" %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", "{{ ga_measurement_id }}");
+  </script>
+{% endif %}
 {% seo %}
