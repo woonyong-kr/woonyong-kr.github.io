@@ -124,7 +124,18 @@
       return;
     }
 
+    function updateSearchState() {
+      var hasValue = searchInput.value.trim().length > 0;
+      var isFocused = document.activeElement === searchInput;
+      searchForm.classList.toggle("is-active", hasValue || isFocused);
+    }
+
     searchInput.value = getSearchKeyword();
+    updateSearchState();
+
+    searchInput.addEventListener("focus", updateSearchState);
+    searchInput.addEventListener("blur", updateSearchState);
+    searchInput.addEventListener("input", updateSearchState);
   }
 
   function setupPostFilters() {
