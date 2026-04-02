@@ -6,6 +6,7 @@
 
 ```bash
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle install
+ruby scripts/fetch_github_contributions.rb
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 ```
 
@@ -14,6 +15,7 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 ## 빌드
 
 ```bash
+ruby scripts/fetch_github_contributions.rb
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
 ```
 
@@ -24,10 +26,12 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
 1. Jenkins가 이 저장소의 `main` 브랜치를 읽도록 연결합니다.
 2. Jenkins Credentials에 `github-pages` ID로 GitHub 사용자명과 PAT를 등록합니다.
 3. GitHub Pages는 `gh-pages` 브랜치 `/ (root)`를 배포 소스로 지정합니다.
+4. Jenkins는 매일 한 번 GitHub 기여 그래프를 새로 받아와 함께 배포합니다.
 
 파이프라인은 다음 순서로 동작합니다.
 
 - `BUNDLE_FORCE_RUBY_PLATFORM=true bundle install`
+- `ruby scripts/fetch_github_contributions.rb`
 - `BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build`
 - 생성된 `_site/` 디렉터리를 `gh-pages` 브랜치 루트로 푸시
 
@@ -63,11 +67,19 @@ search:
     api_key: ""
     index_name: ""
     insights: false
+
+github_contributions:
+  enabled: true
+  username: "woonyong-kr"
+  title: "GitHub 기여 그래프"
 ```
 
 - Google Analytics: `analytics.google.measurement_id`
 - Disqus 댓글: `comments.provider: disqus`, `comments.disqus.shortname`
 - Algolia 검색: `search.provider: algolia`와 `search.algolia.*`
+- GitHub 잔디 그래프: `github_contributions.enabled`, `github_contributions.username`, `github_contributions.title`
+
+GitHub 잔디 그래프는 빌드 시 GitHub GraphQL API로 데이터를 받아 `_data/github_contributions_cache.json`에 캐시합니다. Jenkins에서는 `github-pages` PAT를 그대로 재사용하고, 로컬에서는 `GITHUB_GRAPHQL_TOKEN`, `GITHUB_TOKEN`, 또는 `gh auth login` 중 하나가 필요합니다.
 
 ## 참고
 

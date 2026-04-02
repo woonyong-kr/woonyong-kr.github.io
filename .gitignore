@@ -5,3 +5,5 @@ _site/
 vendor/
 vendor/bundle/
 .DS_Store
+.playwright-cli/
+_data/github_contributions_cache.json
