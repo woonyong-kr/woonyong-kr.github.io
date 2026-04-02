@@ -143,10 +143,6 @@ ruby scripts/fetch_github_contributions.rb
   - username: GitHub 사용자명
   - password: GitHub Personal Access Token
 
-## 샘플 데이터 아카이브
-
-이전 데모 포스트 세트는 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)에 보관되어 있습니다. 기본 빌드에서는 제외되며, 필요할 때만 `_posts/`로 옮겨 사용할 수 있습니다.
-
 ## 라이선스
 
 이 프로젝트는 [MIT License](/Users/woonyong/workspace/blog/LICENSE)를 사용합니다.
