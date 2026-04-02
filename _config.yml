@@ -1,5 +1,5 @@
-title: woonyong.log
-description: 프론트엔드, 자동화, 배포를 차분하게 기록하는 개발 블로그
+title: Velog Style Jekyll Theme
+description: velog 감성의 개발 블로그를 GitHub Pages와 Jekyll로 구성한 오픈소스 테마 데모
 url: "https://woonyong-kr.github.io"
 baseurl: "/blog"
 lang: ko-KR
@@ -52,4 +52,7 @@ exclude:
   - LICENSE
   - NOTICE.md
   - README.md
+  - examples
+  - output
+  - scripts
   - vendor

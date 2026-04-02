@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title>Customization thumbnail</title>
+  <desc>Original SVG illustration for customization guide.</desc>
+  <rect width="1280" height="720" rx="40" fill="#fff4e6"/>
+  <rect x="90" y="88" width="320" height="544" rx="26" fill="#ffffff" stroke="#ffd8a8" stroke-width="6"/>
+  <rect x="142" y="144" width="112" height="112" rx="56" fill="#ffe8cc"/>
+  <rect x="138" y="314" width="220" height="24" rx="12" fill="#fd7e14" opacity="0.22"/>
+  <rect x="138" y="364" width="160" height="24" rx="12" fill="#ced4da"/>
+  <rect x="138" y="414" width="196" height="24" rx="12" fill="#ced4da"/>
+  <rect x="470" y="112" width="722" height="164" rx="30" fill="#ffffff" stroke="#fd7e14" stroke-width="6"/>
+  <rect x="516" y="160" width="260" height="34" rx="17" fill="#fd7e14"/>
+  <rect x="516" y="218" width="600" height="18" rx="9" fill="#dee2e6"/>
+  <rect x="470" y="330" width="344" height="256" rx="28" fill="#212529"/>
+  <rect x="846" y="330" width="346" height="256" rx="28" fill="#ffffff" stroke="#dee2e6" stroke-width="4"/>
+  <rect x="898" y="382" width="182" height="30" rx="15" fill="#fd7e14" opacity="0.2"/>
+  <rect x="898" y="444" width="228" height="24" rx="12" fill="#adb5bd"/>
+  <rect x="898" y="494" width="194" height="24" rx="12" fill="#adb5bd"/>
+  <text x="520" y="500" fill="#f8f9fa" font-family="SFMono-Regular, Consolas, monospace" font-size="34">_data/theme.yml</text>
+</svg>
