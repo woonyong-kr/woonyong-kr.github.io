@@ -32,4 +32,4 @@ profile:
     enabled: true
 
 footer:
-  tagline: Built with Jekyll, inspired by velog.
+  tagline: Open-source Jekyll theme for developer blogs.

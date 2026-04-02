@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title>Local setup thumbnail</title>
+  <desc>Original SVG illustration for local setup instructions.</desc>
+  <rect width="1280" height="720" rx="40" fill="#ecfdf3"/>
+  <rect x="72" y="82" width="1136" height="556" rx="32" fill="#0f172a"/>
+  <rect x="120" y="130" width="140" height="18" rx="9" fill="#51cf66"/>
+  <rect x="290" y="130" width="140" height="18" rx="9" fill="#ffd43b"/>
+  <rect x="460" y="130" width="140" height="18" rx="9" fill="#ff6b6b"/>
+  <rect x="120" y="194" width="420" height="308" rx="22" fill="#111827" stroke="#334155" stroke-width="4"/>
+  <text x="158" y="258" fill="#51cf66" font-family="SFMono-Regular, Consolas, monospace" font-size="34">$ bundle install</text>
+  <text x="158" y="316" fill="#8ce99a" font-family="SFMono-Regular, Consolas, monospace" font-size="30">$ ruby scripts/fetch_github_contributions.rb</text>
+  <text x="158" y="374" fill="#8ce99a" font-family="SFMono-Regular, Consolas, monospace" font-size="30">$ bundle exec jekyll serve</text>
+  <rect x="610" y="194" width="468" height="308" rx="24" fill="#ffffff"/>
+  <rect x="660" y="242" width="320" height="34" rx="17" fill="#12b886" opacity="0.2"/>
+  <rect x="660" y="314" width="240" height="162" rx="18" fill="#12b886"/>
+  <rect x="930" y="314" width="96" height="22" rx="11" fill="#ced4da"/>
+  <rect x="930" y="356" width="110" height="22" rx="11" fill="#ced4da"/>
+  <rect x="930" y="398" width="78" height="22" rx="11" fill="#ced4da"/>
+  <text x="120" y="580" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700">Local Preview</text>
+</svg>

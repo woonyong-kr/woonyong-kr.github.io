@@ -1,19 +1,15 @@
-# Velog-Inspired Jekyll Theme
+# Velog Style Jekyll Theme
 
-velog의 글 읽기 흐름을 참고해 만든 Jekyll 기반 개발 블로그 테마입니다. GitHub Pages 프로젝트 페이지와 Jenkins 배포를 기본으로 두고, 태그 필터, 시리즈, 검색, 다크 모드, GitHub 기여 그래프까지 정적 사이트에 맞게 구성했습니다.
+velog의 글 읽기 흐름을 참고해 만든 Jekyll 기반 오픈소스 개발 블로그 테마입니다. GitHub Pages 프로젝트 페이지를 기본 배포 대상으로 두고, 태그 필터, 시리즈, 검색, GitHub 프로필 동기화, 기여 그래프까지 한 저장소 안에서 바로 사용할 수 있게 구성했습니다.
 
-이 저장소의 현재 값은 예시이므로, 공개 테마처럼 쓰려면 아래 파일부터 바꾸면 됩니다.
+## 포함된 것
 
-## 핵심 기능
-
-- velog 스타일의 글 목록, 시리즈, 소개 탭
-- GitHub 아이디 연결 시 프로필 자동 동기화
+- velog 스타일의 글 목록, 시리즈, 상세 읽기 레이아웃
 - 태그 필터와 검색
-- 썸네일 조건부 노출
-- 다크 모드와 시스템 테마 동기화
-- GitHub 기여 그래프 히어로 섹션
-- Google Analytics, Disqus, Algolia 선택 연동
-- Jenkins 기반 `gh-pages` 배포
+- 시스템 라이트/다크 모드 동기화
+- GitHub 프로필과 기여 그래프 동기화
+- GitHub Pages와 Jenkins 배포 흐름
+- MIT 라이선스로 함께 배포 가능한 원본 SVG 샘플 자산
 
 ## 빠른 시작
 
@@ -25,81 +21,65 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 
 기본 주소는 [http://127.0.0.1:4000/blog/](http://127.0.0.1:4000/blog/) 입니다.
 
-기여 그래프를 쓰지 않거나 토큰이 없으면 `ruby scripts/fetch_github_contributions.rb` 단계는 건너뛸 수 있습니다. 이 경우 잔디 그래프만 숨겨집니다.
-
 ## 가장 먼저 바꿀 파일
 
 - [_config.yml](/Users/woonyong/workspace/blog/_config.yml)
-  - `title`, `description`, `url`, `baseurl`
-  - Analytics, 댓글, Algolia 같은 외부 연동
+  사이트 제목, 설명, URL, 외부 연동 설정
 - [_data/profile.yml](/Users/woonyong/workspace/blog/_data/profile.yml)
-  - 이름, 소개, 아바타, GitHub 링크
+  기본 프로필 이름, 소개 문구, 샘플 GitHub 링크
 - [_data/theme.yml](/Users/woonyong/workspace/blog/_data/theme.yml)
-  - 탭 라벨, 헤더 아이콘 표시, 기본 페이지 크기, 홈 문구
+  탭 노출, 헤더 버튼, 홈 문구, GitHub 연동 옵션
 - [_data/series.yml](/Users/woonyong/workspace/blog/_data/series.yml)
-  - 시리즈 키와 제목
-- [about.md](/Users/woonyong/workspace/blog/about.md)
-  - 소개 페이지 본문
+  시리즈 키와 표시 제목
 - [_posts](/Users/woonyong/workspace/blog/_posts)
-  - 실제 글
-- [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)
-  - 기본 빌드에서는 제외되는 추가 데모 글 모음
+  실제 블로그 글
+- [about.md](/Users/woonyong/workspace/blog/about.md)
+  소개 탭을 켰을 때 보여줄 문서
 
 ## 설정 구조
 
-### 사이트와 배포 설정
+### 사이트 메타와 외부 연동
 
-[_config.yml](/Users/woonyong/workspace/blog/_config.yml)은 사이트 메타데이터와 외부 연동처럼 “빌드에 영향을 주는 값”을 둡니다.
+[_config.yml](/Users/woonyong/workspace/blog/_config.yml)은 사이트 메타데이터와 외부 서비스 설정을 담습니다.
 
 ```yml
-title: your-blog
-description: 개발 기록을 남기는 블로그
+title: Velog Style Jekyll Theme
+description: velog 감성의 개발 블로그를 GitHub Pages와 Jekyll로 구성한 오픈소스 테마 데모
 url: "https://your-name.github.io"
-baseurl: "/blog"
+baseurl: "/repo-name"
 ```
 
-`baseurl`은 GitHub Pages 프로젝트 페이지라면 `/repo-name`, 사용자 페이지라면 보통 빈 문자열 `""`입니다.
+### UI와 동작 옵션
 
-### UI 테마 설정
-
-[_data/theme.yml](/Users/woonyong/workspace/blog/_data/theme.yml)은 테마의 표시 옵션과 라벨을 둡니다.
+[_data/theme.yml](/Users/woonyong/workspace/blog/_data/theme.yml)은 테마 UI 옵션과 문구를 담당합니다.
 
 ```yml
-header:
-  show_github_link: true
-  show_rss_link: true
-  show_theme_toggle: true
-
 tabs:
-  posts_label: 글
-  series_label: 시리즈
-  about_label: 소개
   show_about: false
 
 home:
   initial_post_count: 12
   search_placeholder: 검색어를 입력하세요
-  all_posts_label: 전체보기
-  tag_list_title: 태그 목록
 
 profile:
   github_sync:
     enabled: true
+
+hero:
+  github_contributions:
+    enabled: true
+    username: your-github-id
 ```
 
-추천 기준은 이렇습니다.
+### 기본 프로필 샘플
 
-- `_config.yml`: URL, 외부 연동, 빌드에 필요한 값
-- `_data/theme.yml`: 문구, 표시 여부, 목록 크기 같은 UI 값
-- `_data/profile.yml`: 블로그 소유자 정보
+[_data/profile.yml](/Users/woonyong/workspace/blog/_data/profile.yml)은 GitHub 연결이 없을 때 보여줄 기본 프로필 값을 담습니다.
+
+GitHub 아이디가 연결되어 있고 `profile.github_sync.enabled`가 켜져 있으면, 이름과 아바타, GitHub 링크는 공개 프로필 기준으로 자동 매핑됩니다. `bio`나 `intro`가 GitHub에서 비어 있으면 샘플 텍스트를 그대로 유지합니다.
 
 ## 글 작성 규칙
 
 포스트는 [_posts](/Users/woonyong/workspace/blog/_posts)에 Markdown 파일로 추가합니다.
-
-더 많은 샘플 글이 필요하면 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)에 있는 예시 포스트를 `_posts/`로 옮겨서 데모 세트를 확장할 수 있습니다.
-
-예시 front matter:
 
 ```md
 ---
@@ -108,108 +88,54 @@ description: 목록에 보일 짧은 설명
 date: 2026-04-02 09:00:00 +0900
 updated_at: 2026-04-02 20:00:00 +0900
 thumbnail: /assets/images/posts/example.svg
+series: theme-overview
 tags:
   - Jekyll
-  - GitHub Pages
-series: shipping-fast
+  - Theme
 ---
 ```
 
-- `thumbnail`이 있으면 카드와 상세 상단에 이미지를 보여줍니다.
-- `updated_at`이 있으면 상세 메타에 수정일을 보여줍니다.
-- `series`는 [_data/series.yml](/Users/woonyong/workspace/blog/_data/series.yml)의 키와 맞아야 합니다.
+- `thumbnail`이 있으면 목록 카드와 글 상단에 표시됩니다.
+- `series`는 [_data/series.yml](/Users/woonyong/workspace/blog/_data/series.yml)의 키와 연결됩니다.
+- `tags`는 목록 필터와 글 상세 태그 링크에 동시에 사용됩니다.
 
-## GitHub 기여 그래프
+## GitHub 동기화
 
-히어로 영역의 잔디 그래프는 GitHub GraphQL API에서 최근 1년 기여 데이터를 받아 그립니다.
+이 테마는 하나의 스크립트로 두 가지 데이터를 생성합니다.
 
-설정 파일:
-- [_data/theme.yml](/Users/woonyong/workspace/blog/_data/theme.yml)
+- [_data/github_contributions_cache.json](/Users/woonyong/workspace/blog/_data/github_contributions_cache.json)
+- [_data/github_profile_cache.json](/Users/woonyong/workspace/blog/_data/github_profile_cache.json)
 
-```yml
-hero:
-  github_contributions:
-    enabled: true
-    username: your-github-id
-
-profile:
-  github_sync:
-    enabled: true
-```
-
-데이터 생성:
+실행 명령:
 
 ```bash
 ruby scripts/fetch_github_contributions.rb
 ```
 
-이 스크립트는 기여 그래프뿐 아니라 GitHub 공개 프로필도 함께 동기화합니다.
-
-- [_data/github_contributions_cache.json](/Users/woonyong/workspace/blog/_data/github_contributions_cache.json)
-- [_data/github_profile_cache.json](/Users/woonyong/workspace/blog/_data/github_profile_cache.json)
-
-`profile.github_sync.enabled`가 켜져 있고 `hero.github_contributions.username` 또는 `profile.github`에 GitHub 계정이 연결되어 있으면, 히어로 프로필의 이름/소개/아바타와 포스트 작성자 정보가 GitHub 공개 프로필 기준으로 자동 매핑됩니다. 연결 정보가 없거나 캐시가 없으면 `_data/profile.yml`의 샘플 값을 그대로 사용합니다.
-
-인증 방법은 셋 중 하나면 됩니다.
+인증은 아래 셋 중 하나면 됩니다.
 
 - `GITHUB_GRAPHQL_TOKEN`
 - `GITHUB_TOKEN`
 - `gh auth login`
 
-## 선택 연동
+## 샘플 이미지와 저작권
 
-### Google Analytics
+이 저장소의 샘플 SVG는 모두 이 프로젝트를 위해 직접 만든 원본 자산입니다.
 
-```yml
-analytics:
-  google:
-    measurement_id: "G-XXXXXXXXXX"
-```
+- [assets/images/profile.svg](/Users/woonyong/workspace/blog/assets/images/profile.svg)
+- [assets/images/avatar-placeholder.svg](/Users/woonyong/workspace/blog/assets/images/avatar-placeholder.svg)
+- [assets/images/posts](/Users/woonyong/workspace/blog/assets/images/posts)
 
-### Disqus
-
-```yml
-comments:
-  provider: "disqus"
-  disqus:
-    shortname: "your-shortname"
-```
-
-### Algolia
-
-```yml
-search:
-  provider: algolia
-  algolia:
-    app_id: "YOUR_APP_ID"
-    api_key: "YOUR_SEARCH_ONLY_KEY"
-    index_name: "YOUR_INDEX_NAME"
-    insights: true
-```
-
-## 빌드
-
-```bash
-ruby scripts/fetch_github_contributions.rb
-BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
-```
-
-빌드 결과물은 [_site](/Users/woonyong/workspace/blog/_site)에 생성됩니다.
-
-검증:
-
-```bash
-BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll doctor
-```
+자세한 안내는 [NOTICE.md](/Users/woonyong/workspace/blog/NOTICE.md)에 정리했습니다. 외부 사진이나 서드파티 일러스트를 번들하지 않았기 때문에, 저장소를 그대로 데모 테마로 공개해도 샘플 자산 쪽 저작권 부담이 적습니다.
 
 ## Jenkins 배포
 
-[Jenkinsfile](/Users/woonyong/workspace/blog/Jenkinsfile)은 다음 순서로 동작합니다.
+[Jenkinsfile](/Users/woonyong/workspace/blog/Jenkinsfile)은 아래 순서로 동작합니다.
 
-- 의존성 설치
-- GitHub 기여 그래프 동기화
-- Jekyll 빌드
-- `_site/`를 `gh-pages` 브랜치로 배포
+1. 의존성 설치
+2. GitHub 프로필/기여 그래프 동기화
+3. Jekyll 빌드
+4. `_site/`를 `gh-pages` 브랜치로 배포
 
 필요한 Jenkins Credentials:
 
@@ -217,16 +143,10 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll doctor
   - username: GitHub 사용자명
   - password: GitHub Personal Access Token
 
-현재 파이프라인은 하루 한 번 GitHub 기여 그래프를 자동 동기화하도록 스케줄되어 있습니다.
+## 샘플 데이터 아카이브
 
-## 공개 테마로 정리할 때 권장 사항
+이전 데모 포스트 세트는 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)에 보관되어 있습니다. 기본 빌드에서는 제외되며, 필요할 때만 `_posts/`로 옮겨 사용할 수 있습니다.
 
-- [_data/profile.yml](/Users/woonyong/workspace/blog/_data/profile.yml)의 개인 정보는 샘플 값으로 교체
-- [about.md](/Users/woonyong/workspace/blog/about.md)는 예시 소개 페이지로 단순화
-- [_posts](/Users/woonyong/workspace/blog/_posts)는 기본 데모 세트만 유지하고, 추가 샘플은 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)로 분리
-- GitHub Pages 프로젝트 페이지가 아니라 사용자 페이지를 쓸 경우 `baseurl` 조정
+## 라이선스
 
-## 참고
-
-- GitHub Pages 프로젝트 페이지 경로를 쓰는 경우 `baseurl` 설정이 중요합니다.
-- 디자인 구조와 읽기 흐름은 [velog-io/velog](https://github.com/velog-io/velog) 오픈소스를 참고해 정적 블로그에 맞게 재구성했습니다.
+이 프로젝트는 [MIT License](/Users/woonyong/workspace/blog/LICENSE)를 사용합니다.

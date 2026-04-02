@@ -1,20 +1,6 @@
-shipping-fast:
-  title: 작게 배포하고 빠르게 배우기
-component-architecture:
-  title: 화면을 나누는 기준
-react-labs:
-  title: React 실험 노트
-design-systems:
-  title: 디자인 시스템 운영 메모
-ci-cd-playbook:
-  title: CI/CD 플레이북
-observability-notes:
-  title: 관측 가능성 로그북
-testing-handbook:
-  title: 테스트 핸드북
-data-fetching:
-  title: 데이터 페칭 레시피
-accessibility-lab:
-  title: 접근성 실험실
-browser-performance:
-  title: 브라우저 성능 메모
+theme-overview:
+  title: 테마 소개와 구조
+theme-setup:
+  title: 설치와 커스터마이징
+theme-operations:
+  title: 배포와 운영

@@ -1,18 +1,11 @@
-이 저장소의 레이아웃과 색상 토큰 일부는 MIT 라이선스로 공개된
-[velog-io/velog](https://github.com/velog-io/velog) 오픈소스를 참고해 재구성했습니다.
+## Sample Assets Notice
 
-원저작권 고지는 아래와 같습니다.
+이 저장소에 포함된 아래 SVG 샘플 이미지는 이 프로젝트를 위해 직접 제작한 원본 예시 자산입니다.
 
-MIT License
+- `assets/images/profile.svg`
+- `assets/images/avatar-placeholder.svg`
+- `assets/images/posts/*.svg`
 
-Copyright (c) 2024 Chaf, Inc.
+별도의 외부 이미지, 사진, 일러스트 라이브러리를 번들하지 않았으며, 위 자산은 프로젝트의 MIT License 범위 안에서 함께 사용할 수 있습니다.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+GitHub 프로필 아바타처럼 빌드 시 외부에서 동기화되는 이미지는 저장소에 포함된 배포 자산이 아니며, 해당 서비스의 정책을 따릅니다.
