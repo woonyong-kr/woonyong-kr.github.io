@@ -25,6 +25,11 @@ search:
     index_name: ""
     insights: false
 
+github_contributions:
+  enabled: true
+  username: "woonyong-kr"
+  title: "GitHub 기여 그래프"
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag

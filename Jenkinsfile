@@ -5,6 +5,10 @@ pipeline {
     timestamps()
   }
 
+  triggers {
+    cron('17 3 * * *')
+  }
+
   environment {
     PAGES_BRANCH = 'gh-pages'
     PUBLISH_DIR = '_site'
@@ -18,6 +22,25 @@ pipeline {
           set -eu
           BUNDLE_FORCE_RUBY_PLATFORM=true bundle install --path "$BUNDLE_PATH" --jobs=4 --retry=3
         '''
+      }
+    }
+
+    stage('Fetch GitHub Contributions') {
+      steps {
+        withCredentials([
+          usernamePassword(
+            credentialsId: 'github-pages',
+            usernameVariable: 'GITHUB_USER',
+            passwordVariable: 'GITHUB_TOKEN'
+          )
+        ]) {
+          sh '''
+            set -eu
+            export GITHUB_GRAPHQL_TOKEN="$GITHUB_TOKEN"
+            export GITHUB_CONTRIBUTIONS_STRICT=1
+            ruby scripts/fetch_github_contributions.rb
+          '''
+        }
       }
     }
 
