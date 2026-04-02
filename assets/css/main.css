@@ -861,16 +861,20 @@ html[data-theme="dark"] {
   letter-spacing: 0.01em;
 }
 
+.post-card__tags {
+  margin-top: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
 .post-card__description {
   max-width: 42rem;
-  margin: 0.75rem 0 1.125rem;
+  margin: 0;
   font-size: 0.96875rem;
   line-height: 1.7;
   color: var(--text2);
   word-break: break-word;
 }
 
-.post-card__tags,
 .post-head__tags {
   display: flex;
   flex-wrap: wrap;
