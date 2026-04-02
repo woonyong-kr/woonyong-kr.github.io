@@ -41,6 +41,8 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
   - 소개 페이지 본문
 - [_posts](/Users/woonyong/workspace/blog/_posts)
   - 실제 글
+- [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)
+  - 기본 빌드에서는 제외되는 추가 데모 글 모음
 
 ## 설정 구조
 
@@ -88,6 +90,8 @@ home:
 ## 글 작성 규칙
 
 포스트는 [_posts](/Users/woonyong/workspace/blog/_posts)에 Markdown 파일로 추가합니다.
+
+더 많은 샘플 글이 필요하면 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)에 있는 예시 포스트를 `_posts/`로 옮겨서 데모 세트를 확장할 수 있습니다.
 
 예시 front matter:
 
@@ -204,7 +208,7 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll doctor
 
 - [_data/profile.yml](/Users/woonyong/workspace/blog/_data/profile.yml)의 개인 정보는 샘플 값으로 교체
 - [about.md](/Users/woonyong/workspace/blog/about.md)는 예시 소개 페이지로 단순화
-- [_posts](/Users/woonyong/workspace/blog/_posts)는 데모 글만 남기거나 별도 예시 세트로 분리
+- [_posts](/Users/woonyong/workspace/blog/_posts)는 기본 데모 세트만 유지하고, 추가 샘플은 [examples/demo-posts](/Users/woonyong/workspace/blog/examples/demo-posts)로 분리
 - GitHub Pages 프로젝트 페이지가 아니라 사용자 페이지를 쓸 경우 `baseurl` 조정
 
 ## 참고
