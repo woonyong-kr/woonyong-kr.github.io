@@ -52,7 +52,6 @@ exclude:
   - LICENSE
   - NOTICE.md
   - README.md
-  - examples
   - output
   - scripts
   - vendor
