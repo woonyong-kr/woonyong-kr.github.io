@@ -1,12 +1,9 @@
 {% assign contributions_enabled = site.github_contributions.enabled | default: false %}
 {% assign graph = site.data.github_contributions_cache %}
 {% if contributions_enabled and graph and graph.enabled and graph.weeks and graph.weeks.size > 0 %}
-  <section class="github-graph" aria-labelledby="github-graph-title">
+  <section class="github-graph" aria-label="GitHub 기여 그래프">
     <div class="github-graph__header">
-      <div>
-        <h2 id="github-graph-title" class="github-graph__title">{{ graph.title }}</h2>
-        <p class="github-graph__summary">{{ graph.summary_label }}</p>
-      </div>
+      <p class="github-graph__summary">{{ graph.summary_label }}</p>
       <a class="github-graph__link" href="{{ graph.profile_url }}" target="_blank" rel="noreferrer">
         @{{ graph.login }}
       </a>
