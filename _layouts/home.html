@@ -5,6 +5,7 @@ layout: default
   {% include profile.html %}
   {% include tabs.html active=page.active_tab %}
 
+  {% assign theme = site.data.theme %}
   {% assign algolia_provider = site.search.provider | default: "local" %}
   {% assign algolia_app_id = site.search.algolia.app_id | default: "" %}
   {% assign algolia_api_key = site.search.algolia.api_key | default: "" %}
@@ -14,13 +15,13 @@ layout: default
   {% if algolia_provider == "algolia" and algolia_app_id != "" and algolia_api_key != "" and algolia_index_name != "" %}
     {% assign algolia_enabled = true %}
   {% endif %}
-  {% assign page_size = 12 %}
+  {% assign page_size = theme.home.initial_post_count | default: 12 %}
   {% assign post_index_url = '/posts.json' | relative_url %}
   {% assign sorted_tags = site.tags | sort %}
   <section class="content-section content-section--posts">
     <div class="tag-pills">
       <a class="tag-pill" href="{{ '/' | relative_url }}" data-tag-link>
-        전체보기
+        {{ theme.home.all_posts_label }}
         <span>{{ site.posts.size }}</span>
       </a>
       {% for tag in sorted_tags %}
@@ -41,11 +42,11 @@ layout: default
 
     <div class="posts-panel">
       <aside class="tag-sidebar">
-        <h2 class="tag-sidebar__title">태그 목록</h2>
+        <h2 class="tag-sidebar__title">{{ theme.home.tag_list_title }}</h2>
         <ul class="tag-sidebar__list">
           <li class="tag-sidebar__item">
             <a class="tag-sidebar__link" href="{{ '/' | relative_url }}" data-tag-link>
-              전체보기
+              {{ theme.home.all_posts_label }}
               <span class="tag-sidebar__count">({{ site.posts.size }})</span>
             </a>
           </li>
@@ -79,6 +80,7 @@ layout: default
             data-index-name="{{ algolia_index_name }}"
             data-insights="{% if algolia_insights %}true{% else %}false{% endif %}"
             data-search-base-url="{{ '/' | relative_url }}"
+            data-search-placeholder="{{ theme.home.search_placeholder }}"
           ></div>
         {% else %}
           <form class="posts-search" action="{{ '/' | relative_url }}" method="get" role="search" data-search-form>
@@ -91,7 +93,7 @@ layout: default
             <input
               type="text"
               name="q"
-              placeholder="검색어를 입력하세요"
+              placeholder="{{ theme.home.search_placeholder }}"
               autocomplete="off"
               inputmode="search"
               data-post-search
@@ -103,8 +105,8 @@ layout: default
       <p class="posts-panel__summary" data-post-summary hidden></p>
       {% include post-list.html posts=site.posts limit=page_size page_size=page_size index_url=post_index_url %}
       <div class="posts-panel__sentinel" data-post-sentinel hidden aria-hidden="true"></div>
-      <p class="posts-panel__more" data-post-more hidden>스크롤하면 더 많은 글을 볼 수 있습니다.</p>
-      <p class="posts-panel__empty" data-post-empty hidden>조건에 맞는 글이 없습니다.</p>
+      <p class="posts-panel__more" data-post-more hidden>{{ theme.home.more_posts_label }}</p>
+      <p class="posts-panel__empty" data-post-empty hidden>{{ theme.home.empty_posts_label }}</p>
     </div>
   </section>
 </div>
