@@ -217,16 +217,28 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin: 0 auto;
   padding-top: 5.625rem;
   padding-bottom: 4rem;
+}
+
+.home-hero,
+.home-content {
   display: grid;
   grid-template-columns: 17rem minmax(0, 1fr);
   gap: 3rem;
   align-items: start;
 }
 
+.home-content {
+  position: relative;
+}
+
+.home-hero {
+  margin-bottom: 2.75rem;
+}
+
+.home-hero__profile,
+.home-hero__graph,
 .home-sidebar {
-  position: sticky;
-  top: 5.5rem;
-  align-self: start;
+  min-width: 0;
 }
 
 .home-main {
@@ -530,12 +542,7 @@ html[data-theme="dark"] .theme-toggle__moon {
   justify-content: center;
 }
 
-.home-main > .github-graph {
-  margin-top: 0;
-  margin-bottom: 2rem;
-}
-
-.home-main .velog-tabs {
+.home-layout > .velog-tabs {
   margin-top: 0;
   margin-bottom: 2.5rem;
   justify-content: flex-start;
@@ -822,10 +829,27 @@ html[data-theme="dark"] {
 }
 
 .tag-sidebar {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border4);
   width: 100%;
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 0.375rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border3) transparent;
+}
+
+.tag-sidebar::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.tag-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border3);
+  border-radius: 999px;
+}
+
+.tag-sidebar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .tag-sidebar__title {
@@ -1419,6 +1443,11 @@ html[data-theme="dark"] {
     gap: 1.5rem;
   }
 
+  .home-hero,
+  .home-content {
+    gap: 1.5rem;
+  }
+
   .profile__left {
     gap: 0.875rem;
   }
@@ -1532,7 +1561,7 @@ html[data-theme="dark"] {
     padding-top: 0;
   }
 
-  .home-main .velog-tabs {
+  .home-layout > .velog-tabs {
     justify-content: center;
   }
 
@@ -1598,13 +1627,14 @@ html[data-theme="dark"] {
 }
 
 @media (max-width: 1080px) {
-  .home-layout {
+  .home-hero,
+  .home-content {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
 
-  .home-sidebar {
-    position: static;
+  .home-hero {
+    margin-bottom: 2rem;
   }
 
   .tag-pills {
@@ -1615,7 +1645,7 @@ html[data-theme="dark"] {
     display: none;
   }
 
-  .home-main .velog-tabs {
+  .home-layout > .velog-tabs {
     justify-content: center;
   }
 }
