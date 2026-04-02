@@ -13,7 +13,9 @@ CONFIG_PATH = File.join(ROOT_DIR, "_config.yml")
 PROFILE_PATH = File.join(ROOT_DIR, "_data", "profile.yml")
 THEME_PATH = File.join(ROOT_DIR, "_data", "theme.yml")
 OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_contributions_cache.json")
+PROFILE_OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_profile_cache.json")
 GRAPHQL_ENDPOINT = URI("https://api.github.com/graphql")
+REST_API_ENDPOINT = "https://api.github.com/users"
 
 def load_yaml(path)
   return {} unless File.exist?(path)
@@ -21,8 +23,8 @@ def load_yaml(path)
   YAML.safe_load(File.read(path), permitted_classes: [Date, Time], aliases: true) || {}
 end
 
-def write_payload(payload)
-  File.write(OUTPUT_PATH, "#{JSON.pretty_generate(payload)}\n")
+def write_payload(path, payload)
+  File.write(path, "#{JSON.pretty_generate(payload)}\n")
 end
 
 def gh_token
@@ -46,6 +48,19 @@ def placeholder_payload(title:, login:, profile_url:, reason:)
   }
 end
 
+def placeholder_profile_payload(login:, profile_url:, reason:)
+  {
+    "enabled" => false,
+    "login" => login,
+    "profile_url" => profile_url,
+    "display_name" => "",
+    "bio" => "",
+    "intro" => "",
+    "avatar_url" => "",
+    "reason" => reason
+  }
+end
+
 def tooltip_label(date_string, contribution_count)
   date = Date.parse(date_string)
   "#{date.strftime('%Y년 %-m월 %-d일')} · #{contribution_count}회 기여"
@@ -55,26 +70,50 @@ def strict_mode?
   ENV["GITHUB_CONTRIBUTIONS_STRICT"] == "1" || ENV.key?("CI") || ENV.key?("JENKINS_HOME")
 end
 
+def fetch_github_profile(login:, profile_url:, token:)
+  uri = URI("#{REST_API_ENDPOINT}/#{login}")
+  request = Net::HTTP::Get.new(uri)
+  request["Accept"] = "application/vnd.github+json"
+  request["User-Agent"] = "velog-jekyll-theme"
+  request["Authorization"] = "Bearer #{token}" unless token.to_s.empty?
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  response = http.request(request)
+
+  return placeholder_profile_payload(login: login, profile_url: profile_url, reason: "request_failed") unless response.is_a?(Net::HTTPSuccess)
+
+  body = JSON.parse(response.body)
+  display_name = body["name"].to_s.strip
+  display_name = login if display_name.empty?
+
+  intro_parts = [body["company"], body["location"], body["blog"]]
+    .map { |value| value.to_s.strip }
+    .reject(&:empty?)
+
+  {
+    "enabled" => true,
+    "login" => login,
+    "profile_url" => body["html_url"].to_s.strip.empty? ? profile_url : body["html_url"].to_s.strip,
+    "display_name" => display_name,
+    "bio" => body["bio"].to_s.strip,
+    "intro" => intro_parts.join(" · "),
+    "avatar_url" => body["avatar_url"].to_s.strip,
+    "reason" => ""
+  }
+rescue JSON::ParserError
+  placeholder_profile_payload(login: login, profile_url: profile_url, reason: "invalid_response")
+end
+
 config = load_yaml(CONFIG_PATH)
 profile = load_yaml(PROFILE_PATH)
 theme = load_yaml(THEME_PATH)
 settings = theme.dig("hero", "github_contributions") || {}
+profile_sync_settings = theme.dig("profile", "github_sync") || {}
 title = settings["title"].to_s.strip
 title = "GitHub 기여 그래프" if title.empty?
 enabled = settings.fetch("enabled", false)
-
-unless enabled
-  write_payload(
-    placeholder_payload(
-      title: title,
-      login: "",
-      profile_url: "",
-      reason: "disabled"
-    )
-  )
-  puts "GitHub contributions graph is disabled."
-  exit 0
-end
+profile_sync_enabled = profile_sync_settings.fetch("enabled", true)
 
 ENV["TZ"] = config["timezone"].to_s unless config["timezone"].to_s.empty?
 
@@ -84,22 +123,53 @@ if login.empty?
   login = github_url[%r{\Ahttps://github\.com/([^/?#]+)}, 1].to_s
 end
 
+profile_url = login.empty? ? "" : "https://github.com/#{login}"
+token = ENV["GITHUB_GRAPHQL_TOKEN"].to_s.strip
+token = ENV["GITHUB_TOKEN"].to_s.strip if token.empty?
+token = gh_token if token.empty?
+
+if !profile_sync_enabled
+  write_payload(
+    PROFILE_OUTPUT_PATH,
+    placeholder_profile_payload(login: login, profile_url: profile_url, reason: "disabled")
+  )
+elsif login.empty?
+  write_payload(
+    PROFILE_OUTPUT_PATH,
+    placeholder_profile_payload(login: "", profile_url: "", reason: "missing_username")
+  )
+else
+  write_payload(
+    PROFILE_OUTPUT_PATH,
+    fetch_github_profile(login: login, profile_url: profile_url, token: token)
+  )
+end
+
+unless enabled
+  write_payload(
+    OUTPUT_PATH,
+    placeholder_payload(
+      title: title,
+      login: login,
+      profile_url: profile_url,
+      reason: "disabled"
+    )
+  )
+  puts "GitHub contributions graph is disabled."
+  exit 0
+end
+
 if login.empty?
   payload = placeholder_payload(title: title, login: "", profile_url: "", reason: "missing_username")
-  write_payload(payload)
+  write_payload(OUTPUT_PATH, payload)
   abort "GitHub contributions username is missing." if strict_mode?
   puts "GitHub contributions username is missing. Skipping graph."
   exit 0
 end
 
-profile_url = "https://github.com/#{login}"
-token = ENV["GITHUB_GRAPHQL_TOKEN"].to_s.strip
-token = ENV["GITHUB_TOKEN"].to_s.strip if token.empty?
-token = gh_token if token.empty?
-
 if token.empty?
   payload = placeholder_payload(title: title, login: login, profile_url: profile_url, reason: "missing_token")
-  write_payload(payload)
+  write_payload(OUTPUT_PATH, payload)
   abort "GitHub token is missing. Set GITHUB_GRAPHQL_TOKEN or log in with gh auth." if strict_mode?
   puts "GitHub token is missing. Skipping graph fetch."
   exit 0
@@ -156,6 +226,7 @@ response = http.request(request)
 
 unless response.is_a?(Net::HTTPSuccess)
   write_payload(
+    OUTPUT_PATH,
     placeholder_payload(
       title: title,
       login: login,
@@ -172,6 +243,7 @@ body = JSON.parse(response.body)
 
 if body["errors"]
   write_payload(
+    OUTPUT_PATH,
     placeholder_payload(
       title: title,
       login: login,
@@ -188,6 +260,7 @@ calendar = body.dig("data", "user", "contributionsCollection", "contributionCale
 
 if calendar.nil?
   write_payload(
+    OUTPUT_PATH,
     placeholder_payload(
       title: title,
       login: login,
@@ -248,5 +321,5 @@ payload = {
   "weeks" => weeks
 }
 
-write_payload(payload)
+write_payload(OUTPUT_PATH, payload)
 puts "GitHub contributions cache updated for #{login}."
