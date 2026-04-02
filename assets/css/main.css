@@ -16,6 +16,8 @@
   --gray7: #495057;
   --gray8: #343a40;
   --gray9: #212529;
+  --home-sidebar-width: 18rem;
+  --home-column-gap: 2.75rem;
 }
 
 html[data-theme="light"] {
@@ -128,7 +130,7 @@ svg {
 
 .site-header__inner {
   width: min(1728px, calc(100% - 4rem));
-  height: 4rem;
+  height: 4.25rem;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -138,16 +140,16 @@ svg {
 .header-logo {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   max-width: calc(100vw - 14rem);
-  font-size: 1.3125rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text1);
 }
 
 .header-logo__mark {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -162,12 +164,12 @@ svg {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .icon-button {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -184,8 +186,8 @@ svg {
 }
 
 .icon-button svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .theme-toggle__moon {
@@ -222,8 +224,8 @@ html[data-theme="dark"] .theme-toggle__moon {
 .home-hero,
 .home-content {
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr);
-  gap: 3rem;
+  grid-template-columns: var(--home-sidebar-width) minmax(0, 1fr);
+  gap: var(--home-column-gap);
   align-items: start;
 }
 
@@ -232,7 +234,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .home-hero {
-  margin-bottom: 2.75rem;
+  margin-bottom: 2.5rem;
 }
 
 .home-hero__profile,
@@ -275,8 +277,8 @@ html[data-theme="dark"] .theme-toggle__moon {
 
 .profile__name {
   margin: 0;
-  font-size: 1.625rem;
-  line-height: 1.2;
+  font-size: 1.5rem;
+  line-height: 1.22;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text1);
@@ -290,13 +292,14 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .profile__bio {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--text2);
 }
 
 .profile__intro {
   max-width: 34rem;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
   color: var(--text3);
 }
 
@@ -310,8 +313,8 @@ html[data-theme="dark"] .theme-toggle__moon {
 .profile__stats {
   display: flex;
   justify-content: flex-start;
-  gap: 0.625rem;
-  margin-top: 0.9375rem;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
   flex-wrap: wrap;
 }
 
@@ -319,19 +322,19 @@ html[data-theme="dark"] .theme-toggle__moon {
   display: flex;
   align-items: baseline;
   gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4375rem 0.6875rem;
   border-radius: 999px;
   background: var(--bg-element2);
 }
 
 .profile__stat-value {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text1);
 }
 
 .profile__stat-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text3);
 }
 
@@ -344,14 +347,27 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .profile--sidebar .profile__avatar {
-  width: min(16rem, 100%);
+  width: min(10.5rem, 100%);
   height: auto;
   aspect-ratio: 1 / 1;
   display: block;
 }
 
 .profile--sidebar .profile__info {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
+  max-width: 15rem;
+}
+
+.profile--sidebar .profile__name {
+  font-size: 1.375rem;
+}
+
+.profile--sidebar .profile__bio {
+  font-size: 0.875rem;
+}
+
+.profile--sidebar .profile__intro {
+  font-size: 0.8125rem;
 }
 
 .profile--sidebar .profile__separator {
@@ -367,19 +383,19 @@ html[data-theme="dark"] .theme-toggle__moon {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.625rem;
 }
 
 .github-graph__summary {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text2);
 }
 
 .github-graph__link {
   flex-shrink: 0;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text2);
 }
@@ -536,15 +552,15 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .velog-tabs {
-  margin-top: 3.25rem;
-  margin-bottom: 3.25rem;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
   display: flex;
   justify-content: center;
 }
 
 .home-layout > .velog-tabs {
   margin-top: 0;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.25rem;
   justify-content: flex-start;
 }
 
@@ -554,12 +570,12 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .velog-tabs__item {
-  width: 8rem;
-  height: 3rem;
+  width: 7rem;
+  height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.325rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text2);
   transition: color 0.2s ease;
@@ -572,8 +588,8 @@ html[data-theme="dark"] .theme-toggle__moon {
 .velog-tabs__indicator {
   position: absolute;
   bottom: -2px;
-  left: calc(var(--tab-index) * 8rem);
-  width: 8rem;
+  left: calc(var(--tab-index) * 7rem);
+  width: 7rem;
   height: 2px;
   background: var(--primary2);
   transition: left 0.2s ease;
@@ -584,7 +600,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .post-list {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .content-section--posts {
@@ -643,11 +659,11 @@ html[data-theme="dark"] .theme-toggle__moon {
 .posts-panel__toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .posts-search {
-  width: 16rem;
+  width: 16.5rem;
   height: 2.25rem;
   padding: 0 0.625rem;
   border: 1px solid var(--border3);
@@ -835,6 +851,7 @@ html[data-theme="dark"] {
   max-height: calc(100vh - 7rem);
   overflow-y: auto;
   padding-right: 0.375rem;
+  padding-top: 0.125rem;
   scrollbar-width: thin;
   scrollbar-color: var(--border3) transparent;
 }
@@ -853,13 +870,14 @@ html[data-theme="dark"] {
 }
 
 .tag-sidebar__title {
-  margin: 0 0 1rem;
+  margin: 0 0 0.875rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border3);
   color: var(--text2);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
 }
 
 .tag-sidebar__list {
@@ -869,18 +887,19 @@ html[data-theme="dark"] {
 }
 
 .tag-sidebar__item + .tag-sidebar__item {
-  margin-top: 0.25rem;
+  margin-top: 0.375rem;
 }
 
 .tag-sidebar__link {
   color: var(--text1);
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.8125rem;
+  line-height: 1.55;
 }
 
 .tag-sidebar__count {
-  margin-left: 0.5rem;
+  margin-left: 0.375rem;
   color: var(--text3);
+  font-size: 0.75rem;
 }
 
 .tag-sidebar__link.is-active {
@@ -894,7 +913,7 @@ html[data-theme="dark"] {
 }
 
 .post-card {
-  padding: 3rem 0;
+  padding: 2.5rem 0;
   line-height: 1.5;
 }
 
@@ -908,7 +927,7 @@ html[data-theme="dark"] {
 
 .post-card__thumbnail {
   display: block;
-  margin-bottom: 1.125rem;
+  margin-bottom: 1rem;
   border-radius: 1.125rem;
   overflow: hidden;
 }
@@ -925,31 +944,31 @@ html[data-theme="dark"] {
 
 .post-card__title {
   margin: 0;
-  font-size: 1.625rem;
-  line-height: 1.28;
+  font-size: 1.5rem;
+  line-height: 1.32;
   letter-spacing: -0.02em;
   color: var(--text1);
   word-break: break-word;
 }
 
 .post-card__series {
-  margin: 0 0 0.625rem;
+  margin: 0 0 0.5rem;
   color: var(--primary2);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
 .post-card__tags {
-  margin-top: 0.75rem;
-  margin-bottom: 0.875rem;
+  margin-top: 0.6875rem;
+  margin-bottom: 0.75rem;
 }
 
 .post-card__description {
   max-width: 42rem;
   margin: 0;
-  font-size: 0.96875rem;
-  line-height: 1.7;
+  font-size: 0.9375rem;
+  line-height: 1.68;
   color: var(--text2);
   word-break: break-word;
 }
@@ -961,14 +980,14 @@ html[data-theme="dark"] {
 }
 
 .tag-chip {
-  height: 1.75rem;
-  padding: 0 0.875rem;
+  height: 1.625rem;
+  padding: 0 0.75rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   background: var(--bg-tag);
   color: var(--primary1);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -978,13 +997,13 @@ html[data-theme="dark"] {
 }
 
 .post-card__meta {
-  margin-top: 0.9375rem;
+  margin-top: 0.8125rem;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.375rem;
   color: var(--text3);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }
 
 .post-card__dot {
