@@ -1,6 +1,11 @@
 {% assign theme = site.data.theme %}
 {% assign series_count = site.posts | where_exp: "post", "post.series" | group_by: "series" | size %}
-<section class="profile">
+{% assign sidebar = include.sidebar | default: false %}
+{% assign show_graph = include.show_graph %}
+{% if show_graph == nil %}
+  {% assign show_graph = true %}
+{% endif %}
+<section class="profile{% if sidebar %} profile--sidebar{% endif %}">
   <div class="profile__section">
     <div class="profile__left">
       <img
@@ -30,7 +35,8 @@
     </div>
   </div>
 
-  <div class="profile__separator"></div>
-
-  {% include github-contributions.html %}
+  {% if show_graph != false %}
+    <div class="profile__separator"></div>
+    {% include github-contributions.html %}
+  {% endif %}
 </section>
