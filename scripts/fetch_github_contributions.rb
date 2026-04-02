@@ -11,6 +11,7 @@ require "date"
 ROOT_DIR = File.expand_path("..", __dir__)
 CONFIG_PATH = File.join(ROOT_DIR, "_config.yml")
 PROFILE_PATH = File.join(ROOT_DIR, "_data", "profile.yml")
+THEME_PATH = File.join(ROOT_DIR, "_data", "theme.yml")
 OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_contributions_cache.json")
 GRAPHQL_ENDPOINT = URI("https://api.github.com/graphql")
 
@@ -56,7 +57,8 @@ end
 
 config = load_yaml(CONFIG_PATH)
 profile = load_yaml(PROFILE_PATH)
-settings = config["github_contributions"] || {}
+theme = load_yaml(THEME_PATH)
+settings = theme.dig("hero", "github_contributions") || {}
 title = settings["title"].to_s.strip
 title = "GitHub 기여 그래프" if title.empty?
 enabled = settings.fetch("enabled", false)

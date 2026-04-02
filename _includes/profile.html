@@ -1,3 +1,4 @@
+{% assign theme = site.data.theme %}
 {% assign series_count = site.posts | where_exp: "post", "post.series" | group_by: "series" | size %}
 <section class="profile">
   <div class="profile__section">
@@ -13,24 +14,23 @@
         <h1 class="profile__name">{{ site.data.profile.display_name }}</h1>
         <p class="profile__bio">{{ site.data.profile.bio }}</p>
         <p class="profile__intro">{{ site.data.profile.intro }}</p>
+        {% if theme.hero.show_stats != false %}
+          <div class="profile__stats">
+            <div class="profile__stat">
+              <span class="profile__stat-value">{{ site.posts | size }}</span>
+              <span class="profile__stat-label">{{ theme.labels.posts }}</span>
+            </div>
+            <div class="profile__stat">
+              <span class="profile__stat-value">{{ series_count }}</span>
+              <span class="profile__stat-label">{{ theme.labels.series }}</span>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
   <div class="profile__separator"></div>
-
-  <div class="profile__bottom">
-    <div class="profile__stats">
-      <div class="profile__stat">
-        <span class="profile__stat-value">{{ site.posts | size }}</span>
-        <span class="profile__stat-label">포스트</span>
-      </div>
-      <div class="profile__stat">
-        <span class="profile__stat-value">{{ series_count }}</span>
-        <span class="profile__stat-label">시리즈</span>
-      </div>
-    </div>
-  </div>
 
   {% include github-contributions.html %}
 </section>

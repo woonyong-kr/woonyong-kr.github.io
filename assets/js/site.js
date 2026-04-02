@@ -177,16 +177,18 @@
       return;
     }
 
+    var searchPlaceholder = algoliaContainer.getAttribute("data-search-placeholder") || "검색어를 입력하세요";
+
     window.docsearch({
       container: algoliaContainer,
       appId: algoliaContainer.getAttribute("data-app-id"),
       apiKey: algoliaContainer.getAttribute("data-api-key"),
       indexName: algoliaContainer.getAttribute("data-index-name"),
       insights: algoliaContainer.getAttribute("data-insights") === "true",
-      placeholder: "검색어를 입력하세요",
+      placeholder: searchPlaceholder,
       translations: {
         button: {
-          buttonText: "검색어를 입력하세요",
+          buttonText: searchPlaceholder,
           buttonAriaLabel: "검색",
         },
         modal: {
@@ -196,7 +198,7 @@
             clearButtonAriaLabel: "검색어 지우기",
             closeButtonText: "닫기",
             closeButtonAriaLabel: "검색 닫기",
-            placeholderText: "검색어를 입력하세요",
+            placeholderText: searchPlaceholder,
           },
           startScreen: {
             recentSearchesTitle: "최근 검색",

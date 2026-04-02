@@ -1,4 +1,5 @@
 {% assign active = include.active | default: 'posts' %}
+{% assign theme = site.data.theme %}
 {% assign tab_index = 0 %}
 {% if active == 'series' %}
   {% assign tab_index = 1 %}
@@ -7,9 +8,9 @@
 {% endif %}
 <nav class="velog-tabs" aria-label="콘텐츠 구분">
   <div class="velog-tabs__inner">
-    <a class="velog-tabs__item{% if active == 'posts' %} is-active{% endif %}" href="{{ '/' | relative_url }}">글</a>
-    <a class="velog-tabs__item{% if active == 'series' %} is-active{% endif %}" href="{{ '/series/' | relative_url }}">시리즈</a>
-    <a class="velog-tabs__item{% if active == 'about' %} is-active{% endif %}" href="{{ '/about/' | relative_url }}">소개</a>
+    <a class="velog-tabs__item{% if active == 'posts' %} is-active{% endif %}" href="{{ '/' | relative_url }}">{{ theme.tabs.posts_label }}</a>
+    <a class="velog-tabs__item{% if active == 'series' %} is-active{% endif %}" href="{{ '/series/' | relative_url }}">{{ theme.tabs.series_label }}</a>
+    <a class="velog-tabs__item{% if active == 'about' %} is-active{% endif %}" href="{{ '/about/' | relative_url }}">{{ theme.tabs.about_label }}</a>
     <span class="velog-tabs__indicator" style="--tab-index: {{ tab_index }};"></span>
   </div>
 </nav>

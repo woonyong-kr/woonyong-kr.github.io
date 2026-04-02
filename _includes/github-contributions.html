@@ -1,4 +1,4 @@
-{% assign contributions_enabled = site.github_contributions.enabled | default: false %}
+{% assign contributions_enabled = site.data.theme.hero.github_contributions.enabled | default: false %}
 {% assign graph = site.data.github_contributions_cache %}
 {% if contributions_enabled and graph and graph.enabled and graph.weeks and graph.weeks.size > 0 %}
   <section class="github-graph" aria-label="GitHub 기여 그래프">
