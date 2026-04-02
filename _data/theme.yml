@@ -7,6 +7,7 @@ tabs:
   posts_label: 글
   series_label: 시리즈
   about_label: 소개
+  show_about: false
 
 labels:
   posts: 포스트
@@ -25,6 +26,10 @@ hero:
   github_contributions:
     enabled: true
     username: woonyong-kr
+
+profile:
+  github_sync:
+    enabled: true
 
 footer:
   tagline: Built with Jekyll, inspired by velog.

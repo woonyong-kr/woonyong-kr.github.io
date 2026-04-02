@@ -3,6 +3,22 @@ layout: default
 ---
 {% assign reading_time = content | strip_html | number_of_words | divided_by: 220 | plus: 1 %}
 {% assign series = site.data.series[page.series] %}
+{% assign github_profile = site.data.github_profile_cache %}
+{% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
+{% assign fallback_github_url = site.data.profile.github | default: "" %}
+{% if configured_login == "" and fallback_github_url contains 'github.com/' %}
+  {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
+{% endif %}
+{% assign author_name = site.data.profile.display_name %}
+{% assign author_avatar = site.data.profile.avatar %}
+{% if github_profile and github_profile.enabled and github_profile.login == configured_login %}
+  {% if github_profile.display_name != "" %}
+    {% assign author_name = github_profile.display_name %}
+  {% endif %}
+  {% if github_profile.avatar_url != "" %}
+    {% assign author_avatar = github_profile.avatar_url %}
+  {% endif %}
+{% endif %}
 <article class="post-view">
   <a class="post-view__back" href="{{ '/' | relative_url }}">글 목록으로 돌아가기</a>
 
@@ -16,15 +32,25 @@ layout: default
     {% endif %}
 
     <div class="post-head__author">
-      <img
-        class="post-head__avatar"
-        src="{{ site.data.profile.avatar | relative_url }}"
-        alt="{{ site.data.profile.display_name }}"
-        width="48"
-        height="48"
-      >
+      {% if author_avatar contains '://' %}
+        <img
+          class="post-head__avatar"
+          src="{{ author_avatar }}"
+          alt="{{ author_name }}"
+          width="48"
+          height="48"
+        >
+      {% else %}
+        <img
+          class="post-head__avatar"
+          src="{{ author_avatar | relative_url }}"
+          alt="{{ author_name }}"
+          width="48"
+          height="48"
+        >
+      {% endif %}
       <div class="post-head__meta-block">
-        <strong>{{ site.data.profile.display_name }}</strong>
+        <strong>{{ author_name }}</strong>
         <span>
           {{ page.date | date: "%Y년 %-m월 %-d일" }} · {{ reading_time }}분 읽기{% if page.updated_at %} · 수정 {{ page.updated_at | date: "%Y년 %-m월 %-d일" }}{% endif %}
         </span>

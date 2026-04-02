@@ -12,15 +12,25 @@
     </a>
 
     {% assign theme = site.data.theme %}
+    {% assign github_profile = site.data.github_profile_cache %}
+    {% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
+    {% assign fallback_github_url = site.data.profile.github | default: "" %}
+    {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
+      {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
+    {% endif %}
+    {% assign resolved_github_url = fallback_github_url %}
+    {% if github_profile and github_profile.enabled and github_profile.login == configured_login and github_profile.profile_url != "" %}
+      {% assign resolved_github_url = github_profile.profile_url %}
+    {% endif %}
     {% assign show_github_link = theme.header.show_github_link | default: true %}
     {% assign show_rss_link = theme.header.show_rss_link | default: true %}
     {% assign show_theme_toggle = theme.header.show_theme_toggle | default: true %}
     {% if show_github_link or show_rss_link or show_theme_toggle %}
       <nav class="header-actions" aria-label="바로가기">
-        {% if show_github_link %}
+        {% if show_github_link and resolved_github_url != "" %}
           <a
             class="icon-button"
-            href="{{ site.data.profile.github }}"
+            href="{{ resolved_github_url }}"
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
