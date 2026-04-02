@@ -212,6 +212,27 @@ html[data-theme="dark"] .theme-toggle__moon {
   padding-bottom: 4rem;
 }
 
+.home-layout {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding-top: 5.625rem;
+  padding-bottom: 4rem;
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.home-sidebar {
+  position: sticky;
+  top: 5.5rem;
+  align-self: start;
+}
+
+.home-main {
+  min-width: 0;
+}
+
 .profile__section {
   display: flex;
   align-items: flex-start;
@@ -300,6 +321,29 @@ html[data-theme="dark"] .theme-toggle__moon {
 .profile__stat-label {
   font-size: 0.875rem;
   color: var(--text3);
+}
+
+.profile--sidebar .profile__section {
+  display: block;
+}
+
+.profile--sidebar .profile__left {
+  display: block;
+}
+
+.profile--sidebar .profile__avatar {
+  width: min(16rem, 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  display: block;
+}
+
+.profile--sidebar .profile__info {
+  margin-top: 1.25rem;
+}
+
+.profile--sidebar .profile__separator {
+  display: none;
 }
 
 .github-graph {
@@ -484,6 +528,17 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin-bottom: 3.25rem;
   display: flex;
   justify-content: center;
+}
+
+.home-main > .github-graph {
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+
+.home-main .velog-tabs {
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+  justify-content: flex-start;
 }
 
 .velog-tabs__inner {
@@ -767,10 +822,10 @@ html[data-theme="dark"] {
 }
 
 .tag-sidebar {
-  position: absolute;
-  top: 0;
-  left: -216px;
-  width: 184px;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border4);
+  width: 100%;
 }
 
 .tag-sidebar__title {
@@ -1357,6 +1412,13 @@ html[data-theme="dark"] {
     padding-bottom: 2rem;
   }
 
+  .home-layout {
+    width: calc(100% - 2rem);
+    padding-top: 3rem;
+    padding-bottom: 2rem;
+    gap: 1.5rem;
+  }
+
   .profile__left {
     gap: 0.875rem;
   }
@@ -1385,6 +1447,21 @@ html[data-theme="dark"] {
   .profile__separator {
     margin-top: 1rem;
     margin-bottom: 1rem;
+  }
+
+  .profile--sidebar .profile__left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+  }
+
+  .profile--sidebar .profile__avatar {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .profile--sidebar .profile__info {
+    margin-top: 0;
   }
 
   .github-graph {
@@ -1455,6 +1532,10 @@ html[data-theme="dark"] {
     padding-top: 0;
   }
 
+  .home-main .velog-tabs {
+    justify-content: center;
+  }
+
   .posts-panel__toolbar {
     margin-bottom: 1rem;
   }
@@ -1516,12 +1597,25 @@ html[data-theme="dark"] {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1080px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .home-sidebar {
+    position: static;
+  }
+
   .tag-pills {
     display: flex;
   }
 
   .tag-sidebar {
     display: none;
+  }
+
+  .home-main .velog-tabs {
+    justify-content: center;
   }
 }
