@@ -1012,11 +1012,11 @@ html[data-theme="dark"] {
   aspect-ratio: 368 / 193;
   overflow: hidden;
   border-radius: 1rem;
-  border: 1px solid var(--border3);
   background: var(--bg-element2);
 }
 
 .series-card__image img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
