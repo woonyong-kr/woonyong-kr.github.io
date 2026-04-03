@@ -29,6 +29,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler: '2.5.23'
           bundler-cache: true
 
       # 파비콘 동기화에 필요한 Python 이미지 라이브러리
