@@ -3,7 +3,7 @@ title: "글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법"
 description: "front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다."
 date: 2026-03-30 09:00:00 +0900
 updated_at: 2026-04-03 12:40:00 +0900
-thumbnail: /assets/images/posts/writing-guide.svg
+thumbnail: /assets/images/posts/writing-guide-cover.png
 series: theme-overview
 tags:
   - Markdown
@@ -13,8 +13,6 @@ tags:
 ---
 
 이 테마에서 포스트는 Jekyll 기본 규칙을 따르면서도, 개발 블로그에 자주 필요한 메타데이터를 조금 더 얹어서 씁니다. 핵심은 “글 파일은 단순하게 유지하고, 시리즈 이름이나 UI 문구는 별도 데이터 파일에 분리한다”는 점입니다.
-
-<img src="{{ '/assets/images/posts/writing-model-detail.svg' | relative_url }}" alt="글 작성 모델 다이어그램">
 
 ## 기본 front matter
 

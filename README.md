@@ -159,7 +159,7 @@ title: 글 제목
 description: 목록에 보일 짧은 설명
 date: 2026-04-03 09:00:00 +0900
 updated_at: 2026-04-03 21:00:00 +0900
-thumbnail: /assets/images/posts/example.svg
+thumbnail: /assets/images/posts/example.png
 series: theme-overview
 tags:
   - Jekyll
@@ -284,13 +284,13 @@ search:
 
 ## 샘플 이미지와 저작권
 
-이 저장소에 포함된 SVG 자산은 모두 이 프로젝트를 위해 직접 만든 원본입니다.
+프로필 관련 SVG는 이 프로젝트를 위해 직접 만든 자산이고, 게시물 썸네일 PNG는 Unsplash의 무료 사진을 내려받아 포함했습니다.
 
 - `assets/images/profile.svg`
 - `assets/images/avatar-placeholder.svg`
-- `assets/images/posts/*`
+- `assets/images/posts/*-cover.png`
 
-외부 사진, 서드파티 아이콘 세트, 상업용 일러스트를 번들하지 않았기 때문에 공개 저장소 데모로 배포하기에 안전한 편입니다. 자세한 내용은 `NOTICE.md`를 참고하세요.
+포스트 커버 이미지는 Unsplash License 기준으로 사용할 수 있는 사진만 골랐고, 원본 출처는 `NOTICE.md`에 함께 남겨 두었습니다.
 
 ## 정리 원칙
 

@@ -3,7 +3,7 @@ title: "로컬에서 테마를 설치하고 미리보기하는 가장 빠른 방
 description: "Ruby 의존성 설치부터 GitHub 연동 데이터 동기화, 로컬 미리보기와 흔한 오류 대응까지 한 번에 정리합니다."
 date: 2026-04-01 09:00:00 +0900
 updated_at: 2026-04-03 12:40:00 +0900
-thumbnail: /assets/images/posts/local-setup.svg
+thumbnail: /assets/images/posts/local-setup-cover.png
 series: theme-setup
 tags:
   - Quick Start
@@ -13,8 +13,6 @@ tags:
 ---
 
 처음 실행할 때는 명령 자체보다 “어떤 단계는 선택 사항이고, 어떤 단계는 필수인지”를 구분하는 것이 중요합니다. 이 테마는 GitHub 연동이 없어도 열리지만, Ruby 의존성과 `baseurl`만큼은 정확히 맞아야 합니다.
-
-<img src="{{ '/assets/images/posts/local-setup-detail.svg' | relative_url }}" alt="로컬 설치 체크리스트">
 
 ## 준비물
 
