@@ -196,11 +196,15 @@ analytics:
   google:
     measurement_id: "G-XXXXXXXXXX"
 
-# Disqus 댓글
+# Giscus 댓글
 comments:
-  provider: "disqus"
-  disqus:
-    shortname: "your-shortname"
+  provider: "giscus"
+  giscus:
+    repo: "owner/repository"
+    repo_id: "REPOSITORY_NODE_ID"
+    category: "Announcements"
+    category_id: "CATEGORY_NODE_ID"
+    mapping: "pathname"
 
 # Algolia 검색
 search:
@@ -210,6 +214,10 @@ search:
     api_key: "YOUR_SEARCH_API_KEY"
     index_name: "YOUR_INDEX_NAME"
 ```
+
+기본 댓글 시스템은 Giscus입니다. GitHub Discussions에 댓글이 저장되고, 방문자는 GitHub 계정으로 로그인해 댓글을 남길 수 있습니다.
+
+처음 붙일 때는 저장소 Discussions를 켜고, 필요하면 [giscus app](https://github.com/apps/giscus)도 저장소에 설치해야 합니다.
 
 ## 트러블슈팅
 

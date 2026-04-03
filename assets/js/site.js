@@ -25,11 +25,43 @@
     }
   }
 
+  function getGiscusTheme(theme) {
+    var container = document.querySelector("[data-comments-provider='giscus']");
+    var safeTheme = theme === "dark" ? "dark" : "light";
+
+    if (!container) {
+      return "";
+    }
+
+    return container.getAttribute(safeTheme === "dark" ? "data-giscus-theme-dark" : "data-giscus-theme-light") || "";
+  }
+
+  function syncGiscusTheme(theme) {
+    var iframe = document.querySelector("iframe.giscus-frame");
+    var nextTheme = getGiscusTheme(theme || document.documentElement.getAttribute("data-theme"));
+
+    if (!iframe || !iframe.contentWindow || !nextTheme) {
+      return;
+    }
+
+    iframe.contentWindow.postMessage(
+      {
+        giscus: {
+          setConfig: {
+            theme: nextTheme,
+          },
+        },
+      },
+      "https://giscus.app"
+    );
+  }
+
   function applyTheme(theme, persist) {
     var safeTheme = theme === "dark" ? "dark" : "light";
 
     document.documentElement.setAttribute("data-theme", safeTheme);
     updateThemeMeta(safeTheme);
+    syncGiscusTheme(safeTheme);
 
     if (persist !== true) {
       return;
@@ -567,8 +599,32 @@
     }
   }
 
+  function setupGiscusThemeSync() {
+    var container = document.querySelector("[data-comments-provider='giscus']");
+
+    if (!container) {
+      return;
+    }
+
+    if (typeof MutationObserver === "function") {
+      var observer = new MutationObserver(function () {
+        syncGiscusTheme(document.documentElement.getAttribute("data-theme"));
+      });
+
+      observer.observe(container, { childList: true, subtree: true });
+    }
+
+    window.setTimeout(function () {
+      syncGiscusTheme(document.documentElement.getAttribute("data-theme"));
+    }, 250);
+    window.setTimeout(function () {
+      syncGiscusTheme(document.documentElement.getAttribute("data-theme"));
+    }, 1000);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     setupAlgoliaSearch();
+    setupGiscusThemeSync();
     setupSearchForm();
     setupThemeToggle();
     setupSystemThemeSync();

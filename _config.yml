@@ -13,9 +13,23 @@ analytics:
     measurement_id: ""
 
 comments:
-  provider: ""
+  provider: "giscus"
   disqus:
     shortname: ""
+  giscus:
+    repo: "woonyong-kr/jekyll-theme-velog"
+    repo_id: "R_kgDOR1XW1w"
+    category: "Announcements"
+    category_id: "DIC_kwDOR1XW184C570c"
+    mapping: "pathname"
+    strict: true
+    reactions_enabled: true
+    emit_metadata: false
+    input_position: "bottom"
+    lang: "ko"
+    loading: "lazy"
+    theme_light: "light"
+    theme_dark: "transparent_dark"
 
 search:
   provider: local
