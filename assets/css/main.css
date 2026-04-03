@@ -148,10 +148,16 @@ svg {
 }
 
 .header-logo__mark {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
-  object-fit: contain;
+  object-fit: cover;
+}
+
+.header-logo__mark--avatar {
+  border-radius: 999px;
+  border: 1px solid var(--border3);
+  background: var(--bg-element2);
 }
 
 .header-logo__text {
@@ -164,12 +170,12 @@ svg {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .icon-button {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.625rem;
+  height: 2.625rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -186,8 +192,13 @@ svg {
 }
 
 .icon-button svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .theme-toggle__moon {
