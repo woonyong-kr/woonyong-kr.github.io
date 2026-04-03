@@ -350,42 +350,6 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--text3);
 }
 
-.profile--sidebar .profile__section {
-  display: block;
-}
-
-.profile--sidebar .profile__left {
-  display: block;
-}
-
-.profile--sidebar .profile__avatar {
-  width: min(10.5rem, 100%);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  display: block;
-}
-
-.profile--sidebar .profile__info {
-  margin-top: 1rem;
-  max-width: 15rem;
-}
-
-.profile--sidebar .profile__name {
-  font-size: 1.375rem;
-}
-
-.profile--sidebar .profile__bio {
-  font-size: 0.875rem;
-}
-
-.profile--sidebar .profile__intro {
-  font-size: 0.8125rem;
-}
-
-.profile--sidebar .profile__separator {
-  display: none;
-}
-
 .github-graph {
   margin-top: 1.125rem;
 }
@@ -1528,21 +1492,6 @@ html[data-theme="dark"] {
   .profile__separator {
     margin-top: 1rem;
     margin-bottom: 1rem;
-  }
-
-  .profile--sidebar .profile__left {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.875rem;
-  }
-
-  .profile--sidebar .profile__avatar {
-    width: 5rem;
-    height: 5rem;
-  }
-
-  .profile--sidebar .profile__info {
-    margin-top: 0;
   }
 
   .github-graph {
