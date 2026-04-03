@@ -41,6 +41,10 @@ defaults:
     values:
       layout: post
   - scope:
+      path: "assets"
+    values:
+      layout: null
+  - scope:
       path: ""
     values:
       layout: default

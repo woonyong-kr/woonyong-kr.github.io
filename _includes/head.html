@@ -18,23 +18,13 @@
 {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
   {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
 {% endif %}
-{% assign favicon_avatar = site.data.profile.avatar %}
-{% if github_profile and github_profile.enabled and github_profile.login == configured_login and github_profile.avatar_url != "" %}
-  {% assign favicon_avatar = github_profile.avatar_url %}
-{% endif %}
-{% assign favicon_href = favicon_avatar %}
-{% if favicon_avatar contains '://' %}
-  {% assign favicon_type = '' %}
-{% else %}
-  {% assign favicon_href = favicon_avatar | relative_url | append: '?v=' | append: asset_version %}
-  {% assign favicon_type = 'image/svg+xml' %}
-{% endif %}
+{% assign favicon_href = '/assets/images/favicon.svg' | relative_url | append: '?v=' | append: asset_version %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff" data-theme-color>
 <meta name="apple-mobile-web-app-status-bar-style" content="default" data-apple-status-bar>
-<link rel="icon" href="{{ favicon_href }}"{% if favicon_type != '' %} type="{{ favicon_type }}" sizes="any"{% endif %}>
-<link rel="shortcut icon" href="{{ favicon_href }}"{% if favicon_type != '' %} type="{{ favicon_type }}"{% endif %}>
+<link rel="icon" href="{{ favicon_href }}" type="image/svg+xml" sizes="any">
+<link rel="shortcut icon" href="{{ favicon_href }}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{{ favicon_href }}">
 <link rel="mask-icon" href="{{ '/assets/images/profile.svg' | relative_url }}?v={{ asset_version }}" color="#495057">
 <link rel="alternate" type="application/atom+xml" href="{{ '/feed.xml' | relative_url }}" title="{{ site.title }}">

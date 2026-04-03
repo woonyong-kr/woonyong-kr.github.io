@@ -1,0 +1,35 @@
+---
+layout: null
+---
+{% assign github_profile = site.data.github_profile_cache %}
+{% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
+{% assign fallback_github_url = site.data.profile.github | default: "" %}
+{% if configured_login == "" and fallback_github_url contains 'github.com/' %}
+  {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
+{% endif %}
+{% assign favicon_avatar = site.data.profile.avatar %}
+{% if github_profile and github_profile.enabled and github_profile.login == configured_login and github_profile.avatar_url != "" %}
+  {% assign favicon_avatar = github_profile.avatar_url %}
+{% endif %}
+{% if favicon_avatar contains '://' %}
+  {% assign favicon_avatar_href = favicon_avatar %}
+{% else %}
+  {% assign favicon_avatar_href = favicon_avatar | relative_url %}
+{% endif %}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <clipPath id="avatar-clip">
+      <circle cx="32" cy="32" r="24"/>
+    </clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="25.5" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+  <image
+    href="{{ favicon_avatar_href | escape }}"
+    x="8"
+    y="8"
+    width="48"
+    height="48"
+    preserveAspectRatio="xMidYMid slice"
+    clip-path="url(#avatar-clip)"
+  />
+</svg>
