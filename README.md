@@ -40,6 +40,20 @@
 - 글, 시리즈, 태그, 검색이 모두 있는 시작점을 원하는 경우
 - 오픈소스 공개용 테마 저장소를 템플릿처럼 다듬고 싶은 경우
 
+## Before You Start
+
+이 저장소는 `theme gem`이나 `remote_theme` 패키지보다, `fork해서 바로 내 블로그 저장소로 쓰는 starter repository`에 가깝습니다.
+
+- 추천 사용 방식: 이 저장소를 `fork`하거나 `Use this template`로 복제한 뒤 내 블로그 저장소로 사용
+- 추천 배포 방식: 로컬, Jenkins, 또는 GitHub Actions에서 정적 파일을 빌드한 뒤 `gh-pages` 브랜치에 배포
+- 참고: GitHub Docs 기준으로 GitHub Pages는 Jekyll 테마와 플러그인을 지원하지만, 현재는 GitHub Actions 기반 배포를 권장합니다. 이 저장소처럼 커스텀 동기화 스크립트가 있는 경우에도 외부에서 빌드한 정적 결과물을 배포하는 방식이 가장 단순합니다.
+
+공식 문서:
+
+- [Adding a theme to your GitHub Pages site using Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/adding-a-theme-to-your-github-pages-site-using-jekyll)
+- [About GitHub Pages and Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll)
+- [Jekyll Plugins](https://jekyllrb.com/docs/plugins/)
+
 ## Quick Start
 
 ```bash
@@ -73,6 +87,40 @@ ruby scripts/fetch_github_contributions.rb
 6. 필요하면 `scripts/fetch_github_contributions.rb`로 GitHub 프로필 연결
 
 여기까지 하면 HTML을 직접 수정하지 않아도 대부분의 브랜딩 전환이 끝납니다.
+
+## Fork해서 GitHub Pages 블로그로 사용하기
+
+가장 현실적인 사용 흐름은 아래 순서입니다.
+
+1. 이 저장소를 `fork`하거나 템플릿으로 복제합니다.
+2. 저장소 이름을 원하는 블로그 이름으로 정합니다.
+3. [`_config.yml`](_config.yml)에서 `url`, `baseurl`, `title`, `description`을 수정합니다.
+4. [`_data/profile.yml`](_data/profile.yml), [`_data/theme.yml`](_data/theme.yml), [`_data/series.yml`](_data/series.yml)을 내 정보에 맞게 바꿉니다.
+5. [`_posts/`](_posts)의 가이드 글을 유지하거나 내 글로 교체합니다.
+6. 로컬에서 미리보기와 빌드를 확인합니다.
+7. GitHub Pages의 배포 소스를 `gh-pages` 브랜치 `/(root)`로 설정합니다.
+8. `_site/` 결과물을 `gh-pages`에 배포합니다.
+
+프로젝트 페이지 기준으로는 `_config.yml`의 `baseurl`을 반드시 저장소 이름과 맞춰야 합니다.
+
+- 저장소 이름이 `my-devlog`라면 `baseurl: "/my-devlog"`
+- 사용자 페이지 저장소 `username.github.io`라면 `baseurl: ""`
+
+로컬 확인 명령:
+
+```bash
+BUNDLE_FORCE_RUBY_PLATFORM=true bundle install
+BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
+```
+
+GitHub 프로필과 기여 그래프까지 함께 동기화하려면:
+
+```bash
+ruby scripts/fetch_github_contributions.rb
+BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
+```
+
+이 저장소는 `remote_theme:` 한 줄로 가져다 쓰는 패키지형 테마가 아니라, 화면, 데이터 파일, 데모 글, 배포 예시까지 포함한 스타터 저장소입니다. 즉, 실제 사용자는 보통 `fork -> 설정 수정 -> 글 작성 -> gh-pages 배포` 흐름으로 쓰는 것이 가장 자연스럽습니다.
 
 ## Project Structure
 
@@ -273,7 +321,32 @@ ruby scripts/fetch_github_contributions.rb
 
 연결이 실패해도 `_data/profile.yml`의 샘플 데이터로 화면이 유지되도록 설계했습니다.
 
-## External Integrations
+## Bundled Plugins And Integrations
+
+이 테마에는 두 종류의 확장 요소가 있습니다.
+
+1. Jekyll 빌드 시 함께 동작하는 플러그인
+2. 필요할 때만 켜는 외부 서비스 연동
+
+### 기본 포함 Jekyll 플러그인
+
+현재 [`Gemfile`](Gemfile)과 [`_config.yml`](_config.yml)에 이미 포함된 플러그인은 아래와 같습니다.
+
+| 플러그인 | 역할 | 상태 |
+| --- | --- | --- |
+| `jekyll-feed` | RSS/Atom 피드 생성 | 기본 활성 |
+| `jekyll-seo-tag` | 메타 태그, Open Graph, SEO 태그 생성 | 기본 활성 |
+| `jekyll-sitemap` | sitemap.xml 생성 | 기본 활성 |
+
+이 플러그인들은 현재 테마 구조와 바로 연결돼 있습니다.
+
+- `jekyll-feed`: RSS 아이콘과 피드 경로
+- `jekyll-seo-tag`: 문서 head의 SEO 메타 태그
+- `jekyll-sitemap`: 검색엔진 제출용 사이트맵
+
+GitHub Docs 기준으로 GitHub Pages는 지원되는 Jekyll 플러그인만 빌드할 수 있고, 지원되지 않는 플러그인을 쓰려면 외부에서 정적 파일을 빌드해 배포하는 편이 안전합니다. 이 저장소는 이미 `gh-pages` 정적 배포 흐름을 기준으로 잡혀 있어서, 나중에 커스텀 플러그인을 추가하더라도 배포 전략을 유지하기 쉽습니다.
+
+### 선택형 외부 연동
 
 기본값은 모두 비활성 상태입니다. 필요할 때만 `_config.yml`을 채우면 됩니다.
 
@@ -306,15 +379,57 @@ search:
     insights: true
 ```
 
+### GitHub 프로필 동기화와 기여 그래프
+
+이 연동은 외부 SaaS 위젯이 아니라 저장소에 포함된 스크립트 기반 기능입니다.
+
+- 프로필 이름, 아바타, GitHub 링크 동기화
+- 브라우저 파비콘 동기화
+- 1년 기여 그래프 캐시 생성
+
+설정 위치:
+
+- [`_data/theme.yml`](_data/theme.yml)
+- [`scripts/fetch_github_contributions.rb`](scripts/fetch_github_contributions.rb)
+
+필요 조건:
+
+- `GITHUB_GRAPHQL_TOKEN` 또는 `GITHUB_TOKEN`
+- 또는 `gh auth login`
+
 ## Deployment
 
 ### GitHub Pages
 
-이 테마는 GitHub Pages 프로젝트 페이지 구조를 기본값으로 사용합니다.
+이 테마는 GitHub Pages 프로젝트 페이지 구조를 기본값으로 사용합니다. 가장 추천하는 방식은 `빌드 서버에서 정적 파일을 생성하고`, 그 결과를 `gh-pages` 브랜치로 배포하는 것입니다.
 
 1. 저장소의 Pages 소스를 `gh-pages` 브랜치 `/ (root)`로 설정
 2. `_config.yml`의 `baseurl`을 저장소 이름과 맞춤
 3. 생성된 `_site/`를 `gh-pages`로 배포
+
+왜 이 방식을 추천하나:
+
+- GitHub Pages의 기본 Jekyll 빌드 환경과 분리돼 예측 가능함
+- `scripts/fetch_github_contributions.rb` 같은 사전 처리 단계를 함께 실행 가능
+- 지원 플러그인 목록에 덜 묶이고, 결과물이 이미 정적 HTML이므로 배포가 단순함
+
+### Fork 후 GitHub Pages 체크리스트
+
+포크 직후 가장 많이 놓치는 항목만 따로 정리하면 아래와 같습니다.
+
+1. 저장소 이름과 `_config.yml`의 `baseurl`이 일치하는지 확인
+2. Pages 소스가 `gh-pages` 브랜치 root인지 확인
+3. 프로필 동기화를 쓴다면 토큰이 준비되어 있는지 확인
+4. RSS, Disqus, Algolia, Google Analytics는 실제 값이 없으면 비활성 상태로 두기
+5. 샘플 글을 유지할지 교체할지 먼저 정하기
+
+### GitHub Actions로 써도 되는가
+
+가능합니다. GitHub Docs도 현재는 GitHub Actions 기반 Pages 배포를 권장합니다. 다만 이 저장소는 예시로 Jenkinsfile을 포함하고 있으며, 본질적으로 필요한 것은 아래 세 단계뿐입니다.
+
+1. 필요하면 GitHub 프로필/기여 그래프 동기화
+2. `bundle exec jekyll build`
+3. `_site/` 결과물을 Pages 배포 브랜치나 Actions artifact로 배포
 
 ### Jenkins
 
@@ -331,11 +446,22 @@ search:
   - username: GitHub 사용자명
   - password: GitHub Personal Access Token
 
+즉, Jenkins는 예시일 뿐이고, 같은 흐름을 GitHub Actions나 다른 CI로 옮겨도 문제 없습니다.
+
 ## Troubleshooting
 
 ### 스타일이 깨져 보일 때
 
 가장 먼저 `_config.yml`의 `baseurl`과 실제 저장소 이름이 같은지 확인하세요. 프로젝트 페이지에서는 이 값이 어긋나면 CSS, JS, 이미지 경로가 같이 틀어집니다.
+
+### fork 후 GitHub Pages에서 빈 페이지가 뜰 때
+
+아래 순서로 확인하면 대부분 해결됩니다.
+
+1. `gh-pages` 브랜치에 `_site` 결과물이 실제로 올라갔는지 확인
+2. 저장소 Settings의 Pages source가 `gh-pages` root인지 확인
+3. `_config.yml`의 `url`과 `baseurl`이 현재 저장소 경로와 맞는지 확인
+4. 브라우저 강력 새로고침으로 캐시를 비운 뒤 다시 확인
 
 ### GitHub 그래프가 비어 있을 때
 
