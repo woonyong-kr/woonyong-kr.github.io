@@ -16,6 +16,8 @@
   --gray7: #495057;
   --gray8: #343a40;
   --gray9: #212529;
+  --content-width: 768px;
+  --content-wide-width: 960px;
   --home-sidebar-width: 18rem;
   --home-column-gap: 2.75rem;
 }
@@ -213,12 +215,12 @@ html[data-theme="dark"] .theme-toggle__moon {
 .velog-layout,
 .post-view,
 .site-footer__inner {
-  width: min(768px, calc(100% - 2rem));
+  width: min(var(--content-width), calc(100% - 2rem));
   margin: 0 auto;
 }
 
 .velog-layout--wide {
-  width: min(960px, calc(100% - 2rem));
+  width: min(var(--content-wide-width), calc(100% - 2rem));
 }
 
 .velog-layout {
@@ -227,7 +229,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .home-layout {
-  width: min(1120px, calc(100% - 2rem));
+  width: min(var(--content-wide-width), calc(100% - 2rem));
   margin: 0 auto;
   padding-top: 5.625rem;
   padding-bottom: 4rem;
@@ -241,7 +243,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 .home-intro {
-  width: min(768px, 100%);
+  width: 100%;
   margin: 0 auto 2.75rem;
 }
 
