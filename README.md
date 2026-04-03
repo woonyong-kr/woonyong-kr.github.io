@@ -1,177 +1,95 @@
-# Velog Style Jekyll Theme
+# jekyll-theme-velog
 
-velog의 읽기 흐름을 참고해 만든 Jekyll 기반 개발 블로그 테마입니다. GitHub Pages 프로젝트 페이지를 기본 대상으로 하고, 태그 필터, 시리즈, 검색, GitHub 프로필 동기화, 기여 그래프, 라이트/다크 모드까지 한 번에 갖춘 출발점을 목표로 정리했습니다.
+velog 읽는 흐름이 편해서 비슷하게 만들어봤습니다. Jekyll 기반이고 GitHub Pages에 올려서 씁니다.
 
-이 저장소는 단순한 마크업 샘플이 아니라, 실제로 복제해서 바로 바꿔 쓸 수 있는 오픈소스 테마 템플릿입니다. README와 `_posts/`의 데모 글은 모두 "테마 사용 설명서" 역할을 하도록 작성했습니다.
+라이브 데모 → [woonyong-kr.github.io/jekyll-theme-velog](https://woonyong-kr.github.io/jekyll-theme-velog/)
 
-라이브 데모: [https://woonyong-kr.github.io/jekyll-theme-velog/](https://woonyong-kr.github.io/jekyll-theme-velog/)
+다크 모드 기준으로 찍은 스크린샷입니다.
 
-라이트 모드와 다크 모드를 모두 지원하며, 기본값은 사용자의 시스템 모드를 따릅니다. 아래 프리뷰 이미지는 다크 모드 기준으로 캡처한 화면입니다.
+## 미리보기
 
-## Preview
+### 홈
 
-### Home
+![홈 미리보기](assets/images/docs/home-preview.png)
 
-![Home preview](assets/images/docs/home-preview.png)
+### 시리즈
 
-### Series
+![시리즈 미리보기](assets/images/docs/series-preview.png)
 
-![Series preview](assets/images/docs/series-preview.png)
+### 글
 
-### Post
+![글 미리보기](assets/images/docs/post-preview.png)
 
-![Post preview](assets/images/docs/post-preview.png)
+## 포함된 기능
 
-## What You Get
+- 글 목록, 태그 필터, 검색
+- 시리즈 탭
+- 썸네일, 이전/다음 글 네비게이션
+- GitHub 프로필 동기화 + 1년 기여 그래프
+- 라이트 / 다크 모드 (시스템 설정 자동 반영)
+- GitHub Actions 자동 배포
+- Jekyll 플러그인: feed, seo-tag, sitemap
 
-- velog 스타일의 글 목록과 시리즈 탭
-- 태그 필터와 검색
-- 글 상세 상단 썸네일, 태그, 이전/다음 글 네비게이션
-- GitHub 프로필 동기화와 1년 기여 그래프
-- 시스템 모드 동기화 기반 라이트/다크 모드 지원
-- GitHub Pages 프로젝트 페이지 기준 경로 구조
-- GitHub Actions 기반 자동 배포 (fork 즉시 동작)
-- Jenkins 배포 예시도 포함
-- README와 데모 글까지 포함된 문서형 샘플 콘텐츠
+## 이 저장소 쓰는 방법
 
-## Good Fit
+`remote_theme`으로 가져다 쓰는 패키지가 아니라, fork해서 바로 블로그로 쓰는 starter 저장소입니다.
 
-- 개인 개발 블로그를 빠르게 열고 싶은 경우
-- GitHub Pages에 바로 올릴 수 있는 정적 블로그가 필요한 경우
-- 글, 시리즈, 태그, 검색이 모두 있는 시작점을 원하는 경우
-- 오픈소스 공개용 테마 저장소를 템플릿처럼 다듬고 싶은 경우
+1. 이 저장소를 fork하거나 `Use this template`으로 복제
+2. `_config.yml`에서 `url`, `baseurl`, `title`, `description` 수정
+3. `_data/` 파일 수정
+4. main 브랜치에 push하면 GitHub Actions가 알아서 배포
 
-## Before You Start
+GitHub Pages 설정에서 소스를 `gh-pages` 브랜치 `/ (root)`로 맞춰야 합니다.
 
-이 저장소는 `theme gem`이나 `remote_theme` 패키지보다, `fork해서 바로 내 블로그 저장소로 쓰는 starter repository`에 가깝습니다.
+---
 
-- 추천 사용 방식: 이 저장소를 `fork`하거나 `Use this template`로 복제한 뒤 내 블로그 저장소로 사용
-- 추천 배포 방식: `.github/workflows/deploy.yml`이 포함돼 있어서 `main` 브랜치에 push하면 자동으로 `gh-pages`에 배포됩니다
-- 참고: Jenkins 파이프라인 예시(`Jenkinsfile`)도 포함돼 있으므로, CI 환경에 따라 선택해서 쓸 수 있습니다
+`baseurl`은 저장소 이름과 반드시 일치해야 합니다.
 
-공식 문서:
+```
+저장소 이름: my-blog  →  baseurl: "/my-blog"
+username.github.io  →  baseurl: ""
+```
 
-- [Adding a theme to your GitHub Pages site using Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/adding-a-theme-to-your-github-pages-site-using-jekyll)
-- [About GitHub Pages and Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll)
-- [Jekyll Plugins](https://jekyllrb.com/docs/plugins/)
-
-## Quick Start
+## 빠른 시작
 
 ```bash
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle install
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 ```
 
-기본 미리보기 주소:
+로컬 주소: `http://127.0.0.1:4000/jekyll-theme-velog/`
 
-```text
-http://127.0.0.1:4000/jekyll-theme-velog/
-```
-
-GitHub 프로필과 잔디 그래프까지 같이 보고 싶다면 한 단계만 더 실행하면 됩니다.
+GitHub 프로필과 잔디 그래프를 로컬에서도 보고 싶으면:
 
 ```bash
 ruby scripts/fetch_github_contributions.rb
 ```
 
-이 단계는 선택 사항입니다. 토큰이나 `gh auth login`이 준비되지 않았다면 생략해도 되고, 그 경우에는 `_data/profile.yml`의 샘플 프로필이 대신 보입니다.
+토큰은 `GITHUB_GRAPHQL_TOKEN`, `GITHUB_TOKEN`, `gh auth login` 중 하나면 됩니다. 없으면 그냥 건너뛰어도 됩니다.
 
-## First 10 Minutes
+## 설정 파일
 
-이 테마를 새 블로그로 바꿀 때는 아래 순서가 가장 빠릅니다.
+처음에 손대야 할 파일은 네 개입니다.
 
-1. `_config.yml`에서 `title`, `description`, `url`, `baseurl` 수정
-2. `_data/profile.yml`에서 기본 이름, 소개 문구, 기본 GitHub 링크 수정
-3. `_data/theme.yml`에서 헤더 버튼, 탭, GitHub 동기화 옵션 조정
-4. `_data/series.yml`에 실제 시리즈 이름과 설명 입력
-5. `_posts/`의 데모 글을 유지하거나 교체
-6. 필요하면 `scripts/fetch_github_contributions.rb`로 GitHub 프로필 연결
-
-여기까지 하면 HTML을 직접 수정하지 않아도 대부분의 브랜딩 전환이 끝납니다.
-
-## Fork해서 GitHub Pages 블로그로 사용하기
-
-가장 현실적인 사용 흐름은 아래 순서입니다.
-
-1. 이 저장소를 `fork`하거나 템플릿으로 복제합니다.
-2. 저장소 이름을 원하는 블로그 이름으로 정합니다.
-3. [`_config.yml`](_config.yml)에서 `url`, `baseurl`, `title`, `description`을 수정합니다.
-4. [`_data/profile.yml`](_data/profile.yml), [`_data/theme.yml`](_data/theme.yml), [`_data/series.yml`](_data/series.yml)을 내 정보에 맞게 바꿉니다.
-5. [`_posts/`](_posts)의 가이드 글을 유지하거나 내 글로 교체합니다.
-6. 로컬에서 미리보기와 빌드를 확인합니다.
-7. GitHub Pages의 배포 소스를 `gh-pages` 브랜치 `/(root)`로 설정합니다.
-8. `main`에 push하면 GitHub Actions가 자동으로 빌드하고 `gh-pages`에 배포합니다.
-
-프로젝트 페이지 기준으로는 `_config.yml`의 `baseurl`을 반드시 저장소 이름과 맞춰야 합니다.
-
-- 저장소 이름이 `my-devlog`라면 `baseurl: "/my-devlog"`
-- 사용자 페이지 저장소 `username.github.io`라면 `baseurl: ""`
-
-로컬 확인 명령:
-
-```bash
-BUNDLE_FORCE_RUBY_PLATFORM=true bundle install
-BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
+```
+_config.yml           사이트 URL, 제목, 외부 연동
+_data/profile.yml     토큰 없을 때 보여줄 기본 프로필
+_data/theme.yml       헤더 버튼, 탭 이름, 검색 옵션 등 UI 설정
+_data/series.yml      시리즈 이름과 설명
 ```
 
-GitHub 프로필과 기여 그래프까지 함께 동기화하려면:
-
-```bash
-ruby scripts/fetch_github_contributions.rb
-BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll build
-```
-
-이 저장소는 `remote_theme:` 한 줄로 가져다 쓰는 패키지형 테마가 아니라, 화면, 데이터 파일, 데모 글, 배포 예시까지 포함한 스타터 저장소입니다. 실제 사용자는 `fork → 설정 수정 → 글 작성 → push` 흐름으로 쓰는 것이 가장 자연스럽습니다.
-
-## Project Structure
-
-```text
-.
-├── .github
-│   └── workflows
-│       └── deploy.yml        # GitHub Actions 자동 배포
-├── _config.yml
-├── _data
-│   ├── profile.yml
-│   ├── series.yml
-│   └── theme.yml
-├── _includes
-├── _layouts
-├── _posts
-├── assets
-│   ├── css/main.css
-│   ├── images
-│   └── js/site.js
-├── scripts/fetch_github_contributions.rb
-├── Jenkinsfile
-└── posts.json
-```
-
-구조는 크게 네 층으로 보면 이해가 쉽습니다.
-
-1. `_config.yml` — 사이트 메타데이터, 배포 경로, 외부 연동
-2. `_data/*.yml` — 프로필, 시리즈, UI 옵션 같은 구조화된 설정
-3. `_layouts`, `_includes`, `assets` — 실제 테마 렌더링 코드
-4. `_posts` — 사용자 콘텐츠
-
-## Configuration Map
-
-### `_config.yml`
-
-사이트 레벨 설정입니다.
+### _config.yml
 
 ```yml
-title: Velog Style Jekyll Theme
-description: velog 감성의 개발 블로그를 GitHub Pages와 Jekyll로 구성한 오픈소스 테마 데모
-url: "https://your-name.github.io"
+title: 내 블로그
+description: 블로그 설명
+url: "https://username.github.io"
 baseurl: "/repo-name"
 ```
 
-중요한 점은 `baseurl`입니다. GitHub Pages 프로젝트 페이지는 저장소 이름이 곧 URL 경로가 되므로, 저장소 이름을 바꾸면 `baseurl`도 같이 바꿔야 합니다.
+### _data/theme.yml
 
-### `_data/theme.yml`
-
-테마 레벨 설정입니다. 표시 여부와 UI 문구를 이 파일에서 바꿉니다.
+자주 건드리는 부분만 추리면 이렇습니다.
 
 ```yml
 header:
@@ -179,285 +97,130 @@ header:
   show_rss_link: true
   show_theme_toggle: true
 
-tabs:
-  show_about: false
-
 home:
   initial_post_count: 12
   search_placeholder: 검색어를 입력하세요
-
-profile:
-  github_sync:
-    enabled: true
 
 hero:
   github_contributions:
     enabled: true
     username: your-github-id
+
+profile:
+  github_sync:
+    enabled: true
 ```
 
-### Theme Modes
+### _data/profile.yml
 
-테마는 라이트 모드와 다크 모드를 모두 지원합니다.
-
-- 기본값은 `prefers-color-scheme`를 따름
-- 사용자가 토글하면 선택값을 `localStorage`에 저장
-- 홈, 시리즈, 글 상세 페이지가 같은 테마 토큰을 공유
-- README 프리뷰 이미지는 다크 모드 기준으로 정리
-
-### `_data/profile.yml`
-
-GitHub 연결이 없을 때 보여줄 fallback 데이터를 담습니다.
-
-- 표시 이름
-- 소개 문구
-- 기본 아바타
-- 기본 GitHub 링크
-
-즉, GitHub 동기화가 실패해도 화면이 비어 보이지 않게 받쳐 주는 파일입니다.
-
-### `_data/series.yml`
-
-시리즈 키와 사용자에게 보일 제목/설명을 분리합니다.
+GitHub 동기화가 안 됐을 때 보여줄 fallback입니다.
 
 ```yml
-theme-overview:
-  title: 테마 소개와 구조
-  description: 홈 구성, 글 목록, 시리즈 카드처럼 테마의 핵심 화면 구성을 빠르게 훑습니다.
+display_name: 이름
+bio: 한 줄 소개
+intro: 추가 정보
+avatar: /assets/images/avatar-placeholder.svg
+github: https://github.com/your-handle
 ```
 
-글 front matter에는 짧은 키만 쓰고, 실제 카드 문구는 이 파일에서 관리하는 편이 유지보수에 좋습니다.
+### _data/series.yml
 
-## Writing Posts
+```yml
+my-series:
+  title: 시리즈 표시 이름
+  description: 시리즈 설명
+```
 
-포스트는 `_posts/`에 Jekyll 규칙대로 작성합니다.
+글 front matter에서는 키만 씁니다.
+
+```yml
+series: my-series
+```
+
+## 글 작성
 
 ```md
 ---
 title: 글 제목
-description: 목록에 보일 짧은 설명
-date: 2026-04-03 09:00:00 +0900
-updated_at: 2026-04-03 21:00:00 +0900
-thumbnail: /assets/images/posts/my-post-cover.png
-series: theme-overview
+description: 카드에 보일 설명
+date: 2026-01-01 09:00:00 +0900
+updated_at: 2026-01-01 21:00:00 +0900
+thumbnail: /assets/images/posts/cover.png
+series: my-series
 tags:
   - Jekyll
-  - Theme
+  - GitHub Pages
 ---
 ```
 
-필드별 사용 위치:
+## GitHub Actions 배포
 
-| 필드 | 용도 |
-| --- | --- |
-| `title` | 글 목록 제목, 상세 제목 |
-| `description` | 카드 요약 문구 |
-| `date` | 발행일 |
-| `updated_at` | 수정일 표기, 최신 정렬 기준 |
-| `thumbnail` | 카드 상단, 글 상세 상단 썸네일 |
-| `series` | 시리즈 카드, 시리즈 필터 연결 |
-| `tags` | 홈 태그 목록과 글 상세 태그 링크 |
-
-현재 테마에서 확인해 둔 Markdown 범위:
-
-- 제목과 일반 문단
-- 리스트와 체크리스트
-- 표
-- 코드 블록
-- 이미지
-- 링크
-- 인용문
-- raw HTML
-- YouTube iframe
-
-## Demo Content
-
-현재 `_posts/`에는 lorem ipsum 대신 아래 주제를 설명하는 실제 가이드 글이 들어 있습니다.
-
-- 테마 소개
-- 로컬 설치
-- 테마 커스터마이징
-- 글 작성 규칙
-- GitHub 프로필 동기화
-- GitHub Pages + GitHub Actions / Jenkins 배포
-
-즉, 이 저장소를 실행하면 "빈 테마"가 아니라 "사용법을 같이 보여주는 테마 데모 사이트"가 열립니다.
-
-| 글 | 다루는 내용 |
-| --- | --- |
-| `Velog Style Jekyll Theme 소개` | 전체 화면 구성과 오픈소스 테마로서의 방향 |
-| `로컬에서 테마를 설치하고 미리보기하는 가장 빠른 방법` | 로컬 실행, `baseurl`, 초기 오류 대응 |
-| `프로필, 탭, 홈 화면을 테마 설정으로 커스터마이징하기` | `_config.yml`, `_data/theme.yml`, `_data/profile.yml` 사용법 |
-| `글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법` | front matter, 시리즈, 태그, 썸네일 작성 규칙 |
-| `GitHub 프로필 동기화와 기여 그래프를 붙이는 방법` | 프로필 동기화, 파비콘, 기여 그래프 캐시 구조 |
-| `GitHub Pages와 GitHub Actions / Jenkins로 테마를 배포하는 방법` | `gh-pages` 배포와 GitHub Actions / Jenkins 파이프라인 흐름 |
-
-## GitHub Profile Sync
-
-`scripts/fetch_github_contributions.rb`는 두 가지 캐시를 만듭니다.
-
-- `_data/github_contributions_cache.json`
-- `_data/github_profile_cache.json`
-
-실행 명령:
-
-```bash
-ruby scripts/fetch_github_contributions.rb
-```
-
-인증은 아래 셋 중 하나면 됩니다.
-
-- `GITHUB_GRAPHQL_TOKEN`
-- `GITHUB_TOKEN`
-- `gh auth login`
-
-동기화가 성공하면 아래 항목이 자동으로 갱신됩니다.
-
-- 홈 프로필 아바타와 이름
-- 헤더 브랜드 아이콘
-- 브라우저 탭 파비콘
-- GitHub 링크
-- 1년 기여 그래프
-
-연결이 실패해도 `_data/profile.yml`의 샘플 데이터로 화면이 유지되도록 설계했습니다.
-
-## Deployment
-
-### GitHub Actions (추천)
-
-저장소에 `.github/workflows/deploy.yml`이 포함돼 있어서, fork 직후부터 자동 배포가 동작합니다.
-
-트리거:
-- `main` 브랜치 push 시 자동 실행
-- 매일 새벽 3:17 스케줄 실행 (잔디 그래프 갱신 목적)
-- 수동 실행(`workflow_dispatch`)
-
-배포 흐름:
+`.github/workflows/deploy.yml`이 포함돼 있어서 fork하면 바로 동작합니다.
 
 ```
-bundle install → GitHub 프로필/잔디 동기화 → jekyll build → gh-pages 배포
+main push  →  bundle install  →  잔디 동기화  →  jekyll build  →  gh-pages 배포
 ```
 
-잔디 그래프까지 연동하려면 저장소 Settings → Secrets에 `GH_PAT`(Personal Access Token)을 추가하면 됩니다. 토큰 없이도 기본 배포는 동작합니다.
+매일 새벽 3:17에 스케줄 실행도 됩니다 (잔디 그래프 갱신 목적).
 
-### GitHub Pages 설정
+잔디 그래프까지 연동하려면 저장소 Settings → Secrets에 `GH_PAT`(read:user 권한 PAT)을 추가합니다. 없으면 `GITHUB_TOKEN`으로 폴백되는데, 기본 배포는 문제없이 됩니다.
 
-1. 저장소 Settings → Pages → Source를 `gh-pages` 브랜치 `/ (root)`로 설정
-2. `_config.yml`의 `baseurl`을 저장소 이름과 맞춤
-3. `main`에 push하면 Actions가 자동으로 배포
+### fork 후 체크리스트
 
-### Fork 후 GitHub Pages 체크리스트
-
-포크 직후 가장 많이 놓치는 항목만 따로 정리하면 아래와 같습니다.
-
-1. 저장소 이름과 `_config.yml`의 `baseurl`이 일치하는지 확인
+1. `_config.yml`의 `baseurl`이 저장소 이름과 맞는지 확인
 2. Pages 소스가 `gh-pages` 브랜치 root인지 확인
-3. 프로필 동기화를 쓴다면 `GH_PAT` Secret이 등록돼 있는지 확인
-4. RSS, Disqus, Algolia, Google Analytics는 실제 값이 없으면 비활성 상태로 두기
-5. 샘플 글을 유지할지 교체할지 먼저 정하기
+3. 잔디 그래프 쓸 거면 `GH_PAT` Secret 등록
+4. 샘플 글 유지할지 교체할지 결정
 
 ### Jenkins
 
-Jenkins를 쓰는 환경이라면 `Jenkinsfile`이 동일한 흐름으로 동작합니다.
+Jenkins 쓰는 환경이면 `Jenkinsfile`도 포함돼 있습니다. 동작 흐름은 Actions와 동일합니다.
 
-필요한 Jenkins Credentials:
+필요한 Credentials:
 
-- `github-pages`
-  - username: GitHub 사용자명
-  - password: GitHub Personal Access Token
+```
+credentialsId: github-pages
+  username: GitHub 사용자명
+  password: GitHub Personal Access Token
+```
 
-GitHub Actions와 Jenkins 중 어느 쪽을 써도 배포 결과는 동일합니다.
+## 선택적 외부 연동
 
-## Bundled Plugins And Integrations
-
-이 테마에는 두 종류의 확장 요소가 있습니다.
-
-1. Jekyll 빌드 시 함께 동작하는 플러그인
-2. 필요할 때만 켜는 외부 서비스 연동
-
-### 기본 포함 Jekyll 플러그인
-
-현재 [`Gemfile`](Gemfile)과 [`_config.yml`](_config.yml)에 이미 포함된 플러그인은 아래와 같습니다.
-
-| 플러그인 | 역할 | 상태 |
-| --- | --- | --- |
-| `jekyll-feed` | RSS/Atom 피드 생성 | 기본 활성 |
-| `jekyll-seo-tag` | 메타 태그, Open Graph, SEO 태그 생성 | 기본 활성 |
-| `jekyll-sitemap` | sitemap.xml 생성 | 기본 활성 |
-
-### 선택형 외부 연동
-
-기본값은 모두 비활성 상태입니다. 필요할 때만 `_config.yml`을 채우면 됩니다.
-
-### Google Analytics
+`_config.yml`에 값만 채우면 활성화됩니다. 빈칸이면 비활성 상태로 유지됩니다.
 
 ```yml
+# Google Analytics
 analytics:
   google:
     measurement_id: "G-XXXXXXXXXX"
-```
 
-### Disqus
-
-```yml
+# Disqus 댓글
 comments:
   provider: "disqus"
   disqus:
     shortname: "your-shortname"
-```
 
-### Algolia
-
-```yml
+# Algolia 검색
 search:
   provider: "algolia"
   algolia:
     app_id: "YOUR_APP_ID"
     api_key: "YOUR_SEARCH_API_KEY"
     index_name: "YOUR_INDEX_NAME"
-    insights: true
 ```
 
-## Troubleshooting
+## 트러블슈팅
 
-### 스타일이 깨져 보일 때
+**스타일이 깨질 때** — `_config.yml`의 `baseurl`이 저장소 이름과 다를 때 CSS, JS, 이미지 경로가 전부 틀어집니다. 먼저 이걸 확인하세요.
 
-가장 먼저 `_config.yml`의 `baseurl`과 실제 저장소 이름이 같은지 확인하세요. 프로젝트 페이지에서는 이 값이 어긋나면 CSS, JS, 이미지 경로가 같이 틀어집니다.
+**Pages에서 빈 화면** — `gh-pages` 브랜치에 실제로 빌드 결과물이 올라갔는지, Pages 소스 설정이 맞는지 순서대로 확인하면 거의 해결됩니다.
 
-### fork 후 GitHub Pages에서 빈 페이지가 뜰 때
+**Actions 실패 후 잔디 그래프가 안 보일 때** — 잔디 동기화 step은 실패해도 빌드가 멈추지 않도록 설계했습니다. 잔디가 안 보이면 `GH_PAT` Secret을 추가해보세요.
 
-아래 순서로 확인하면 대부분 해결됩니다.
+**로컬에서 gem 설치 오류** — Apple Silicon이나 네이티브 gem 문제는 `BUNDLE_FORCE_RUBY_PLATFORM=true`로 대부분 해결됩니다.
 
-1. `gh-pages` 브랜치에 `_site` 결과물이 실제로 올라갔는지 확인
-2. 저장소 Settings의 Pages source가 `gh-pages` root인지 확인
-3. `_config.yml`의 `url`과 `baseurl`이 현재 저장소 경로와 맞는지 확인
-4. 브라우저 강력 새로고침으로 캐시를 비운 뒤 다시 확인
+## 라이선스
 
-### GitHub Actions가 실패할 때
+MIT
 
-잔디 동기화 step이 실패하더라도 빌드와 배포는 계속 진행됩니다. 잔디 그래프가 보이지 않는다면 `GH_PAT` Secret을 추가하면 됩니다.
-
-### GitHub 그래프가 비어 있을 때
-
-아래 중 하나가 준비돼 있는지 확인하세요.
-
-- 로컬: `GITHUB_GRAPHQL_TOKEN`, `GITHUB_TOKEN`, 또는 `gh auth login`
-- GitHub Actions: 저장소 Settings → Secrets → `GH_PAT` 등록
-
-### 로컬에서 gem 설치가 실패할 때
-
-Apple Silicon 환경이나 네이티브 gem 문제를 피하기 위해 예시 명령에 `BUNDLE_FORCE_RUBY_PLATFORM=true`를 기본으로 넣어 두었습니다.
-
-## Bundled Assets And License
-
-이 저장소에는 세 종류의 자산이 포함됩니다.
-
-- 직접 제작한 프로필 관련 SVG
-- Unsplash License 기준으로 사용할 수 있는 포스트 커버 PNG
-- 이 테마를 실제로 캡처해 만든 프리뷰 스크린샷
-
-자세한 출처는 [NOTICE.md](NOTICE.md)에 정리되어 있습니다.
-
-## License
-
-이 프로젝트는 `MIT License`를 사용합니다.
+포함된 이미지 출처는 [NOTICE.md](NOTICE.md)에 정리해뒀습니다.
