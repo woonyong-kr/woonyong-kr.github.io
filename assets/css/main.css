@@ -247,10 +247,6 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin: 0 auto 2.75rem;
 }
 
-.home-content {
-  position: relative;
-}
-
 .home-sidebar {
   min-width: 0;
 }
@@ -457,10 +453,6 @@ html[data-theme="dark"] .theme-toggle__moon {
   background: transparent;
 }
 
-.github-graph__cell--none {
-  background: var(--contribution-none);
-}
-
 .github-graph__cell--first_quartile {
   background: var(--contribution-first);
 }
@@ -537,7 +529,6 @@ html[data-theme="dark"] .theme-toggle__moon {
 .home-main > .velog-tabs {
   margin-top: 0;
   margin-bottom: 2.25rem;
-  justify-content: center;
 }
 
 .home-main > .velog-tabs .velog-tabs__inner {
@@ -575,16 +566,8 @@ html[data-theme="dark"] .theme-toggle__moon {
   transition: left 0.2s ease;
 }
 
-.content-section {
-  position: relative;
-}
-
 .post-list {
   margin-top: 1.5rem;
-}
-
-.content-section--posts {
-  position: relative;
 }
 
 .tag-pills {
@@ -626,10 +609,6 @@ html[data-theme="dark"] .theme-toggle__moon {
 .tag-pill.is-active span {
   color: inherit;
   opacity: 0.85;
-}
-
-.posts-panel {
-  position: relative;
 }
 
 .posts-panel .post-list {
@@ -1562,10 +1541,6 @@ html[data-theme="dark"] {
     padding-top: 0;
   }
 
-  .home-main > .velog-tabs {
-    justify-content: center;
-  }
-
   .posts-panel__toolbar {
     margin-bottom: 1rem;
   }
@@ -1641,7 +1616,4 @@ html[data-theme="dark"] {
     display: none;
   }
 
-  .home-main > .velog-tabs {
-    justify-content: center;
-  }
 }
