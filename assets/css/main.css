@@ -194,11 +194,8 @@ svg {
 .icon-button svg {
   width: 1.375rem;
   height: 1.375rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: currentColor;
+  stroke: none;
 }
 
 .theme-toggle__moon {
