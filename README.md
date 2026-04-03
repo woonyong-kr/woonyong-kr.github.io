@@ -6,6 +6,8 @@
 
 라이브 데모: [https://woonyong-kr.github.io/jekyll-theme-velog/](https://woonyong-kr.github.io/jekyll-theme-velog/)
 
+라이트 모드와 다크 모드를 모두 지원하며, 기본값은 사용자의 시스템 모드를 따릅니다. 아래 프리뷰 이미지는 다크 모드 기준으로 캡처한 화면입니다.
+
 ## Preview
 
 ### Home
@@ -26,7 +28,7 @@
 - 태그 필터와 검색
 - 글 상세 상단 썸네일, 태그, 이전/다음 글 네비게이션
 - GitHub 프로필 동기화와 1년 기여 그래프
-- 시스템 라이트/다크 모드 대응
+- 시스템 모드 동기화 기반 라이트/다크 모드 지원
 - GitHub Pages 프로젝트 페이지 기준 경로 구조
 - Jenkins 기반 자동 배포 예시
 - README와 데모 글까지 포함된 문서형 샘플 콘텐츠
@@ -145,6 +147,15 @@ hero:
     enabled: true
     username: your-github-id
 ```
+
+### Theme Modes
+
+테마는 라이트 모드와 다크 모드를 모두 지원합니다.
+
+- 기본값은 `prefers-color-scheme`를 따름
+- 사용자가 토글하면 선택값을 `localStorage`에 저장
+- 홈, 시리즈, 글 상세 페이지가 같은 테마 토큰을 공유
+- README 프리뷰 이미지는 다크 모드 기준으로 정리
 
 ### `_data/profile.yml`
 
