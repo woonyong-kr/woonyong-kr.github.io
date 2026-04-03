@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-<div class="velog-layout">
+<div class="velog-layout{% if page.layout_width == 'wide' %} velog-layout--wide{% endif %}">
   {% include profile.html %}
   {% include tabs.html active=page.active_tab %}
 
