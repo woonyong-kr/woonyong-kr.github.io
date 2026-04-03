@@ -558,7 +558,7 @@ html[data-theme="dark"] .theme-toggle__moon {
   justify-content: center;
 }
 
-.home-layout > .velog-tabs {
+.home-main > .velog-tabs {
   margin-top: 0;
   margin-bottom: 2.25rem;
   justify-content: flex-start;
@@ -1580,7 +1580,7 @@ html[data-theme="dark"] {
     padding-top: 0;
   }
 
-  .home-layout > .velog-tabs {
+  .home-main > .velog-tabs {
     justify-content: center;
   }
 
@@ -1664,7 +1664,7 @@ html[data-theme="dark"] {
     display: none;
   }
 
-  .home-layout > .velog-tabs {
+  .home-main > .velog-tabs {
     justify-content: center;
   }
 }
