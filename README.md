@@ -19,7 +19,7 @@ ruby scripts/fetch_github_contributions.rb
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 ```
 
-기본 주소는 [http://127.0.0.1:4000/blog/](http://127.0.0.1:4000/blog/) 입니다.
+기본 주소는 [http://127.0.0.1:4000/jekyll-theme-velog/](http://127.0.0.1:4000/jekyll-theme-velog/) 입니다.
 
 ## 가장 먼저 바꿀 파일
 
