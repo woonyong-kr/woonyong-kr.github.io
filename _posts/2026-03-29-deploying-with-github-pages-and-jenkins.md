@@ -3,7 +3,7 @@ title: "GitHub Pages와 Jenkins로 테마를 배포하는 방법"
 description: "프로젝트 페이지 기준으로 빌드 결과를 gh-pages 브랜치에 배포하는 흐름과 저장소 이름 변경 시 주의할 점까지 정리합니다."
 date: 2026-03-29 09:00:00 +0900
 updated_at: 2026-04-03 12:40:00 +0900
-thumbnail: /assets/images/posts/deployment-guide.svg
+thumbnail: /assets/images/posts/deployment-guide-cover.png
 series: theme-operations
 tags:
   - GitHub Pages
@@ -13,8 +13,6 @@ tags:
 ---
 
 이 테마는 `main`에서 Jekyll을 빌드하고, 결과를 `gh-pages` 브랜치로 배포하는 구조를 기본값으로 둡니다. GitHub Pages 프로젝트 페이지 기준으로 가장 단순하고 재현하기 쉬운 배포 방식입니다.
-
-<img src="{{ '/assets/images/posts/deployment-pipeline-detail.svg' | relative_url }}" alt="배포 파이프라인 다이어그램">
 
 ## 기본 배포 흐름
 

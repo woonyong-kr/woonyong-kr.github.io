@@ -3,7 +3,7 @@ title: "GitHub 프로필 동기화와 기여 그래프를 붙이는 방법"
 description: "GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다."
 date: 2026-03-28 09:00:00 +0900
 updated_at: 2026-04-03 12:40:00 +0900
-thumbnail: /assets/images/posts/github-sync.svg
+thumbnail: /assets/images/posts/github-sync-cover.png
 series: theme-operations
 tags:
   - GitHub
@@ -13,8 +13,6 @@ tags:
 ---
 
 이 테마는 GitHub 계정을 연결하면 홈 프로필, 헤더 브랜드 이미지, 브라우저 탭 파비콘, GitHub 링크, 기여 그래프를 자동으로 갱신합니다. 중요한 점은 “연결이 실패해도 화면이 비어 보이지 않게” fallback 구조를 함께 갖고 있다는 것입니다.
-
-<img src="{{ '/assets/images/posts/github-sync-detail.svg' | relative_url }}" alt="GitHub 동기화 흐름">
 
 ## 어떤 데이터를 가져오나
 
