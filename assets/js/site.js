@@ -11,10 +11,6 @@
     }
   }
 
-  function getSystemTheme() {
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-
   function updateThemeMeta(theme) {
     var themeColorMeta = document.querySelector("[data-theme-color]");
     var appleStatusMeta = document.querySelector("[data-apple-status-bar]");
