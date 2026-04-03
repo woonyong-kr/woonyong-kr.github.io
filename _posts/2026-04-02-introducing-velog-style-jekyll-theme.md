@@ -2,7 +2,7 @@
 title: "Velog Style Jekyll Theme 소개"
 description: "velog의 읽기 흐름을 참고해 Jekyll과 GitHub Pages에 맞게 다시 구성한 오픈소스 개발 블로그 테마를 소개합니다."
 date: 2026-04-02 09:00:00 +0900
-updated_at: 2026-04-03 14:50:00 +0900
+updated_at: 2026-04-03 14:58:00 +0900
 thumbnail: /assets/images/posts/theme-intro-cover.png
 series: theme-overview
 tags:
@@ -13,6 +13,8 @@ tags:
 ---
 
 이 테마는 `읽기 편한 글 목록`, `시리즈`, `태그`, `검색`, `GitHub 프로필 동기화`, `기여 그래프`를 한 번에 갖춘 Jekyll 기반 개발 블로그 출발점입니다. 단순히 보기 좋은 화면만 넣는 대신, 실제로 저장소를 복제한 뒤 어떻게 설정하고 운영하는지까지 문서형 데모로 함께 제공하는 것을 목표로 만들었습니다.
+
+라이트 모드와 다크 모드를 모두 지원하며, 기본값은 시스템 모드를 따릅니다. 아래 화면은 다크 모드 기준으로 캡처한 실제 데모입니다.
 
 ## 화면 미리보기
 
