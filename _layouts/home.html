@@ -24,8 +24,6 @@ layout: default
     </div>
   </section>
 
-  {% include tabs.html active=page.active_tab %}
-
   <section class="home-content">
     <aside class="home-sidebar">
       <aside class="tag-sidebar">
@@ -58,6 +56,8 @@ layout: default
     </aside>
 
     <main class="home-main">
+      {% include tabs.html active=page.active_tab %}
+
       <section class="content-section content-section--posts">
         <div class="tag-pills">
           <a class="tag-pill" href="{{ '/' | relative_url }}" data-tag-link>
