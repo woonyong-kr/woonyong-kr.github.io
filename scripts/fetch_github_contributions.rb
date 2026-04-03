@@ -14,6 +14,7 @@ PROFILE_PATH = File.join(ROOT_DIR, "_data", "profile.yml")
 THEME_PATH = File.join(ROOT_DIR, "_data", "theme.yml")
 OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_contributions_cache.json")
 PROFILE_OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_profile_cache.json")
+FAVICON_OUTPUT_PATH = File.join(ROOT_DIR, "assets", "images", "favicon.png")
 GRAPHQL_ENDPOINT = URI("https://api.github.com/graphql")
 REST_API_ENDPOINT = "https://api.github.com/users"
 
@@ -25,6 +26,52 @@ end
 
 def write_payload(path, payload)
   File.write(path, "#{JSON.pretty_generate(payload)}\n")
+end
+
+def sync_favicon_png(avatar_url:, output_path:)
+  return false if avatar_url.to_s.strip.empty?
+
+  python_script = <<~PYTHON
+    import sys
+    import urllib.request
+    from pathlib import Path
+
+    try:
+      from PIL import Image, ImageDraw
+    except Exception:
+      raise SystemExit(2)
+
+    url = sys.argv[1]
+    output = Path(sys.argv[2])
+    tmp = output.with_suffix(".tmp.png")
+
+    urllib.request.urlretrieve(url, tmp)
+
+    try:
+      image = Image.open(tmp).convert("RGBA").resize((256, 256), Image.Resampling.LANCZOS)
+      mask = Image.new("L", (256, 256), 0)
+      draw = ImageDraw.Draw(mask)
+      draw.ellipse((12, 12, 244, 244), fill=255)
+
+      canvas = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+      canvas.paste(image, (0, 0), mask)
+
+      ring = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+      ring_draw = ImageDraw.Draw(ring)
+      ring_draw.ellipse((12, 12, 244, 244), outline=(208, 215, 222, 255), width=4)
+      canvas.alpha_composite(ring)
+
+      output.parent.mkdir(parents=True, exist_ok=True)
+      canvas.save(output)
+    finally:
+      if tmp.exists():
+        tmp.unlink()
+  PYTHON
+
+  _stdout, _stderr, status = Open3.capture3("python3", "-c", python_script, avatar_url, output_path)
+  status.success?
+rescue Errno::ENOENT
+  false
 end
 
 def gh_token
@@ -139,10 +186,11 @@ elsif login.empty?
     placeholder_profile_payload(login: "", profile_url: "", reason: "missing_username")
   )
 else
-  write_payload(
-    PROFILE_OUTPUT_PATH,
-    fetch_github_profile(login: login, profile_url: profile_url, token: token)
-  )
+  profile_payload = fetch_github_profile(login: login, profile_url: profile_url, token: token)
+  write_payload(PROFILE_OUTPUT_PATH, profile_payload)
+  if profile_payload["enabled"] && !profile_payload["avatar_url"].to_s.strip.empty?
+    sync_favicon_png(avatar_url: profile_payload["avatar_url"], output_path: FAVICON_OUTPUT_PATH)
+  end
 end
 
 unless enabled

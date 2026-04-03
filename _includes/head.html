@@ -18,13 +18,13 @@
 {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
   {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
 {% endif %}
-{% assign favicon_href = '/assets/images/favicon.svg' | relative_url | append: '?v=' | append: asset_version %}
+{% assign favicon_href = '/assets/images/favicon.png' | relative_url | append: '?v=' | append: asset_version %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff" data-theme-color>
 <meta name="apple-mobile-web-app-status-bar-style" content="default" data-apple-status-bar>
-<link rel="icon" href="{{ favicon_href }}" type="image/svg+xml" sizes="any">
-<link rel="shortcut icon" href="{{ favicon_href }}" type="image/svg+xml">
+<link rel="icon" href="{{ favicon_href }}" type="image/png" sizes="256x256">
+<link rel="shortcut icon" href="{{ favicon_href }}" type="image/png">
 <link rel="apple-touch-icon" href="{{ favicon_href }}">
 <link rel="mask-icon" href="{{ '/assets/images/profile.svg' | relative_url }}?v={{ asset_version }}" color="#495057">
 <link rel="alternate" type="application/atom+xml" href="{{ '/feed.xml' | relative_url }}" title="{{ site.title }}">
