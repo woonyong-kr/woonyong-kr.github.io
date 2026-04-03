@@ -15,13 +15,8 @@ layout: default
 {% assign post_index_url = '/posts.json' | relative_url %}
 {% assign sorted_tags = site.tags | sort %}
 <div class="home-layout">
-  <section class="home-hero">
-    <aside class="home-hero__profile">
-      {% include profile.html sidebar=true show_graph=false %}
-    </aside>
-    <div class="home-hero__graph">
-      {% include github-contributions.html %}
-    </div>
+  <section class="home-intro">
+    {% include profile.html %}
   </section>
 
   <section class="home-content">
