@@ -44,6 +44,10 @@
       return;
     }
 
+    if (!iframe.src || iframe.src.indexOf("https://giscus.app") !== 0) {
+      return;
+    }
+
     iframe.contentWindow.postMessage(
       {
         giscus: {
