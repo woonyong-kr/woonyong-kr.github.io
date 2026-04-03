@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title>Theme structure guide</title>
+  <desc>Diagram showing the main files and flow of the Jekyll theme.</desc>
+  <rect width="1280" height="720" rx="40" fill="#f8f9fa"/>
+  <rect x="72" y="72" width="1136" height="576" rx="32" fill="#ffffff" stroke="#dee2e6" stroke-width="6"/>
+  <text x="110" y="138" fill="#1c1f23" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700">Theme Structure</text>
+  <text x="110" y="182" fill="#495057" font-family="Arial, Helvetica, sans-serif" font-size="24">설정 파일, 템플릿, 콘텐츠, 자산, 배포 결과가 어떻게 연결되는지 한 눈에 보여주는 안내도</text>
+
+  <rect x="116" y="236" width="216" height="132" rx="24" fill="#fff4e6" stroke="#fd7e14" stroke-width="4"/>
+  <text x="144" y="286" fill="#7c2d12" font-family="SFMono-Regular, Consolas, monospace" font-size="28" font-weight="700">_config.yml</text>
+  <text x="144" y="326" fill="#7c2d12" font-family="Arial, Helvetica, sans-serif" font-size="22">사이트 메타</text>
+  <text x="144" y="356" fill="#7c2d12" font-family="Arial, Helvetica, sans-serif" font-size="22">배포 경로</text>
+
+  <rect x="380" y="236" width="216" height="132" rx="24" fill="#eef7ff" stroke="#228be6" stroke-width="4"/>
+  <text x="414" y="286" fill="#1d4ed8" font-family="SFMono-Regular, Consolas, monospace" font-size="28" font-weight="700">_data/</text>
+  <text x="414" y="326" fill="#1d4ed8" font-family="Arial, Helvetica, sans-serif" font-size="22">profile.yml</text>
+  <text x="414" y="356" fill="#1d4ed8" font-family="Arial, Helvetica, sans-serif" font-size="22">theme.yml / series.yml</text>
+
+  <rect x="644" y="236" width="216" height="132" rx="24" fill="#ecfdf3" stroke="#12b886" stroke-width="4"/>
+  <text x="682" y="286" fill="#087f5b" font-family="SFMono-Regular, Consolas, monospace" font-size="28" font-weight="700">_posts/</text>
+  <text x="682" y="326" fill="#087f5b" font-family="Arial, Helvetica, sans-serif" font-size="22">Markdown 글</text>
+  <text x="682" y="356" fill="#087f5b" font-family="Arial, Helvetica, sans-serif" font-size="22">front matter</text>
+
+  <rect x="908" y="236" width="256" height="132" rx="24" fill="#f3f0ff" stroke="#7950f2" stroke-width="4"/>
+  <text x="940" y="286" fill="#5f3dc4" font-family="SFMono-Regular, Consolas, monospace" font-size="28" font-weight="700">assets/ + layouts</text>
+  <text x="940" y="326" fill="#5f3dc4" font-family="Arial, Helvetica, sans-serif" font-size="22">CSS / JS / SVG</text>
+  <text x="940" y="356" fill="#5f3dc4" font-family="Arial, Helvetica, sans-serif" font-size="22">화면 렌더링</text>
+
+  <path d="M332 302h40" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+  <path d="M596 302h40" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+  <path d="M860 302h40" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+
+  <rect x="240" y="454" width="800" height="118" rx="28" fill="#212529"/>
+  <text x="278" y="514" fill="#f8f9fa" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">Jekyll Build</text>
+  <text x="470" y="514" fill="#ced4da" font-family="Arial, Helvetica, sans-serif" font-size="26">설정 + 데이터 + 포스트 + 템플릿을 조합해 정적 사이트 생성</text>
+  <text x="278" y="552" fill="#8ce99a" font-family="SFMono-Regular, Consolas, monospace" font-size="26">bundle exec jekyll build</text>
+
+  <path d="M224 368v52" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+  <path d="M488 368v52" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+  <path d="M752 368v52" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1036 368v52" stroke="#adb5bd" stroke-width="8" stroke-linecap="round"/>
+
+  <rect x="454" y="604" width="372" height="70" rx="22" fill="#e9ecef"/>
+  <text x="502" y="649" fill="#1c1f23" font-family="SFMono-Regular, Consolas, monospace" font-size="30" font-weight="700">_site/ -> gh-pages</text>
+</svg>
