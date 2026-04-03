@@ -217,6 +217,10 @@ html[data-theme="dark"] .theme-toggle__moon {
   margin: 0 auto;
 }
 
+.velog-layout--wide {
+  width: min(960px, calc(100% - 2rem));
+}
+
 .velog-layout {
   padding-top: 5.625rem;
   padding-bottom: 4rem;
@@ -569,7 +573,11 @@ html[data-theme="dark"] .theme-toggle__moon {
 .home-main > .velog-tabs {
   margin-top: 0;
   margin-bottom: 2.25rem;
-  justify-content: flex-start;
+  justify-content: center;
+}
+
+.home-main > .velog-tabs .velog-tabs__inner {
+  margin: 0 auto;
 }
 
 .velog-tabs__inner {
@@ -1023,9 +1031,9 @@ html[data-theme="dark"] {
 }
 
 .series-list {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   display: grid;
-  gap: 2rem;
+  gap: 2.5rem 2rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -1039,6 +1047,8 @@ html[data-theme="dark"] {
   width: 100%;
   aspect-ratio: 368 / 193;
   overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid var(--border3);
   background: var(--bg-element2);
 }
 
@@ -1049,11 +1059,18 @@ html[data-theme="dark"] {
 }
 
 .series-card__title {
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
-  line-height: 1.5;
+  margin: 1rem 0 0.4375rem;
+  font-size: 1.0625rem;
+  line-height: 1.45;
   color: var(--text1);
   font-weight: 700;
+}
+
+.series-card__description {
+  margin: 0 0 0.625rem;
+  color: var(--text2);
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 .series-card__meta {
@@ -1063,7 +1080,7 @@ html[data-theme="dark"] {
   align-items: center;
   gap: 0.25rem;
   color: var(--text3);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .series-card__count {
@@ -1455,6 +1472,10 @@ html[data-theme="dark"] {
   .velog-layout,
   .post-view,
   .site-footer__inner {
+    width: calc(100% - 2rem);
+  }
+
+  .velog-layout--wide {
     width: calc(100% - 2rem);
   }
 
