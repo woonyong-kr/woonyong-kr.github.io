@@ -26,4 +26,14 @@
 
 위 사진은 Unsplash License 기준으로 사용할 수 있으며, 라이선스 원문은 `https://unsplash.com/license`에서 확인할 수 있습니다.
 
+## Generated Preview Screenshots
+
+아래 이미지는 이 저장소의 실제 테마 데모를 캡처해 만든 프리뷰 스크린샷입니다.
+
+- `assets/images/docs/home-preview.png`
+- `assets/images/docs/series-preview.png`
+- `assets/images/docs/post-preview.png`
+
+별도 외부 이미지 라이브러리에서 가져온 것이 아니라, 이 저장소의 실행 결과를 캡처한 문서용 자산입니다.
+
 GitHub 프로필 아바타처럼 빌드 시 외부에서 동기화되는 이미지는 저장소에 포함된 배포 자산이 아니며, 해당 서비스의 정책을 따릅니다.

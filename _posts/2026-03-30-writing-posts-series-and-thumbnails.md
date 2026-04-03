@@ -2,7 +2,7 @@
 title: "글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법"
 description: "front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다."
 date: 2026-03-30 09:00:00 +0900
-updated_at: 2026-04-03 12:40:00 +0900
+updated_at: 2026-04-03 14:50:00 +0900
 thumbnail: /assets/images/posts/writing-guide-cover.png
 series: theme-overview
 tags:
@@ -24,7 +24,7 @@ title: 글 제목
 description: 목록에 보일 요약
 date: 2026-04-03 09:00:00 +0900
 updated_at: 2026-04-03 21:00:00 +0900
-thumbnail: /assets/images/posts/example.svg
+thumbnail: /assets/images/posts/my-post-cover.png
 series: theme-overview
 tags:
   - Jekyll
@@ -67,6 +67,17 @@ tags:
 - 시리즈 카드: 대표 글의 `thumbnail`이 있을 때만 표시
 
 즉, 이미지가 없는 글은 텍스트 중심 카드로 자연스럽게 남고, 이미지가 있는 글만 시각적으로 강조됩니다.
+
+## 커버 이미지 준비 팁
+
+오픈소스 데모 저장소라면 썸네일도 대충 넣기보다 기준을 정해 두는 편이 좋습니다.
+
+- 너무 작은 이미지는 피하기
+- 카드와 상세 모두에서 자연스럽게 보이도록 가로형 비율 사용
+- 저작권 출처를 `NOTICE.md`에 남기기
+- 데모용이라면 분위기가 비슷한 이미지를 한 세트로 맞추기
+
+이 저장소는 실제 공개용 데모로 보이도록 코드 화면, 작업 환경, 노트북 사용 장면처럼 개발 블로그와 자연스럽게 어울리는 커버 이미지를 사용합니다.
 
 ## Markdown 지원 범위
 
