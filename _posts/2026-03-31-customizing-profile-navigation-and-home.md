@@ -24,7 +24,7 @@ tags:
 - 설명
 - `url`
 - `baseurl`
-- Google Analytics, Algolia, Disqus 같은 외부 연동
+- Google Analytics, Algolia, Giscus 같은 외부 연동
 
 이 파일은 “사이트 레벨 설정”이라고 생각하면 됩니다.
 

@@ -773,6 +773,11 @@ html[data-theme="dark"] {
   font-size: 1.25rem;
 }
 
+.giscus,
+.giscus-frame {
+  width: 100%;
+}
+
 .posts-panel__summary {
   margin: 0 0 1rem;
   color: var(--text2);
