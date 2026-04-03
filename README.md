@@ -2,7 +2,7 @@
 
 velog 읽는 흐름이 편해서 비슷하게 만들어봤습니다. Jekyll 기반이고 GitHub Pages에 올려서 씁니다.
 
-라이브 데모 → [woonyong-kr.github.io/jekyll-theme-velog](https://woonyong-kr.github.io/jekyll-theme-velog/)
+라이브 데모: [https://blog.woonyong.org/](https://blog.woonyong.org/)
 
 다크 모드 기준으로 찍은 스크린샷입니다.
 
@@ -57,9 +57,11 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle install
 BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 ```
 
-로컬 주소: `http://127.0.0.1:4000/jekyll-theme-velog/`
+```text
+http://127.0.0.1:4000/
+```
 
-GitHub 프로필과 잔디 그래프를 로컬에서도 보고 싶으면:
+GitHub 프로필과 잔디 그래프까지 같이 보고 싶다면 한 단계만 더 실행하면 됩니다.
 
 ```bash
 ruby scripts/fetch_github_contributions.rb

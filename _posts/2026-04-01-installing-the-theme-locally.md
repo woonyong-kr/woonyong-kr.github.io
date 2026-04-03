@@ -39,10 +39,10 @@ BUNDLE_FORCE_RUBY_PLATFORM=true bundle exec jekyll serve
 현재 저장소 이름 기준 기본 주소는 다음입니다.
 
 ```text
-http://127.0.0.1:4000/jekyll-theme-velog/
+http://127.0.0.1:4000/
 ```
 
-이 경로는 `_config.yml`의 `baseurl`과 연결됩니다. 저장소 이름을 바꾸면 `baseurl`도 같이 바꿔야 로컬과 GitHub Pages가 같은 경로 구조를 유지합니다.
+커스텀 도메인을 쓰고 `baseurl`을 비워 둔 상태라면 로컬 미리보기 주소도 루트(`/`)로 열립니다. 프로젝트 페이지를 쓸 때만 저장소 이름에 맞는 `baseurl`이 필요합니다.
 
 ## GitHub 동기화 없이 실행하는 경우
 
