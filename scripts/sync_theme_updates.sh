@@ -119,9 +119,10 @@ if [[ "${merge_failed}" == "1" ]]; then
       continue
     fi
 
-    echo "::error::Automatic merge conflict in non-preserved path: ${conflicted_path}"
-    git merge --abort || true
-    exit 1
+    if ! git checkout --theirs -- "${conflicted_path}" 2>/dev/null; then
+      rm -rf "${conflicted_path}"
+    fi
+    git add -A -- "${conflicted_path}" 2>/dev/null || true
   done <<< "${conflicted_paths}"
 fi
 
