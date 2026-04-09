@@ -9,12 +9,18 @@
     {% endif %}
     {% assign resolved_github_url = fallback_github_url %}
     {% assign header_avatar = site.data.profile.avatar %}
+    {% assign header_title = site.title %}
     {% if github_profile and github_profile.enabled and github_profile.login == configured_login %}
       {% if github_profile.profile_url != "" %}
         {% assign resolved_github_url = github_profile.profile_url %}
       {% endif %}
       {% if github_profile.avatar_url != "" %}
         {% assign header_avatar = github_profile.avatar_url %}
+      {% endif %}
+      {% if github_profile.display_name != "" %}
+        {% assign header_title = github_profile.display_name %}
+      {% elsif github_profile.login != "" %}
+        {% assign header_title = '@' | append: github_profile.login %}
       {% endif %}
     {% endif %}
 
@@ -36,7 +42,7 @@
           height="36"
         >
       {% endif %}
-      <span class="header-logo__text">{{ site.title }}</span>
+      <span class="header-logo__text">{{ header_title }}</span>
     </a>
 
     {% assign show_github_link = theme.header.show_github_link | default: true %}
