@@ -1,0 +1,30 @@
+name: Sync Theme Updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 매주 월요일 10:10 KST
+    - cron: '10 1 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-theme-updates
+  cancel-in-progress: false
+
+jobs:
+  sync-theme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync theme updates into PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/sync_theme_updates.sh
