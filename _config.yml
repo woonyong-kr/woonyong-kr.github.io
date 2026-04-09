@@ -1,5 +1,5 @@
-title: Velog Style Jekyll Theme
-description: velog 감성의 개발 블로그를 GitHub Pages와 Jekyll로 구성한 오픈소스 테마 데모
+title: Woonyong Blog
+description: 개발과 운영을 기록하는 블로그
 url: "https://blog.woonyong.org"
 baseurl: ""
 lang: ko-KR
@@ -13,14 +13,14 @@ analytics:
     measurement_id: ""
 
 comments:
-  provider: "giscus"
+  provider: ""
   disqus:
     shortname: ""
   giscus:
-    repo: "woonyong-kr/jekyll-theme-velog"
-    repo_id: "R_kgDOR1XW1w"
+    repo: "woonyong-kr/woonyong-kr.github.io"
+    repo_id: "REPOSITORY_NODE_ID"
     category: "Announcements"
-    category_id: "DIC_kwDOR1XW184C570c"
+    category_id: "CATEGORY_NODE_ID"
     mapping: "pathname"
     strict: true
     reactions_enabled: true
