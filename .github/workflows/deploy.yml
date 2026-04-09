@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Ruby 설치 + Gemfile.lock 기반 gem 자동 캐시
       - name: Setup Ruby
