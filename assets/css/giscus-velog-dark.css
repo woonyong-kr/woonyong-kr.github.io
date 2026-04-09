@@ -2,7 +2,7 @@ main {
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Apple SD Gothic Neo",
     "Malgun Gothic", "맑은 고딕", "Noto Sans KR", Arial, sans-serif;
-  --color-fg-on-emphasis: #ffffff;
+  --color-fg-on-emphasis: #121212;
   --color-btn-text: #d9d9d9;
   --color-btn-bg: #252525;
   --color-btn-border: #4d4d4d;
@@ -13,7 +13,7 @@ main {
   --color-btn-active-bg: #323232;
   --color-btn-active-border: #696969;
   --color-btn-selected-bg: #1e1e1e;
-  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-text: #121212;
   --color-btn-primary-bg: #63e6be;
   --color-btn-primary-border: #63e6be;
   --color-btn-primary-shadow: 0 0 transparent;
@@ -22,7 +22,7 @@ main {
   --color-btn-primary-hover-border: #96f2d7;
   --color-btn-primary-selected-bg: #55d8b0;
   --color-btn-primary-selected-shadow: 0 0 transparent;
-  --color-btn-primary-disabled-text: rgba(255, 255, 255, 0.64);
+  --color-btn-primary-disabled-text: rgba(18, 18, 18, 0.56);
   --color-btn-primary-disabled-bg: rgba(99, 230, 190, 0.48);
   --color-btn-primary-disabled-border: rgba(99, 230, 190, 0.48);
   --color-action-list-item-default-hover-bg: rgba(99, 230, 190, 0.1);
