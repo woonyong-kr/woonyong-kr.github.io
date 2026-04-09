@@ -13,12 +13,16 @@
 {% if github_profile and github_profile.enabled and github_profile.login == configured_login %}
   {% if github_profile.display_name != "" %}
     {% assign profile_name = github_profile.display_name %}
+  {% elsif github_profile.login != "" %}
+    {% assign profile_name = github_profile.login %}
   {% endif %}
   {% if github_profile.bio != "" %}
     {% assign profile_bio = github_profile.bio %}
   {% endif %}
   {% if github_profile.intro != "" %}
     {% assign profile_intro = github_profile.intro %}
+  {% elsif profile_intro == "" or profile_intro contains 'GitHub 프로필을 연결하면' %}
+    {% assign profile_intro = '@' | append: github_profile.login %}
   {% endif %}
   {% if github_profile.avatar_url != "" %}
     {% assign profile_avatar = github_profile.avatar_url %}
