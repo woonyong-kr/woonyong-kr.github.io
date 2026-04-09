@@ -51,13 +51,13 @@
 
   <meta property="article:modified_time" content="2026-04-03T12:40:00+09:00">
 
-<link rel="icon" href="/assets/images/favicon.png?v=1775724216" type="image/png" sizes="256x256">
-<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775724216" type="image/png">
-<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775724216">
-<link rel="mask-icon" href="/assets/images/profile.svg?v=1775724216" color="#495057">
+<link rel="icon" href="/assets/images/favicon.png?v=1775725262" type="image/png" sizes="256x256">
+<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775725262" type="image/png">
+<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775725262">
+<link rel="mask-icon" href="/assets/images/profile.svg?v=1775725262" color="#495057">
 <link rel="alternate" type="application/atom+xml" href="/feed.xml" title="choi woo-nyong">
 
-<link rel="stylesheet" href="/assets/css/main.css?v=1775724216">
+<link rel="stylesheet" href="/assets/css/main.css?v=1775725262">
 <script>
   (function () {
     function applyTheme(theme) {
@@ -374,32 +374,48 @@
 
 
 
+
+
+
+
+
+
   <section
     class="comments-section"
     aria-label="댓글"
     data-comments-provider="giscus"
-    data-giscus-theme-light="light"
-    data-giscus-theme-dark="transparent_dark"
+    data-giscus-theme-light="https://blog.woonyong.org/assets/css/giscus-velog-light.css"
+    data-giscus-theme-dark="https://blog.woonyong.org/assets/css/giscus-velog-dark.css"
   >
     <h2 class="comments-section__title">댓글</h2>
     <div class="giscus"></div>
-    <script
-      src="https://giscus.app/client.js"
-      data-repo="woonyong-kr/woonyong-kr.github.io"
-      data-repo-id="R_kgDOR9z4JQ"
-      data-category="Announcements"
-      data-category-id="DIC_kwDOR9z4Jc4C6cIf"
-      data-mapping="pathname"
-      data-strict="1"
-      data-reactions-enabled="1"
-      data-emit-metadata="0"
-      data-input-position="bottom"
-      data-theme="preferred_color_scheme"
-      data-lang="ko"
-      data-loading="lazy"
-      crossorigin="anonymous"
-      async
-    ></script>
+    <script>
+      (function () {
+        var container = document.currentScript.parentElement;
+        var currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        var resolvedTheme = container.getAttribute(currentTheme === "dark" ? "data-giscus-theme-dark" : "data-giscus-theme-light")
+          || "preferred_color_scheme";
+        var script = document.createElement("script");
+
+        script.src = "https://giscus.app/client.js";
+        script.setAttribute("data-repo", "woonyong-kr/woonyong-kr.github.io");
+        script.setAttribute("data-repo-id", "R_kgDOR9z4JQ");
+        script.setAttribute("data-category", "Announcements");
+        script.setAttribute("data-category-id", "DIC_kwDOR9z4Jc4C6cIf");
+        script.setAttribute("data-mapping", "pathname");
+        script.setAttribute("data-strict", "1");
+        script.setAttribute("data-reactions-enabled", "1");
+        script.setAttribute("data-emit-metadata", "0");
+        script.setAttribute("data-input-position", "bottom");
+        script.setAttribute("data-theme", resolvedTheme);
+        script.setAttribute("data-lang", "ko");
+        script.setAttribute("data-loading", "lazy");
+        script.setAttribute("crossorigin", "anonymous");
+        script.async = true;
+
+        container.appendChild(script);
+      })();
+    </script>
     <noscript>JavaScript를 활성화해야 댓글을 볼 수 있습니다.</noscript>
   </section>
 
@@ -418,6 +434,6 @@
 </footer>
 
     
-    <script src="/assets/js/site.js?v=1775724216"></script>
+    <script src="/assets/js/site.js?v=1775725262"></script>
   </body>
 </html>
