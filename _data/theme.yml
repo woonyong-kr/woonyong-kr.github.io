@@ -24,12 +24,12 @@ home:
 hero:
   show_stats: true
   github_contributions:
-    enabled: true
-    username: woonyong-kr
+    enabled: false
+    username: ""
 
 profile:
   github_sync:
-    enabled: true
+    enabled: false
 
 footer:
   tagline: Open-source Jekyll theme for developer blogs.

@@ -2,7 +2,7 @@
 
 velog 읽는 흐름이 편해서 비슷하게 만들어봤습니다. Jekyll 기반이고 GitHub Pages에 올려서 씁니다.
 
-라이브 데모: [https://blog.woonyong.org/](https://blog.woonyong.org/)
+라이브 데모: [https://woonyong-kr.github.io/jekyll-theme-velog/](https://woonyong-kr.github.io/jekyll-theme-velog/)
 
 다크 모드 기준으로 찍은 스크린샷입니다.
 
@@ -215,7 +215,7 @@ search:
     index_name: "YOUR_INDEX_NAME"
 ```
 
-기본 댓글 시스템은 Giscus입니다. GitHub Discussions에 댓글이 저장되고, 방문자는 GitHub 계정으로 로그인해 댓글을 남길 수 있습니다.
+댓글은 기본 비활성 상태입니다. Giscus를 쓰려면 `provider`를 `giscus`로 바꾸고 아래 값을 채우면 됩니다. GitHub Discussions에 댓글이 저장되고, 방문자는 GitHub 계정으로 로그인해 댓글을 남길 수 있습니다.
 
 처음 붙일 때는 저장소 Discussions를 켜고, 필요하면 [giscus app](https://github.com/apps/giscus)도 저장소에 설치해야 합니다.
 
