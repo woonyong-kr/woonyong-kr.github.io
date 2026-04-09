@@ -28,8 +28,8 @@ comments:
     input_position: "bottom"
     lang: "ko"
     loading: "lazy"
-    theme_light: "light"
-    theme_dark: "transparent_dark"
+    theme_light: "/assets/css/giscus-velog-light.css"
+    theme_dark: "/assets/css/giscus-velog-dark.css"
 
 search:
   provider: local
