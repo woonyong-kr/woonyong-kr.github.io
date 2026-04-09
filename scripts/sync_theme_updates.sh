@@ -57,10 +57,10 @@ find_open_pr_number() {
   gh pr list \
     --repo "${GH_REPO}" \
     --base "${BASE_BRANCH}" \
-    --head "${GH_OWNER}:${SYNC_BRANCH}" \
     --state open \
-    --json number \
-    --jq '.[0].number // ""'
+    --json number,headRefName \
+    --jq ".[] | select(.headRefName == \"${SYNC_BRANCH}\") | .number" \
+    | head -n 1
 }
 
 append_summary() {
