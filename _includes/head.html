@@ -12,12 +12,6 @@
   {% assign algolia_page_enabled = true %}
 {% endif %}
 {% assign ga_measurement_id = site.analytics.google.measurement_id | default: "" %}
-{% assign github_profile = site.data.github_profile_cache %}
-{% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
-{% assign fallback_github_url = site.data.profile.github | default: "" %}
-{% if configured_login == "" and fallback_github_url contains 'github.com/' %}
-  {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
-{% endif %}
 {% assign favicon_href = '/assets/images/favicon.png' | relative_url | append: '?v=' | append: asset_version %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
