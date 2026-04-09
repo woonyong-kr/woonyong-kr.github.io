@@ -2,6 +2,7 @@ main {
   color-scheme: light;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Apple SD Gothic Neo",
     "Malgun Gothic", "맑은 고딕", "Noto Sans KR", Arial, sans-serif;
+  --color-fg-on-emphasis: #ffffff;
   --color-btn-text: #495057;
   --color-btn-bg: #ffffff;
   --color-btn-border: #dee2e6;
@@ -57,13 +58,33 @@ main {
 }
 
 main .gsc-comment-box,
+main .gsc-reply-box,
 main .gsc-timeline,
 main .gsc-reactions,
 main .gsc-comment-box-textarea,
-main .gsc-comment-box-tabs {
-  border-radius: 1rem;
+main .gsc-comment-box-tabs,
+main .gsc-comment-box-main,
+main .gsc-comment-box-bottom {
+  border-radius: 1.125rem;
 }
 
 main .gsc-homepage-bg {
   background-color: #ffffff;
+}
+
+main .gsc-comment-box,
+main .gsc-reply-box,
+main .gsc-timeline {
+  overflow: hidden;
+}
+
+main .gsc-comment-box-textarea,
+main .gsc-comment-box textarea,
+main .gsc-reply-box .gsc-comment-box-textarea,
+main .gsc-reply-box textarea {
+  min-height: 11.5rem;
+}
+
+main .gsc-comment-box-main {
+  min-height: 12rem;
 }
