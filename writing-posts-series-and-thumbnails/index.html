@@ -12,17 +12,52 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff" data-theme-color>
 <meta name="apple-mobile-web-app-status-bar-style" content="default" data-apple-status-bar>
-<link rel="icon" href="/assets/images/favicon.png?v=1775719041" type="image/png" sizes="256x256">
-<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775719041" type="image/png">
-<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775719041">
-<link rel="mask-icon" href="/assets/images/profile.svg?v=1775719041" color="#495057">
-<link rel="alternate" type="application/atom+xml" href="/feed.xml" title="Woonyong Blog">
+<title>글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법 | choi woo-nyong</title>
+<meta name="generator" content="Jekyll v4.3.3">
+<meta name="description" content="front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다.">
+<link rel="canonical" href="https://blog.woonyong.org/writing-posts-series-and-thumbnails/">
+<meta property="og:title" content="글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법 | choi woo-nyong">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:description" content="front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다.">
+<meta property="og:url" content="https://blog.woonyong.org/writing-posts-series-and-thumbnails/">
+<meta property="og:site_name" content="choi woo-nyong">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법 | choi woo-nyong">
+<meta name="twitter:description" content="front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다.">
 
-<link rel="stylesheet" href="/assets/css/main.css?v=1775719041">
+  <meta property="article:published_time" content="2026-03-30T09:00:00+09:00">
+
+
+  <meta property="article:modified_time" content="2026-04-03T14:50:00+09:00">
+
+<link rel="icon" href="/assets/images/favicon.png?v=1775719719" type="image/png" sizes="256x256">
+<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775719719" type="image/png">
+<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775719719">
+<link rel="mask-icon" href="/assets/images/profile.svg?v=1775719719" color="#495057">
+<link rel="alternate" type="application/atom+xml" href="/feed.xml" title="choi woo-nyong">
+
+<link rel="stylesheet" href="/assets/css/main.css?v=1775719719">
 <script>
   (function () {
     function applyTheme(theme) {
@@ -58,24 +93,18 @@
   })();
 </script>
 
-<!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법 | Woonyong Blog</title>
-<meta name="generator" content="Jekyll v4.3.3" />
-<meta property="og:title" content="글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법" />
-<meta property="og:locale" content="ko_KR" />
-<meta name="description" content="front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다." />
-<meta property="og:description" content="front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다." />
-<link rel="canonical" href="https://blog.woonyong.org/writing-posts-series-and-thumbnails/" />
-<meta property="og:url" content="https://blog.woonyong.org/writing-posts-series-and-thumbnails/" />
-<meta property="og:site_name" content="Woonyong Blog" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2026-03-30T09:00:00+09:00" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2026-03-30T09:00:00+09:00","datePublished":"2026-03-30T09:00:00+09:00","description":"front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다.","headline":"글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.woonyong.org/writing-posts-series-and-thumbnails/"},"url":"https://blog.woonyong.org/writing-posts-series-and-thumbnails/"}</script>
-<!-- End Jekyll SEO tag -->
-
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "name": "choi woo-nyong",
+    "headline": "글, 시리즈, 태그, 썸네일을 이 테마에서 다루는 방법 | choi woo-nyong",
+    "description": "front matter 설계, Markdown 지원 범위, 시리즈와 태그 연결, 썸네일 표시 규칙까지 작성자 관점에서 정리합니다.",
+    "url": "https://blog.woonyong.org/writing-posts-series-and-thumbnails/",
+    "datePublished": "2026-03-30T09:00:00+09:00",
+    "dateModified": "2026-04-03T14:50:00+09:00"
+  }
+</script>
 
   </head>
   <body>
@@ -100,7 +129,7 @@
     
     
 
-    <a class="header-logo" href="/" aria-label="Woonyong Blog">
+    <a class="header-logo" href="/" aria-label="choi woo-nyong">
       
         <img
           class="header-logo__mark header-logo__mark--avatar"
@@ -446,6 +475,6 @@
 </footer>
 
     
-    <script src="/assets/js/site.js?v=1775719041"></script>
+    <script src="/assets/js/site.js?v=1775719719"></script>
   </body>
 </html>

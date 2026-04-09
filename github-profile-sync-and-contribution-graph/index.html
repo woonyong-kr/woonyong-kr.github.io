@@ -12,17 +12,52 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff" data-theme-color>
 <meta name="apple-mobile-web-app-status-bar-style" content="default" data-apple-status-bar>
-<link rel="icon" href="/assets/images/favicon.png?v=1775719041" type="image/png" sizes="256x256">
-<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775719041" type="image/png">
-<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775719041">
-<link rel="mask-icon" href="/assets/images/profile.svg?v=1775719041" color="#495057">
-<link rel="alternate" type="application/atom+xml" href="/feed.xml" title="Woonyong Blog">
+<title>GitHub 프로필 동기화와 기여 그래프를 붙이는 방법 | choi woo-nyong</title>
+<meta name="generator" content="Jekyll v4.3.3">
+<meta name="description" content="GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다.">
+<link rel="canonical" href="https://blog.woonyong.org/github-profile-sync-and-contribution-graph/">
+<meta property="og:title" content="GitHub 프로필 동기화와 기여 그래프를 붙이는 방법 | choi woo-nyong">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:description" content="GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다.">
+<meta property="og:url" content="https://blog.woonyong.org/github-profile-sync-and-contribution-graph/">
+<meta property="og:site_name" content="choi woo-nyong">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GitHub 프로필 동기화와 기여 그래프를 붙이는 방법 | choi woo-nyong">
+<meta name="twitter:description" content="GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다.">
 
-<link rel="stylesheet" href="/assets/css/main.css?v=1775719041">
+  <meta property="article:published_time" content="2026-03-28T09:00:00+09:00">
+
+
+  <meta property="article:modified_time" content="2026-04-03T12:40:00+09:00">
+
+<link rel="icon" href="/assets/images/favicon.png?v=1775719719" type="image/png" sizes="256x256">
+<link rel="shortcut icon" href="/assets/images/favicon.png?v=1775719719" type="image/png">
+<link rel="apple-touch-icon" href="/assets/images/favicon.png?v=1775719719">
+<link rel="mask-icon" href="/assets/images/profile.svg?v=1775719719" color="#495057">
+<link rel="alternate" type="application/atom+xml" href="/feed.xml" title="choi woo-nyong">
+
+<link rel="stylesheet" href="/assets/css/main.css?v=1775719719">
 <script>
   (function () {
     function applyTheme(theme) {
@@ -58,24 +93,18 @@
   })();
 </script>
 
-<!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>GitHub 프로필 동기화와 기여 그래프를 붙이는 방법 | Woonyong Blog</title>
-<meta name="generator" content="Jekyll v4.3.3" />
-<meta property="og:title" content="GitHub 프로필 동기화와 기여 그래프를 붙이는 방법" />
-<meta property="og:locale" content="ko_KR" />
-<meta name="description" content="GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다." />
-<meta property="og:description" content="GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다." />
-<link rel="canonical" href="https://blog.woonyong.org/github-profile-sync-and-contribution-graph/" />
-<meta property="og:url" content="https://blog.woonyong.org/github-profile-sync-and-contribution-graph/" />
-<meta property="og:site_name" content="Woonyong Blog" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2026-03-28T09:00:00+09:00" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="GitHub 프로필 동기화와 기여 그래프를 붙이는 방법" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2026-03-28T09:00:00+09:00","datePublished":"2026-03-28T09:00:00+09:00","description":"GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다.","headline":"GitHub 프로필 동기화와 기여 그래프를 붙이는 방법","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.woonyong.org/github-profile-sync-and-contribution-graph/"},"url":"https://blog.woonyong.org/github-profile-sync-and-contribution-graph/"}</script>
-<!-- End Jekyll SEO tag -->
-
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "name": "choi woo-nyong",
+    "headline": "GitHub 프로필 동기화와 기여 그래프를 붙이는 방법 | choi woo-nyong",
+    "description": "GitHub 아이디만 연결하면 이름, 아바타, 링크, 기여 그래프가 홈 화면에 반영되는 흐름과 fallback 규칙을 설명합니다.",
+    "url": "https://blog.woonyong.org/github-profile-sync-and-contribution-graph/",
+    "datePublished": "2026-03-28T09:00:00+09:00",
+    "dateModified": "2026-04-03T12:40:00+09:00"
+  }
+</script>
 
   </head>
   <body>
@@ -100,7 +129,7 @@
     
     
 
-    <a class="header-logo" href="/" aria-label="Woonyong Blog">
+    <a class="header-logo" href="/" aria-label="choi woo-nyong">
       
         <img
           class="header-logo__mark header-logo__mark--avatar"
@@ -382,6 +411,6 @@
 </footer>
 
     
-    <script src="/assets/js/site.js?v=1775719041"></script>
+    <script src="/assets/js/site.js?v=1775719719"></script>
   </body>
 </html>
