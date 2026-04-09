@@ -13,14 +13,14 @@ analytics:
     measurement_id: ""
 
 comments:
-  provider: ""
+  provider: "giscus"
   disqus:
     shortname: ""
   giscus:
     repo: "woonyong-kr/woonyong-kr.github.io"
-    repo_id: "REPOSITORY_NODE_ID"
+    repo_id: "R_kgDOR9z4JQ"
     category: "Announcements"
-    category_id: "CATEGORY_NODE_ID"
+    category_id: "DIC_kwDOR9z4Jc4C6cIf"
     mapping: "pathname"
     strict: true
     reactions_enabled: true
