@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <rect x="0" y="0" width="1600" height="900" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="60" y="105" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="36" font-weight="bold" fill="#2f3733">INSERT 2,751 → 591,429 ops/sec</text>
+
+  <!-- panel separator -->
+  <line x1="800" y1="170" x2="800" y2="750" stroke="#d9dde0" stroke-width="2"/>
+
+  <!-- panel labels -->
+  <text x="430" y="200" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#6a716d">개선 전 (1,000,000행)</text>
+  <text x="1170" y="200" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#02a76a">개선 후</text>
+
+  <!-- baselines -->
+  <line x1="140" y1="640" x2="740" y2="640" stroke="#d9dde0" stroke-width="2"/>
+  <line x1="860" y1="640" x2="1460" y2="640" stroke="#d9dde0" stroke-width="2"/>
+
+  <!-- left bar (before, gray) -->
+  <rect x="350" y="414" width="160" height="226" rx="4" fill="#8a918d"/>
+  <text x="430" y="388" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="26" font-weight="bold" fill="#2f3733">2,751 ops/sec</text>
+
+  <!-- right bar (after, green) -->
+  <rect x="1090" y="260" width="160" height="380" rx="4" fill="#02a76a"/>
+  <text x="1170" y="236" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="28" font-weight="bold" fill="#02a76a">591,429 ops/sec</text>
+  <text x="1170" y="450" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="30" font-weight="bold" fill="#ffffff">215배</text>
+
+  <!-- descriptions -->
+  <text x="430" y="692" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#6a716d">힙 체인 전체 재탐색 O(P²)</text>
+  <text x="430" y="726" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#6a716d">REPL 경로 lock 미해제 O(N²)</text>
+  <text x="1170" y="692" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#6a716d">빈 슬롯 힌트 + 문장 종료 시 lock 해제</text>
+
+  <!-- scale note -->
+  <text x="800" y="790" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="15" fill="#8a918d">막대 높이는 로그 스케일 기준 (215배 차이)</text>
+
+  <!-- source -->
+  <text x="1540" y="836" text-anchor="end" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="13" fill="#8a918d">측정: MiniDB 1,000,000행 INSERT, 동일 조건 3회 중앙값 · github.com/woonyong-kr/minidb</text>
+</svg>

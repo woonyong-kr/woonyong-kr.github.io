@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6a716d"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a918d"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="60" y="105" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="36" font-weight="bold" fill="#2f3733">60명 · 발주처 15명 사이의 구조</text>
+
+  <!-- client boxes -->
+  <rect x="330" y="160" width="340" height="80" rx="8" fill="#ffffff" stroke="#8a918d" stroke-width="2"/>
+  <text x="500" y="208" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="22" fill="#2f3733">한화시스템 기획 10명</text>
+  <rect x="930" y="160" width="340" height="80" rx="8" fill="#ffffff" stroke="#8a918d" stroke-width="2"/>
+  <text x="1100" y="208" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="22" fill="#2f3733">EBS 기획 5명</text>
+  <text x="800" y="206" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="16" fill="#8a918d">발주처 15명</text>
+
+  <!-- arrows: clients -> PD -->
+  <line x1="520" y1="240" x2="712" y2="330" stroke="#6a716d" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1080" y1="240" x2="888" y2="330" stroke="#6a716d" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- PD box (green border) -->
+  <rect x="480" y="340" width="640" height="110" rx="8" fill="#ffffff" stroke="#02a76a" stroke-width="3"/>
+  <text x="800" y="386" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="26" font-weight="bold" fill="#2f3733">총괄 PD</text>
+  <text x="800" y="422" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="18" fill="#6a716d">요구사항 창구 단일화 · 완료 기준 합의</text>
+
+  <!-- side annotation -->
+  <line x1="1120" y1="386" x2="1145" y2="386" stroke="#d9dde0" stroke-width="2"/>
+  <text x="1155" y="380" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="16" fill="#6a716d">직군별 지식 공유 세션</text>
+  <text x="1155" y="408" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="16" fill="#6a716d">업무 대화 전면 공개</text>
+
+  <!-- PD -> teams connector -->
+  <line x1="800" y1="450" x2="800" y2="505" stroke="#6a716d" stroke-width="2"/>
+  <line x1="430" y1="505" x2="1170" y2="505" stroke="#6a716d" stroke-width="2"/>
+  <line x1="430" y1="505" x2="430" y2="552" stroke="#6a716d" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="505" x2="800" y2="552" stroke="#6a716d" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1170" y1="505" x2="1170" y2="552" stroke="#6a716d" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- team boxes -->
+  <rect x="280" y="560" width="300" height="90" rx="8" fill="#ffffff" stroke="#8a918d" stroke-width="2"/>
+  <text x="430" y="613" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" fill="#2f3733">개발 40명</text>
+  <rect x="650" y="560" width="300" height="90" rx="8" fill="#ffffff" stroke="#8a918d" stroke-width="2"/>
+  <text x="800" y="613" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" fill="#2f3733">아트 15명</text>
+  <rect x="1020" y="560" width="300" height="90" rx="8" fill="#ffffff" stroke="#8a918d" stroke-width="2"/>
+  <text x="1170" y="613" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" fill="#2f3733">기획 5명</text>
+
+  <!-- inter-team bidirectional dashed link -->
+  <line x1="430" y1="650" x2="430" y2="690" stroke="#8a918d" stroke-width="2" stroke-dasharray="6 6"/>
+  <line x1="800" y1="650" x2="800" y2="690" stroke="#8a918d" stroke-width="2" stroke-dasharray="6 6"/>
+  <line x1="1170" y1="650" x2="1170" y2="690" stroke="#8a918d" stroke-width="2" stroke-dasharray="6 6"/>
+  <line x1="430" y1="690" x2="1170" y2="690" stroke="#8a918d" stroke-width="2" stroke-dasharray="6 6" marker-start="url(#arrowDash)" marker-end="url(#arrowDash)"/>
+  <text x="800" y="728" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="16" fill="#6a716d">완료 기준 합의 절차</text>
+
+  <!-- source -->
+  <text x="1540" y="836" text-anchor="end" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="13" fill="#8a918d">Wecanverse (2023.04–2025.05) 조직 구조</text>
+</svg>

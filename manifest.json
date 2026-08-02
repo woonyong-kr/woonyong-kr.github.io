@@ -1,0 +1,13 @@
+{
+  "short_name": "WN.",
+  "name": "최우녕 — AI Engineer 포트폴리오",
+  "icons": [
+    { "src": "favicon.ico", "sizes": "16x16 32x32 48x48 64x64", "type": "image/x-icon" },
+    { "src": "apple-touch-icon.png", "type": "image/png", "sizes": "180x180" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#05d182",
+  "background_color": "#fcfcfc"
+}

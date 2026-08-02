@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "./static/css/main.cbda08da.chunk.css",
+    "main.js": "./static/js/main.fb0ed980.chunk.js",
+    "main.js.map": "./static/js/main.fb0ed980.chunk.js.map",
+    "runtime-main.js": "./static/js/runtime-main.f66bbeae.js",
+    "runtime-main.js.map": "./static/js/runtime-main.f66bbeae.js.map",
+    "static/js/2.b24c9079.chunk.js": "./static/js/2.b24c9079.chunk.js",
+    "static/js/2.b24c9079.chunk.js.map": "./static/js/2.b24c9079.chunk.js.map",
+    "static/css/3.40d7e7f1.chunk.css": "./static/css/3.40d7e7f1.chunk.css",
+    "static/js/3.a58ae007.chunk.js": "./static/js/3.a58ae007.chunk.js",
+    "static/js/3.a58ae007.chunk.js.map": "./static/js/3.a58ae007.chunk.js.map",
+    "index.html": "./index.html",
+    "static/css/3.40d7e7f1.chunk.css.map": "./static/css/3.40d7e7f1.chunk.css.map",
+    "static/css/main.cbda08da.chunk.css.map": "./static/css/main.cbda08da.chunk.css.map",
+    "static/js/2.b24c9079.chunk.js.LICENSE.txt": "./static/js/2.b24c9079.chunk.js.LICENSE.txt",
+    "static/media/choiwoonyong-front-white.cfa34f3b.png": "./static/media/choiwoonyong-front-white.cfa34f3b.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.f66bbeae.js",
+    "static/js/2.b24c9079.chunk.js",
+    "static/css/main.cbda08da.chunk.css",
+    "static/js/main.fb0ed980.chunk.js"
+  ]
+}
