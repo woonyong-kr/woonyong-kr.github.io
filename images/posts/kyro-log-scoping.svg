@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <rect x="0" y="0" width="1600" height="900" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="60" y="90" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="36" font-weight="bold" fill="#2f3733">판정 입력 축소 — 장애에 귀속된 로그만 재집계</text>
+  <text x="60" y="130" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#6a716d">무엇을 버렸는지까지 데이터로 남겨, 축소가 판정을 왜곡하지 않게</text>
+
+  <!-- stage 1 -->
+  <rect x="80" y="240" width="320" height="180" rx="10" fill="#f4f6f5" stroke="#8a918d" stroke-width="2"/>
+  <text x="240" y="290" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#2f3733">원본 증거 로그</text>
+  <text x="240" y="326" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">전 네임스페이스 스트림</text>
+  <text x="240" y="358" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="19" fill="#02a76a">원본은 그대로 보존</text>
+  <text x="240" y="390" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="19" fill="#6a716d">판정 번들만 정제</text>
+
+  <line x1="400" y1="330" x2="470" y2="330" stroke="#2f3733" stroke-width="3"/>
+  <polygon points="470,330 456,322 456,338" fill="#2f3733"/>
+
+  <!-- stage 2 -->
+  <rect x="480" y="240" width="340" height="180" rx="10" fill="#ffffff" stroke="#2f3733" stroke-width="2.5"/>
+  <text x="650" y="290" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#2f3733">귀속 필터</text>
+  <text x="650" y="326" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">장애 네임스페이스 · Pod 라벨</text>
+  <text x="650" y="358" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">일치하는 스트림만 선택</text>
+  <text x="650" y="390" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="19" fill="#6a716d">귀속 불가 스트림은 보수적으로 유지</text>
+
+  <line x1="820" y1="330" x2="890" y2="330" stroke="#2f3733" stroke-width="3"/>
+  <polygon points="890,330 876,322 876,338" fill="#2f3733"/>
+
+  <!-- stage 3 -->
+  <rect x="900" y="240" width="340" height="180" rx="10" fill="#ffffff" stroke="#2f3733" stroke-width="2.5"/>
+  <text x="1070" y="290" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#2f3733">재집계</text>
+  <text x="1070" y="326" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">라인 수 · 패턴 · 심각도 · trace id 를</text>
+  <text x="1070" y="358" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">선택된 스트림만으로 다시 계산</text>
+  <text x="1070" y="390" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="19" fill="#6a716d">다른 네임스페이스 노이즈가 승격되지 않음</text>
+
+  <line x1="1240" y1="330" x2="1310" y2="330" stroke="#2f3733" stroke-width="3"/>
+  <polygon points="1310,330 1296,322 1296,338" fill="#2f3733"/>
+
+  <!-- stage 4 -->
+  <rect x="1320" y="240" width="220" height="180" rx="10" fill="#eefaf4" stroke="#02a76a" stroke-width="2.5"/>
+  <text x="1430" y="296" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="24" font-weight="bold" fill="#02a76a">판정 입력</text>
+  <text x="1430" y="334" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">장애에 귀속된</text>
+  <text x="1430" y="364" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">근거만 담은 번들</text>
+
+  <!-- lower band: limits -->
+  <rect x="290" y="530" width="1020" height="150" rx="10" fill="#f4f6f5" stroke="#8a918d" stroke-width="2"/>
+  <text x="800" y="580" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="23" font-weight="bold" fill="#2f3733">상한 · 바이트 예산</text>
+  <text x="800" y="616" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#2f3733">엔트리 8 · 스트림 4 · 텍스트 1,600자 — 초과하면 가장 큰 리스트부터 절반씩 축소</text>
+  <text x="800" y="650" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="20" fill="#02a76a">잘라낸 원본 개수는 metadata 로 함께 기록 — 판정이 "얼마나 잘렸는지" 알고 판단</text>
+
+  <line x1="800" y1="420" x2="800" y2="530" stroke="#8a918d" stroke-width="2.5" stroke-dasharray="8 6"/>
+
+  <!-- bottom caption -->
+  <line x1="60" y1="760" x2="1540" y2="760" stroke="#d9dde0" stroke-width="2"/>
+  <text x="800" y="812" text-anchor="middle" font-family="'Noto Sans CJK KR','Noto Sans KR',sans-serif" font-size="22" font-weight="bold" fill="#2f3733">"샌드박스 노이즈가 진짜 장애를 가리던 문제"에서 출발한 설계 — 원본 보존 · 보수적 유지 · 상한 명시</text>
+</svg>
