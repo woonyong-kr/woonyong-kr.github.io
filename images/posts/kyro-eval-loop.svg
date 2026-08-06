@@ -9,7 +9,7 @@
   <!-- 1. 카탈로그 -->
   <rect x="80" y="220" width="330" height="150" rx="10" fill="#f4f6f5" stroke="#8a918d" stroke-width="2"/>
   <text x="245" y="268" text-anchor="middle" font-size="24" font-weight="bold" fill="#2f3733">규칙 카탈로그</text>
-  <text x="245" y="304" text-anchor="middle" font-size="20" fill="#2f3733">도메인 16종 · rule 29</text>
+  <text x="245" y="304" text-anchor="middle" font-size="20" fill="#2f3733">YAML 15개 · rule 29</text>
   <text x="245" y="336" text-anchor="middle" font-size="20" fill="#6a716d">등록 원인 87종</text>
 
   <line x1="410" y1="295" x2="490" y2="295" stroke="#2f3733" stroke-width="3"/>
