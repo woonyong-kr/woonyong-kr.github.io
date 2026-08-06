@@ -37,7 +37,7 @@ target cluster-agent / node-collector → 신뢰 경계가 다름
 
 ## 확인할 수 있는 것
 
-- 회고 원문과 재조회 명령: \`k8s-ops-min\` 저장소의 \`docs/architecture-cost-postmortem.md\`
+- 회고 원문과 재조회 명령: \`k8s-ops\` 저장소의 \`docs/architecture-cost-postmortem.md\`
 - 통합 확인: \`python src/entrypoints/app.py --check\` — controller_services 39 · agent_services 2
 - 청구서 · CloudWatch 원본 캡처와 CSV: \`docs/evidence/\`
 
