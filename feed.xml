@@ -6,7 +6,7 @@
     <description>최우녕 — AI Engineer 포트폴리오</description>
     <language>ko</language>
     <item>
-      <title>서비스 47개의 값은 청구서에 적혀 있었다</title>
+      <title>비용 회고에서 원인을 단정하지 않는 법</title>
       <link>https://woonyong-kr.github.io/#/posts/cost-postmortem</link>
       <guid isPermaLink="false">cost-postmortem</guid>
       <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
@@ -76,7 +76,7 @@
       <description>Slotted Page · B+Tree · Buffer Pool 을 하나의 경로로 이은 기록</description>
     </item>
     <item>
-      <title>PostgreSQL 과 붙어 보고 고친 것</title>
+      <title>PostgreSQL 비교로 찾은 범위 조회 병목</title>
       <link>https://woonyong-kr.github.io/#/posts/pg-benchmark</link>
       <guid isPermaLink="false">pg-benchmark</guid>
       <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
@@ -125,7 +125,7 @@
       <description>Copy-on-Write 구현, 복사는 쓰기 순간까지 미룬다</description>
     </item>
     <item>
-      <title>AI 가 프로덕션을 직접 못 바꾸게 하기</title>
+      <title>자동 복구가 클러스터를 직접 바꾸지 못하게 한 이유</title>
       <link>https://woonyong-kr.github.io/#/posts/recovery-authority</link>
       <guid isPermaLink="false">recovery-authority</guid>
       <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
@@ -139,18 +139,18 @@
       <description>줄이기 전에, 줄여도 판정이 같은지부터</description>
     </item>
     <item>
-      <title>LLM 에게 정답 대신 후보를 시키기</title>
+      <title>LLM fallback을 붙이기 전에 정할 것</title>
       <link>https://woonyong-kr.github.io/#/posts/llm-fallback</link>
       <guid isPermaLink="false">llm-fallback</guid>
       <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
-      <description>규칙이 먼저, LLM 은 규칙이 모를 때만</description>
+      <description>구현된 기능이 아니라, 규칙 밖 후보를 다루기 위한 설계 메모</description>
     </item>
     <item>
-      <title>장애 원인 판정을 YAML 로 뺀 이유</title>
+      <title>장애 원인 판정을 YAML로 분리한 이유</title>
       <link>https://woonyong-kr.github.io/#/posts/rule-catalog</link>
       <guid isPermaLink="false">rule-catalog</guid>
       <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
-      <description>규칙 엔진 구현과 시나리오 116개 검증, 94.3% 에서 100% 까지</description>
+      <description>규칙 카탈로그와 합성 회귀 입력이 확인하는 범위</description>
     </item>
     <item>
       <title>DB 는 바뀌었는데 이벤트만 사라질 때</title>
