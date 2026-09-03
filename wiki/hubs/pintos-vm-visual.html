@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>PintOS 가상 메모리 흐름 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="PintOS 가상 메모리 흐름 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="PintOS 가상 메모리 흐름 · 최우녕"/><meta name="twitter:description" content="PintOS 가상 메모리의 page fault·claim·swap·mmap 복구 흐름을 연결한다."/><meta property="og:description" content="PintOS 가상 메모리의 page fault·claim·swap·mmap 복구 흐름을 연결한다."/><meta property="og:image:alt" content="PintOS 가상 메모리의 page fault·claim·swap·mmap 복구 흐름을 연결한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/hubs/pintos-vm-visual"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/hubs/pintos-vm-visual"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PintOS 가상 메모리의 page fault·claim·swap·mmap 복구 흐름을 연결한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/hubs/pintos-vm-visual" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-378" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-378" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/hubs/">hubs</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>PintOS 가상 메모리 흐름</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pintos-가상-메모리-흐름">PintOS 가상 메모리 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-가상-메모리-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<p>PintOS 가상 메모리의 page fault·claim·swap·mmap 복구 흐름을 연결한다.</p>
+<h2 id="최종-다이어그램-설계-메모">최종 다이어그램 설계 메모<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#최종-다이어그램-설계-메모" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>최종 그림 세트:</p>
+<ul>
+<li>VM 전체 흐름: 유저 VA 접근 → MMU → PTE miss → page fault → SPT → frame → PTE 설치</li>
+<li>코드 로딩 과정: <code>load_segment()</code>가 UNINIT page와 lazy aux를 만들고 첫 접근 때 실제로 읽는 흐름</li>
+<li>주소 참조 과정: <code>CR2</code>, <code>error_code</code>, <code>vm_try_handle_fault()</code> 판단 분기</li>
+<li>VM 데이터 구조: <code>struct page</code>, <code>struct frame</code>, SPT hash, PML4의 역할 분리</li>
+<li>Frame/SPT API: <code>vm_alloc_page()</code>, <code>vm_do_claim_page()</code>, <code>swap_in()</code>, <code>destroy(page)</code>의 호출 관계</li>
+</ul>
+<h2 id="한-장으로-보는-vm-흐름">한 장으로 보는 VM 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#한-장으로-보는-vm-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Mermaid는 현재 정본의 복구·실패 경로를 포함한 탐색 지도다. 원본 source의 시각적 구획은 아래 도판 세트에서 보존한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n  User[\&quot;유저 명령어&lt;br/>mov rax, [0x401000]\&quot;] --> MMU[\&quot;MMU&lt;br/>VA → PA 번역\&quot;]\n  Stack[\&quot;스택 명령어&lt;br/>push rax\&quot;] --> MMU\n  MMU --> PML4[\&quot;PML4&lt;br/>현재 주소 공간의 하드웨어 page table\&quot;]\n  PML4 -->|PTE 있음| Memory[\&quot;Frame bytes&lt;br/>실제 데이터 읽기/쓰기\&quot;]\n  PML4 -->|PTE 없음| PF[\&quot;page_fault()&lt;br/>CR2와 error_code 읽기\&quot;]\n  PF --> Try[\&quot;vm_try_handle_fault()&lt;br/>합법 fault인지 판단\&quot;]\n  Try -->|권한 위반| Exit[\&quot;process exit\&quot;]\n  Try -->|SPT page 있음| Claim[\&quot;vm_do_claim_page()\&quot;]\n  Try -->|SPT page 없음| StackCheck{\&quot;stack growth 조건 만족?\&quot;}\n  StackCheck -->|No| Exit\n  StackCheck -->|Yes| Grow[\&quot;vm_stack_growth()\&quot;]\n  Grow --> Alloc[\&quot;vm_alloc_page()\&quot;] --> Claim\n  Claim --> Frame[\&quot;vm_get_frame()\&quot;]\n  Frame --> Link[\&quot;page ↔ frame 연결\&quot;]\n  Link --> SetPte[\&quot;pml4_set_page()&lt;br/>PTE 설치\&quot;]\n  SetPte -->|성공| SwapIn[\&quot;swap_in(page, frame->kva)\&quot;]\n  SetPte -->|실패| Rollback[\&quot;claim rollback&lt;br/>link / PTE / frame 정리\&quot;]\n  SwapIn -->|실패| Rollback\n  SwapIn --> Uninit{\&quot;page type\&quot;}\n  Uninit -->|UNINIT| Init[\&quot;uninit_initialize()\&quot;]\n  Uninit -->|ANON| Anon[\&quot;anon_swap_in()\&quot;]\n  Uninit -->|FILE| File[\&quot;file_backed_swap_in()\&quot;]\n  Init --> Initializer[\&quot;anon_initializer() 또는&lt;br/>file_backed_initializer()\&quot;]\n  Init --> Lazy[\&quot;lazy_load_segment()\&quot;]\n  Lazy -->|실패| InitFail[\&quot;UNINIT swap_in 실패&lt;br/>aux / type metadata 정리\&quot;]\n  InitFail --> AuxChecklist[\&quot;lazy aux cleanup&lt;br/>success / failure / destroy\&quot;]\n  AuxChecklist --> Rollback\n  Lazy --> Memory\n  Anon --> Memory\n  File --> Memory\n  Memory --> ByteCheck[\&quot;GDB byte check&lt;br/>fault_addr vs frame->kva+offset\&quot;]\n  Rollback --> Exit\n  Exit --> ExitCleanup[\&quot;process_cleanup()&lt;br/>SPT page destroy\&quot;]\n  ExitCleanup --> Kill[\&quot;supplemental_page_table_kill()&lt;br/>UNINIT / ANON / FILE 정리\&quot;]&quot;">flowchart LR
+  User[&quot;유저 명령어&lt;br/>mov rax, [0x401000]&quot;] --> MMU[&quot;MMU&lt;br/>VA → PA 번역&quot;]
+  Stack[&quot;스택 명령어&lt;br/>push rax&quot;] --> MMU
+  MMU --> PML4[&quot;PML4&lt;br/>현재 주소 공간의 하드웨어 page table&quot;]
+  PML4 -->|PTE 있음| Memory[&quot;Frame bytes&lt;br/>실제 데이터 읽기/쓰기&quot;]
+  PML4 -->|PTE 없음| PF[&quot;page_fault()&lt;br/>CR2와 error_code 읽기&quot;]
+  PF --> Try[&quot;vm_try_handle_fault()&lt;br/>합법 fault인지 판단&quot;]
+  Try -->|권한 위반| Exit[&quot;process exit&quot;]
+  Try -->|SPT page 있음| Claim[&quot;vm_do_claim_page()&quot;]
+  Try -->|SPT page 없음| StackCheck{&quot;stack growth 조건 만족?&quot;}
+  StackCheck -->|No| Exit
+  StackCheck -->|Yes| Grow[&quot;vm_stack_growth()&quot;]
+  Grow --> Alloc[&quot;vm_alloc_page()&quot;] --> Claim
+  Claim --> Frame[&quot;vm_get_frame()&quot;]
+  Frame --> Link[&quot;page ↔ frame 연결&quot;]
+  Link --> SetPte[&quot;pml4_set_page()&lt;br/>PTE 설치&quot;]
+  SetPte -->|성공| SwapIn[&quot;swap_in(page, frame->kva)&quot;]
+  SetPte -->|실패| Rollback[&quot;claim rollback&lt;br/>link / PTE / frame 정리&quot;]
+  SwapIn -->|실패| Rollback
+  SwapIn --> Uninit{&quot;page type&quot;}
+  Uninit -->|UNINIT| Init[&quot;uninit_initialize()&quot;]
+  Uninit -->|ANON| Anon[&quot;anon_swap_in()&quot;]
+  Uninit -->|FILE| File[&quot;file_backed_swap_in()&quot;]
+  Init --> Initializer[&quot;anon_initializer() 또는&lt;br/>file_backed_initializer()&quot;]
+  Init --> Lazy[&quot;lazy_load_segment()&quot;]
+  Lazy -->|실패| InitFail[&quot;UNINIT swap_in 실패&lt;br/>aux / type metadata 정리&quot;]
+  InitFail --> AuxChecklist[&quot;lazy aux cleanup&lt;br/>success / failure / destroy&quot;]
+  AuxChecklist --> Rollback
+  Lazy --> Memory
+  Anon --> Memory
+  File --> Memory
+  Memory --> ByteCheck[&quot;GDB byte check&lt;br/>fault_addr vs frame->kva+offset&quot;]
+  Rollback --> Exit
+  Exit --> ExitCleanup[&quot;process_cleanup()&lt;br/>SPT page destroy&quot;]
+  ExitCleanup --> Kill[&quot;supplemental_page_table_kill()&lt;br/>UNINIT / ANON / FILE 정리&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="링크-표">링크 표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#링크-표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>구현 전 전체 질문
+<ul>
+<li>코드에서 볼 위치: VM 전체</li>
+</ul>
+</li>
+<li>VA -> MMU -> PA
+<ul>
+<li>코드에서 볼 위치: <code>pintos/threads/mmu.c</code></li>
+</ul>
+</li>
+<li>PML4 / CR3
+<ul>
+<li>코드에서 볼 위치: <code>pml4_activate()</code>, <code>pml4_get_page()</code>, <code>pml4_set_page()</code></li>
+</ul>
+</li>
+<li>PAGE / FRAME / SPT
+<ul>
+<li>코드에서 볼 위치: <code>pintos/include/vm/vm.h</code></li>
+</ul>
+</li>
+<li>코드 로딩 과정
+<ul>
+<li>코드에서 볼 위치: <code>load_segment()</code>, <code>lazy_load_segment()</code></li>
+</ul>
+</li>
+<li>fork lazy UNINIT page
+<ul>
+<li>코드에서 볼 위치: <code>supplemental_page_table_copy()</code>, <code>uninit_new()</code>, <code>uninit_initialize()</code></li>
+</ul>
+</li>
+<li>주소 참조 과정
+<ul>
+<li>코드에서 볼 위치: <code>page_fault()</code>, <code>vm_try_handle_fault()</code>, <code>spt_find_page()</code></li>
+</ul>
+</li>
+<li>page claim
+<ul>
+<li>코드에서 볼 위치: <code>vm_do_claim_page()</code>, <code>vm_get_frame()</code></li>
+</ul>
+</li>
+<li>frame eviction / clock
+<ul>
+<li>코드에서 볼 위치: <code>vm_get_frame()</code>, <code>vm_get_victim()</code>, <code>pml4_is_accessed()</code></li>
+</ul>
+</li>
+<li>claim rollback
+<ul>
+<li>코드에서 볼 위치: <code>pml4_set_page()</code> 실패, <code>swap_in()</code> 실패, <code>pml4_clear_page()</code></li>
+</ul>
+</li>
+<li>UNINIT swap_in 실패
+<ul>
+<li>코드에서 볼 위치: <code>uninit_initialize()</code>, <code>lazy_load_segment()</code>, <code>anon_initializer()</code>, <code>file_backed_initializer()</code></li>
+</ul>
+</li>
+<li>lazy aux cleanup 구현
+<ul>
+<li>코드에서 볼 위치: <code>lazy_load_segment()</code>, mmap lazy callback, <code>uninit_destroy()</code>, <code>file_backed_destroy()</code></li>
+</ul>
+</li>
+<li>byte equivalence
+<ul>
+<li>코드에서 볼 위치: <code>pml4_get_page()</code>, <code>frame->kva + offset</code>, QEMU GDB memory read</li>
+</ul>
+</li>
+<li>process cleanup
+<ul>
+<li>코드에서 볼 위치: <code>process_cleanup()</code>, <code>supplemental_page_table_kill()</code>, <code>destroy(page)</code></li>
+</ul>
+</li>
+<li>stack growth
+<ul>
+<li>코드에서 볼 위치: <code>vm_stack_growth()</code>, <code>setup_stack()</code></li>
+</ul>
+</li>
+<li>UNINIT -> ANON / FILE
+<ul>
+<li>코드에서 볼 위치: <code>uninit_initialize()</code>, <code>uninit_destroy()</code>, <code>anon_initializer()</code>, <code>file_backed_initializer()</code></li>
+</ul>
+</li>
+<li>fork swapped ANON page
+<ul>
+<li>코드에서 볼 위치: <code>supplemental_page_table_copy()</code>, <code>anon_swap_in()</code>, <code>anon_swap_out()</code></li>
+</ul>
+</li>
+<li>바이트 관찰
+<ul>
+<li>코드에서 볼 위치: raw bytes, PTE, <code>struct page</code>, <code>struct intr_frame</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="이-문서에서-지켜야-할-작성-방식">이 문서에서 지켜야 할 작성 방식<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#이-문서에서-지켜야-할-작성-방식" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>흐름도 박스 하나: 가능하면 하나의 <code>Wiki</code> 문서</li>
+<li>그림 안의 핵심 함수명, 자료구조, GDB 관찰 포인트: 관련 <code>Wiki</code> 문서</li>
+<li>Mermaid/Markdown 구조 옆 일반 Markdown 링크 표</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/pintos" class="internal">PintOS</a></li><li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal">fork에서 lazy UNINIT page의 aux는 어떻게 복사해야 하나</a></li><li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal">lazy aux 실패 주입 Lab</a></li><li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal">Lazy Load aux/file 수명 Trace</a></li><li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal">Lazy Loading Segment 흐름</a></li><li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal">lazy page aux cleanup 구현 체크리스트 Trace</a></li><li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal">lazy page aux ownership 계약</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal">UNINIT swap_in 실패 롤백 Trace</a></li><li><a href="../../wiki/pintos/" class="internal">PintOS 운영체제 학습 프로젝트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-377" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pintos-가상-메모리-흐름" data-for="pintos-가상-메모리-흐름">PintOS 가상 메모리 흐름</a></li><li class="depth-1"><a href="#최종-다이어그램-설계-메모" data-for="최종-다이어그램-설계-메모">최종 다이어그램 설계 메모</a></li><li class="depth-1"><a href="#한-장으로-보는-vm-흐름" data-for="한-장으로-보는-vm-흐름">한 장으로 보는 VM 흐름</a></li><li class="depth-1"><a href="#링크-표" data-for="링크-표">링크 표</a></li><li class="depth-1"><a href="#이-문서에서-지켜야-할-작성-방식" data-for="이-문서에서-지켜야-할-작성-방식">이 문서에서 지켜야 할 작성 방식</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>컨텍스트 스위치 (Context Switch) Trace · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="컨텍스트 스위치 (Context Switch) Trace · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="컨텍스트 스위치 (Context Switch) Trace · 최우녕"/><meta name="twitter:description" content="스케줄러를 처음 보면 스레드 전환을 함수 호출처럼 이해하기 쉽다."/><meta property="og:description" content="스케줄러를 처음 보면 스레드 전환을 함수 호출처럼 이해하기 쉽다."/><meta property="og:image:alt" content="스케줄러를 처음 보면 스레드 전환을 함수 호출처럼 이해하기 쉽다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/context-switch-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/context-switch-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="스케줄러를 처음 보면 스레드 전환을 함수 호출처럼 이해하기 쉽다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/context-switch-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-433" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-433" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>컨텍스트 스위치 (Context Switch) Trace</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="컨텍스트-스위치-context-switch-trace">컨텍스트 스위치 (Context Switch) Trace<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#컨텍스트-스위치-context-switch-trace" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>스레드 전환은 함수 호출처럼 다른 코드로 점프하는 일이 아니다. CPU 레지스터와 스택을 저장하고 복원해야 다음 스레드가 실행을 이어 갈 수 있다. USERPROG가 켜진 PintOS에서 주소 공간이 다른 유저 프로세스로 전환할 때는 페이지 테이블 기준도 함께 바뀐다.</p>
+</blockquote>
+<h2 id="컨텍스트-스위치를-따라가며-확인할-질문">컨텍스트 스위치를 따라가며 확인할 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#컨텍스트-스위치를-따라가며-확인할-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>스케줄러를 처음 보면 스레드 전환을 함수 호출처럼 이해하기 쉽다. 그러나 이 문서에서 다루는 PintOS의 전환 과정은 CPU 레지스터와 스택을 저장하고 복원하는 작업이다. USERPROG가 켜져 있고 주소 공간이 달라진다면 페이지 테이블 기준도 전환 대상에 포함된다.</p>
+<p>이 흐름을 따라가며 다음 질문에 답한다.</p>
+<ul>
+<li>왜 타이머 interrupt 안에서 바로 <code>thread_yield()</code>하지 않고 끝까지 미루는가?</li>
+<li><code>schedule()</code>은 “다음 스레드를 고르는 코드”인가, “레지스터를 바꾸는 코드”인가?</li>
+<li><code>thread_launch()</code>는 현재 스레드의 어느 값을 어디에 저장하는가?</li>
+<li><code>do_iret()</code> 뒤에는 왜 함수 호출처럼 원래 위치로 돌아오지 않는가?</li>
+<li>GDB에서 보는 <code>RIP/RSP</code>는 PintOS 스레드의 필드인가, QEMU의 guest CPU state인가?</li>
+</ul>
+<h2 id="함수-호출과-다른-점">함수 호출과 다른 점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#함수-호출과-다른-점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>컨텍스트 스위치를 모르면 스케줄러를 “함수 포인터를 바꿔 호출하는 코드”처럼 오해하기 쉽다.</p>
+<p>CPU에는 현재 <code>RIP</code>, <code>RSP</code>, 범용 레지스터, flags, segment와 주소 변환 기준이 들어 있다. 스레드 A를 멈추고 B를 실행하려면 A가 나중에 돌아올 수 있도록 이 실행 상태를 저장해야 한다. 그런 다음 B가 마지막으로 멈춘 지점의 상태를 CPU에 복원해야 한다.</p>
+<p>따라서 컨텍스트 스위치는 스레드 이름만 바꾸는 일이 아니다. 다음에 실행할 instruction pointer와 stack pointer를 포함한 CPU 실행 상태를 바꾸는 일이다.</p>
+<h2 id="저장-선택-복원">저장, 선택, 복원<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#저장-선택-복원" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 문서에서 살펴보는 컨텍스트 스위치는 세 단계로 나눌 수 있다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>초보자용 해석</th><th>실제로 바뀌는 것</th></tr></thead><tbody><tr><td>저장</td><td>지금 어디까지 실행했는지 잃지 않게 적어 둔다</td><td>현재 스레드의 register snapshot</td></tr><tr><td>선택</td><td>다음 CPU 주인을 고른다</td><td><code>ready_list</code>에서 <code>next</code> 선택</td></tr><tr><td>복원</td><td>다음 스레드가 멈춘 지점으로 돌아간다</td><td>다음 스레드의 <code>RIP/RSP/registers</code></td></tr></tbody></table></div>
+<p>CPU 위에서 실행되는 순간에는 하나의 레지스터 집합과 하나의 현재 스택만 사용된다. 여러 스레드가 존재한다는 말은 이 문맥에서 스레드마다 다시 실행하는 데 필요한 상태가 따로 저장되어 있다는 뜻이다.</p>
+<p>PintOS의 timer 선점 흐름에 이 세 단계를 연결하면 다음과 같다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant PIT as PIT (IRQ0)\n    participant ISR as intr_handler\n    participant TT as thread_tick\n    participant TY as thread_yield\n    participant SCH as schedule\n    participant TL as thread_launch\n    participant IRET as do_iret\n\n    PIT->>ISR: timer interrupt (vec 0x20)\n    ISR->>TT: thread_tick()\n    TT->>TT: ++thread_ticks >= TIME_SLICE?\n    TT->>ISR: intr_yield_on_return()\n    ISR->>TY: interrupt 반환 경계에서 thread_yield()\n    TY->>TY: cur→READY, ready_list에 삽입\n    TY->>SCH: do_schedule(THREAD_READY)\n    SCH->>SCH: next 선택·RUNNING·process_activate\n    SCH->>TL: thread_launch(next)\n    TL->>TL: cur registers → cur->tf, rip=out_iret\n    TL->>IRET: do_iret(&amp;next->tf)\n    IRET->>IRET: iretq → next rip/rsp로 복귀&quot;">sequenceDiagram
+    participant PIT as PIT (IRQ0)
+    participant ISR as intr_handler
+    participant TT as thread_tick
+    participant TY as thread_yield
+    participant SCH as schedule
+    participant TL as thread_launch
+    participant IRET as do_iret
+
+    PIT->>ISR: timer interrupt (vec 0x20)
+    ISR->>TT: thread_tick()
+    TT->>TT: ++thread_ticks >= TIME_SLICE?
+    TT->>ISR: intr_yield_on_return()
+    ISR->>TY: interrupt 반환 경계에서 thread_yield()
+    TY->>TY: cur→READY, ready_list에 삽입
+    TY->>SCH: do_schedule(THREAD_READY)
+    SCH->>SCH: next 선택·RUNNING·process_activate
+    SCH->>TL: thread_launch(next)
+    TL->>TL: cur registers → cur->tf, rip=out_iret
+    TL->>IRET: do_iret(&amp;next->tf)
+    IRET->>IRET: iretq → next rip/rsp로 복귀
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="a에서-b로-전환하는-장면">A에서 B로 전환하는 장면<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#a에서-b로-전환하는-장면" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>스레드 A가 실행 중이고 타이머가 4번째 tick을 발생시켰다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 RUNNING: A</span></span>
+<span data-line><span>ready_list 앞: B</span></span>
+<span data-line><span>thread_ticks: 4</span></span>
+<span data-line><span>TIME_SLICE: 4</span></span></code></pre></figure>
+<p>PintOS는 A가 나중에 실행을 이어 갈 수 있도록 현재 상태를 보존한 뒤 B로 넘어가야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>A의 현재 값</span></span>
+<span data-line><span>  RIP = A가 나중에 이어 실행할 위치</span></span>
+<span data-line><span>  RSP = A의 현재 커널 스택 위치</span></span>
+<span data-line><span>  RAX/RBX/... = A가 사용 중이던 범용 레지스터</span></span>
+<span data-line> </span>
+<span data-line><span>B의 저장된 값</span></span>
+<span data-line><span>  RIP = B가 나중에 이어 실행할 위치</span></span>
+<span data-line><span>  RSP = B의 커널 스택 위치</span></span>
+<span data-line><span>  RAX/RBX/... = B가 마지막으로 저장해 둔 범용 레지스터</span></span></code></pre></figure>
+<p>이 전환에서는 A의 CPU 상태를 저장한 다음 B의 저장된 상태를 복원한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>A의 CPU 상태 -> A->tf에 저장</span></span>
+<span data-line><span>B->tf의 상태 -> CPU에 복원</span></span></code></pre></figure>
+<h2 id="pintos와-실제-운영체제의-범위">PintOS와 실제 운영체제의 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos와-실제-운영체제의-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 문서에 적힌 범위에서 현실 OS의 컨텍스트 스위치는 PintOS보다 더 많은 요소와 연결된다.</p>
+<ul>
+<li>Linux는 per-CPU run queue, scheduler class, preemption model, tickless, CPU migration, TLB shootdown 같은 요소를 함께 다룬다.</li>
+<li>Windows는 dispatcher, thread/process object, priority, quantum, wait reason, APC 같은 요소가 scheduler와 연결된다.</li>
+<li>두 OS 모두 FPU/SIMD register, debug register, 보안 기능, SMP 동기화까지 고려해야 한다.</li>
+</ul>
+<p>이 차이가 있어도 이 문서에서 비교하는 기본 흐름은 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 실행 흐름의 상태 저장</span></span>
+<span data-line><span>다음 실행 흐름 선택</span></span>
+<span data-line><span>다음 실행 흐름의 상태 복원</span></span></code></pre></figure>
+<p>PintOS는 이 흐름을 학습 가능한 크기로 보여 준다. PintOS를 실제 OS와 같은 규모의 구현으로 볼 수는 없지만, 레지스터와 스택을 저장하고 복원하는 전환 원리는 여기서 확인할 수 있다.</p>
+<h2 id="pintos에서-문맥이-이동하는-과정">PintOS에서 문맥이 이동하는 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서-문맥이-이동하는-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-스레드의-문맥은-어디에-저장되는가">1. 스레드의 문맥은 어디에 저장되는가?<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-스레드의-문맥은-어디에-저장되는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 먼저 볼 단서는 <code>struct thread</code> 안의 <code>struct intr_frame tf</code>다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/threads/thread.h</code>
+<ul>
+<li>각 <code>struct thread</code>는 전용 4KB 페이지의 아래쪽에 놓인다.</li>
+<li>같은 페이지의 위쪽은 그 스레드의 커널 스택으로 쓰인다.</li>
+<li><code>struct thread</code> 필드에 <code>struct intr_frame tf;</code>가 들어 있다.</li>
+</ul>
+</li>
+</ul>
+<p>이 구조에서는 스레드별 문맥이 각 스레드가 소유한 메모리에 저장되고, 커널 스택도 스레드별로 존재한다. 스택이 너무 커지면 같은 4KB 페이지 안의 <code>struct thread</code>를 덮을 수 있다.</p>
+<p>현재 스레드를 찾는 방법도 이 구조를 이용한다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>running_thread()</code>는 현재 <code>rsp</code>를 읽고 페이지 시작 주소로 내림한다.</li>
+<li>그 페이지 시작 주소를 <code>struct thread *</code>로 해석한다.</li>
+</ul>
+</li>
+</ul>
+<p>따라서 PintOS의 “현재 스레드”는 현재 CPU stack pointer가 속한 4KB 페이지에서 역산된다.</p>
+<h3 id="2-timer-interrupt가-왜-스케줄링으로-이어지는가">2. timer interrupt가 왜 스케줄링으로 이어지는가?<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-timer-interrupt가-왜-스케줄링으로-이어지는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>timer interrupt는 OS가 실행 흐름을 다시 판단하는 주기적인 기회다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>thread_tick()</code>이 tick마다 호출된다.</li>
+<li><code>TIME_SLICE</code>를 다 쓰면 <code>intr_yield_on_return()</code>을 호출한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/interrupt.c</code>
+<ul>
+<li><code>intr_yield_on_return()</code>은 <code>yield_on_return = true</code>를 설정한다.</li>
+<li><code>intr_handler()</code>는 외부 interrupt 마무리 지점에서 그 값을 보고 <code>thread_yield()</code>를 호출한다.</li>
+</ul>
+</li>
+</ul>
+<p><code>thread_tick()</code>은 그 자리에서 <code>schedule()</code>을 호출하지 않는다. 대신 인터럽트 핸들러가 끝나는 지점에서 <code>thread_yield()</code>가 실행되도록 예약한다. 이 이유는 <a href="../../wiki/os/why-intr-yield-on-return" class="internal internal-link alias" data-slug="wiki/os/why-intr-yield-on-return">인터럽트 끝에서 yield하는 이유</a>에서 따로 살펴본다.</p>
+<h3 id="3-schedule은-무엇을-바꾸는가">3. <code>schedule()</code>은 무엇을 바꾸는가?<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-schedule은-무엇을-바꾸는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 스케줄러는 다음 CPU 주인을 정한다. 여기서는 <code>ready_list</code>에서 다음 스레드를 고르지만, <code>schedule()</code> 자체가 모든 레지스터를 직접 저장하고 복원하지는 않는다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>next_thread_to_run()</code>이 <code>ready_list</code>에서 다음 스레드를 고른다.</li>
+<li><code>schedule()</code>이 <code>next->status = THREAD_RUNNING</code>, <code>thread_ticks = 0</code> 등을 처리한다.</li>
+<li>USERPROG일 때 <code>process_activate(next)</code>로 주소 공간을 전환한다.</li>
+<li>마지막에 <code>thread_launch(next)</code>로 실제 문맥 교체로 내려간다.</li>
+</ul>
+</li>
+</ul>
+<p>각 함수의 역할은 다음과 같이 나뉜다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>함수</th><th>하는 일</th></tr></thead><tbody><tr><td>선택</td><td><code>next_thread_to_run()</code></td><td><code>ready_list</code>에서 다음 후보를 뽑는다</td></tr><tr><td>상태 전환</td><td><code>schedule()</code></td><td><code>next->status</code>, <code>thread_ticks</code>, 주소 공간을 갱신한다</td></tr><tr><td>레지스터 교체</td><td><code>thread_launch(next)</code></td><td>현재 <code>tf</code>에 저장하고 다음 <code>tf</code>를 복원한다</td></tr><tr><td>실제 복귀</td><td><code>do_iret(tf)</code></td><td><code>iretq</code>로 <code>tf->rip/tf->rsp</code> 기준 실행을 재개한다</td></tr></tbody></table></div>
+<h3 id="4-주소-공간과-커널-스택-기준도-바뀐다">4. 주소 공간과 커널 스택 기준도 바뀐다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-주소-공간과-커널-스택-기준도-바뀐다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>USERPROG가 켜진 PintOS에서 주소 공간이 다른 실행 흐름으로 전환할 때는 레지스터 외의 기준도 바뀐다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code>
+<ul>
+<li><code>process_activate(next)</code>가 <code>pml4_activate(next->pml4)</code>와 <code>tss_update(next)</code>를 호출한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/mmu.c</code>
+<ul>
+<li><code>pml4_activate()</code>가 <code>lcr3(...)</code>로 page table root를 바꾼다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/tss.c</code>
+<ul>
+<li><code>tss_update(next)</code>가 <code>tss->rsp0 = (uint64_t) next + PGSIZE</code>로 다음 스레드의 커널 스택 꼭대기를 기록한다.</li>
+</ul>
+</li>
+</ul>
+<p>따라서 유저 프로세스 A에서 B로 넘어갈 때는 <a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB 기준</a>과 다음 syscall 또는 interrupt에서 사용할 kernel stack도 함께 바뀐다.</p>
+<h3 id="5-thread_launch와-do_iret">5. <code>thread_launch()</code>와 <code>do_iret()</code><a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-thread_launch와-do_iret" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS KAIST 코드에서 실제 문맥 교체는 <code>thread_launch()</code>에서 확인할 수 있다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>tf_cur = &amp;running_thread()->tf</code>는 현재 스레드의 문맥 저장 위치다.</li>
+<li><code>tf = &amp;next->tf</code>는 다음 스레드의 문맥 복원 소스다.</li>
+<li>인라인 어셈블리가 현재 레지스터들을 <code>tf_cur</code>에 써넣는다.</li>
+<li>마지막에 <code>do_iret(tf)</code>를 호출한다.</li>
+</ul>
+</li>
+</ul>
+<p>그 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 CPU 레지스터들 -> 현재 스레드의 intr_frame에 저장</span></span>
+<span data-line><span>다음 스레드의 intr_frame -> CPU 레지스터에 복원</span></span>
+<span data-line><span>iretq -> 다음 스레드의 RIP/RSP로 복귀</span></span></code></pre></figure>
+<p>이때 <code>out_iret</code>은 현재 스레드가 나중에 돌아올 위치를 나타낸다. <code>thread_launch()</code>는 현재 스레드의 <code>tf.rip</code>에 C 소스의 다음 줄이 아니라 어셈블리 안의 <code>out_iret</code> label 주소를 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread_launch(B)</span></span>
+<span data-line><span>  A->tf.rip = out_iret</span></span>
+<span data-line><span>  do_iret(&amp;B->tf)</span></span>
+<span data-line><span>  ...</span></span>
+<span data-line><span>out_iret:</span></span>
+<span data-line><span>  thread_launch()가 끝난 것처럼 이어짐</span></span></code></pre></figure>
+<p>A가 나중에 다시 선택되면 <code>do_iret(&amp;A->tf)</code>는 A를 <code>out_iret</code> 지점으로 돌려보낸다. A의 관점에서는 이전에 호출한 <code>thread_launch()</code>가 그때 반환한 것처럼 실행이 이어진다. 이 구조에서 컨텍스트 스위치는 일반적인 함수 호출보다 저장된 continuation으로 복귀하는 과정에 가깝다.</p>
+<h2 id="qemu가-담당하는-범위">QEMU가 담당하는 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-담당하는-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 Trace에서 QEMU는 스케줄러가 아니다.</p>
+<ul>
+<li>PintOS의 <code>schedule()</code>/<code>thread_launch()</code>/<code>do_iret()</code>는 guest OS 내부 코드다.</li>
+<li>QEMU는 그 코드가 실행되는 동안, x86-64 CPU의 <code>iretq</code> 같은 명령이 실제 CPU에서 실행된 것 같은 효과를 내도록 에뮬레이션한다.</li>
+</ul>
+<p>문서에서 근거로 삼는 QEMU 위치는 다음과 같다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/emit.c.inc" class="external external-link">target/i386/tcg/emit.c.inc<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>gen_IRET()</code>가 <code>iret</code> 계열 instruction을 helper 호출로 번역한다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/seg_helper.c" class="external external-link">target/i386/tcg/seg_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>helper_iret_protected()</code>가 protected/long mode의 interrupt return을 처리한다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/cpu.h" class="external external-link">target/i386/cpu.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>CPUX86State</code>에 guest 범용 레지스터 배열과 <code>eip</code> 같은 guest CPU state가 있다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/gdbstub.c" class="external external-link">target/i386/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>x86_cpu_gdb_read_register()</code>가 GDB 요청에 대해 <code>env->regs[...]</code>, <code>env->eip</code>, <code>env->eflags</code> 등을 읽어 돌려준다.</li>
+</ul>
+</li>
+</ul>
+<p>따라서 이 환경에서 GDB의 <code>info registers</code>로 보는 값은 host macOS/Linux의 실제 레지스터가 아니라 QEMU가 관리하는 guest CPU register state다.</p>
+<h2 id="linux-windows-pintos-qemu-비교">Linux, Windows, PintOS, QEMU 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-windows-pintos-qemu-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>무엇을 결정하나</th><th>이 문서에서 보는 것</th></tr></thead><tbody><tr><td>Linux / Windows</td><td>실제 커널 scheduler, per-CPU run queue, preemption, 주소 공간 전환</td><td>현실 기준. PintOS보다 훨씬 복잡하다</td></tr><tr><td>PintOS</td><td>guest OS 내부 스레드 상태와 <code>ready_list</code>, <code>struct intr_frame</code></td><td><code>schedule()</code> -> <code>thread_launch()</code> -> <code>do_iret()</code></td></tr><tr><td>QEMU</td><td>guest instruction 실행, guest register state, <code>iretq</code> 효과, GDB stub</td><td>PintOS 정책을 해석하지 않고 CPU처럼 보이게 한다</td></tr></tbody></table></div>
+<h2 id="코드에서-따라갈-경로">코드에서 따라갈 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드에서-따라갈-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-interrupt-진입은-struct-intr_frame">1. interrupt 진입은 <code>struct intr_frame</code><a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-interrupt-진입은-struct-intr_frame" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/intr-stubs.S</code>
+<ul>
+<li><code>intr_entry</code>가 범용 레지스터를 stack에 저장하고 <code>intr_handler()</code>를 호출한다.</li>
+<li>반환 경로에서 같은 순서로 레지스터를 복원한 뒤 <code>iretq</code>를 실행한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/threads/interrupt.h</code>
+<ul>
+<li><code>struct intr_frame</code>은 <code>R.r15</code>부터 <code>R.rax</code>, <code>rip</code>, <code>eflags</code>, <code>rsp</code>, <code>ss</code>까지 담는다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-timer-tick은-yield를-예약한다">2. timer tick은 yield를 예약한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-timer-tick은-yield를-예약한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>thread_tick()</code>은 <code>++thread_ticks >= TIME_SLICE</code>일 때 <code>intr_yield_on_return()</code>을 호출한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/interrupt.c</code>
+<ul>
+<li><code>intr_handler()</code>는 외부 interrupt 마무리에서 <code>yield_on_return</code>을 확인하고 <code>thread_yield()</code>를 호출한다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-thread_yield는-현재-스레드를-ready로-바꾼다">3. <code>thread_yield()</code>는 현재 스레드를 READY로 바꾼다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-thread_yield는-현재-스레드를-ready로-바꾼다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>thread_yield()</code>는 <code>ASSERT(!intr_context())</code>로 interrupt context 직접 호출을 막는다.</li>
+<li>idle thread가 아니면 현재 스레드를 <code>ready_list</code>에 다시 넣고 <code>do_schedule(THREAD_READY)</code>로 내려간다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-thread_launch와-do_iret가-실제로-전환한다">4. <code>thread_launch()</code>와 <code>do_iret()</code>가 실제로 전환한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-thread_launch와-do_iret가-실제로-전환한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/thread.c</code>
+<ul>
+<li><code>thread_launch(next)</code>가 현재 register들을 <code>running_thread()->tf</code>에 저장한다.</li>
+<li><code>do_iret(&amp;next->tf)</code>가 다음 register들을 복원한다.</li>
+<li><code>iretq</code> 이후의 <code>RIP/RSP</code>는 다음 스레드의 <code>tf</code>가 정한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="값으로-따라가는-컨텍스트-스위치">값으로 따라가는 컨텍스트 스위치<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#값으로-따라가는-컨텍스트-스위치" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-4kb-페이지와-스택-포인터">1. 4KB 페이지와 스택 포인터<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-4kb-페이지와-스택-포인터" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 <code>struct thread</code>를 4KB 페이지에 올려두고 같은 페이지 상단을 커널 스택으로 쓴다.</p>
+<p>예를 들어 <code>t</code>의 주소가 <code>0x80000000</code>이라고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PGSIZE = 0x1000</span></span>
+<span data-line><span>thread struct base = 0x80000000</span></span>
+<span data-line><span>top of page        = 0x80001000</span></span></code></pre></figure>
+<p><code>init_thread()</code>에서 초기 스택 포인터는 다음처럼 잡힌다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>t->tf.rsp = (uint64_t) t + PGSIZE - sizeof (void *)</span></span></code></pre></figure>
+<p><code>sizeof(void*) = 8</code>인 x86-64라면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>t->tf.rsp = 0x80000000 + 0x1000 - 8</span></span>
+<span data-line><span>          = 0x80000ff8</span></span></code></pre></figure>
+<p>이 값은 커널 스택의 맨 위에서 8바이트 아래다. 이 스레드는 처음 실행될 때부터 자기 전용 커널 스택을 사용한다.</p>
+<h3 id="2-struct-intr_frame의-주요-오프셋">2. <code>struct intr_frame</code>의 주요 오프셋<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-struct-intr_frame의-주요-오프셋" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>do_iret()</code>와 <code>thread_launch()</code>의 어셈블리에서는 <code>struct intr_frame</code>을 메모리에 놓인 레지스터 배열처럼 사용한다.</p>
+<p>아래 오프셋은 PintOS 저장소 상대 경로 <code>pintos/include/threads/interrupt.h</code>와 <code>pintos/threads/thread.c</code>의 접근 순서에서 나온다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th style="text-align:right;">오프셋</th><th>필드</th><th>의미</th></tr></thead><tbody><tr><td style="text-align:right;"><code>+0</code></td><td><code>R.r15</code></td><td>저장된 <code>r15</code></td></tr><tr><td style="text-align:right;"><code>+8</code></td><td><code>R.r14</code></td><td>저장된 <code>r14</code></td></tr><tr><td style="text-align:right;"><code>+16</code></td><td><code>R.r13</code></td><td>저장된 <code>r13</code></td></tr><tr><td style="text-align:right;"><code>+24</code></td><td><code>R.r12</code></td><td>저장된 <code>r12</code></td></tr><tr><td style="text-align:right;"><code>+32</code></td><td><code>R.r11</code></td><td>저장된 <code>r11</code></td></tr><tr><td style="text-align:right;"><code>+40</code></td><td><code>R.r10</code></td><td>저장된 <code>r10</code></td></tr><tr><td style="text-align:right;"><code>+48</code></td><td><code>R.r9</code></td><td>저장된 <code>r9</code></td></tr><tr><td style="text-align:right;"><code>+56</code></td><td><code>R.r8</code></td><td>저장된 <code>r8</code></td></tr><tr><td style="text-align:right;"><code>+64</code></td><td><code>R.rsi</code></td><td>저장된 <code>rsi</code></td></tr><tr><td style="text-align:right;"><code>+72</code></td><td><code>R.rdi</code></td><td>저장된 <code>rdi</code></td></tr><tr><td style="text-align:right;"><code>+80</code></td><td><code>R.rbp</code></td><td>저장된 <code>rbp</code></td></tr><tr><td style="text-align:right;"><code>+88</code></td><td><code>R.rdx</code></td><td>저장된 <code>rdx</code></td></tr><tr><td style="text-align:right;"><code>+96</code></td><td><code>R.rcx</code></td><td>저장된 <code>rcx</code></td></tr><tr><td style="text-align:right;"><code>+104</code></td><td><code>R.rbx</code></td><td>저장된 <code>rbx</code></td></tr><tr><td style="text-align:right;"><code>+112</code></td><td><code>R.rax</code></td><td>저장된 <code>rax</code></td></tr><tr><td style="text-align:right;"><code>+120</code></td><td><code>es</code></td><td>segment register</td></tr><tr><td style="text-align:right;"><code>+128</code></td><td><code>ds</code></td><td>segment register</td></tr><tr><td style="text-align:right;"><code>+136</code></td><td><code>vec_no</code></td><td>interrupt vector</td></tr><tr><td style="text-align:right;"><code>+144</code></td><td><code>error_code</code></td><td>exception error code 또는 0</td></tr><tr><td style="text-align:right;"><code>+152</code></td><td><code>rip</code></td><td>복귀할 instruction pointer</td></tr><tr><td style="text-align:right;"><code>+160</code></td><td><code>cs</code></td><td>code segment</td></tr><tr><td style="text-align:right;"><code>+168</code></td><td><code>eflags</code></td><td>flags</td></tr><tr><td style="text-align:right;"><code>+176</code></td><td><code>rsp</code></td><td>복귀할 stack pointer</td></tr><tr><td style="text-align:right;"><code>+184</code></td><td><code>ss</code></td><td>stack segment</td></tr></tbody></table></div>
+<p><code>do_iret(tf)</code>는 먼저 <code>rsp = tf</code>로 바꾼 뒤 위 오프셋에서 레지스터를 하나씩 읽는다. 마지막에는 <code>rsp</code>를 <code>tf + 152</code> 위치로 옮기고 <code>iretq</code>를 실행한다. 따라서 <code>tf + 152</code>부터는 CPU가 interrupt return frame으로 읽을 값들이 놓인다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>tf + 152: rip</span></span>
+<span data-line><span>tf + 160: cs</span></span>
+<span data-line><span>tf + 168: eflags</span></span>
+<span data-line><span>tf + 176: rsp</span></span>
+<span data-line><span>tf + 184: ss</span></span></code></pre></figure>
+<h3 id="3-out_iret이-저장되는-이유">3. <code>out_iret</code>이 저장되는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-out_iret이-저장되는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현재 A에서 B로 넘어가는 장면에서는 두 frame을 다음과 같이 가리킨다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>tf_cur = &amp;A->tf</span></span>
+<span data-line><span>tf     = &amp;B->tf</span></span></code></pre></figure>
+<p><code>thread_launch(B)</code>는 A의 <code>tf.rip</code>에 <code>out_iret</code> label 주소를 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>A->tf.rip = out_iret</span></span>
+<span data-line><span>A->tf.rsp = 현재 A의 커널 스택 위치</span></span></code></pre></figure>
+<p>그 뒤 <code>do_iret(&amp;B->tf)</code>가 실행되면 CPU 상태는 B의 <code>tf.rip/tf.rsp</code>를 기준으로 바뀌고 A는 멈춘다.</p>
+<p>나중에 B 또는 다른 스레드가 A를 다시 고르면 다음 흐름으로 A가 재개된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>do_iret(&amp;A->tf)</span></span>
+<span data-line><span>  -> iretq</span></span>
+<span data-line><span>  -> RIP = A->tf.rip = out_iret</span></span></code></pre></figure>
+<p>A는 이전에 멈췄던 <code>thread_launch()</code>의 끝부분에서 실행을 이어 간다.</p>
+<h2 id="gdb에서-확인할-지점">GDB에서 확인할 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb에서-확인할-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 항목은 PintOS(QEMU+GDB)에서 관찰할 대상과 명령을 정리한 것이다. 이 문서에는 명령을 실제로 실행한 결과가 포함되어 있지 않다.</p>
+<h3 id="1-타이머-틱에서-양보가-예약되는지">1. 타이머 틱에서 양보가 예약되는지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-타이머-틱에서-양보가-예약되는지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b thread_tick</span></span>
+<span data-line><span>b intr_yield_on_return</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<ul>
+<li><code>thread_ticks</code>가 <code>TIME_SLICE</code>에 도달하는 순간</li>
+<li><code>intr_context()</code>가 true인 상태에서만 <code>intr_yield_on_return()</code>이 호출되는지</li>
+<li>이 시점에는 아직 <code>thread_launch()</code>로 내려가지 않았는지</li>
+</ul>
+<h3 id="2-interrupt-끝에서-실제-yield가-일어나는지">2. interrupt 끝에서 실제 yield가 일어나는지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-interrupt-끝에서-실제-yield가-일어나는지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b intr_handler</span></span>
+<span data-line><span>b thread_yield</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<ul>
+<li><code>yield_on_return</code>이 true로 바뀌는지</li>
+<li><code>in_external_intr</code>가 false로 내려간 뒤 <code>thread_yield()</code>가 호출되는지</li>
+<li><code>thread_yield()</code>의 <code>ASSERT(!intr_context())</code>가 왜 필요한지</li>
+</ul>
+<h3 id="3-schedule이-next를-고르는지">3. <code>schedule()</code>이 next를 고르는지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-schedule이-next를-고르는지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b schedule</span></span>
+<span data-line><span>b next_thread_to_run</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>set $cur = (struct thread *)((uint64_t)$rsp &amp; ~(uint64_t)0xfff)</span></span>
+<span data-line><span>p $cur->name</span></span>
+<span data-line><span>p $cur->status</span></span>
+<span data-line><span>p/x $rsp</span></span></code></pre></figure>
+<p><code>next_thread_to_run()</code>에서 <code>ready_list</code>가 비어 있지 않다면 반환값은 <code>list_pop_front(&amp;ready_list)</code>에서 나온다.</p>
+<h3 id="4-thread_launch의-저장-위치와-복원-소스">4. <code>thread_launch()</code>의 저장 위치와 복원 소스<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-thread_launch의-저장-위치와-복원-소스" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b thread_launch</span></span></code></pre></figure>
+<p>breakpoint에 걸리면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>set $cur = (struct thread *)((uint64_t)$rsp &amp; ~(uint64_t)0xfff)</span></span>
+<span data-line><span>p $cur->name</span></span>
+<span data-line><span>p th->name</span></span>
+<span data-line><span>p/x &amp;$cur->tf</span></span>
+<span data-line><span>p/x &amp;th->tf</span></span>
+<span data-line><span>p/x $cur->tf.rip</span></span>
+<span data-line><span>p/x th->tf.rip</span></span>
+<span data-line><span>x/24gx &amp;$cur->tf</span></span>
+<span data-line><span>x/24gx &amp;th->tf</span></span>
+<span data-line><span>info registers rip rsp rax rbx rcx rdx</span></span></code></pre></figure>
+<p>관찰 포인트:</p>
+<ul>
+<li><code>$cur</code>는 현재 <code>$rsp</code>가 속한 4KB 페이지 시작 주소를 <code>struct thread *</code>로 해석한 값이다.</li>
+<li><code>&amp;$cur->tf</code>는 현재 스레드 A의 저장 위치다.</li>
+<li><code>&amp;th->tf</code>는 다음 스레드 B의 복원 소스다.</li>
+<li><code>x/24gx</code>로 보면 <code>tf + 152</code> 근처에 <code>rip/cs/eflags/rsp/ss</code>가 이어진다.</li>
+</ul>
+<h3 id="5-do_iret-직전의-frame">5. <code>do_iret()</code> 직전의 frame<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-do_iret-직전의-frame" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b do_iret</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x tf</span></span>
+<span data-line><span>p/x tf->rip</span></span>
+<span data-line><span>p/x tf->rsp</span></span>
+<span data-line><span>x/24gx tf</span></span>
+<span data-line><span>info registers rip rsp</span></span></code></pre></figure>
+<p><code>do_iret()</code> 안에서는 <code>movq %0, %rsp</code> 때문에 현재 stack pointer가 <code>tf</code> 주소로 바뀐다. 그 뒤 <code>iretq</code>가 실행되면 <code>RIP/RSP</code>는 <code>tf->rip/tf->rsp</code>를 기준으로 바뀐다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>threads/thread.c</td><td><code>thread_tick()</code></td><td>thread_ticks++ 후 TIME_SLICE 도달 시 yield 예약</td></tr><tr><td>threads/interrupt.c</td><td><code>intr_yield_on_return()</code></td><td>yield_on_return = true 설정</td></tr><tr><td>threads/interrupt.c</td><td><code>intr_handler()</code></td><td>외부 인터럽트 마무리 시 yield_on_return 확인 → thread_yield</td></tr><tr><td>threads/thread.c</td><td><code>thread_yield()</code></td><td>cur→READY, ready_list 삽입, do_schedule 호출</td></tr><tr><td>threads/thread.c</td><td><code>schedule()</code></td><td>next 선택, RUNNING 설정, process_activate, thread_launch</td></tr><tr><td>threads/thread.c</td><td><code>next_thread_to_run()</code></td><td>ready_list에서 pop_front</td></tr><tr><td>threads/thread.c</td><td><code>thread_launch(next)</code></td><td>cur 레지스터→cur->tf 저장, cur->tf.rip=out_iret</td></tr><tr><td>threads/thread.c</td><td><code>do_iret(tf)</code></td><td>rsp=tf, 레지스터 복원, iretq</td></tr><tr><td>threads/thread.c</td><td><code>running_thread()</code></td><td>rsp &amp; ~0xFFF → struct thread* 역산</td></tr><tr><td>threads/intr-stubs.S</td><td><code>intr_entry</code></td><td>범용 레지스터 push → intr_handler 호출</td></tr><tr><td>include/threads/interrupt.h</td><td><code>struct intr_frame</code></td><td>r15~rax, es, ds, vec_no, error_code, rip, cs, eflags, rsp, ss</td></tr><tr><td>userprog/process.c</td><td><code>process_activate()</code></td><td>pml4_activate + tss_update</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_activate()</code></td><td>lcr3()로 CR3 교체</td></tr><tr><td>userprog/tss.c</td><td><code>tss_update()</code></td><td>tss->rsp0 = next + PGSIZE</td></tr></tbody></table></div>
+<h2 id="흐름을-다시-연결하기">흐름을 다시 연결하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#흐름을-다시-연결하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>컨텍스트 스위치는 다음 스레드 함수를 호출하는 일이 아니라 레지스터와 스택 포인터를 저장하고 복원하는 일이다.</li>
+<li>PintOS는 현재 스레드의 문맥을 <code>struct thread</code> 안의 <code>struct intr_frame tf</code>에 저장한다.</li>
+<li><code>schedule()</code>은 다음 스레드를 고르고 상태와 주소 공간 기준을 갱신한 뒤 실제 레지스터 교체를 <code>thread_launch()</code>에 맡긴다.</li>
+<li><code>thread_launch()</code>는 현재 스레드가 나중에 돌아올 주소로 <code>out_iret</code>을 저장한다.</li>
+<li><code>do_iret()</code>와 <code>iretq</code>는 다음 스레드의 <code>tf->rip/tf->rsp</code>로 실행을 재개한다.</li>
+<li>QEMU는 PintOS의 스케줄링 정책을 결정하지 않는다. guest CPU state와 <code>iretq</code>의 효과를 에뮬레이션하고 GDB가 그 상태를 읽도록 한다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">CPU register 실행</a></li>
+<li><a href="../../wiki/os/intr-frame-layout" class="internal internal-link alias" data-slug="wiki/os/intr-frame-layout">intr frame 레이아웃</a></li>
+<li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal internal-link alias" data-slug="wiki/os/intr-frame-register-snapshot">register snapshot</a></li>
+<li><a href="../../wiki/os/thread-launch-mechanism" class="internal internal-link alias" data-slug="wiki/os/thread-launch-mechanism">thread launch()</a></li>
+<li><a href="../../wiki/os/do-iret-restore" class="internal internal-link alias" data-slug="wiki/os/do-iret-restore">do iret() 복원</a></li>
+<li><a href="../../wiki/os/why-intr-yield-on-return" class="internal internal-link alias" data-slug="wiki/os/why-intr-yield-on-return">인터럽트 끝에서 yield하는 이유</a></li>
+<li><a href="../../wiki/os/thread-tick-time-slice" class="internal internal-link alias" data-slug="wiki/os/thread-tick-time-slice">TIME SLICE 검사</a></li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB와 CR3 주소 공간 전환</a></li>
+<li><a href="../../wiki/os/cr3-switch-flush" class="internal internal-link alias" data-slug="wiki/os/cr3-switch-flush">CR3 전환과 TLB Flush</a></li>
+<li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal internal-link alias" data-slug="wiki/os/tss-rsp0-mechanism">TSS rsp0</a></li>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a></li>
+<li><a href="../../wiki/os/user-kernel-mode" class="internal internal-link alias" data-slug="wiki/os/user-kernel-mode">유저 모드와 커널 모드</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/backend/io-models" class="internal">동기·비동기·블로킹·논블로킹 I/O — 네 가지 입출력 모델을 구분하는 법</a></li><li><a href="../../wiki/backend/js-async-callback-promise" class="internal">콜백·프로미스·async/await</a></li><li><a href="../../wiki/backend/web-workers" class="internal">Web Workers</a></li><li><a href="../../wiki/common/cpu-vs-gpu" class="internal">CPU와 GPU</a></li><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/check-preemption" class="internal">check_preemption() 선점 판단</a></li><li><a href="../../wiki/os/cpu-execution-cycle" class="internal">명령어 실행 사이클</a></li><li><a href="../../wiki/os/cpu-register-execution" class="internal">CPU 레지스터와 명령어 실행</a></li><li><a href="../../wiki/os/cr3-page-table-root" class="internal">CR3 — 페이지 테이블 루트</a></li><li><a href="../../wiki/os/cr3-switch-flush" class="internal">CR3 전환과 TLB Flush</a></li><li><a href="../../wiki/os/do-iret-restore" class="internal">do_iret() 레지스터 복원</a></li><li><a href="../../wiki/os/do-iret-user-mode-entry" class="internal">do_iret() → user mode 진입</a></li><li><a href="../../wiki/os/fetch-decode-execute" class="internal">fetch → decode → execute</a></li><li><a href="../../wiki/os/fork-semaphore-sync" class="internal">fork 세마포어 동기화</a></li><li><a href="../../wiki/os/gdb-stub-protocol" class="internal">GDB Stub Protocol — guest register를 전달하는 법</a></li><li><a href="../../wiki/os/guest-register-hosting" class="internal">Guest Register Hosting — QEMU가 게스트 레지스터를 보관하는 방법</a></li><li><a href="../../wiki/os/interrupt-enable-disable" class="internal">인터럽트 활성화/비활성화 — intr_enable · intr_disable · intr_set_level</a></li><li><a href="../../wiki/os/interrupt-timer-qemu" class="internal">QEMU 타이머 인터럽트</a></li><li><a href="../../wiki/os/intr-frame-layout" class="internal">struct intr_frame 레이아웃</a></li><li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal">인터럽트 프레임 레지스터 스냅샷 (Intr Frame Register Snapshot)</a></li><li><a href="../../wiki/os/intr-handler-dispatch" class="internal">intr_handler() — 인터럽트 디스패치</a></li><li><a href="../../wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge" class="internal">PintOS 초기 main thread와 커널 주소 공간</a></li><li><a href="../../wiki/os/pintos-intrusive-list-lab" class="internal">PintOS intrusive list 실험: `list_elem` 주소에서 `struct thread` 복원하기</a></li><li><a href="../../wiki/os/pintos-threads-scheduling-execution-model" class="internal">PintOS Threads와 Scheduling</a></li><li><a href="../../wiki/os/pintos-user-programs-execution-boundary" class="internal">PintOS User Programs 실행 경계와 System Call</a></li><li><a href="../../wiki/os/pml4-activate" class="internal">pml4_activate — CR3 전환으로 주소 공간 교체</a></li><li><a href="../../wiki/os/priority-donation-knowledge" class="internal">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a></li><li><a href="../../wiki/os/priority-inversion-problem" class="internal">Priority Inversion</a></li><li><a href="../../wiki/os/process-activate-tss" class="internal">process_activate() — TSS rsp0 설정과 주소 공간 전환</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/process-fork-mechanism" class="internal">fork -- 주소 공간 복제</a></li><li><a href="../../wiki/os/process-thread-abstraction" class="internal">프로세스와 스레드 추상화</a></li><li><a href="../../wiki/os/rip-instruction-pointer" class="internal">RIP — 다음 명령어 주소</a></li><li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal">세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기</a></li><li><a href="../../wiki/os/thread-block" class="internal">thread_block — 현재 스레드를 BLOCKED 상태로 전환</a></li><li><a href="../../wiki/os/thread-current-mechanism" class="internal">thread_current() — RSP로 현재 스레드 찾기</a></li><li><a href="../../wiki/os/thread-init-sequence" class="internal">thread_init() — 스레딩 시스템 초기화</a></li><li><a href="../../wiki/os/thread-launch-mechanism" class="internal">thread_launch() — register 저장과 스레드 전환</a></li><li><a href="../../wiki/os/thread-scheduler-trace" class="internal">스레드 스케줄러 (Thread Scheduler) Trace</a></li><li><a href="../../wiki/os/thread-state-transition" class="internal">Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING</a></li><li><a href="../../wiki/os/thread-struct-memory-layout" class="internal">스레드 구조체 메모리 배치 (Thread Struct Memory Layout)</a></li><li><a href="../../wiki/os/thread-tick-time-slice" class="internal">thread_tick()와 TIME_SLICE 검사</a></li><li><a href="../../wiki/os/thread-yield" class="internal">thread_yield() 자발적 CPU 양보</a></li><li><a href="../../wiki/os/time-sharing-system" class="internal">시분할 시스템</a></li><li><a href="../../wiki/os/tlb-cache-mechanism" class="internal">TLB 캐시 메커니즘</a></li><li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal">TLB와 CR3 주소 공간 전환</a></li><li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal">TSS rsp0 커널 스택</a></li><li><a href="../../wiki/os/user-kernel-stack-separation" class="internal">유저 스택 / 커널 스택 분리</a></li><li><a href="../../wiki/os/why-intr-yield-on-return" class="internal">인터럽트 끝에서 yield하는 이유</a></li><li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal">x86-64 TSS 커널 스택 전환</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-431" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#컨텍스트-스위치-context-switch-trace" data-for="컨텍스트-스위치-context-switch-trace">컨텍스트 스위치 (Context Switch) Trace</a></li><li class="depth-1"><a href="#컨텍스트-스위치를-따라가며-확인할-질문" data-for="컨텍스트-스위치를-따라가며-확인할-질문">컨텍스트 스위치를 따라가며 확인할 질문</a></li><li class="depth-1"><a href="#함수-호출과-다른-점" data-for="함수-호출과-다른-점">함수 호출과 다른 점</a></li><li class="depth-1"><a href="#저장-선택-복원" data-for="저장-선택-복원">저장, 선택, 복원</a></li><li class="depth-1"><a href="#a에서-b로-전환하는-장면" data-for="a에서-b로-전환하는-장면">A에서 B로 전환하는 장면</a></li><li class="depth-1"><a href="#pintos와-실제-운영체제의-범위" data-for="pintos와-실제-운영체제의-범위">PintOS와 실제 운영체제의 범위</a></li><li class="depth-1"><a href="#pintos에서-문맥이-이동하는-과정" data-for="pintos에서-문맥이-이동하는-과정">PintOS에서 문맥이 이동하는 과정</a></li><li class="depth-2"><a href="#1-스레드의-문맥은-어디에-저장되는가" data-for="1-스레드의-문맥은-어디에-저장되는가">1. 스레드의 문맥은 어디에 저장되는가?</a></li><li class="depth-2"><a href="#2-timer-interrupt가-왜-스케줄링으로-이어지는가" data-for="2-timer-interrupt가-왜-스케줄링으로-이어지는가">2. timer interrupt가 왜 스케줄링으로 이어지는가?</a></li><li class="depth-2"><a href="#3-schedule은-무엇을-바꾸는가" data-for="3-schedule은-무엇을-바꾸는가">3. schedule()은 무엇을 바꾸는가?</a></li><li class="depth-2"><a href="#4-주소-공간과-커널-스택-기준도-바뀐다" data-for="4-주소-공간과-커널-스택-기준도-바뀐다">4. 주소 공간과 커널 스택 기준도 바뀐다</a></li><li class="depth-2"><a href="#5-thread_launch와-do_iret" data-for="5-thread_launch와-do_iret">5. thread_launch()와 do_iret()</a></li><li class="depth-1"><a href="#qemu가-담당하는-범위" data-for="qemu가-담당하는-범위">QEMU가 담당하는 범위</a></li><li class="depth-1"><a href="#linux-windows-pintos-qemu-비교" data-for="linux-windows-pintos-qemu-비교">Linux, Windows, PintOS, QEMU 비교</a></li><li class="depth-1"><a href="#코드에서-따라갈-경로" data-for="코드에서-따라갈-경로">코드에서 따라갈 경로</a></li><li class="depth-2"><a href="#1-interrupt-진입은-struct-intr_frame" data-for="1-interrupt-진입은-struct-intr_frame">1. interrupt 진입은 struct intr_frame</a></li><li class="depth-2"><a href="#2-timer-tick은-yield를-예약한다" data-for="2-timer-tick은-yield를-예약한다">2. timer tick은 yield를 예약한다</a></li><li class="depth-2"><a href="#3-thread_yield는-현재-스레드를-ready로-바꾼다" data-for="3-thread_yield는-현재-스레드를-ready로-바꾼다">3. thread_yield()는 현재 스레드를 READY로 바꾼다</a></li><li class="depth-2"><a href="#4-thread_launch와-do_iret가-실제로-전환한다" data-for="4-thread_launch와-do_iret가-실제로-전환한다">4. thread_launch()와 do_iret()가 실제로 전환한다</a></li><li class="depth-1"><a href="#값으로-따라가는-컨텍스트-스위치" data-for="값으로-따라가는-컨텍스트-스위치">값으로 따라가는 컨텍스트 스위치</a></li><li class="depth-2"><a href="#1-4kb-페이지와-스택-포인터" data-for="1-4kb-페이지와-스택-포인터">1. 4KB 페이지와 스택 포인터</a></li><li class="depth-2"><a href="#2-struct-intr_frame의-주요-오프셋" data-for="2-struct-intr_frame의-주요-오프셋">2. struct intr_frame의 주요 오프셋</a></li><li class="depth-2"><a href="#3-out_iret이-저장되는-이유" data-for="3-out_iret이-저장되는-이유">3. out_iret이 저장되는 이유</a></li><li class="depth-1"><a href="#gdb에서-확인할-지점" data-for="gdb에서-확인할-지점">GDB에서 확인할 지점</a></li><li class="depth-2"><a href="#1-타이머-틱에서-양보가-예약되는지" data-for="1-타이머-틱에서-양보가-예약되는지">1. 타이머 틱에서 양보가 예약되는지</a></li><li class="depth-2"><a href="#2-interrupt-끝에서-실제-yield가-일어나는지" data-for="2-interrupt-끝에서-실제-yield가-일어나는지">2. interrupt 끝에서 실제 yield가 일어나는지</a></li><li class="depth-2"><a href="#3-schedule이-next를-고르는지" data-for="3-schedule이-next를-고르는지">3. schedule()이 next를 고르는지</a></li><li class="depth-2"><a href="#4-thread_launch의-저장-위치와-복원-소스" data-for="4-thread_launch의-저장-위치와-복원-소스">4. thread_launch()의 저장 위치와 복원 소스</a></li><li class="depth-2"><a href="#5-do_iret-직전의-frame" data-for="5-do_iret-직전의-frame">5. do_iret() 직전의 frame</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#흐름을-다시-연결하기" data-for="흐름을-다시-연결하기">흐름을 다시 연결하기</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

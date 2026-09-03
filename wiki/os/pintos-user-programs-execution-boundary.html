@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>PintOS User Programs 실행 경계와 System Call · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="PintOS User Programs 실행 경계와 System Call · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="PintOS User Programs 실행 경계와 System Call · 최우녕"/><meta name="twitter:description" content="ELF를 적재하고 유저 모드로 전환해 main을 실행하는 과정과, 커널-유저 경계에서의 system call."/><meta property="og:description" content="ELF를 적재하고 유저 모드로 전환해 main을 실행하는 과정과, 커널-유저 경계에서의 system call."/><meta property="og:image:alt" content="ELF를 적재하고 유저 모드로 전환해 main을 실행하는 과정과, 커널-유저 경계에서의 system call."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/pintos-user-programs-execution-boundary"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/pintos-user-programs-execution-boundary"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="ELF를 적재하고 유저 모드로 전환해 main을 실행하는 과정과, 커널-유저 경계에서의 system call."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/pintos-user-programs-execution-boundary" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-573" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-573" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>PintOS User Programs 실행 경계와 System Call</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pintos-user-programs-실행-경계와-system-call">PintOS User Programs 실행 경계와 System Call<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-user-programs-실행-경계와-system-call" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>범위: 이 문서는 x86-64의 유저·커널 실행 경계와 시스템 콜, PintOS의 프로그램 적재·인자 전달·포인터 검증 및 QEMU의 하드웨어 효과 재현을 설명하고 구현 선택 기준과 관찰 절차를 제시한다. 구체적인 코드 경로·구조체 offset·상수·Linux/Windows 비교와 GDB 시나리오의 동작 여부 및 성능 판단은 특정 소스 버전과 실제 빌드·실행·측정 기록을 대조해야 하는 검증 대상이며, 본문만으로 검증 결과를 뜻하지 않는다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: ELF를 적재하고 유저 모드로 전환해 main을 실행하는 과정과, 커널-유저 경계에서의 system call.</p>
+</blockquote>
+<h2 id="user-kernel-경계-차이">User-Kernel 경계 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#user-kernel-경계-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>사용자 프로그램은 커널 안의 함수가 아니다. 디스크에 있는 ELF 실행 파일을 읽어 메모리에 올리고, 유저 모드로 전환해서 <code>main(argc, argv)</code>를 실행해야 한다. 이 전환의 핵심은 <strong>커널 모드와 유저 모드 사이의 경계</strong>다. 유저 프로그램이 커널 기능을 쓸 때는 반드시 시스템 콜이라는 좁은 문을 통과해야 하며, 커널은 유저가 넘긴 포인터를 신뢰해서는 안 된다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64 CPU는 Current Privilege Level(CPL)로 현재 실행 중인 코드의 권한을 구분한다. CPL 0은 커널 모드, CPL 3은 유저 모드다. 유저 모드에서는 I/O 포트 접근, 페이지 테이블 변경, 인터럽트 플래그 조작 같은 특권 명령을 실행할 수 없다.</p>
+<p>유저가 커널 기능을 요청하는 유일한 경로는 <code>syscall</code> 명령이다. 이 명령이 실행되면 CPU는 자동으로 다음을 수행한다:</p>
+<ol>
+<li>RCX ← 유저 RIP (돌아갈 주소 보존)</li>
+<li>R11 ← RFLAGS (유저 플래그 보존)</li>
+<li>RIP ← MSR_LSTAR 값 (커널 진입점)</li>
+<li>CPL 0으로 전환</li>
+</ol>
+<p>돌아갈 때는 <code>sysretq</code> 또는 <code>iretq</code>가 CPL 3으로 복원한다.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서 유저 프로그램 실행 경계는 PintOS보다 훨씬 복잡하다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>요소</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>프로세스 모델</td><td>1 프로세스 N 스레드, <code>task_struct</code></td><td>1 프로세스 N 스레드, <code>EPROCESS</code>/<code>ETHREAD</code></td></tr><tr><td>ELF 적재</td><td><code>execve()</code> → <code>load_elf_binary()</code>, 동적 링커</td><td>PE 적재, <code>ntdll.dll</code> 로더</td></tr><tr><td>syscall 수</td><td>400개 이상</td><td>수천 개 (NT syscall)</td></tr><tr><td>유저 포인터 검증</td><td><code>copy_from_user()</code>/<code>copy_to_user()</code></td><td><code>ProbeForRead()</code>/<code>ProbeForWrite()</code></td></tr><tr><td>fd 관리</td><td><code>struct file</code> + fdtable, 최대 수만 개</td><td>Handle Table + Object Manager</td></tr><tr><td>보안</td><td>seccomp, SELinux, capabilities</td><td>ACL, integrity levels, UAC</td></tr></tbody></table></div>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 이 복잡한 세계를 네 가지 핵심 과제로 축소한다:</p>
+<p><strong>과제 1: ELF 적재와 주소 공간 구성</strong></p>
+<p><code>process_exec()</code> → <code>load()</code> → <code>load_segment()</code> → <code>setup_stack()</code></p>
+<p>ELF 헤더에서 PT_LOAD 세그먼트를 읽고, 코드/데이터를 유저 주소 공간에 배치한다. 스택은 <code>USER_STACK</code> (0x47480000) 아래로 자란다.</p>
+<p><strong>과제 2: Argument Passing</strong></p>
+<p>명령줄 <code>&quot;echo hello pintos&quot;</code>가 주어지면 커널은 유저 스택에 다음을 배치해야 한다:</p>
+<pre><code>주소            내용                 설명
+0x4747ffed      &quot;echo\0&quot;            argv[0] 문자열
+0x4747fff2      &quot;hello\0&quot;           argv[1] 문자열
+0x4747fff8      &quot;pintos\0&quot;          argv[2] 문자열 (끝에 \0 포함하면 fff8~fffe)
+              ... padding ...       8바이트 정렬
+0x4747ffd0      0x0                 argv[3] = NULL sentinel
+0x4747ffd8      0x4747fff8          argv[2] 주소
+0x4747ffe0      0x4747fff2          argv[1] 주소
+0x4747ffe8      0x4747ffed          argv[0] 주소
+              ... fake return ...
+RSP →         argc=3, argv 포인터    RDI=3, RSI=argv 주소
+</code></pre>
+<p>이 배치가 틀리면 유저의 <code>main(argc, argv)</code>는 시작 직후부터 엉뚱한 값을 읽는다.</p>
+<p><strong>과제 3: System Call 연결</strong></p>
+<p>유저 프로그램은 파일 열기, 화면 출력, 프로세스 대기를 직접 할 수 없다. 모든 커널 기능은 시스템 콜을 통해 요청한다:</p>
+<pre><code>유저: write(1, &quot;hello&quot;, 5)
+  → RAX = SYS_WRITE (10)
+  → RDI = 1  (fd)
+  → RSI = 문자열 주소
+  → RDX = 5  (크기)
+  → syscall 명령
+  → 커널: syscall_handler(f)
+  → f->R.rax에서 번호 읽기
+  → f->R.rdi/rsi/rdx에서 인자 읽기
+  → 결과를 f->R.rax에 저장
+  → iretq로 유저 복귀
+</code></pre>
+<p><strong>과제 4: 유저 포인터 검증</strong></p>
+<p>유저가 넘긴 주소가 유효한 유저 영역인지 반드시 확인해야 한다. 확인 없이 커널이 유저 포인터를 역참조하면, 악의적 프로그램이 커널 메모리를 읽거나 덮어쓸 수 있다.</p>
+<p>검증 방법은 두 가지다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>방법</th><th>구현</th><th>장단점</th></tr></thead><tbody><tr><td>사전 검증</td><td><code>is_user_vaddr()</code> + <code>pml4_get_page()</code></td><td>안전하지만 느림</td></tr><tr><td>page fault 기반</td><td>접근 후 fault 시 프로세스 종료</td><td>빠르지만 구현 복잡</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 유저-커널 경계의 <strong>의미</strong>를 모른다. QEMU가 재현하는 것은 하드웨어가 하는 일뿐이다.</p>
+<p><code>SYS_WRITE</code>가 무엇인지, fd 1이 stdout인지는 QEMU가 아닌 PintOS 커널이 해석한다.</p>
+<p>QEMU가 <code>syscall</code> 명령을 만나면 <code>helper_syscall()</code>이 실행된다. 이 함수는 x86-64 ISA 매뉴얼대로 다음을 수행한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. RCX ← RIP (유저 복귀 주소 보존)</span></span>
+<span data-line><span>2. R11 ← RFLAGS (유저 플래그 보존)</span></span>
+<span data-line><span>3. RFLAGS ← RFLAGS &amp; ~(DF | IF | TF | AC)  (인터럽트 비활성화 등)</span></span>
+<span data-line><span>4. CPL ← 0</span></span>
+<span data-line><span>5. RIP ← MSR_LSTAR (커널 진입점)</span></span>
+<span data-line><span>6. CS ← MSR_STAR[47:32] | 0 (커널 코드 세그먼트)</span></span>
+<span data-line><span>7. SS ← MSR_STAR[47:32] + 8 (커널 데이터 세그먼트)</span></span></code></pre></figure>
+<p>QEMU TCG에서 이 과정이 일어나는 코드 경로:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>QEMU 파일</th><th>함수</th><th>역할</th></tr></thead><tbody><tr><td>target/i386/tcg/emit.c.inc</td><td><code>gen_SYSCALL()</code></td><td>TCG IR 생성: helper_syscall 호출 코드 방출</td></tr><tr><td>target/i386/tcg/system/seg_helper.c</td><td><code>helper_syscall()</code></td><td>실제 레지스터 전환 로직: RCX/R11 저장, MSR_LSTAR→RIP</td></tr><tr><td>target/i386/cpu.h</td><td><code>CPUX86State.msr_lstar</code></td><td>guest MSR_LSTAR 값 보관</td></tr></tbody></table></div>
+<p><code>sysretq</code>도 마찬가지다. PintOS <code>syscall-entry.S</code>의 마지막 <code>sysretq</code>를 QEMU가 만나면 <code>helper_sysret()</code>이 CPL 3으로 되돌리고, RCX→RIP, R11→RFLAGS를 복원한다.</p>
+<p>QEMU 관점에서 syscall 전후의 guest state 변화:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>syscall 직전:                    syscall 직후:</span></span>
+<span data-line><span>  env->eip = 유저 코드 주소         env->eip = env->msr_lstar</span></span>
+<span data-line><span>  env->regs[R_EAX] = SYS_WRITE    env->regs[R_EAX] = SYS_WRITE (변경 없음)</span></span>
+<span data-line><span>  env->regs[R_ECX] = 유저 값        env->regs[R_ECX] = 유저 RIP</span></span>
+<span data-line><span>  env->hflags: CPL=3              env->hflags: CPL=0</span></span></code></pre></figure>
+<p>QEMU가 <code>syscall</code>의 하드웨어 효과만 재현하고 의미를 해석하지 않는다는 증거는, QEMU가 RAX 값을 절대 변경하지 않는다는 점이다. RAX를 SYS_WRITE에서 반환값으로 바꾸는 것은 PintOS의 <code>syscall_handler()</code>다.</p>
+<p>유저 모드에서 특권 명령(CR3 쓰기, <code>hlt</code>, I/O 포트 접근 등)을 실행하면 QEMU는 <code>raise_exception()</code>으로 <a href="../.././../tags/gp" class="tag-link internal internal-link alias" data-slug="tags/gp">gp</a>(0) fault를 guest에 전달한다. PintOS는 이를 받아 해당 프로세스를 종료한다.</p>
+<h2 id="user-kernel-경계-값-추적">User-Kernel 경계 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#user-kernel-경계-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><code>USER_STACK       = 0x47480000
+KERN_BASE        = 0x8004000000
+ELF magic        = 0x7f 'E' 'L' 'F' (4바이트)
+PT_LOAD type     = 1
+PGSIZE           = 4096 = 0x1000
+SYS_WRITE        = 10 (syscall number)
+MSR_LSTAR        = 0xC0000082
+</code></pre>
+<p>struct intr_frame에서 syscall 인자 offset:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th style="text-align:right;">offset (bytes)</th></tr></thead><tbody><tr><td><code>f->R.r15</code></td><td style="text-align:right;">0</td></tr><tr><td><code>f->R.rsi</code></td><td style="text-align:right;">64</td></tr><tr><td><code>f->R.rdi</code></td><td style="text-align:right;">72</td></tr><tr><td><code>f->R.rdx</code></td><td style="text-align:right;">88</td></tr><tr><td><code>f->R.rax</code></td><td style="text-align:right;">112</td></tr><tr><td><code>f->rip</code></td><td style="text-align:right;">152</td></tr><tr><td><code>f->rsp</code></td><td style="text-align:right;">176</td></tr></tbody></table></div>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant User as 유저 프로그램\n    participant CPU as CPU (x86-64)\n    participant Kernel as PintOS 커널\n\n    Note over User: write(1, \&quot;hello\&quot;, 5) 호출\n    User->>CPU: RAX=10, RDI=1, RSI=buf, RDX=5\n    CPU->>CPU: syscall 명령 실행\n    Note over CPU: RCX←RIP, R11←RFLAGS&lt;br/>RIP←MSR_LSTAR, CPL 0\n    CPU->>Kernel: syscall_entry (어셈블리)\n    Kernel->>Kernel: 유저 레지스터를 스택에 push&lt;br/>→ struct intr_frame 생성\n    Kernel->>Kernel: syscall_handler(f)\n    Note over Kernel: f->R.rax == SYS_WRITE&lt;br/>f->R.rdi == 1 (fd)&lt;br/>f->R.rsi == buf 주소 (검증 필요!)&lt;br/>f->R.rdx == 5\n    Kernel->>Kernel: is_user_vaddr(buf) 검증\n    Kernel->>Kernel: 실제 write 수행\n    Kernel->>Kernel: f->R.rax = 반환값\n    Kernel->>CPU: do_iret (iretq)\n    Note over CPU: CPL 3 복원&lt;br/>RIP/RSP/RFLAGS 복원\n    CPU->>User: write() 반환&quot;">sequenceDiagram
+    participant User as 유저 프로그램
+    participant CPU as CPU (x86-64)
+    participant Kernel as PintOS 커널
+
+    Note over User: write(1, &quot;hello&quot;, 5) 호출
+    User->>CPU: RAX=10, RDI=1, RSI=buf, RDX=5
+    CPU->>CPU: syscall 명령 실행
+    Note over CPU: RCX←RIP, R11←RFLAGS&lt;br/>RIP←MSR_LSTAR, CPL 0
+    CPU->>Kernel: syscall_entry (어셈블리)
+    Kernel->>Kernel: 유저 레지스터를 스택에 push&lt;br/>→ struct intr_frame 생성
+    Kernel->>Kernel: syscall_handler(f)
+    Note over Kernel: f->R.rax == SYS_WRITE&lt;br/>f->R.rdi == 1 (fd)&lt;br/>f->R.rsi == buf 주소 (검증 필요!)&lt;br/>f->R.rdx == 5
+    Kernel->>Kernel: is_user_vaddr(buf) 검증
+    Kernel->>Kernel: 실제 write 수행
+    Kernel->>Kernel: f->R.rax = 반환값
+    Kernel->>CPU: do_iret (iretq)
+    Note over CPU: CPL 3 복원&lt;br/>RIP/RSP/RFLAGS 복원
+    CPU->>User: write() 반환
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>프로그램 적재 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;process_exec(cmd_line)\&quot;] --> P[\&quot;parse_command_line()&lt;br/>명령줄 token 구성\&quot;]\n    P --> B[\&quot;load(file_name)\&quot;]\n    B --> C[\&quot;filesys_open(file_name)\&quot;]\n    C --> D[\&quot;ELF 헤더 검증&lt;br/>magic: 7f 45 4c 46\&quot;]\n    D --> E[\&quot;PT_LOAD 세그먼트 순회\&quot;]\n    E --> F[\&quot;load_segment()&lt;br/>코드/데이터 배치\&quot;]\n    F --> G[\&quot;setup_initial_stack()&lt;br/>USER_STACK에 argv/argc 배치\&quot;]\n    G --> I[\&quot;if_->rip = ehdr.e_entry&lt;br/>if_->rsp = 스택 꼭대기\&quot;]\n    I --> J[\&quot;do_iret(if_)&lt;br/>유저 모드 진입\&quot;]&quot;">flowchart TD
+    A[&quot;process_exec(cmd_line)&quot;] --> P[&quot;parse_command_line()&lt;br/>명령줄 token 구성&quot;]
+    P --> B[&quot;load(file_name)&quot;]
+    B --> C[&quot;filesys_open(file_name)&quot;]
+    C --> D[&quot;ELF 헤더 검증&lt;br/>magic: 7f 45 4c 46&quot;]
+    D --> E[&quot;PT_LOAD 세그먼트 순회&quot;]
+    E --> F[&quot;load_segment()&lt;br/>코드/데이터 배치&quot;]
+    F --> G[&quot;setup_initial_stack()&lt;br/>USER_STACK에 argv/argc 배치&quot;]
+    G --> I[&quot;if_->rip = ehdr.e_entry&lt;br/>if_->rsp = 스택 꼭대기&quot;]
+    I --> J[&quot;do_iret(if_)&lt;br/>유저 모드 진입&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>userprog/process.c</td><td><code>process_exec()</code></td><td>명령줄 파싱 후 load 호출</td></tr><tr><td>userprog/process.c</td><td><code>load()</code></td><td>ELF 읽기, 세그먼트 적재, 스택 설정</td></tr><tr><td>userprog/process.c</td><td><code>load_segment()</code></td><td>PT_LOAD를 페이지 단위로 유저 공간에 배치</td></tr><tr><td>userprog/process.c</td><td><code>parse_command_line()</code> / <code>setup_initial_stack()</code></td><td>명령줄 token을 만들고 유저 스택에 argv/argc를 x86-64 ABI대로 배치</td></tr><tr><td>userprog/syscall.c</td><td><code>syscall_init()</code></td><td>MSR_LSTAR에 syscall_entry 등록</td></tr><tr><td>userprog/syscall.c</td><td><code>syscall_handler()</code></td><td>RAX로 분기, RDI/RSI/RDX로 인자 읽기</td></tr><tr><td>userprog/syscall-entry.S</td><td><code>syscall_entry</code></td><td>유저 레지스터 → 커널 스택 push → intr_frame</td></tr><tr><td>include/threads/interrupt.h</td><td><code>struct intr_frame</code></td><td>syscall/interrupt 순간의 레지스터 snapshot</td></tr><tr><td>userprog/exception.c</td><td><code>page_fault()</code></td><td>유저 포인터 접근 실패 시 fault 처리</td></tr></tbody></table></div>
+<h2 id="linux-vs-pintos-syscall-경로-심화-비교">Linux vs PintOS syscall 경로 심화 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-syscall-경로-심화-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>syscall 진입에서 복귀까지의 경로를 단계별로 비교하면 PintOS가 어디를 단순화했는지 드러난다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>Linux (x86-64)</th><th>PintOS</th></tr></thead><tbody><tr><td>MSR_LSTAR 설정</td><td><code>syscall_init()</code> → <code>entry_SYSCALL_64</code></td><td><code>syscall_init()</code> → <code>syscall_entry</code></td></tr><tr><td>스택 전환</td><td>per-CPU <code>cpu_current_top_of_stack</code> (GS base)</td><td>TSS의 <code>rsp0</code>에서 읽기</td></tr><tr><td>레지스터 저장</td><td><code>push</code>로 <code>pt_regs</code> 구성 (168B)</td><td><code>push</code>로 <code>intr_frame</code> 구성 (184B)</td></tr><tr><td>번호 검증</td><td><code>cmp __NR_syscall_max</code>, 범위 초과 시 <code>-ENOSYS</code></td><td>번호별 switch-case, default는 <code>thread_exit()</code></td></tr><tr><td>syscall table</td><td><code>sys_call_table[nr]</code> 함수 포인터 배열</td><td><code>switch(f->R.rax)</code> 분기문</td></tr><tr><td>유저 포인터 접근</td><td><code>copy_from_user()</code> (fault handler + extable)</td><td><code>is_user_vaddr()</code> + <code>pml4_get_page()</code> 또는 page fault 기반</td></tr><tr><td>복귀</td><td><code>sysretq</code> (빠른 경로) 또는 <code>iretq</code> (signal 처리 등)</td><td><code>sysretq</code> (정상) 또는 <code>do_iret()</code> (fork 자식 첫 실행 등)</td></tr><tr><td>signal 처리</td><td><code>exit_to_user_mode()</code> → signal delivery</td><td>없음</td></tr><tr><td>seccomp</td><td><code>__secure_computing()</code> 필터 체크</td><td>없음</td></tr><tr><td>auditing</td><td><code>syscall_trace_enter()</code></td><td>없음</td></tr></tbody></table></div>
+<p>PintOS에서 <code>sysretq</code> 대신 <code>do_iret()</code>을 쓰는 경우는 다음과 같다: fork된 자식의 첫 실행, <code>process_exec()</code>로 새 프로그램을 시작할 때. 이 경우 유저 RIP/RSP/RFLAGS를 직접 지정해야 하므로 <code>iretq</code>가 필요하다.</p>
+<h2 id="syscall-entrys-상세-분석">syscall-entry.S 상세 분석<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#syscall-entrys-상세-분석" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>syscall-entry.S</code>의 핵심 흐름을 커널 스택 위의 바이트 배치로 추적한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>syscall 명령 직후 CPU 상태:</span></span>
+<span data-line><span>  RCX = 유저 RIP     (CPU가 자동 저장)</span></span>
+<span data-line><span>  R11 = RFLAGS       (CPU가 자동 저장)</span></span>
+<span data-line><span>  RSP = 유저 RSP     (아직 전환 안 됨!)</span></span>
+<span data-line><span>  RIP = MSR_LSTAR → syscall_entry</span></span>
+<span data-line> </span>
+<span data-line><span>syscall_entry 진입:</span></span>
+<span data-line><span>  1. RBX, R12를 temp1, temp2에 임시 저장 (callee-saved 보존)</span></span>
+<span data-line><span>  2. 유저 RSP를 RBX에 백업</span></span>
+<span data-line><span>  3. TSS에서 커널 RSP(rsp0)를 읽어 RSP에 설정 → 커널 스택 전환 완료</span></span>
+<span data-line><span>  4. push 순서로 intr_frame 구성:</span></span></code></pre></figure>
+<p>커널 스택 위의 push 순서와 intr_frame 필드 대응:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>push 순서</th><th>값</th><th>intr_frame 필드</th><th style="text-align:right;">offset (top=0)</th></tr></thead><tbody><tr><td>1</td><td>SEL_UDSEG</td><td>ss</td><td style="text-align:right;">176</td></tr><tr><td>2</td><td>유저 RSP (RBX)</td><td>rsp</td><td style="text-align:right;">168</td></tr><tr><td>3</td><td>R11 (RFLAGS)</td><td>eflags</td><td style="text-align:right;">160</td></tr><tr><td>4</td><td>SEL_UCSEG</td><td>cs</td><td style="text-align:right;">152</td></tr><tr><td>5</td><td>RCX (유저 RIP)</td><td>rip</td><td style="text-align:right;">144</td></tr><tr><td>6-7</td><td>(skip 16B)</td><td>error_code, vec_no</td><td style="text-align:right;">128, 136</td></tr><tr><td>8</td><td>SEL_UDSEG</td><td>ds</td><td style="text-align:right;">120</td></tr><tr><td>9</td><td>SEL_UDSEG</td><td>es</td><td style="text-align:right;">112</td></tr><tr><td>10</td><td>RAX</td><td>R.rax</td><td style="text-align:right;">104</td></tr><tr><td>11</td><td>RBX (원본)</td><td>R.rbx</td><td style="text-align:right;">96</td></tr><tr><td>12</td><td>0 (RCX 자리)</td><td>R.rcx</td><td style="text-align:right;">88</td></tr><tr><td>13</td><td>RDX</td><td>R.rdx</td><td style="text-align:right;">80</td></tr><tr><td>14</td><td>RBP</td><td>R.rbp</td><td style="text-align:right;">72</td></tr><tr><td>15</td><td>RDI</td><td>R.rdi</td><td style="text-align:right;">64</td></tr><tr><td>16</td><td>RSI</td><td>R.rsi</td><td style="text-align:right;">56</td></tr><tr><td>17</td><td>R8</td><td>R.r8</td><td style="text-align:right;">48</td></tr><tr><td>18</td><td>R9</td><td>R.r9</td><td style="text-align:right;">40</td></tr><tr><td>19</td><td>R10</td><td>R.r10</td><td style="text-align:right;">32</td></tr><tr><td>20</td><td>0 (R11 자리)</td><td>R.r11</td><td style="text-align:right;">24</td></tr><tr><td>21</td><td>R12 (원본)</td><td>R.r12</td><td style="text-align:right;">16</td></tr><tr><td>22</td><td>R13</td><td>R.r13</td><td style="text-align:right;">8</td></tr><tr><td>23</td><td>R14</td><td>R.r14</td><td style="text-align:right;">0 (RSP top)</td></tr><tr><td>24</td><td>R15</td><td>R.r15</td><td style="text-align:right;">← RSP 최종</td></tr></tbody></table></div>
+<p>RCX와 R11이 0으로 push되는 이유: CPU가 <code>syscall</code> 시 RCX에 유저 RIP를, R11에 RFLAGS를 덮어쓰기 때문에 원래의 유저 RCX/R11은 이미 파괴되었다. 대신 유저 RIP는 <code>rip</code> 필드에, RFLAGS는 <code>eflags</code> 필드에 따로 저장된다.</p>
+<p>복귀 경로(<code>sysretq</code> 직전)에서는 역순으로 pop한 뒤, RCX에 유저 RIP를, R11에 RFLAGS를 복원하고, RSP를 유저 스택으로 되돌린 뒤 <code>sysretq</code>를 실행한다.</p>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-syscall-진입-시-intr_frame-전체-덤프">1. syscall 진입 시 intr_frame 전체 덤프<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-syscall-진입-시-intr_frame-전체-덤프" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define syscall-frame-dump</span></span>
+<span data-line><span>  break syscall_handler</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    printf &quot;=== syscall_handler: intr_frame dump ===\n&quot;</span></span>
+<span data-line><span>    printf &quot;RAX(syscall#) = %d (0x%lx)\n&quot;, (int)f->R.rax, f->R.rax</span></span>
+<span data-line><span>    printf &quot;RDI(arg1)     = 0x%lx\n&quot;, f->R.rdi</span></span>
+<span data-line><span>    printf &quot;RSI(arg2)     = 0x%lx\n&quot;, f->R.rsi</span></span>
+<span data-line><span>    printf &quot;RDX(arg3)     = 0x%lx\n&quot;, f->R.rdx</span></span>
+<span data-line><span>    printf &quot;R10(arg4)     = 0x%lx\n&quot;, f->R.r10</span></span>
+<span data-line><span>    printf &quot;R8(arg5)      = 0x%lx\n&quot;, f->R.r8</span></span>
+<span data-line><span>    printf &quot;R9(arg6)      = 0x%lx\n&quot;, f->R.r9</span></span>
+<span data-line><span>    printf &quot;user RIP      = 0x%lx\n&quot;, f->rip</span></span>
+<span data-line><span>    printf &quot;user RSP      = 0x%lx\n&quot;, f->rsp</span></span>
+<span data-line><span>    printf &quot;RFLAGS        = 0x%lx\n&quot;, f->eflags</span></span>
+<span data-line><span>    printf &quot;CS=0x%x DS=0x%x\n&quot;, (int)f->cs, (int)f->ds</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="2-특정-syscall-번호-필터링-예-sys_write10">2. 특정 syscall 번호 필터링 (예: SYS_WRITE=10)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-특정-syscall-번호-필터링-예-sys_write10" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-write-syscall</span></span>
+<span data-line><span>  break syscall_handler if f->R.rax == 10</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    printf &quot;write(fd=%d, buf=0x%lx, size=%d)\n&quot;, (int)f->R.rdi, f->R.rsi, (int)f->R.rdx</span></span>
+<span data-line><span>    x/s f->R.rsi</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="3-커널-스택-전환-관찰-tss-rsp0">3. 커널 스택 전환 관찰 (TSS rsp0)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-커널-스택-전환-관찰-tss-rsp0" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define tss-rsp0-watch</span></span>
+<span data-line><span>  break process_activate</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $t = thread_current()</span></span>
+<span data-line><span>    printf &quot;process_activate: tid=%d\n&quot;, $t->tid</span></span>
+<span data-line><span>    printf &quot;  kernel stack top (rsp0 target) = 0x%lx\n&quot;, (uint64_t)$t + 0x1000</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="4-유저-포인터-검증-실패-감지">4. 유저 포인터 검증 실패 감지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-유저-포인터-검증-실패-감지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define user-ptr-fail-watch</span></span>
+<span data-line><span>  break page_fault</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    if (f->error_code &amp; 4)</span></span>
+<span data-line><span>      printf &quot;USER page fault: addr=0x%lx write=%d\n&quot;, $cr2, (int)((f->error_code >> 1) &amp; 1)</span></span>
+<span data-line><span>      printf &quot;  user RIP=0x%lx RSP=0x%lx\n&quot;, f->rip, f->rsp</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="5-sysretq-vs-iretq-복귀-경로-구분">5. sysretq vs iretq 복귀 경로 구분<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-sysretq-vs-iretq-복귀-경로-구분" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define return-path-watch</span></span>
+<span data-line><span>  break *syscall_entry+155</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    printf &quot;sysretq path: returning to RIP=0x%lx\n&quot;, $rcx</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  break do_iret</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    printf &quot;iretq path: returning to RIP=0x%lx RSP=0x%lx\n&quot;, ((struct intr_frame *)$rdi)->rip, ((struct intr_frame *)$rdi)->rsp</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-1-syscall-진입부터-복귀까지-전체-레지스터-흐름">시나리오 1: syscall 진입부터 복귀까지 전체 레지스터 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-1-syscall-진입부터-복귀까지-전체-레지스터-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>args-single one</code> 테스트에서 write syscall 하나를 전체 추적:</p>
+<ol>
+<li><code>syscall-frame-dump</code> 정의 후 실행</li>
+<li>RAX=10(SYS_WRITE), RDI=1(stdout), RSI=buf, RDX=size 확인</li>
+<li><code>tss-rsp0-watch</code> 병행하여 커널 스택 상단 주소 확인</li>
+<li><code>return-path-watch</code>로 sysretq 경로에서 RCX에 유저 RIP가 복원되는지 확인</li>
+<li>복귀 후 유저 코드가 RAX에 반환값(쓴 바이트 수)을 받는지 확인</li>
+</ol>
+<p>이 시나리오로 <strong>user wrapper → syscall 명령어 → syscall_entry.S → syscall_handler → sysretq → user</strong> 전체 왕복을 register 수준에서 검증한다.</p>
+<h3 id="시나리오-2-잘못된-포인터가-exit-1로-이어지는-경로">시나리오 2: 잘못된 포인터가 exit(-1)로 이어지는 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-2-잘못된-포인터가-exit-1로-이어지는-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>bad-read</code> 테스트에서 유저가 커널 주소를 역참조:</p>
+<ol>
+<li><code>user-ptr-fail-watch</code> 정의 후 실행</li>
+<li>page fault 발생: addr=0x(커널 주소), user=1 확인</li>
+<li>validate 실패 → <code>exit(-1)</code> 호출 추적</li>
+<li>exit(-1) 결과가 부모의 wait()으로 전달되는지 확인</li>
+</ol>
+<h3 id="시나리오-3-fork-후-자식의-syscall이-부모와-다른-커널-스택을-사용하는지-확인">시나리오 3: fork 후 자식의 syscall이 부모와 다른 커널 스택을 사용하는지 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-3-fork-후-자식의-syscall이-부모와-다른-커널-스택을-사용하는지-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li><code>tss-rsp0-watch</code> 정의 후 <code>fork-once</code> 실행</li>
+<li>process_activate에서 부모와 자식의 rsp0가 다른 주소를 가리키는지 확인 (각 thread의 page 상단)</li>
+<li>자식이 syscall 진입 시 RSP가 자식의 커널 스택 범위 내에 있는지 <code>syscall-frame-dump</code>로 확인</li>
+</ol>
+<h2 id="linux-vs-pintos-user-kernel-경계-비교">Linux vs PintOS User-Kernel 경계 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-user-kernel-경계-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>syscall 진입</td><td><code>entry_SYSCALL_64</code> (MSR_LSTAR)</td><td><code>syscall_entry</code> (MSR_LSTAR)</td></tr><tr><td>커널 스택 전환</td><td>percpu TSS rsp0, IST</td><td>thread 구조체 상단 4KB</td></tr><tr><td>syscall ABI</td><td>RAX=번호, RDI~R9 인자(6개)</td><td>동일 (x86-64 규약)</td></tr><tr><td>유저 포인터 검증</td><td><code>access_ok()</code> + SMAP/SMEP</td><td><code>is_user_vaddr()</code> + PTE walk</td></tr><tr><td>KPTI</td><td>user/kernel PML4 분리</td><td>없음 (단일 PML4)</td></tr><tr><td>seccomp</td><td>BPF 필터로 syscall 차단</td><td>없음</td></tr><tr><td>vsyscall/vDSO</td><td>gettimeofday 등 user space 처리</td><td>없음</td></tr><tr><td>스택 가드 페이지</td><td>GUARD_HOLE (unmapped)</td><td>없음</td></tr><tr><td>signal 전달</td><td>do_signal → sigframe</td><td>없음</td></tr><tr><td>복귀 경로</td><td>sysretq (fast) / iretq (slow)</td><td>sysretq 전용</td></tr><tr><td>fd limit</td><td>RLIMIT_NOFILE (기본 1024)</td><td>고정 배열 (128개 등)</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal internal-link alias" data-slug="wiki/hubs/user-program-execution-boundary">User Programs 실행 경계</a></li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a></li>
+<li><a href="../../wiki/os/syscall-instruction" class="internal internal-link alias" data-slug="wiki/os/syscall-instruction">syscall 명령어</a></li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 권한 전환</a></li>
+<li><a href="../../wiki/os/lstar-msr-entry" class="internal internal-link alias" data-slug="wiki/os/lstar-msr-entry">LSTAR MSR</a></li>
+<li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-task-state-segment-kernel-stack-knowledge">TSS와 커널 스택</a></li>
+<li><a href="../../wiki/os/argument-passing-lab" class="internal internal-link alias" data-slug="wiki/os/argument-passing-lab">argument passing Lab</a></li>
+<li><a href="../../wiki/os/user-pointer-safe-copy-knowledge" class="internal internal-link alias" data-slug="wiki/os/user-pointer-safe-copy-knowledge">유저 포인터 검증</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">CPU register 실행</a></li>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork fd table 복제</a></li>
+<li><a href="../../wiki/os/elf-loader-knowledge" class="internal internal-link alias" data-slug="wiki/os/elf-loader-knowledge">ELF Loader</a></li>
+<li><a href="../../wiki/os/entry-point-rip" class="internal internal-link alias" data-slug="wiki/os/entry-point-rip">entry point RIP</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a></li>
+<li><a href="../../wiki/os/cpux86state-structure" class="internal internal-link alias" data-slug="wiki/os/cpux86state-structure">CPUX86State</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/argc-argv-abi" class="internal">argc/argv ABI — 유저 프로그램 시작 인자 전달 규약</a></li><li><a href="../../wiki/os/cpl-privilege-switch" class="internal">CPL 3→0 권한 전환</a></li><li><a href="../../wiki/os/cpu-register-execution" class="internal">CPU 레지스터와 명령어 실행</a></li><li><a href="../../wiki/os/eflags-register" class="internal">EFLAGS (RFLAGS) 레지스터</a></li><li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal">인터럽트 프레임 레지스터 스냅샷 (Intr Frame Register Snapshot)</a></li><li><a href="../../wiki/os/kernel-user-protection" class="internal">보호 (Protection)</a></li><li><a href="../../wiki/os/lstar-msr-entry" class="internal">LSTAR MSR → syscall 진입점</a></li><li><a href="../../wiki/os/qemu-tcg-translation" class="internal">TCG 코드 번역</a></li><li><a href="../../wiki/os/syscall-handler-dispatch" class="internal">syscall_handler() — 번호별 분기</a></li><li><a href="../../wiki/os/syscall-instruction" class="internal">syscall 명령어</a></li><li><a href="../../wiki/os/user-pointer-safe-copy-knowledge" class="internal">유저 포인터 안전 복사는 왜 별도 규칙이 필요한가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-571" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pintos-user-programs-실행-경계와-system-call" data-for="pintos-user-programs-실행-경계와-system-call">PintOS User Programs 실행 경계와 System Call</a></li><li class="depth-1"><a href="#user-kernel-경계-차이" data-for="user-kernel-경계-차이">User-Kernel 경계 차이</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#user-kernel-경계-값-추적" data-for="user-kernel-경계-값-추적">User-Kernel 경계 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#linux-vs-pintos-syscall-경로-심화-비교" data-for="linux-vs-pintos-syscall-경로-심화-비교">Linux vs PintOS syscall 경로 심화 비교</a></li><li class="depth-1"><a href="#syscall-entrys-상세-분석" data-for="syscall-entrys-상세-분석">syscall-entry.S 상세 분석</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#1-syscall-진입-시-intr_frame-전체-덤프" data-for="1-syscall-진입-시-intr_frame-전체-덤프">1. syscall 진입 시 intr_frame 전체 덤프</a></li><li class="depth-2"><a href="#2-특정-syscall-번호-필터링-예-sys_write10" data-for="2-특정-syscall-번호-필터링-예-sys_write10">2. 특정 syscall 번호 필터링 (예: SYS_WRITE=10)</a></li><li class="depth-2"><a href="#3-커널-스택-전환-관찰-tss-rsp0" data-for="3-커널-스택-전환-관찰-tss-rsp0">3. 커널 스택 전환 관찰 (TSS rsp0)</a></li><li class="depth-2"><a href="#4-유저-포인터-검증-실패-감지" data-for="4-유저-포인터-검증-실패-감지">4. 유저 포인터 검증 실패 감지</a></li><li class="depth-2"><a href="#5-sysretq-vs-iretq-복귀-경로-구분" data-for="5-sysretq-vs-iretq-복귀-경로-구분">5. sysretq vs iretq 복귀 경로 구분</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-1-syscall-진입부터-복귀까지-전체-레지스터-흐름" data-for="시나리오-1-syscall-진입부터-복귀까지-전체-레지스터-흐름">시나리오 1: syscall 진입부터 복귀까지 전체 레지스터 흐름</a></li><li class="depth-2"><a href="#시나리오-2-잘못된-포인터가-exit-1로-이어지는-경로" data-for="시나리오-2-잘못된-포인터가-exit-1로-이어지는-경로">시나리오 2: 잘못된 포인터가 exit(-1)로 이어지는 경로</a></li><li class="depth-2"><a href="#시나리오-3-fork-후-자식의-syscall이-부모와-다른-커널-스택을-사용하는지-확인" data-for="시나리오-3-fork-후-자식의-syscall이-부모와-다른-커널-스택을-사용하는지-확인">시나리오 3: fork 후 자식의 syscall이 부모와 다른 커널 스택을 사용하는지 확인</a></li><li class="depth-1"><a href="#linux-vs-pintos-user-kernel-경계-비교" data-for="linux-vs-pintos-user-kernel-경계-비교">Linux vs PintOS User-Kernel 경계 비교</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

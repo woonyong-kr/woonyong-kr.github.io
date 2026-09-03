@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Process Record는 왜 thread와 따로 필요한가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Process Record는 왜 thread와 따로 필요한가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Process Record는 왜 thread와 따로 필요한가 · 최우녕"/><meta name="twitter:description" content="wait(pid)는 이미 끝난 자식의 종료 코드도 읽을 수 있어야 한다."/><meta property="og:description" content="wait(pid)는 이미 끝난 자식의 종료 코드도 읽을 수 있어야 한다."/><meta property="og:image:alt" content="wait(pid)는 이미 끝난 자식의 종료 코드도 읽을 수 있어야 한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/process-child-status-record-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/process-child-status-record-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="wait(pid)는 이미 끝난 자식의 종료 코드도 읽을 수 있어야 한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/process-child-status-record-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-591" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-591" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Process Record는 왜 thread와 따로 필요한가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="process-record는-왜-thread와-따로-필요한가">Process Record는 왜 thread와 따로 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record는-왜-thread와-따로-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>자식 스레드가 먼저 사라져도 부모는 나중에 <code>wait(pid)</code>로 종료 코드를 읽어야 한다. 그래서 종료 상태는 <code>struct thread</code>가 아니라 조금 더 오래 남을 수 있는 process record에 놓인다.</p>
+</blockquote>
+<h2 id="그럼-부모는-어디에서-exit81의-81을-읽어야-할까">그럼 부모는 어디에서 <code>exit(81)</code>의 <code>81</code>을 읽어야 할까<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#그럼-부모는-어디에서-exit81의-81을-읽어야-할까" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>wait(pid)</code>는 이미 끝난 자식의 종료 코드도 읽을 수 있어야 한다.</p>
+<p>그런데 자식이 끝났다면 자식의 <code>struct thread</code>도 곧 사라질 수 있다.</p>
+<p>그럼 부모는 어디에서 <code>exit(81)</code>의 <code>81</code>을 읽어야 할까?</p>
+<p>이 질문이 <code>Process Record</code>, 이 코드베이스에서는 <code>struct child_status</code>가 필요한 이유다.</p>
+<h2 id="process-record-문제">Process Record 문제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record-문제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>부모와 자식은 동시에 끝나지 않는다.</p>
+<p>가능한 순서는 최소 세 가지다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>순서</th><th>필요한 정보</th></tr></thead><tbody><tr><td>부모가 먼저 <code>wait()</code> 호출</td><td>자식이 끝날 때까지 부모를 재울 장소</td></tr><tr><td>자식이 먼저 <code>exit()</code> 호출</td><td>부모가 나중에 읽을 종료 코드</td></tr><tr><td>부모가 먼저 종료</td><td>아직 살아 있는 자식 상태 레코드를 넘기거나 정리할 기준</td></tr></tbody></table></div>
+<p><code>struct thread</code> 하나에 모든 것을 넣으면 수명 문제가 생긴다.</p>
+<p>자식이 종료하면서 자기 <code>struct thread</code>가 <code>THREAD_DYING</code>으로 넘어가도, 부모가 아직 <code>wait(pid)</code>를 호출하지 않았을 수 있다. 반대로 부모가 먼저 죽으면 자식은 아직 자기 종료 상태를 기록해야 할 수 있다.</p>
+<p>이 말은 즉, <code>wait/exit</code>에는 <strong>스레드 자체보다 조금 더 오래 남을 수 있는 작은 커널 기록</strong>이 필요하다.</p>
+<h2 id="process-record-차이">Process Record 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>child_status</code>는 부모와 자식 사이에 놓인 작은 상태표다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent thread</span></span>
+<span data-line><span>  child_status_list</span></span>
+<span data-line><span>    -> child_status for pid 7</span></span>
+<span data-line><span>         tid = 7</span></span>
+<span data-line><span>         exit_status = -1 또는 실제 종료 코드</span></span>
+<span data-line><span>         waited = 부모가 이미 wait했는가</span></span>
+<span data-line><span>         exited = 자식이 이미 종료했는가</span></span>
+<span data-line><span>         fork_success = fork 초기화가 끝났는가</span></span>
+<span data-line><span>         fork_sema = fork 완료 알림</span></span>
+<span data-line><span>         wait_sema = exit 완료 알림</span></span>
+<span data-line> </span>
+<span data-line><span>child thread</span></span>
+<span data-line><span>  self_status</span></span>
+<span data-line><span>    -> 같은 child_status</span></span></code></pre></figure>
+<p>부모는 <code>child_status_list</code>로 “내가 기다릴 수 있는 자식인가”를 판단한다.</p>
+<p>자식은 <code>self_status</code>로 “내 종료 코드를 어디에 써야 하는가”를 찾는다.</p>
+<h2 id="wait-twice-테스트를-보자"><code>wait-twice</code> 테스트를 보자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#wait-twice-테스트를-보자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>wait-twice</code> 테스트를 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">pid_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> child </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;child-simple&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">msg</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;wait(exec()) = </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%d</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (child));</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">msg</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;wait(exec()) = </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%d</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (child));</span></span></code></pre></figure>
+<p>기대 결과는 다음 흐름이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>첫 번째 wait(child)  -> 81</span></span>
+<span data-line><span>두 번째 wait(child)  -> -1</span></span></code></pre></figure>
+<p>첫 번째 <code>wait()</code>가 성공하면 부모는 <code>child_status</code>를 리스트에서 제거하고 해제한다.</p>
+<p>두 번째 <code>wait()</code>는 더 이상 같은 <code>child_status</code>를 찾지 못한다. 그래서 <code>-1</code>이 된다.</p>
+<p><code>waited</code> 필드는 “동시에 두 번 기다리는 상황”을 막고, <code>list_remove()</code>와 <code>free()</code>는 “한 번 수거한 자식 상태를 다시 수거하지 않는다”는 규칙을 완성한다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Unix 계열에서는 자식이 종료한 뒤에도 부모가 아직 <code>wait()</code>하지 않았다면 종료 상태가 커널에 남는다. 흔히 zombie라고 부르는 상태는 계속 CPU를 쓰는 실행 주체가 아니라, 부모가 수거해야 할 종료 기록에 가깝다.</p>
+<p>Windows는 모델이 다르다. 프로세스는 커널 오브젝트이고, 사용자는 process handle을 통해 종료를 기다리거나 종료 코드를 조회한다. 부모-자식 관계보다 handle과 object reference count가 더 중심이다.</p>
+<p>두 실제 OS 모두 PintOS보다 훨씬 복잡하다. signal, process group, handle 상속, job object, 권한, reference count, multi-thread process 같은 현실 조건이 붙기 때문이다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 코드베이스의 핵심 구조체는 <code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code>에 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> child_status {</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">  tid_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> tid;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> exit_status;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> waited;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> exited;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> orphaned;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> fork_success;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore fork_sema;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore wait_sema;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem elem;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>struct thread</code>에는 연결점 두 개가 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list child_status_list;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> child_status </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">self_status;</span></span></code></pre></figure>
+<p>각 필드는 질문 하나에 답한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th>답하는 질문</th></tr></thead><tbody><tr><td><code>tid</code></td><td>부모가 기다리는 <code>pid</code>가 이 자식인가</td></tr><tr><td><code>exit_status</code></td><td>자식이 남긴 종료 코드는 무엇인가</td></tr><tr><td><code>waited</code></td><td>부모가 이미 wait를 시작했거나 끝냈는가</td></tr><tr><td><code>exited</code></td><td>자식이 이미 종료했는가</td></tr><tr><td><code>orphaned</code></td><td>원래 부모가 먼저 종료되어 root 쪽으로 넘어갔는가</td></tr><tr><td><code>fork_success</code></td><td>자식이 주소 공간과 fd table 복제를 끝냈는가</td></tr><tr><td><code>fork_sema</code></td><td>부모가 <code>fork()</code> 반환 전에 자식 초기화를 기다리는 통로</td></tr><tr><td><code>wait_sema</code></td><td>부모가 <code>wait()</code>에서 자식 종료를 기다리는 통로</td></tr><tr><td><code>elem</code></td><td>부모 또는 root의 <code>child_status_list</code>에 들어가기 위한 list node</td></tr></tbody></table></div>
+<p>중요한 구분은 <code>fork_sema</code>와 <code>wait_sema</code>다.</p>
+<p><code>fork_sema</code>는 “자식이 만들어졌는가”를 기다린다. <code>wait_sema</code>는 “자식이 끝났는가”를 기다린다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>child_status</code>의 의미를 알지 못한다.</p>
+<p>QEMU 관점에서는 다음 정도만 보인다.</p>
+<ul>
+<li>guest CPU가 <code>syscall</code> 명령을 실행한다.</li>
+<li>PintOS 커널이 guest memory 안의 <code>struct child_status</code> 바이트를 읽고 쓴다.</li>
+<li><code>sema_down()</code> 때문에 PintOS scheduler가 guest thread 상태를 바꾼다.</li>
+<li>GDB stub은 guest register와 guest memory를 읽고 써 준다.</li>
+</ul>
+<p>근거가 되는 QEMU 위치는 다음이다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/gdbstub.c" class="external external-link">target/i386/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>x86_cpu_gdb_read_register()</code></li>
+<li><code>x86_cpu_gdb_write_register()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/gdbstub/gdbstub.c" class="external external-link">gdbstub/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>handle_read_mem()</code></li>
+<li><code>handle_write_mem()</code></li>
+</ul>
+</li>
+</ul>
+<p>이 말은 즉, “누가 부모이고 누가 자식인가”는 PintOS 커널의 정책이다. QEMU는 그 정책이 실행될 하드웨어 효과를 재현할 뿐이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>종료 기록</td><td>실제 커널의 process/task 또는 process object 상태</td><td><code>struct child_status</code></td><td>의미를 모름</td></tr><tr><td>기다림</td><td><code>waitpid()</code>, handle wait, wait queue 등</td><td><code>wait_sema</code></td><td>guest 실행만 제공</td></tr><tr><td>fork 완료 동기화</td><td>실제 OS 내부의 더 복잡한 생성 경로</td><td><code>fork_sema</code></td><td>의미를 모름</td></tr><tr><td>부모가 먼저 종료</td><td>init/systemd 재부모화, object reference 정책 등</td><td>root thread로 넘기거나 이미 끝난 record 정리</td><td>의미를 모름</td></tr><tr><td>단순화</td><td>보안, signal, handle, thread group 등을 포함</td><td>과제에 필요한 상태표와 semaphore만 구현</td><td>OS 정책 없음</td></tr></tbody></table></div>
+<p>PintOS의 <code>child_status</code>는 실제 OS의 프로세스 관리 전체를 흉내 내는 구조가 아니다. 학습자가 <code>fork</code>, <code>wait</code>, <code>exit</code>의 최소 수명 문제를 코드로 다루게 하는 축소 모델이다.</p>
+<h2 id="process-record-코드">Process Record 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>process_fork()</code>는 부모 쪽에서 <code>child_status</code>를 만들고 부모 리스트에 넣는다.</p>
+<p>파일: <code>SW_AI-W11-pintos/pintos/userprog/process.c</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>malloc(sizeof *cs)</span></span>
+<span data-line><span>cs->exit_status = -1</span></span>
+<span data-line><span>cs->waited = false</span></span>
+<span data-line><span>cs->exited = false</span></span>
+<span data-line><span>sema_init(&amp;cs->fork_sema, 0)</span></span>
+<span data-line><span>sema_init(&amp;cs->wait_sema, 0)</span></span>
+<span data-line><span>list_push_back(&amp;curr->child_status_list, &amp;cs->elem)</span></span>
+<span data-line><span>thread_create(..., __do_fork, args)</span></span>
+<span data-line><span>sema_down(&amp;cs->fork_sema)</span></span></code></pre></figure>
+<p><code>__do_fork()</code>는 자식 쪽에서 같은 레코드를 자기 <code>self_status</code>로 붙잡는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>curr->self_status = args->cs</span></span>
+<span data-line><span>주소 공간 복제</span></span>
+<span data-line><span>fd_table 복제</span></span>
+<span data-line><span>curr->self_status->fork_success = true</span></span>
+<span data-line><span>sema_up(&amp;curr->self_status->fork_sema)</span></span></code></pre></figure>
+<p><code>process_wait()</code>는 부모 리스트에서 <code>tid</code>가 맞는 레코드를 찾고, 필요하면 <code>wait_sema</code>에서 잔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>if (cs->tid != child_tid) continue</span></span>
+<span data-line><span>if (cs->waited) return -1</span></span>
+<span data-line><span>cs->waited = true</span></span>
+<span data-line><span>if (!cs->exited) sema_down(&amp;cs->wait_sema)</span></span>
+<span data-line><span>status = cs->exit_status</span></span>
+<span data-line><span>list_remove(&amp;cs->elem)</span></span>
+<span data-line><span>free(cs)</span></span>
+<span data-line><span>return status</span></span></code></pre></figure>
+<p><code>exit(status)</code>는 종료 코드를 자식의 <code>self_status</code>에 쓴다.</p>
+<p>파일: <code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>curr->self_status->exit_status = status</span></span>
+<span data-line><span>thread_exit()</span></span></code></pre></figure>
+<p><code>process_exit()</code>은 자식 레코드와 자기 레코드를 마무리한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>reparent_or_reap_children(curr, root)</span></span>
+<span data-line><span>finish_self_status(curr)</span></span>
+<span data-line><span>process_cleanup()</span></span></code></pre></figure>
+<p><code>finish_self_status()</code>는 부모가 기다릴 수 있도록 <code>exited = true</code>를 남기고 <code>wait_sema</code>를 올린다.</p>
+<h2 id="process-record-값-추적">Process Record 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>예를 들어 자식 <code>tid = 7</code>이 <code>exit(81)</code>로 끝난다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>child_status address = 0x80042100</span></span>
+<span data-line><span>tid                 = 7</span></span>
+<span data-line><span>exit_status 초기값   = -1</span></span></code></pre></figure>
+<p><code>exit(81)</code> syscall 진입 순간에는 register가 이렇게 보인다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAX = SYS_EXIT</span></span>
+<span data-line><span>RDI = 81</span></span></code></pre></figure>
+<p>PintOS <code>exit()</code>이 실행되면 커널 메모리의 레코드가 바뀐다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x80042100 + offset(exit_status) = 81</span></span></code></pre></figure>
+<p>정확한 offset은 구조체 padding 때문에 GDB에서 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x curr->self_status</span></span>
+<span data-line><span>p &amp;curr->self_status->exit_status</span></span>
+<span data-line><span>p/x (char *)&amp;curr->self_status->exit_status - (char *)curr->self_status</span></span></code></pre></figure>
+<p>부모가 <code>wait(7)</code>로 돌아올 때는 반대 방향이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>process_wait(7)</span></span>
+<span data-line><span>  -> cs->exit_status 읽기</span></span>
+<span data-line><span>  -> status = 81</span></span>
+<span data-line><span>  -> syscall_handler가 f->R.rax = 81</span></span>
+<span data-line><span>  -> user wait(7)의 반환값 = 81</span></span></code></pre></figure>
+<p>이 말은 즉, 종료 코드는 유저 스택에서 부모 스택으로 직접 복사되는 값이 아니다. 부모와 자식이 공유하던 커널 상태표를 거쳐 전달된다.</p>
+<h2 id="process-record-gdb">Process Record GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-record-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS GDB에서 다음 지점을 끊어 보면 좋다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>break process_fork</span></span>
+<span data-line><span>break __do_fork</span></span>
+<span data-line><span>break process_wait</span></span>
+<span data-line><span>break exit</span></span>
+<span data-line><span>break finish_self_status</span></span></code></pre></figure>
+<p><code>wait-twice</code>에서 볼 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p child_tid</span></span>
+<span data-line><span>p cs->tid</span></span>
+<span data-line><span>p cs->waited</span></span>
+<span data-line><span>p cs->exited</span></span>
+<span data-line><span>p cs->exit_status</span></span></code></pre></figure>
+<p><code>orphan-reparent-wait</code> 계열 테스트를 볼 때는 <code>reparent_or_reap_children()</code>에 breakpoint를 추가한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>break reparent_or_reap_children</span></span>
+<span data-line><span>p cs->orphaned</span></span>
+<span data-line><span>p/x &amp;root->child_status_list</span></span></code></pre></figure>
+<p>테스트로 확인할 후보:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>tests/userprog/wait-simple</span></span>
+<span data-line><span>tests/userprog/wait-twice</span></span>
+<span data-line><span>tests/userprog/wait-killed</span></span>
+<span data-line><span>tests/userprog/orphan-reparent-wait</span></span>
+<span data-line><span>tests/userprog/orphan-reparent-twice</span></span></code></pre></figure>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>child_status의 생성부터 소멸까지 수명 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant P as 부모 thread\n    participant CS as child_status\n    participant C as 자식 thread\n\n    P->>CS: malloc + 초기화&lt;br/>exit_status=-1, waited=false, exited=false\n    P->>P: list_push_back(child_status_list, cs)\n    P->>C: thread_create(__do_fork)\n    P->>CS: sema_down(fork_sema) — 자식 초기화 대기\n\n    C->>CS: self_status = cs\n    C->>C: 주소 공간 복제, fd 복제\n    C->>CS: fork_success = true\n    C->>CS: sema_up(fork_sema)\n\n    Note over P: fork() 반환, tid 획득\n\n    Note over C: 유저 코드 실행...\n    C->>CS: exit_status = 81\n    C->>CS: exited = true\n    C->>CS: sema_up(wait_sema)\n    Note over C: thread 소멸\n\n    P->>CS: process_wait(tid)&lt;br/>waited = true\n    P->>CS: sema_down(wait_sema) — 이미 exited면 즉시 통과\n    P->>P: status = cs->exit_status (81)\n    P->>CS: list_remove + free\n    Note over CS: 소멸&quot;">sequenceDiagram
+    participant P as 부모 thread
+    participant CS as child_status
+    participant C as 자식 thread
+
+    P->>CS: malloc + 초기화&lt;br/>exit_status=-1, waited=false, exited=false
+    P->>P: list_push_back(child_status_list, cs)
+    P->>C: thread_create(__do_fork)
+    P->>CS: sema_down(fork_sema) — 자식 초기화 대기
+
+    C->>CS: self_status = cs
+    C->>C: 주소 공간 복제, fd 복제
+    C->>CS: fork_success = true
+    C->>CS: sema_up(fork_sema)
+
+    Note over P: fork() 반환, tid 획득
+
+    Note over C: 유저 코드 실행...
+    C->>CS: exit_status = 81
+    C->>CS: exited = true
+    C->>CS: sema_up(wait_sema)
+    Note over C: thread 소멸
+
+    P->>CS: process_wait(tid)&lt;br/>waited = true
+    P->>CS: sema_down(wait_sema) — 이미 exited면 즉시 통과
+    P->>P: status = cs->exit_status (81)
+    P->>CS: list_remove + free
+    Note over CS: 소멸
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>부모가 먼저 종료하는 경우 (orphan):</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;부모 process_exit()\&quot;] --> B[\&quot;reparent_or_reap_children()\&quot;]\n    B --> C{\&quot;자식 cs->exited&lt;br/>AND !cs->waited?\&quot;}\n    C -->|Yes| D[\&quot;list_remove + free&lt;br/>(이미 끝났고 아무도 안 기다림)\&quot;]\n    C -->|No| E[\&quot;cs->orphaned = true&lt;br/>orphan_status_list로 이동\&quot;]\n    E --> F[\&quot;자식이 나중에 exit()\&quot;]\n    F --> G[\&quot;finish_self_status()\&quot;]\n    G --> H{\&quot;cs->orphaned&lt;br/>AND !cs->waited?\&quot;}\n    H -->|Yes| I[\&quot;list_remove + free&lt;br/>(자기가 스스로 정리)\&quot;]\n    H -->|No| J[\&quot;sema_up(wait_sema)&lt;br/>(누군가 기다리고 있음)\&quot;]&quot;">flowchart TD
+    A[&quot;부모 process_exit()&quot;] --> B[&quot;reparent_or_reap_children()&quot;]
+    B --> C{&quot;자식 cs->exited&lt;br/>AND !cs->waited?&quot;}
+    C -->|Yes| D[&quot;list_remove + free&lt;br/>(이미 끝났고 아무도 안 기다림)&quot;]
+    C -->|No| E[&quot;cs->orphaned = true&lt;br/>orphan_status_list로 이동&quot;]
+    E --> F[&quot;자식이 나중에 exit()&quot;]
+    F --> G[&quot;finish_self_status()&quot;]
+    G --> H{&quot;cs->orphaned&lt;br/>AND !cs->waited?&quot;}
+    H -->|Yes| I[&quot;list_remove + free&lt;br/>(자기가 스스로 정리)&quot;]
+    H -->|No| J[&quot;sema_up(wait_sema)&lt;br/>(누군가 기다리고 있음)&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>child_status 메모리 레이아웃:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th>크기</th><th style="text-align:right;">offset (approx)</th><th>값 예시</th></tr></thead><tbody><tr><td>tid</td><td>4B</td><td style="text-align:right;">0</td><td>7</td></tr><tr><td>exit_status</td><td>4B</td><td style="text-align:right;">4</td><td>-1 → 81</td></tr><tr><td>waited</td><td>1B</td><td style="text-align:right;">8</td><td>false</td></tr><tr><td>exited</td><td>1B</td><td style="text-align:right;">9</td><td>false → true</td></tr><tr><td>orphaned</td><td>1B</td><td style="text-align:right;">10</td><td>false</td></tr><tr><td>fork_success</td><td>1B</td><td style="text-align:right;">11</td><td>false → true</td></tr><tr><td>fork_sema</td><td>~24B</td><td style="text-align:right;">12</td><td>value=0, waiters list</td></tr><tr><td>wait_sema</td><td>~24B</td><td style="text-align:right;">~36</td><td>value=0, waiters list</td></tr><tr><td>elem</td><td>16B</td><td style="text-align:right;">~60</td><td>list_elem (prev, next)</td></tr></tbody></table></div>
+<p>(정확한 offset은 padding에 따라 다르므로 GDB의 <code>p &amp;cs->필드 - (char*)cs</code>로 확인)</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/thread.h</td><td><code>struct child_status</code></td><td>부모-자식 간 종료 코드 전달 레코드</td></tr><tr><td>include/threads/thread.h</td><td><code>child_status_list</code> (in thread)</td><td>부모가 가진 자식 레코드 리스트</td></tr><tr><td>include/threads/thread.h</td><td><code>self_status</code> (in thread)</td><td>자식이 자기 레코드를 가리키는 포인터</td></tr><tr><td>userprog/process.c:174</td><td><code>process_fork()</code></td><td>cs malloc → 초기화 → list_push_back → sema_down(fork_sema)</td></tr><tr><td>userprog/process.c</td><td><code>__do_fork()</code></td><td>self_status 연결 → 주소공간 복제 → fork_success → sema_up(fork_sema)</td></tr><tr><td>userprog/process.c:486</td><td><code>process_wait()</code></td><td>tid 검색 → waited 검사 → sema_down(wait_sema) → free</td></tr><tr><td>userprog/process.c:593</td><td><code>process_exit_with_status()</code></td><td>exit_status 기록 → thread_exit()</td></tr><tr><td>userprog/process.c:543</td><td><code>reparent_or_reap_children()</code></td><td>이미 끝난 자식 free, 살아있는 자식 orphan 처리</td></tr><tr><td>userprog/process.c:569</td><td><code>finish_self_status()</code></td><td>exited=true → sema_up(wait_sema), orphan이면 self free</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><code>child_status</code>는 부모와 자식 사이에 놓인 작은 Process Record다.</li>
+<li>부모는 <code>child_status_list</code>로 자식 여부와 wait 가능 여부를 판단한다.</li>
+<li>자식은 <code>self_status</code>로 자기 종료 코드를 기록할 위치를 찾는다.</li>
+<li><code>fork_sema</code>는 fork 생성 완료 동기화, <code>wait_sema</code>는 exit 완료 동기화다.</li>
+<li>자식의 <code>struct thread</code>가 사라져도 부모가 읽을 종료 기록은 별도 레코드에 남아야 한다.</li>
+<li>QEMU는 이 레코드의 의미를 모르고, guest CPU/register/memory 관찰 환경만 제공한다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/process-fork-wait-exit" class="internal internal-link alias" data-slug="wiki/os/process-fork-wait-exit">exit</a></li>
+<li><a href="../../wiki/os/exit-status-preservation" class="internal internal-link alias" data-slug="wiki/os/exit-status-preservation">exit status 보존</a></li>
+<li><a href="../../wiki/os/child-status-struct" class="internal internal-link alias" data-slug="wiki/os/child-status-struct">child status record</a></li>
+<li><a href="../../wiki/os/init-adopts-orphan" class="internal internal-link alias" data-slug="wiki/os/init-adopts-orphan">init orphan 입양</a></li>
+<li><a href="../../wiki/os/fork-semaphore-sync" class="internal internal-link alias" data-slug="wiki/os/fork-semaphore-sync">fork sema 동기화</a></li>
+<li><a href="../../wiki/hubs/pintos-process-visual" class="internal internal-link alias" data-slug="wiki/hubs/pintos-process-visual">PintOS 프로세스 시각화</a></li>
+<li><a href="../../wiki/os/process-wait-exit-trace" class="internal internal-link alias" data-slug="wiki/os/process-wait-exit-trace">exit 흐름</a></li>
+<li><a href="../../wiki/os/process-orphan-reparent-trace" class="internal internal-link alias" data-slug="wiki/os/process-orphan-reparent-trace">orphan reparent</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork fd table 복제</a></li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">SPT fork copy</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/child-status-struct" class="internal">자식 상태 구조체</a></li><li><a href="../../wiki/os/exit-status-preservation" class="internal">종료 상태 보존 (Exit Status Preservation)</a></li><li><a href="../../wiki/os/ipc-message-passing" class="internal">IPC Message Passing — 커널을 경유하는 프로세스 간 통신</a></li><li><a href="../../wiki/os/list-entry-macro" class="internal">list_entry 매크로</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/process-orphan-reparent-trace" class="internal">부모가 먼저 종료되면 자식 상태는 누가 수거하는가</a></li><li><a href="../../wiki/os/process-wait-exit-trace" class="internal">부모는 자식의 exit status를 어떻게 받는가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-589" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#process-record는-왜-thread와-따로-필요한가" data-for="process-record는-왜-thread와-따로-필요한가">Process Record는 왜 thread와 따로 필요한가</a></li><li class="depth-1"><a href="#그럼-부모는-어디에서-exit81의-81을-읽어야-할까" data-for="그럼-부모는-어디에서-exit81의-81을-읽어야-할까">그럼 부모는 어디에서 exit(81)의 81을 읽어야 할까</a></li><li class="depth-1"><a href="#process-record-문제" data-for="process-record-문제">Process Record 문제</a></li><li class="depth-1"><a href="#process-record-차이" data-for="process-record-차이">Process Record 차이</a></li><li class="depth-1"><a href="#wait-twice-테스트를-보자" data-for="wait-twice-테스트를-보자">wait-twice 테스트를 보자</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#process-record-코드" data-for="process-record-코드">Process Record 코드</a></li><li class="depth-1"><a href="#process-record-값-추적" data-for="process-record-값-추적">Process Record 값 추적</a></li><li class="depth-1"><a href="#process-record-gdb" data-for="process-record-gdb">Process Record GDB</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

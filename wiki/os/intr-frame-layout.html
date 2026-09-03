@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>struct intr_frame 레이아웃 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="struct intr_frame 레이아웃 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="struct intr_frame 레이아웃 · 최우녕"/><meta name="twitter:description" content="struct intrframe은 인터럽트·예외 발생 시 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체로, 핸들러 진입·syscall·context switch·doiret 복원까지 모든 실행 상태 전환의 공통 매개체다."/><meta property="og:description" content="struct intrframe은 인터럽트·예외 발생 시 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체로, 핸들러 진입·syscall·context switch·doiret 복원까지 모든 실행 상태 전환의 공통 매개체다."/><meta property="og:image:alt" content="struct intrframe은 인터럽트·예외 발생 시 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체로, 핸들러 진입·syscall·context switch·doiret 복원까지 모든 실행 상태 전환의 공통 매개체다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/intr-frame-layout"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/intr-frame-layout"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="struct intrframe은 인터럽트·예외 발생 시 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체로, 핸들러 진입·syscall·context switch·doiret 복원까지 모든 실행 상태 전환의 공통 매개체다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/intr-frame-layout" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-501" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-501" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>struct intr_frame 레이아웃</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="struct-intr_frame-레이아웃">struct intr_frame 레이아웃<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#struct-intr_frame-레이아웃" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 x86-64 인터럽트·예외의 일반적인 상태 저장·복원 원리를 바탕으로 PintOS의 struct intr_frame 레이아웃과 사용 흐름을 설명한다. 구체적인 크기·오프셋·파일 위치와 Linux·Windows·QEMU 관련 내용은 특정 구현과 코드에 의존하므로, 실제 적용 여부는 대상 소스와 버전 및 GDB 실행 결과로 별도 검증해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: struct intr_frame은 인터럽트·예외 발생 시 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체로, 핸들러 진입·syscall·context switch·do_iret 복원까지 모든 실행 상태 전환의 공통 매개체다.</p>
+</blockquote>
+<h2 id="struct-intr_frame-레이아웃-구조">struct intr_frame 레이아웃 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#struct-intr_frame-레이아웃-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>struct intr_frame</code>은 인터럽트나 예외가 발생했을 때 중단된 실행 상태를 스택에 저장하는 스냅샷 구조체다. 이 구조체 하나로 interrupt handler 진입, syscall 처리, context switch, <code>do_iret()</code> 복원까지 모든 실행 상태 전환이 이루어진다. OS에서 가장 자주 등장하는 데이터 구조 중 하나이며, 이 레이아웃을 정확히 이해해야 register 저장/복원, 권한 전환, 스택 전환의 원리를 파악할 수 있다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64 CPU는 인터럽트나 예외가 발생하면 하드웨어가 자동으로 다음 5개 값을 현재 스택(또는 IST/TSS가 지정한 커널 스택)에 push한다:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% interrupt/exception 순간 CPU 자동 push와 intr_frame 형성\nflowchart TD\n  start[\&quot;interrupt / exception 발생\&quot;]\n  common_stack[\&quot;CPU 공통 auto-push&lt;br/>RFLAGS, CS, RIP&lt;br/>일부 예외는 error_code 추가\&quot;]\n  privilege_stack[\&quot;권한 전환 시에만 추가&lt;br/>old SS, old RSP&lt;br/>TSS.rsp0로 stack 전환\&quot;]\n  stub[\&quot;intrNN_stub&lt;br/>error_code가 없으면 pushq $0&lt;br/>push $vec_no\&quot;]\n  entry[\&quot;intr_entry&lt;br/>segment register와 general-purpose register 저장\&quot;]\n  frame[\&quot;struct intr_frame&lt;br/>CPU 꼬리와 stub, entry 저장분이 합쳐진 snapshot\&quot;]\n  same_cpl[\&quot;same_cpl\&quot;]\n  switch_cpl[\&quot;switch_cpl\&quot;]\n  start -->|\&quot;kernel 내부 진입\&quot;| same_cpl\n  start -->|\&quot;user -&amp;gt; kernel\&quot;| switch_cpl\n  same_cpl --> common_stack\n  switch_cpl --> privilege_stack\n  privilege_stack --> common_stack\n  common_stack -->|\&quot;IDT[vec_no]\&quot;| stub\n  stub -->|\&quot;jmp intr_entry\&quot;| entry\n  entry -->|\&quot;f == &amp;amp;f-&amp;gt;R.r15\&quot;| frame&quot;">%% interrupt/exception 순간 CPU 자동 push와 intr_frame 형성
+flowchart TD
+  start[&quot;interrupt / exception 발생&quot;]
+  common_stack[&quot;CPU 공통 auto-push&lt;br/>RFLAGS, CS, RIP&lt;br/>일부 예외는 error_code 추가&quot;]
+  privilege_stack[&quot;권한 전환 시에만 추가&lt;br/>old SS, old RSP&lt;br/>TSS.rsp0로 stack 전환&quot;]
+  stub[&quot;intrNN_stub&lt;br/>error_code가 없으면 pushq $0&lt;br/>push $vec_no&quot;]
+  entry[&quot;intr_entry&lt;br/>segment register와 general-purpose register 저장&quot;]
+  frame[&quot;struct intr_frame&lt;br/>CPU 꼬리와 stub, entry 저장분이 합쳐진 snapshot&quot;]
+  same_cpl[&quot;same_cpl&quot;]
+  switch_cpl[&quot;switch_cpl&quot;]
+  start -->|&quot;kernel 내부 진입&quot;| same_cpl
+  start -->|&quot;user -&amp;gt; kernel&quot;| switch_cpl
+  same_cpl --> common_stack
+  switch_cpl --> privilege_stack
+  privilege_stack --> common_stack
+  common_stack -->|&quot;IDT[vec_no]&quot;| stub
+  stub -->|&quot;jmp intr_entry&quot;| entry
+  entry -->|&quot;f == &amp;amp;f-&amp;gt;R.r15&quot;| frame
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>handler 관점에서는 이후 <code>intrNN_stub</code>과 <code>intr_entry</code>가 <code>vec_no</code>, segment register, general-purpose register를 더 쌓는다. 그래서 PintOS의 <code>struct intr_frame</code>은 CPU가 자동 push한 꼬리와 stub이 보강한 앞부분이 합쳐진 snapshot이다.
+핵심 규칙은 다음과 같다:</p>
+<ul>
+<li>권한 전환(CPL 3→0)이 일어나면 SS와 RSP는 TSS의 rsp0에서 가져온 커널 스택으로 교체된다.</li>
+<li>같은 권한(CPL 0→0)이면 SS/RSP는 현재 스택을 그대로 쓴다.</li>
+<li>error code는 CPU가 push하는 예외(#PF=0x0E, <a href="../.././../tags/gp" class="tag-link internal internal-link alias" data-slug="tags/gp">gp</a>=0x0D 등)에서만 존재한다. 나머지는 소프트웨어가 0을 push해 일관성을 맞춘다.</li>
+</ul>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux의 <code>struct pt_regs</code>가 PintOS의 <code>struct intr_frame</code>에 해당한다. Linux는 <code>arch/x86/include/asm/ptrace.h</code>에 정의되며, 레이아웃은 거의 동일하지만 segment register 패딩 방식이 다르다. <code>SAVE_REGS</code>/<code>RESTORE_REGS</code> 매크로로 entry_64.S에서 저장/복원한다.</p>
+<p>Windows는 <code>KTRAP_FRAME</code> 구조체가 같은 역할을 한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 <code>struct intr_frame</code>은 <code>include/threads/interrupt.h</code>에 정의된다. 메모리 레이아웃(낮은 주소 → 높은 주소)은 다음과 같다:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS struct intr_frame 192 bytes 메모리 레이아웃\nflowchart TD\n  title[\&quot;struct intr_frame 메모리 레이아웃&lt;br/>192 bytes = 0xC0, 낮은 주소에서 높은 주소 순서\&quot;]\n  f00[\&quot;0x00 R.r15 8B intr_entry\&quot;]\n  f08[\&quot;0x08 R.r14 8B intr_entry\&quot;]\n  f10[\&quot;0x10 R.r13 8B intr_entry\&quot;]\n  f18[\&quot;0x18 R.r12 8B intr_entry\&quot;]\n  f20[\&quot;0x20 R.r11 8B intr_entry\&quot;]\n  f28[\&quot;0x28 R.r10 8B intr_entry\&quot;]\n  f30[\&quot;0x30 R.r9 8B intr_entry\&quot;]\n  f38[\&quot;0x38 R.r8 8B intr_entry\&quot;]\n  f40[\&quot;0x40 R.rsi 8B intr_entry\&quot;]\n  f48[\&quot;0x48 R.rdi 8B intr_entry\&quot;]\n  f50[\&quot;0x50 R.rbp 8B intr_entry\&quot;]\n  f58[\&quot;0x58 R.rdx 8B intr_entry\&quot;]\n  f60[\&quot;0x60 R.rcx 8B intr_entry\&quot;]\n  f68[\&quot;0x68 R.rbx 8B intr_entry\&quot;]\n  f70[\&quot;0x70 R.rax 8B intr_entry\&quot;]\n  f78[\&quot;0x78 es + padding 8B intr_entry\&quot;]\n  f80[\&quot;0x80 ds + padding 8B intr_entry\&quot;]\n  f88[\&quot;0x88 vec_no 8B intrNN_stub\&quot;]\n  f90[\&quot;0x90 error_code 8B CPU 또는 intrNN_stub\&quot;]\n  f98[\&quot;0x98 rip 8B CPU\&quot;]\n  fa0[\&quot;0xA0 cs + padding 8B CPU\&quot;]\n  fa8[\&quot;0xA8 eflags 8B CPU\&quot;]\n  fb0[\&quot;0xB0 rsp 8B CPU\&quot;]\n  fb8[\&quot;0xB8 ss + padding 8B CPU\&quot;]\n  n_end[\&quot;0xC0 f + sizeof(struct intr_frame)\&quot;]\n  title -->|\&quot;낮은 주소\&quot;| f00\n  f00 --> f08\n  f08 --> f10\n  f10 --> f18\n  f18 --> f20\n  f20 --> f28\n  f28 --> f30\n  f30 --> f38\n  f38 --> f40\n  f40 --> f48\n  f48 --> f50\n  f50 --> f58\n  f58 --> f60\n  f60 --> f68\n  f68 --> f70\n  f70 --> f78\n  f78 --> f80\n  f80 --> f88\n  f88 --> f90\n  f90 --> f98\n  f98 --> fa0\n  fa0 --> fa8\n  fa8 --> fb0\n  fb0 --> fb8\n  fb8 -->|\&quot;높은 주소\&quot;| n_end&quot;">%% PintOS struct intr_frame 192 bytes 메모리 레이아웃
+flowchart TD
+  title[&quot;struct intr_frame 메모리 레이아웃&lt;br/>192 bytes = 0xC0, 낮은 주소에서 높은 주소 순서&quot;]
+  f00[&quot;0x00 R.r15 8B intr_entry&quot;]
+  f08[&quot;0x08 R.r14 8B intr_entry&quot;]
+  f10[&quot;0x10 R.r13 8B intr_entry&quot;]
+  f18[&quot;0x18 R.r12 8B intr_entry&quot;]
+  f20[&quot;0x20 R.r11 8B intr_entry&quot;]
+  f28[&quot;0x28 R.r10 8B intr_entry&quot;]
+  f30[&quot;0x30 R.r9 8B intr_entry&quot;]
+  f38[&quot;0x38 R.r8 8B intr_entry&quot;]
+  f40[&quot;0x40 R.rsi 8B intr_entry&quot;]
+  f48[&quot;0x48 R.rdi 8B intr_entry&quot;]
+  f50[&quot;0x50 R.rbp 8B intr_entry&quot;]
+  f58[&quot;0x58 R.rdx 8B intr_entry&quot;]
+  f60[&quot;0x60 R.rcx 8B intr_entry&quot;]
+  f68[&quot;0x68 R.rbx 8B intr_entry&quot;]
+  f70[&quot;0x70 R.rax 8B intr_entry&quot;]
+  f78[&quot;0x78 es + padding 8B intr_entry&quot;]
+  f80[&quot;0x80 ds + padding 8B intr_entry&quot;]
+  f88[&quot;0x88 vec_no 8B intrNN_stub&quot;]
+  f90[&quot;0x90 error_code 8B CPU 또는 intrNN_stub&quot;]
+  f98[&quot;0x98 rip 8B CPU&quot;]
+  fa0[&quot;0xA0 cs + padding 8B CPU&quot;]
+  fa8[&quot;0xA8 eflags 8B CPU&quot;]
+  fb0[&quot;0xB0 rsp 8B CPU&quot;]
+  fb8[&quot;0xB8 ss + padding 8B CPU&quot;]
+  n_end[&quot;0xC0 f + sizeof(struct intr_frame)&quot;]
+  title -->|&quot;낮은 주소&quot;| f00
+  f00 --> f08
+  f08 --> f10
+  f10 --> f18
+  f18 --> f20
+  f20 --> f28
+  f28 --> f30
+  f30 --> f38
+  f38 --> f40
+  f40 --> f48
+  f48 --> f50
+  f50 --> f58
+  f58 --> f60
+  f60 --> f68
+  f68 --> f70
+  f70 --> f78
+  f78 --> f80
+  f80 --> f88
+  f88 --> f90
+  f90 --> f98
+  f98 --> fa0
+  fa0 --> fa8
+  fa8 --> fb0
+  fb0 --> fb8
+  fb8 -->|&quot;높은 주소&quot;| n_end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>읽는 법:</p>
+<ul>
+<li><code>struct gp_registers R</code>는 0x00부터 0x77까지 15개 <code>uint64_t</code> register를 담는다.</li>
+<li><code>intr_handler(struct intr_frame *f)</code>가 받는 <code>f</code>는 위 그림의 0x00, 즉 <code>R.r15</code> 위치를 가리킨다.</li>
+<li><code>do_iret</code> / <code>iretq</code>가 마지막에 복원하는 값은 CPU가 만든 꼬리(<code>rip</code>, <code>cs</code>, <code>eflags</code>, <code>rsp</code>, <code>ss</code>)다.
+저장 순서는 스택에 push되는 역순(높은 오프셋이 먼저 push)이므로, 메모리에서는 R.r15가 가장 낮은 주소에 위치한다.</li>
+</ul>
+<h4 id="저장-과정-intr-stubss">저장 과정 (intr-stubs.S)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#저장-과정-intr-stubss" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<ol>
+<li>CPU가 EFLAGS, CS, RIP를 push하고, CPL 3→0처럼 권한이 바뀔 때만 old SS와 old RSP도 push한다. 이때 TSS의 rsp0 스택을 사용한다.</li>
+<li>CPU가 error_code를 push (해당 예외만)</li>
+<li><code>intrNN_stub</code>이 error code가 없는 경우 <code>pushq $0</code>으로 보정, 이후 <code>push $vec_no</code></li>
+<li><code>intr_entry</code>로 점프</li>
+<li><code>intr_entry</code>가 ds, es를 저장하고 <code>subq $120, %rsp</code>로 공간 확보 후 범용 레지스터 15개를 저장한다. 이어 <code>SEL_KDSEG</code>를 ds, es, ss, fs, gs에 설정한 뒤 C handler를 호출한다.</li>
+<li><code>%rsp</code>를 <code>%rdi</code>에 넣어 <code>intr_handler(struct intr_frame *f)</code>의 인자로 전달</li>
+</ol>
+<h4 id="복원-과정">복원 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#복원-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<p><code>intr_entry</code>의 후반부에서 역순으로 복원:</p>
+<ol>
+<li>범용 레지스터 15개 복원</li>
+<li>ds, es 복원</li>
+<li><code>addq $32, %rsp</code>로 16-byte segment 저장 슬롯(es, ds)과 16-byte <code>vec_no + error_code</code>를 함께 건너뜀</li>
+<li><code>iretq</code>가 RIP, CS, EFLAGS를 복원하고, privilege level이 바뀌는 복귀에서만 RSP와 SS도 복원</li>
+</ol>
+<h4 id="error-code를-push하는-예외-벡터">error code를 push하는 예외 벡터<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#error-code를-push하는-예외-벡터" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<p>CPU가 error code를 자동으로 push하는 예외는 정해져 있다. intr-stubs.S에서 <code>REAL</code> 매크로로 구분한다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>벡터</th><th>이름</th><th>error code</th></tr></thead><tbody><tr><td>0x08</td><td><a href="../.././../tags/df" class="tag-link internal internal-link alias" data-slug="tags/df">df</a> (Double Fault)</td><td>항상 0</td></tr><tr><td>0x0A</td><td><a href="../.././../tags/ts" class="tag-link internal internal-link alias" data-slug="tags/ts">ts</a> (Invalid TSS)</td><td>selector index</td></tr><tr><td>0x0B</td><td><a href="../.././../tags/np" class="tag-link internal internal-link alias" data-slug="tags/np">np</a> (Segment Not Present)</td><td>selector index</td></tr><tr><td>0x0D</td><td><a href="../.././../tags/gp" class="tag-link internal internal-link alias" data-slug="tags/gp">gp</a> (General Protection)</td><td>selector 또는 0</td></tr><tr><td>0x0E</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> (Page Fault)</td><td>P|W|U 비트 조합</td></tr><tr><td>0x11</td><td><a href="../.././../tags/ac" class="tag-link internal internal-link alias" data-slug="tags/ac">ac</a> (Alignment Check)</td><td>항상 0</td></tr><tr><td>0x1E</td><td><a href="../.././../tags/sx" class="tag-link internal internal-link alias" data-slug="tags/sx">sx</a> (Security Exception)</td><td>구현 의존</td></tr></tbody></table></div>
+<p>나머지 ~249개 벡터는 <code>zero</code> 매크로로 <code>pushq $0</code>을 삽입하여 구조체 레이아웃을 일관되게 맞춘다.</p>
+<h4 id="thread-구조체-안에서의-위치">thread 구조체 안에서의 위치<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#thread-구조체-안에서의-위치" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<p><code>struct thread</code>의 <code>tf</code> 멤버가 <code>struct intr_frame</code>이다. <code>thread_launch()</code>에서 현재 스레드의 <code>tf</code>에 레지스터를 저장하고, 다음 스레드의 <code>tf</code>로 <code>do_iret()</code>를 호출해 복원한다.</p>
+<h4 id="5가지-사용-장면">5가지 사용 장면<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5가지-사용-장면" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>장면</th><th>intr_frame 생성</th><th>복원</th></tr></thead><tbody><tr><td>하드웨어 인터럽트 (timer 등)</td><td>CPU hw push + intr_entry</td><td>intr_entry 후반 + iretq</td></tr><tr><td>CPU 예외 (#PF, <a href="../.././../tags/gp" class="tag-link internal internal-link alias" data-slug="tags/gp">gp</a> 등)</td><td>CPU hw push + intrNN_stub + intr_entry</td><td>intr_entry 후반 + iretq</td></tr><tr><td>syscall 진입</td><td>syscall_entry.S가 intr_frame 형태로 구성</td><td>do_iret()</td></tr><tr><td>context switch</td><td>thread_launch()가 현재 tf에 저장</td><td>do_iret()로 다음 tf 복원</td></tr><tr><td>fork 자식 최초 실행</td><td>__do_fork()가 부모 tf를 memcpy + rax=0</td><td>do_iret()</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU TCG는 <code>do_interrupt_64()</code> (<code>target/i386/seg_helper.c</code>)에서 x86-64 인터럽트 진입을 에뮬레이션한다. 하드웨어가 하는 5개 값 push(SS, RSP, RFLAGS, CS, RIP)를 CPUX86State의 레지스터를 읽어 guest 메모리에 순서대로 기록한다.</p>
+<p>GDB stub에서 <code>info registers</code>로 보는 값은 CPUX86State에서 읽는 것이므로, intr_frame에 저장된 값과 CPUX86State 값은 intr_entry 직후에는 다를 수 있다. intr_frame에는 <strong>중단된</strong> 실행 상태가 들어 있고, CPUX86State에는 <strong>현재</strong> 실행 상태가 들어 있기 때문이다.</p>
+<p>GDB에서 intr_frame 내용 확인:</p>
+<pre><code>(gdb) p/x *(struct intr_frame *)$rdi
+</code></pre>
+<p><code>$rdi</code>는 intr_handler의 첫 번째 인자이므로, handler 진입 직후에 이 명령으로 중단된 실행 상태 전체를 볼 수 있다.</p>
+<h2 id="struct-intr_frame-레이아웃-값-추적">struct intr_frame 레이아웃 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#struct-intr_frame-레이아웃-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>전체 구조체 크기를 바이트 단위로 검증:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>영역</th><th>바이트 수</th><th>계산</th></tr></thead><tbody><tr><td>gp_registers (15개 × 8B)</td><td>120</td><td>15 × 8 = 120</td></tr><tr><td>es + padding</td><td>8</td><td>2 + 2 + 4 = 8</td></tr><tr><td>ds + padding</td><td>8</td><td>2 + 2 + 4 = 8</td></tr><tr><td>vec_no</td><td>8</td><td>uint64_t</td></tr><tr><td>error_code</td><td>8</td><td>uint64_t</td></tr><tr><td>rip</td><td>8</td><td>uintptr_t</td></tr><tr><td>cs + padding</td><td>8</td><td>2 + 2 + 4 = 8</td></tr><tr><td>eflags</td><td>8</td><td>uint64_t</td></tr><tr><td>rsp</td><td>8</td><td>uintptr_t</td></tr><tr><td>ss + padding</td><td>8</td><td>2 + 2 + 4 = 8</td></tr><tr><td><strong>합계</strong></td><td><strong>192</strong></td><td>0xC0 bytes</td></tr></tbody></table></div>
+<p>GDB에서 확인하는 법:</p>
+<pre><code>(gdb) p sizeof(struct intr_frame)
+$1 = 192
+(gdb) p/x &amp;((struct intr_frame *)0)->R.rax
+$2 = 0x70     (= 112)
+(gdb) p/x &amp;((struct intr_frame *)0)->rip
+$3 = 0x98     (= 152)
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% interrupt 진입부터 intr_handler와 iretq 복원까지의 순서\nflowchart LR\n  cpu[\&quot;CPU hardware&lt;br/>RFLAGS, CS, RIP push&lt;br/>권한 전환 시에만 old SS/RSP 추가&lt;br/>일부 exception은 error_code push\&quot;]\n  stub[\&quot;intrNN_stub&lt;br/>pushq $0 보정 또는 skip&lt;br/>push $vec_no\&quot;]\n  entry_save[\&quot;intr_entry 저장&lt;br/>subq $16, %rsp&lt;br/>subq $120, %rsp&lt;br/>R.r15부터 R.rax 저장\&quot;]\n  entry_restore[\&quot;intr_entry 복원&lt;br/>general-purpose register 복원&lt;br/>segment register 복원&lt;br/>addq $32, %rsp\&quot;]\n  iret[\&quot;iretq&lt;br/>rip, cs, eflags 복원&lt;br/>권한 전환 복귀 시 rsp, ss 추가 복원\&quot;]\n  handler[\&quot;handler\&quot;]\n  cpu -->|\&quot;IDT vector 진입\&quot;| stub\n  stub -->|\&quot;jmp intr_entry\&quot;| entry_save\n  entry_save -->|\&quot;call intr_handler\&quot;| handler\n  handler -->|\&quot;return\&quot;| entry_restore\n  entry_restore -->|\&quot;CPU 꼬리 영역\&quot;| iret&quot;">%% interrupt 진입부터 intr_handler와 iretq 복원까지의 순서
+flowchart LR
+  cpu[&quot;CPU hardware&lt;br/>RFLAGS, CS, RIP push&lt;br/>권한 전환 시에만 old SS/RSP 추가&lt;br/>일부 exception은 error_code push&quot;]
+  stub[&quot;intrNN_stub&lt;br/>pushq $0 보정 또는 skip&lt;br/>push $vec_no&quot;]
+  entry_save[&quot;intr_entry 저장&lt;br/>subq $16, %rsp&lt;br/>subq $120, %rsp&lt;br/>R.r15부터 R.rax 저장&quot;]
+  entry_restore[&quot;intr_entry 복원&lt;br/>general-purpose register 복원&lt;br/>segment register 복원&lt;br/>addq $32, %rsp&quot;]
+  iret[&quot;iretq&lt;br/>rip, cs, eflags 복원&lt;br/>권한 전환 복귀 시 rsp, ss 추가 복원&quot;]
+  handler[&quot;handler&quot;]
+  cpu -->|&quot;IDT vector 진입&quot;| stub
+  stub -->|&quot;jmp intr_entry&quot;| entry_save
+  entry_save -->|&quot;call intr_handler&quot;| handler
+  handler -->|&quot;return&quot;| entry_restore
+  entry_restore -->|&quot;CPU 꼬리 영역&quot;| iret
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>시간 순서로 보면 <code>struct intr_frame</code>은 CPU hardware, <code>intrNN_stub</code>, <code>intr_entry</code>가 차례로 같은 스택 위에 덧붙여 완성한 구조다.</p>
+<ol>
+<li>CPU hardware는 interrupt/exception 순간 <code>eflags</code>, <code>cs</code>, <code>rip</code> 꼬리 영역을 먼저 만든다. privilege level이 바뀔 때만 old <code>ss</code>, <code>rsp</code>가 추가되며, 일부 exception에서는 <code>error_code</code>도 CPU가 push한다.</li>
+<li><code>intrNN_stub</code>은 CPU가 <code>error_code</code>를 만들지 않는 vector에서 <code>pushq $0</code>으로 보정하고, 모든 vector에서 <code>push $vec_no</code>를 수행한 뒤 <code>jmp intr_entry</code>로 공통 진입 코드에 합류한다.</li>
+<li><code>intr_entry</code>는 <code>subq $16, %rsp</code>로 <code>es</code>, <code>ds</code> 저장 공간을 만들고, <code>subq $120, %rsp</code>로 <code>struct gp_registers R</code> 영역을 만든 뒤 <code>R.r15</code>부터 <code>R.rax</code>까지 15개 general-purpose register를 저장한다.</li>
+</ol>
+<p>최종 메모리에서는 <code>R.r15</code>부터 <code>R.rax</code>가 나중에 저장됐지만 가장 낮은 주소에 놓인다. 복원할 때는 <code>intr_entry</code> 후반부가 general-purpose register와 segment register를 먼저 복원하고, <code>addq $32, %rsp</code>로 segment 저장 슬롯과 <code>vec_no</code>·<code>error_code</code>를 건너뛴다. 마지막 <code>iretq</code>는 <code>rip</code>, <code>cs</code>, <code>eflags</code>를 복원하며 privilege level 전환 복귀에서만 <code>rsp</code>, <code>ss</code>까지 소비한다. <code>struct intr_frame</code>의 <code>rsp</code>·<code>ss</code> 필드는 same-CPL hardware interrupt에서는 CPU가 만든 유효 필드라고 가정하지 않는다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/interrupt.h</td><td>struct gp_registers</td><td>29-45</td><td>범용 레지스터 15개 (r15~rax), packed</td></tr><tr><td>include/threads/interrupt.h</td><td>struct intr_frame</td><td>47-85</td><td>전체 192바이트 스냅샷 구조체, packed</td></tr><tr><td>threads/intr-stubs.S</td><td>intr_entry</td><td>16-66</td><td>레지스터 저장(subq $120→movq×15) → intr_handler 호출 → 복원 → iretq</td></tr><tr><td>threads/intr-stubs.S</td><td>STUB 매크로</td><td>109-119</td><td>vec_no push, zero/REAL로 error code 보정</td></tr><tr><td>threads/intr-stubs.S</td><td>zero / REAL</td><td>96-100</td><td><code>pushq $0</code> 또는 no-op (CPU가 push)</td></tr><tr><td>threads/thread.c</td><td>thread_launch()</td><td>617-676</td><td>인라인 asm으로 현재 tf 저장, do_iret(next->tf) 호출</td></tr><tr><td>threads/thread.c</td><td>do_iret()</td><td>577-610</td><td>RSP를 tf 시작으로 이동, r15~rax 복원, iretq</td></tr><tr><td>threads/thread.h</td><td>struct thread::tf</td><td>—</td><td>스레드별 intr_frame 보관 위치</td></tr><tr><td>userprog/process.c</td><td>__do_fork()</td><td>—</td><td>부모 tf를 자식에 memcpy, rax=0 설정</td></tr><tr><td>userprog/exception.c</td><td>page_fault()</td><td>—</td><td>f->error_code에서 PF_P/W/U 추출</td></tr><tr><td>QEMU target/i386/seg_helper.c</td><td>do_interrupt_64()</td><td>—</td><td>hw push 5개를 guest 메모리에 에뮬레이션</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/threads-execution-model" class="internal internal-link alias" data-slug="wiki/hubs/threads-execution-model">이 문서의 상위 문서</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">intr frame을 사용한 전환 흐름 추적</a></li>
+<li><a href="../../wiki/os/thread-launch-mechanism" class="internal internal-link alias" data-slug="wiki/os/thread-launch-mechanism">복원 상세</a></li>
+<li><a href="../../wiki/os/do-iret-restore" class="internal internal-link alias" data-slug="wiki/os/do-iret-restore">do iret()로 intr frame 복원</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">각 레지스터의 의미</a></li>
+<li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-task-state-segment-kernel-stack-knowledge">TSS rsp0과 커널 스택 전환</a></li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 전환과 intr frame의 관계</a></li>
+<li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal internal-link alias" data-slug="wiki/os/intr-frame-register-snapshot">intr frame의 5가지 사용 장면 상세</a></li>
+<li><a href="../../wiki/os/fork-intr-frame-copy" class="internal internal-link alias" data-slug="wiki/os/fork-intr-frame-copy">fork에서 intr frame 복사와 rax=0</a></li>
+<li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal internal-link alias" data-slug="wiki/os/syscall-entry-stack-switch-trace">syscall 진입 시 커널 스택 전환</a></li>
+<li><a href="../../wiki/os/eflags-register" class="internal internal-link alias" data-slug="wiki/os/eflags-register">EFLAGS 각 비트의 의미</a></li>
+<li><a href="../../wiki/os/interrupt-descriptor-table" class="internal internal-link alias" data-slug="wiki/os/interrupt-descriptor-table">IDT에서 intr entry로 연결되는 경로</a></li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">#PF error code 비트 해석</a></li>
+<li><a href="../../wiki/os/cpux86state-structure" class="internal internal-link alias" data-slug="wiki/os/cpux86state-structure">QEMU에서 레지스터 보관 구조</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/byte-as-struct-field" class="internal">바이트를 Struct Field로 해석하기</a></li><li><a href="../../wiki/os/context-switch-trace" class="internal">컨텍스트 스위치 (Context Switch) Trace</a></li><li><a href="../../wiki/os/cpu-register-execution" class="internal">CPU 레지스터와 명령어 실행</a></li><li><a href="../../wiki/os/cpux86state-structure" class="internal">CPUX86State 구조체 — QEMU의 가상 CPU</a></li><li><a href="../../wiki/os/do-iret-restore" class="internal">do_iret() 레지스터 복원</a></li><li><a href="../../wiki/os/do-iret-user-mode-entry" class="internal">do_iret() → user mode 진입</a></li><li><a href="../../wiki/os/eflags-register" class="internal">EFLAGS (RFLAGS) 레지스터</a></li><li><a href="../../wiki/os/fork-intr-frame-copy" class="internal">fork — intr_frame 복사와 rax=0</a></li><li><a href="../../wiki/os/i8259-pic-irq" class="internal">i8259 PIC</a></li><li><a href="../../wiki/os/interrupt-descriptor-table" class="internal">인터럽트 디스크립터 테이블 (Interrupt Descriptor Table)</a></li><li><a href="../../wiki/os/interrupt-timer-qemu" class="internal">QEMU 타이머 인터럽트</a></li><li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal">인터럽트 프레임 레지스터 스냅샷 (Intr Frame Register Snapshot)</a></li><li><a href="../../wiki/os/intr-handler-dispatch" class="internal">intr_handler() — 인터럽트 디스패치</a></li><li><a href="../../wiki/os/lstar-msr-entry" class="internal">LSTAR MSR → syscall 진입점</a></li><li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/rax-return-syscall" class="internal">RAX의 syscall 번호와 반환값</a></li><li><a href="../../wiki/os/rdi-rsi-rdx-arguments" class="internal">RDI · RSI · RDX — syscall 인자 레지스터</a></li><li><a href="../../wiki/os/rip-instruction-pointer" class="internal">RIP — 다음 명령어 주소</a></li><li><a href="../../wiki/os/rsp-stack-pointer" class="internal">RSP 스택 포인터 (RSP Stack Pointer)</a></li><li><a href="../../wiki/os/syscall-abi-convention" class="internal">시스템콜 ABI Convention (Syscall ABI Convention)</a></li><li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal">시스템 콜 진입의 스택 전환과 intr_frame</a></li><li><a href="../../wiki/os/syscall-return-path" class="internal">syscall 복귀 경로 — sysretq vs iretq</a></li><li><a href="../../wiki/os/thread-current-mechanism" class="internal">thread_current() — RSP로 현재 스레드 찾기</a></li><li><a href="../../wiki/os/thread-launch-mechanism" class="internal">thread_launch() — register 저장과 스레드 전환</a></li><li><a href="../../wiki/os/thread-struct-memory-layout" class="internal">스레드 구조체 메모리 배치 (Thread Struct Memory Layout)</a></li><li><a href="../../wiki/os/timer-interrupt-handler" class="internal">타이머 인터럽트 핸들러 timer_interrupt()</a></li><li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal">TSS rsp0 커널 스택</a></li><li><a href="../../wiki/os/user-kernel-stack-separation" class="internal">유저 스택 / 커널 스택 분리</a></li><li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal">x86-64 TSS 커널 스택 전환</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-499" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#struct-intr_frame-레이아웃" data-for="struct-intr_frame-레이아웃">struct intr_frame 레이아웃</a></li><li class="depth-1"><a href="#struct-intr_frame-레이아웃-구조" data-for="struct-intr_frame-레이아웃-구조">struct intr_frame 레이아웃 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#struct-intr_frame-레이아웃-값-추적" data-for="struct-intr_frame-레이아웃-값-추적">struct intr_frame 레이아웃 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

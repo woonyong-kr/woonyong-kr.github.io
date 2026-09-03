@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>swapped anonymous page fork snapshot 흐름 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="swapped anonymous page fork snapshot 흐름 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="swapped anonymous page fork snapshot 흐름 · 최우녕"/><meta name="twitter:description" content="fork 시 부모 anonymous page가 이미 swap slot에 내려가 있으면 slot 번호만 얕게 복사해서는 안 되고, 자식은 fork 순간의 4096B 스냅샷을 독립으로 가져야 부모 swap-in 후 slot 해제로 인한 오염을 피한다."/><meta property="og:description" content="fork 시 부모 anonymous page가 이미 swap slot에 내려가 있으면 slot 번호만 얕게 복사해서는 안 되고, 자식은 fork 순간의 4096B 스냅샷을 독립으로 가져야 부모 swap-in 후 slot 해제로 인한 오염을 피한다."/><meta property="og:image:alt" content="fork 시 부모 anonymous page가 이미 swap slot에 내려가 있으면 slot 번호만 얕게 복사해서는 안 되고, 자식은 fork 순간의 4096B 스냅샷을 독립으로 가져야 부모 swap-in 후 slot 해제로 인한 오염을 피한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/swapped-anon-fork-snapshot-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/swapped-anon-fork-snapshot-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fork 시 부모 anonymous page가 이미 swap slot에 내려가 있으면 slot 번호만 얕게 복사해서는 안 되고, 자식은 fork 순간의 4096B 스냅샷을 독립으로 가져야 부모 swap-in 후 slot 해제로 인한 오염을 피한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/swapped-anon-fork-snapshot-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-658" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-658" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>swapped anonymous page fork snapshot 흐름</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="swapped-anonymous-page-fork-snapshot-흐름">swapped anonymous page fork snapshot 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swapped-anonymous-page-fork-snapshot-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: fork 시 부모 anonymous page가 이미 swap slot에 내려가 있으면 slot 번호만 얕게 복사해서는 안 되고, 자식은 fork 순간의 4096B 스냅샷을 독립으로 가져야 부모 swap-in 후 slot 해제로 인한 오염을 피한다.</p>
+</blockquote>
+<h2 id="swapped-anon-fork-구조">swapped anon fork 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swapped-anon-fork-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>fork()</code> 시 부모의 anonymous page가 이미 swap slot에 내려가 있다면, 자식은 “fork 순간의 4096B snapshot”을 독립적으로 보유해야 한다. slot 번호만 얕게 복사하면 parent swap-in 후 slot이 해제되어 child가 오염된 데이터를 읽는다. 이 Trace는 swap-out 상태 anonymous page의 fork 복사 흐름과 실패 rollback을 추적한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>하드웨어는 swap slot이라는 개념을 모른다. MMU가 아는 것은 page table의 present bit뿐이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>하드웨어가 아는 것</th><th>하드웨어가 모르는 것</th></tr></thead><tbody><tr><td>PTE의 present bit = 0 → <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 발생</td><td>왜 present가 0인지 (eviction? 아직 적재 안 됨?)</td></tr><tr><td>CR2에 fault 주소를 기록</td><td>fault 주소의 backing store가 swap disk인지 file인지</td></tr><tr><td>error code에 read/write, user/kernel 표시</td><td>어떤 process의 어떤 page인지</td></tr></tbody></table></div>
+<p>따라서 swap-out된 page를 fork로 복사하는 것은 순전히 OS 소프트웨어의 책임이다. CPU/MMU는 “이 VA에 present mapping이 없다”만 전달하고, OS가 SPT를 참조해 backing bytes를 찾아야 한다.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>fork 모델</td><td><code>copy_mm()</code> → COW + swap entry 복사</td><td><code>CreateProcess</code>로 새 주소 공간 생성 (Unix fork 없음)</td></tr><tr><td>swap-out page 공유</td><td>swap entry refcount로 여러 process가 같은 slot 참조 가능</td><td>pagefile-backed section + VAD로 유사 효과</td></tr><tr><td>수명 관리</td><td><code>swap_count</code>, <code>page refcount</code>, reverse mapping</td><td>pagefile reference count, prototype PTE</td></tr><tr><td>fork 실패 시</td><td><code>dup_mm()</code> 실패 → 부분 복사된 VMA/PTE rollback</td><td><code>NtCreateProcess</code> 내부 cleanup</td></tr></tbody></table></div>
+<p>공통 원칙: <strong>backing store를 공유하면 lifetime metadata(refcount)가 필요하고, refcount가 없으면 독립 backing을 만들어야 한다.</strong></p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS W09 코드에서 swap-out된 anonymous page의 fork 복사는 현재 <code>spt_copy_loaded_page()</code>의 한계로 드러난다.</p>
+<p><strong>현재 코드의 문제점:</strong> <code>spt_copy_loaded_page()</code>는 <code>page->frame == NULL</code>이면 즉시 <code>false</code>를 반환한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* vm/vm.c: spt_copy_loaded_page() */</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">kva </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>swap-out된 page는 <code>frame == NULL</code>이므로 이 함수가 실패한다. 이를 해결하려면 swap-out 상태를 별도 분기로 처리해야 한다.</p>
+<p><strong>struct anon_page의 실제 구조:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* include/vm/anon.h */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> vm_type type;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swapped;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        /* swap-out 상태인가 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swap_slot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* slot 번호, SWAP_SLOT_NONE이면 미할당 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><strong>swap 관련 상수:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* vm/anon.c */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> SECTORS_PER_PAGE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (PGSIZE </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> DISK_SECTOR_SIZE)</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  /* 4096/512 = 8 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> SWAP_SLOT_NONE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">   ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p><strong>보수적인 구현 전략 — child 전용 slot snapshot:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>supplemental_page_table_copy(dst, src)</span></span>
+<span data-line><span>  → parent SPT 순회</span></span>
+<span data-line><span>  → page_get_type(page) == VM_ANON &amp;&amp; page->anon.swapped == true 확인</span></span>
+<span data-line><span>  → parent slot N의 8 sector를 임시 buffer로 disk_read</span></span>
+<span data-line><span>  → child 전용 slot M을 bitmap_scan_and_flip으로 할당</span></span>
+<span data-line><span>  → 같은 8 sector를 slot M에 disk_write</span></span>
+<span data-line><span>  → child page의 anon.swap_slot = M, anon.swapped = true</span></span></code></pre></figure>
+<p><strong>대안 전략 — parent swap-in 후 memcpy:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent slot N → anon_swap_in → parent frame으로 복원</span></span>
+<span data-line><span>child page → vm_do_claim_page → child frame 확보</span></span>
+<span data-line><span>memcpy(child frame->kva, parent frame->kva, PGSIZE)</span></span></code></pre></figure>
+<p>이 방식은 child가 바로 resident가 되어 이해하기 쉽지만, fork 중 frame allocation과 eviction 재진입을 조심해야 한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 <code>struct page</code>, SPT, swap slot owner를 전혀 모른다. QEMU 관점에서 보이는 사건은 딱 두 가지다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>QEMU가 보는 것</th><th>의미</th></tr></thead><tbody><tr><td><code>EXCP0E_PAGE</code> + CR2 + error_code</td><td>child가 not-present VA를 접근하면 guest에 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 전달</td></tr><tr><td>IDE <code>disk_read</code>/<code>disk_write</code> sector I/O</td><td>PintOS가 swap slot sector를 읽거나 씀</td></tr></tbody></table></div>
+<p>QEMU에서 “slot 3을 parent가 소유하는가 child가 소유하는가”를 찾으면 안 된다. 그 의미는 PintOS 커널 자료구조 안에 있다.</p>
+<h2 id="swapped-anon-fork-값-추적">swapped anon fork 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swapped-anon-fork-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="slot-복사-계산-예제">slot 복사 계산 예제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#slot-복사-계산-예제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>부모가 <code>0x805000</code> page를 swap slot 3에 내려 보낸 뒤 fork한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA page          = 0x805000</span></span>
+<span data-line><span>PGSIZE           = 4096 B (0x1000)</span></span>
+<span data-line><span>DISK_SECTOR_SIZE = 512 B</span></span>
+<span data-line><span>SECTORS_PER_PAGE = 8</span></span>
+<span data-line><span>parent slot      = 3</span></span>
+<span data-line><span>child slot       = 7 (bitmap에서 다음 빈 slot)</span></span></code></pre></figure>
+<p>parent slot 3의 disk 좌표:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>base sector = 3 × 8 = 24</span></span>
+<span data-line><span>sector range = 24..31</span></span>
+<span data-line><span>byte offset = 24 × 512 = 24 &lt;&lt; 9 = 0x3000</span></span>
+<span data-line><span>byte range  = 0x3000..0x3FFF (4096 bytes)</span></span></code></pre></figure>
+<p>child slot 7의 disk 좌표:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>base sector = 7 × 8 = 56</span></span>
+<span data-line><span>sector range = 56..63</span></span>
+<span data-line><span>byte offset = 56 × 512 = 56 &lt;&lt; 9 = 0x7000</span></span>
+<span data-line><span>byte range  = 0x7000..0x7FFF (4096 bytes)</span></span></code></pre></figure>
+<p>fork 직후 불변식:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>disk[0x3000..0x3FFF] == disk[0x7000..0x7FFF]   (bytes 동일)</span></span>
+<span data-line><span>slot 3 owner = parent page P                     (소유권 분리)</span></span>
+<span data-line><span>slot 7 owner = child page C</span></span></code></pre></figure>
+<h3 id="slot-공유-시-깨지는-시나리오-숫자로-추적">slot 공유 시 깨지는 시나리오 (숫자로 추적)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#slot-공유-시-깨지는-시나리오-숫자로-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>t=0: parent page P → slot 3, child page C → slot 3 (얕은 복사)</span></span>
+<span data-line><span>t=1: parent fault 0x805000 → anon_swap_in → disk_read(sector 24..31)</span></span>
+<span data-line><span>     → bitmap_set(slot 3, false)  ← slot 3 해제!</span></span>
+<span data-line><span>t=2: 다른 page X → anon_swap_out → bitmap_scan → slot 3 재할당</span></span>
+<span data-line><span>     → disk_write(sector 24..31, page X의 bytes)</span></span>
+<span data-line><span>t=3: child fault 0x805000 → anon_swap_in → disk_read(sector 24..31)</span></span>
+<span data-line><span>     → child가 page X의 bytes를 읽음!  ← fork snapshot 오염</span></span></code></pre></figure>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="fork-swap-snapshot-전체-흐름">fork swap snapshot 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-swap-snapshot-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant P as Parent Process\n    participant SPT as supplemental_page_table_copy\n    participant SD as Swap Disk\n    participant C as Child Process\n\n    Note over P: parent page P at slot 3&lt;br/>frame = NULL, swapped = true\n\n    P->>SPT: fork → SPT copy 시작\n    SPT->>SPT: page type == VM_ANON&lt;br/>anon.swapped == true 확인\n\n    alt 전략 A: slot-to-slot 복사\n        SPT->>SD: disk_read(slot 3, sectors 24..31) → buffer\n        SPT->>SD: bitmap_scan_and_flip → slot 7\n        SPT->>SD: disk_write(slot 7, sectors 56..63) ← buffer\n        SPT->>C: child page C: swap_slot=7, swapped=true\n    else 전략 B: swap-in 후 memcpy\n        SPT->>SD: anon_swap_in(parent page) → parent frame\n        SPT->>C: vm_do_claim_page(child page) → child frame\n        SPT->>C: memcpy(child frame, parent frame, 4096)\n    end\n\n    Note over P,C: parent owns slot 3&lt;br/>child owns slot 7 (A) or resident frame (B)&quot;">sequenceDiagram
+    participant P as Parent Process
+    participant SPT as supplemental_page_table_copy
+    participant SD as Swap Disk
+    participant C as Child Process
+
+    Note over P: parent page P at slot 3&lt;br/>frame = NULL, swapped = true
+
+    P->>SPT: fork → SPT copy 시작
+    SPT->>SPT: page type == VM_ANON&lt;br/>anon.swapped == true 확인
+
+    alt 전략 A: slot-to-slot 복사
+        SPT->>SD: disk_read(slot 3, sectors 24..31) → buffer
+        SPT->>SD: bitmap_scan_and_flip → slot 7
+        SPT->>SD: disk_write(slot 7, sectors 56..63) ← buffer
+        SPT->>C: child page C: swap_slot=7, swapped=true
+    else 전략 B: swap-in 후 memcpy
+        SPT->>SD: anon_swap_in(parent page) → parent frame
+        SPT->>C: vm_do_claim_page(child page) → child frame
+        SPT->>C: memcpy(child frame, parent frame, 4096)
+    end
+
+    Note over P,C: parent owns slot 3&lt;br/>child owns slot 7 (A) or resident frame (B)
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="slot-공유-위험-다이어그램">slot 공유 위험 다이어그램<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#slot-공유-위험-다이어그램" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[fork: child.slot = parent.slot = 3] --> B[parent fault → swap_in slot 3]\n    B --> C[bitmap_set slot 3 = false]\n    C --> D[다른 page X → swap_out → slot 3 재할당]\n    D --> E[child fault → swap_in slot 3]\n    E --> F[child reads page X bytes!&lt;br/>fork snapshot 오염]\n&quot;">flowchart TD
+    A[fork: child.slot = parent.slot = 3] --> B[parent fault → swap_in slot 3]
+    B --> C[bitmap_set slot 3 = false]
+    C --> D[다른 page X → swap_out → slot 3 재할당]
+    D --> E[child fault → swap_in slot 3]
+    E --> F[child reads page X bytes!&lt;br/>fork snapshot 오염]
+
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="rollback-판단-mermaid-flowchart">rollback 판단 Mermaid flowchart<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#rollback-판단-mermaid-flowchart" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    START[child page 생성] --> SLOT{child slot&lt;br/>할당 성공?}\n    SLOT -->|실패| F1[child page free → return false]\n    SLOT -->|성공| READ{parent slot&lt;br/>read 성공?}\n    READ -->|실패| F2[child slot free&lt;br/>child page free&lt;br/>return false]\n    READ -->|성공| WRITE{child slot&lt;br/>write 성공?}\n    WRITE -->|실패| F3[child slot free&lt;br/>child page free&lt;br/>return false]\n    WRITE -->|성공| INSERT{child SPT&lt;br/>insert 성공?}\n    INSERT -->|실패| F4[child page destroy&lt;br/>→ slot free 포함]\n    INSERT -->|성공| OK[return true]\n&quot;">flowchart TD
+    START[child page 생성] --> SLOT{child slot&lt;br/>할당 성공?}
+    SLOT -->|실패| F1[child page free → return false]
+    SLOT -->|성공| READ{parent slot&lt;br/>read 성공?}
+    READ -->|실패| F2[child slot free&lt;br/>child page free&lt;br/>return false]
+    READ -->|성공| WRITE{child slot&lt;br/>write 성공?}
+    WRITE -->|실패| F3[child slot free&lt;br/>child page free&lt;br/>return false]
+    WRITE -->|성공| INSERT{child SPT&lt;br/>insert 성공?}
+    INSERT -->|실패| F4[child page destroy&lt;br/>→ slot free 포함]
+    INSERT -->|성공| OK[return true]
+
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>include/vm/anon.h</code></td><td><code>struct anon_page</code></td><td><code>swapped</code>, <code>swap_slot</code> 필드로 swap 상태 관리</td></tr><tr><td><code>vm/anon.c</code></td><td><code>SECTORS_PER_PAGE</code>, <code>SWAP_SLOT_NONE</code></td><td>swap 상수 (8 sectors/page, sentinel 값)</td></tr><tr><td><code>vm/anon.c</code></td><td><code>anon_swap_in()</code></td><td>slot에서 8 sector disk_read → kva, bitmap clear</td></tr><tr><td><code>vm/anon.c</code></td><td><code>anon_swap_out()</code></td><td>bitmap_scan → 8 sector disk_write, slot 기록</td></tr><tr><td><code>vm/anon.c</code></td><td><code>anon_destroy()</code></td><td>swapped 상태면 bitmap clear로 slot 해제</td></tr><tr><td><code>vm/anon.c</code></td><td><code>anon_initializer()</code></td><td>swapped=false, swap_slot=SWAP_SLOT_NONE 초기화</td></tr><tr><td><code>vm/vm.c</code></td><td><code>supplemental_page_table_copy()</code></td><td>parent SPT 순회 → <code>spt_copy_page()</code> 호출</td></tr><tr><td><code>vm/vm.c</code></td><td><code>spt_copy_loaded_page()</code></td><td><code>frame==NULL</code>이면 false — swap-out page 미처리</td></tr><tr><td><code>vm/vm.c</code></td><td><code>spt_copy_uninit_page()</code></td><td>UNINIT page aux 복사 (swap과 무관)</td></tr><tr><td><code>userprog/process.c</code></td><td><code>__do_fork()</code></td><td><code>supplemental_page_table_copy()</code> 호출 지점</td></tr><tr><td><code>userprog/process.c</code></td><td><code>process_cleanup()</code></td><td><code>supplemental_page_table_kill()</code> → 각 page destroy</td></tr><tr><td><code>devices/disk.c</code></td><td><code>disk_read()</code>, <code>disk_write()</code></td><td>sector 단위 I/O (QEMU IDE backend로 전달)</td></tr><tr><td><code>lib/kernel/bitmap.c</code></td><td><code>bitmap_scan_and_flip()</code></td><td>빈 swap slot 검색 및 할당</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">SPT fork copy</a>
+<ul>
+<li>fork가 page 상태별로 다른 copy 정책을 가져야 하는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-swapped-anon-page-copy-question">slot 번호 얕은 복사가 왜 위험한지 묻는 원 질문</a></li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous page swap slot</a>
+<ul>
+<li>anonymous page가 swap slot metadata를 어디에 기억하는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">Swap Lab</a>
+<ul>
+<li>anonymous page 한 장이 disk sector 8개로 내려갔다 돌아오는 기본 실험.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/swap-fork-process-isolation-lab">swap fork isolation Lab</a>
+<ul>
+<li><code>swap-fork</code>가 child별 swap 격리를 어떻게 압박하는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">Swap Disk QEMU Trace</a>
+<ul>
+<li>PintOS slot 번호가 QEMU block backend offset으로 내려가는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">eviction으로 frame을 빼앗는 전체 흐름</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">Copy on Write</a>
+<ul>
+<li>COW가 이 문제를 refcount로 더 싸게 처리하는 방법.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">SPT cleanup trace</a>
+<ul>
+<li>fork 실패 후 child cleanup이 slot을 정리하는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/process-fork-wait-exit" class="internal internal-link alias" data-slug="wiki/os/process-fork-wait-exit">exit 상태 전이의 큰 그림</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal">fork에서 swapped-out anonymous page는 어떻게 복사해야 하나</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/spt-copy-swapped-page" class="internal">Swapped Page 복사 (fork SPT copy)</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-656" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#swapped-anonymous-page-fork-snapshot-흐름" data-for="swapped-anonymous-page-fork-snapshot-흐름">swapped anonymous page fork snapshot 흐름</a></li><li class="depth-1"><a href="#swapped-anon-fork-구조" data-for="swapped-anon-fork-구조">swapped anon fork 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#swapped-anon-fork-값-추적" data-for="swapped-anon-fork-값-추적">swapped anon fork 값 추적</a></li><li class="depth-2"><a href="#slot-복사-계산-예제" data-for="slot-복사-계산-예제">slot 복사 계산 예제</a></li><li class="depth-2"><a href="#slot-공유-시-깨지는-시나리오-숫자로-추적" data-for="slot-공유-시-깨지는-시나리오-숫자로-추적">slot 공유 시 깨지는 시나리오 (숫자로 추적)</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#fork-swap-snapshot-전체-흐름" data-for="fork-swap-snapshot-전체-흐름">fork swap snapshot 전체 흐름</a></li><li class="depth-2"><a href="#slot-공유-위험-다이어그램" data-for="slot-공유-위험-다이어그램">slot 공유 위험 다이어그램</a></li><li class="depth-2"><a href="#rollback-판단-mermaid-flowchart" data-for="rollback-판단-mermaid-flowchart">rollback 판단 Mermaid flowchart</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

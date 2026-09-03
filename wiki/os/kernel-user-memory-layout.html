@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가 · 최우녕"/><meta name="twitter:description" content="한 프로세스의 가상 주소 공간이 커널 영역과 유저 영역으로 나뉘는 구조."/><meta property="og:description" content="한 프로세스의 가상 주소 공간이 커널 영역과 유저 영역으로 나뉘는 구조."/><meta property="og:image:alt" content="한 프로세스의 가상 주소 공간이 커널 영역과 유저 영역으로 나뉘는 구조."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/kernel-user-memory-layout"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/kernel-user-memory-layout"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="한 프로세스의 가상 주소 공간이 커널 영역과 유저 영역으로 나뉘는 구조."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/kernel-user-memory-layout" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-509" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-509" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="커널-영역과-유저-영역--가상-주소-공간은-어떻게-나뉘는가">커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-영역과-유저-영역--가상-주소-공간은-어떻게-나뉘는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 가상 주소 공간의 커널·유저 영역 구분이라는 일반 개념을 PintOS의 매핑·할당 구조와 Linux 비교를 통해 설명한다. 주소값, 코드 좌표, QEMU 동작, GDB 출력과 성능 관련 판단은 특정 코드·버전에서 실제 실행하거나 측정해 검증한 결과가 아니라, 제시된 구현 설명과 관찰 절차의 예시로 구분해 읽어야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: 한 프로세스의 가상 주소 공간이 커널 영역과 유저 영역으로 나뉘는 구조.</p>
+</blockquote>
+<h2 id="가상-주소-공간의-전체-구조">가상 주소 공간의 전체 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#가상-주소-공간의-전체-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>하나의 프로세스가 실행 중일 때, CPU가 보는 가상 주소 공간은 크게 두 영역으로 나뉜다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: virtual-address-space-layout.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;virtual address space layout&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>유저 모드에서 <code>KERN_BASE</code> 위의 주소에 접근하면 page fault가 발생한다. 이게 커널이 모드를 나눠서 보호하는 핵심 메커니즘이다.</p>
+<h2 id="커널-영역--11-매핑의-의미">커널 영역 — 1:1 매핑의 의미<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-영역--11-매핑의-의미" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="11-매핑이란">”1:1 매핑”이란<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#11-매핑이란" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 커널 영역의 가상 주소는 물리 메모리 전체를 그대로 올려놓은 구조다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: kernel-1to1-mapping.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;kernel 1to1 mapping&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>이 매핑은 <strong>부팅 시점에 전부 미리 설정</strong>된다. 이후에 커널이 메모리를 쓸 때 페이지 테이블을 건드릴 필요가 없다. <code>ptov()</code>와 <code>vtop()</code> 매크로가 단순한 덧셈/뺄셈으로 변환하는 이유도 이것이다.</p>
+<h3 id="palloc은-매핑을-만드는-게-아니다">palloc은 매핑을 만드는 게 아니다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#palloc은-매핑을-만드는-게-아니다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>여기서 가장 헷갈리는 부분이 <code>palloc_get_page()</code>의 역할이다.</p>
+<p>1:1 매핑이 이미 전체 물리 메모리를 커버하고 있으므로, <code>palloc_get_page()</code>는 <strong>새로운 매핑을 만드는 게 아니다</strong>. 비트맵에서 “아직 안 쓰는 물리 페이지”를 찾아서 “사용 중”으로 표시한 뒤, 그 물리 페이지에 이미 대응하는 가상 주소를 반환하는 것뿐이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: palloc-get-page-flow.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;palloc get page flow&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>“가상 주소 어딘가를 새로 매핑해야 한다”는 전제 자체가 필요 없다. 1:1 매핑 덕분에 물리 메모리의 모든 바이트가 이미 가상 주소를 갖고 있고, palloc은 그중 빈 것을 골라주는 <strong>할당자</strong>일 뿐이다.</p>
+<h3 id="커널-스택이-충돌하지-않는-이유">커널 스택이 충돌하지 않는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-스택이-충돌하지-않는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>모든 스레드가 같은 커널 페이지 테이블을 공유하니까, 원칙적으로는 다른 스레드의 커널 스택 영역에 접근할 수 있다. 하지만 각 스레드는 <code>palloc_get_page()</code>로 <strong>서로 다른 물리 페이지</strong>를 받고, 그 페이지의 맨 위를 자기 <code>rsp</code>로 설정하니까 실제로는 각자 다른 4KB 영역에서만 스택을 쓰게 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: kernel-stack-separation.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;kernel stack separation&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>커널이 <code>schedule()</code>에서 다른 스레드의 구조체에 접근하거나, <code>thread_foreach()</code>로 모든 스레드를 순회할 수 있는 것도 같은 이유다. 다 같은 커널 주소 공간에 있으니까.</p>
+<h3 id="커널-힙">커널 힙<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-힙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>커널 주소 공간 자체가 하나이므로 그 안의 모든 영역이 자연스럽게 공유된다. <code>malloc()</code>이나 <code>palloc_get_page()</code>로 할당하는 커널 메모리는 1:1 매핑 위에 있고, 어떤 스레드에서 할당하든 다른 스레드에서도 접근 가능하다.</p>
+<h2 id="유저-영역--프로세스마다-다른-매핑">유저 영역 — 프로세스마다 다른 매핑<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-영역--프로세스마다-다른-매핑" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>유저 영역은 커널과 완전히 다르다. 미리 매핑돼 있지 않고, 페이지를 할당받은 뒤 <code>pml4_set_page()</code>로 유저 가상 주소 → 물리 주소 매핑을 <strong>새로 만들어야</strong> 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: user-virtual-address-space.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;user virtual address space&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>각 프로세스는 자기만의 pml4를 갖고, 코드/데이터/BSS/힙/스택이 따로 매핑돼 있다. 프로세스 A의 코드가 올라간 가상 주소와 프로세스 B의 코드가 올라간 가상 주소가 같더라도, pml4가 다르기 때문에 서로 다른 물리 페이지를 가리킨다.</p>
+<h3 id="유저-풀과-커널-풀">유저 풀과 커널 풀<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-풀과-커널-풀" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 물리 메모리를 커널 풀과 유저 풀로 나눈다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: kernel-user-pool.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;kernel user pool&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>유저 프로세스의 코드/데이터를 로드할 때는 유저 풀에서 물리 페이지를 받고, <code>pml4_set_page()</code>로 유저 가상 주소에 매핑한다. 커널 스택이나 <code>struct thread</code>를 만들 때는 커널 풀에서 받고, 1:1 매핑이 이미 있으니까 추가 매핑 없이 바로 쓴다.</p>
+<h2 id="공유-라이브러리--같은-물리-페이지-다른-가상-주소">공유 라이브러리 — 같은 물리 페이지, 다른 가상 주소<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#공유-라이브러리--같은-물리-페이지-다른-가상-주소" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="pintos에는-없다">PintOS에는 없다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에는-없다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 정적 링크만 지원한다. 모든 라이브러리 코드가 ELF 바이너리에 포함돼서 코드/데이터 세그먼트에 같이 로드된다.</p>
+<h3 id="리눅스에서는">리눅스에서는<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#리눅스에서는" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>공유 라이브러리(<code>.so</code>)는 <strong>유저 영역</strong>에 매핑된다. <code>mmap</code>으로 스택과 힙 사이 공간에 올리고, 물리 페이지는 여러 프로세스가 공유하되 각 프로세스의 <strong>유저 가상 주소에 따로 매핑</strong>하는 구조다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: shared-library-mapping.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;shared library mapping&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p><code>libc.so</code> 같은 걸 프로세스마다 물리 메모리에 중복 로드하면 낭비니까, 물리 페이지 하나를 여러 프로세스의 페이지 테이블이 동시에 가리키게 하는 것이다. 이건 shared memory(<a href="../../wiki/os/ipc-shared-memory" class="internal internal-link alias" data-slug="wiki/os/ipc-shared-memory">IPC 공유 메모리</a>)와 동일한 메커니즘이다.</p>
+<p>보안상 고정 주소를 쓰면 공격에 취약하니까, 리눅스는 <strong>ASLR</strong>(Address Space Layout Randomization)로 매핑 주소를 매번 랜덤하게 배치한다.</p>
+<p>커널에는 공유 라이브러리 개념이 따로 없다. 커널 코드 자체가 전부 커널 영역에 상주하고, 모든 스레드가 이미 공유하고 있기 때문이다.</p>
+<h2 id="커널과-유저-양쪽의-코드데이터스택-구조">커널과 유저 양쪽의 코드/데이터/스택 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널과-유저-양쪽의-코드데이터스택-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>커널과 유저 각각 자기 영역 안에서 코드/데이터/스택 구조를 갖는다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>커널 영역</th><th>유저 영역</th></tr></thead><tbody><tr><td>코드</td><td>커널 바이너리 (부팅 시 로드)</td><td>ELF 실행 파일 (load_segment)</td></tr><tr><td>데이터</td><td>전역 변수, 상수</td><td>ELF 데이터 세그먼트</td></tr><tr><td>스택</td><td>스레드별 4KB 커널 스택</td><td>프로세스별 유저 스택</td></tr><tr><td>힙</td><td><code>malloc</code>/<code>palloc</code> (커널 풀)</td><td><code>sbrk</code>/<code>mmap</code> (유저 풀)</td></tr><tr><td>매핑 방식</td><td>1:1 매핑 (부팅 시 고정)</td><td>pml4_set_page (동적)</td></tr><tr><td>풀</td><td>커널 풀</td><td>유저 풀</td></tr><tr><td>공유 범위</td><td>모든 프로세스가 동일</td><td>프로세스마다 독립</td></tr><tr><td>공유 라이브러리</td><td>없음 (이미 전부 공유)</td><td><code>.so</code>를 mmap으로 매핑 (Linux)</td></tr></tbody></table></div>
+<h2 id="커널-영역과-유저-영역-값-추적">커널 영역과 유저 영역 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-영역과-유저-영역-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="pintos-주소-공간-경계">PintOS 주소 공간 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-주소-공간-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>의미</th></tr></thead><tbody><tr><td>KERN_BASE</td><td><code>0x8004000000</code></td><td>커널/유저 경계 (약 512 GB 위치)</td></tr><tr><td>유저 영역</td><td><code>0x0</code> ~ <code>0x8003FFFFFF</code></td><td>프로세스별 독립 매핑</td></tr><tr><td>커널 영역</td><td><code>0x8004000000</code> ~</td><td>모든 프로세스가 공유하는 1:1 매핑</td></tr><tr><td>ptov(0x0)</td><td><code>0x8004000000</code></td><td>물리 0번지의 커널 VA</td></tr><tr><td>vtop(0x8004001000)</td><td><code>0x1000</code></td><td>커널 VA에서 물리 주소 역산</td></tr></tbody></table></div>
+<h3 id="palloc-풀-분리">palloc 풀 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#palloc-풀-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>풀</th><th>할당 플래그</th><th>용도</th><th>추가 매핑 필요?</th></tr></thead><tbody><tr><td>kernel_pool</td><td><code>PAL_ZERO</code> (기본)</td><td>struct thread, 커널 스택, 내부 자료구조</td><td>불필요 (1:1 매핑 이미 존재)</td></tr><tr><td>user_pool</td><td><code>PAL_USER</code></td><td>유저 코드/데이터/스택 frame</td><td>필요 (<code>pml4_set_page()</code>)</td></tr></tbody></table></div>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    subgraph VA[\&quot;가상 주소 공간 (프로세스 하나가 보는 전체)\&quot;]\n        direction TB\n        U[\&quot;유저 영역\\n0x0 ~ KERN_BASE-1\\n프로세스마다 독립 pml4 매핑\&quot;]\n        K[\&quot;커널 영역\\nKERN_BASE(0x8004000000) ~\\n1:1 매핑, 모든 프로세스 공유\&quot;]\n    end\n\n    subgraph PA[\&quot;물리 메모리\&quot;]\n        direction TB\n        UP[\&quot;user_pool\\nPAL_USER로 할당\&quot;]\n        KP[\&quot;kernel_pool\\n기본 palloc으로 할당\&quot;]\n    end\n\n    U -->|\&quot;pml4_set_page()\\n동적 매핑\&quot;| UP\n    K -->|\&quot;ptov/vtop\\n단순 덧셈/뺄셈\&quot;| KP\n    K -->|\&quot;1:1 매핑\\n부팅 시 고정\&quot;| UP&quot;">flowchart TD
+    subgraph VA[&quot;가상 주소 공간 (프로세스 하나가 보는 전체)&quot;]
+        direction TB
+        U[&quot;유저 영역\n0x0 ~ KERN_BASE-1\n프로세스마다 독립 pml4 매핑&quot;]
+        K[&quot;커널 영역\nKERN_BASE(0x8004000000) ~\n1:1 매핑, 모든 프로세스 공유&quot;]
+    end
+
+    subgraph PA[&quot;물리 메모리&quot;]
+        direction TB
+        UP[&quot;user_pool\nPAL_USER로 할당&quot;]
+        KP[&quot;kernel_pool\n기본 palloc으로 할당&quot;]
+    end
+
+    U -->|&quot;pml4_set_page()\n동적 매핑&quot;| UP
+    K -->|&quot;ptov/vtop\n단순 덧셈/뺄셈&quot;| KP
+    K -->|&quot;1:1 매핑\n부팅 시 고정&quot;| UP
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    A[\&quot;palloc_get_page(PAL_USER)\&quot;] --> B[\&quot;user_pool 비트맵에서\\n빈 물리 페이지 탐색\&quot;]\n    B --> C[\&quot;kva = ptov(물리 주소)\\n반환\&quot;]\n    C --> D[\&quot;pml4_set_page(pml4,\\nupage, kva, writable)\&quot;]\n    D --> E[\&quot;유저 VA → 물리 frame\\n매핑 완성\&quot;]\n\n    A2[\&quot;palloc_get_page(0)\&quot;] --> B2[\&quot;kernel_pool 비트맵에서\\n빈 물리 페이지 탐색\&quot;]\n    B2 --> C2[\&quot;kva = ptov(물리 주소)\\n반환\&quot;]\n    C2 --> D2[\&quot;추가 매핑 불필요\\n1:1 매핑으로 즉시 사용\&quot;]&quot;">flowchart LR
+    A[&quot;palloc_get_page(PAL_USER)&quot;] --> B[&quot;user_pool 비트맵에서\n빈 물리 페이지 탐색&quot;]
+    B --> C[&quot;kva = ptov(물리 주소)\n반환&quot;]
+    C --> D[&quot;pml4_set_page(pml4,\nupage, kva, writable)&quot;]
+    D --> E[&quot;유저 VA → 물리 frame\n매핑 완성&quot;]
+
+    A2[&quot;palloc_get_page(0)&quot;] --> B2[&quot;kernel_pool 비트맵에서\n빈 물리 페이지 탐색&quot;]
+    B2 --> C2[&quot;kva = ptov(물리 주소)\n반환&quot;]
+    C2 --> D2[&quot;추가 매핑 불필요\n1:1 매핑으로 즉시 사용&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/매크로</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/loader.h:19</td><td><code>LOADER_KERN_BASE</code></td><td><code>0x8004000000</code> — 커널/유저 경계 상수</td></tr><tr><td>include/threads/vaddr.h:58</td><td><code>KERN_BASE</code></td><td>LOADER_KERN_BASE의 별칭</td></tr><tr><td>include/threads/vaddr.h:68</td><td><code>is_user_vaddr()</code></td><td>VA &lt; KERN_BASE인지 검사</td></tr><tr><td>include/threads/vaddr.h:73</td><td><code>is_kernel_vaddr()</code></td><td>VA >= KERN_BASE인지 검사</td></tr><tr><td>include/threads/vaddr.h:79</td><td><code>ptov(paddr)</code></td><td>물리 주소 + KERN_BASE → 커널 VA</td></tr><tr><td>include/threads/vaddr.h:84</td><td><code>vtop(vaddr)</code></td><td>커널 VA - KERN_BASE → 물리 주소</td></tr><tr><td>threads/palloc.c:50</td><td>kernel_pool, user_pool</td><td>두 풀의 static 변수</td></tr><tr><td>threads/palloc.c:292</td><td>palloc_get_multiple()</td><td>PAL_USER 플래그로 풀 선택</td></tr><tr><td>threads/palloc.c:323</td><td>palloc_get_page()</td><td>한 페이지 할당 (get_multiple 래퍼)</td></tr><tr><td>threads/palloc.c:367</td><td>init_pool()</td><td>풀 초기화: 비트맵 생성, 시작/끝 주소 기록</td></tr><tr><td>threads/mmu.c:251</td><td>pml4_set_page()</td><td>유저 VA → 물리 frame PTE 설치</td></tr><tr><td>threads/init.c</td><td>thread_init() → palloc_init()</td><td>부팅 시 풀 분할</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 게스트의 가상 주소 공간 레이아웃을 직접 관여하지 않는다. 커널/유저 분할은 순전히 게스트 OS가 PML4를 어떻게 설정하느냐에 달려 있다. QEMU가 관여하는 지점:</p>
+<ul>
+<li><strong>softmmu TLB</strong>: 게스트 가상 주소 → 게스트 물리 주소 변환을 캐시한다. KERN_BASE 위의 접근과 아래의 접근이 같은 TLB에서 관리되며, 캐시 항목의 user/supervisor 비트로 권한을 검사한다.</li>
+<li><strong>RAMBlock</strong>: 게스트 물리 메모리 전체(128 MB)를 하나의 RAMBlock으로 backing한다. 커널 풀이든 유저 풀이든 같은 RAMBlock 안의 다른 오프셋일 뿐이다.</li>
+<li><strong>CR3 전환</strong>: <code>pml4_activate()</code>가 <code>lcr3()</code>를 실행하면 QEMU는 softmmu TLB를 전면 flush한다. 이후 모든 메모리 접근이 새 PML4 기준으로 변환된다.</li>
+<li><strong>PTE user bit 검증</strong>: 유저 모드(CPL 3)에서 PTE의 user bit이 0인 페이지에 접근하면 QEMU가 page fault를 발생시킨다. 이것이 커널 영역 보호의 핵심이다.</li>
+</ul>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 1. KERN_BASE 경계 확인 — 현재 CR3 기준으로 커널/유저 매핑 상태</span></span>
+<span data-line><span>define show_layout</span></span>
+<span data-line><span>  printf &quot;=== Address Space Layout ===\n&quot;</span></span>
+<span data-line><span>  printf &quot;KERN_BASE = 0x%lx\n&quot;, 0x8004000000</span></span>
+<span data-line><span>  printf &quot;CR3 (current PML4 PA) = 0x%lx\n&quot;, $cr3</span></span>
+<span data-line><span>  set $t = thread_current()</span></span>
+<span data-line><span>  printf &quot;tid=%d, pml4=%p\n&quot;, $t->tid, $t->pml4</span></span>
+<span data-line><span>  printf &quot;User range:   0x0 ~ 0x%lx\n&quot;, 0x8003ffffff</span></span>
+<span data-line><span>  printf &quot;Kernel range: 0x%lx ~\n&quot;, 0x8004000000</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 2. ptov/vtop 변환 검증 — 물리 주소 ↔ 커널 VA 일치 확인</span></span>
+<span data-line><span>define check_ptov</span></span>
+<span data-line><span>  set $pa = (unsigned long)$arg0</span></span>
+<span data-line><span>  set $kva = $pa + 0x8004000000</span></span>
+<span data-line><span>  printf &quot;PA=0x%lx → ptov → KVA=0x%lx\n&quot;, $pa, $kva</span></span>
+<span data-line><span>  printf &quot;Verify: vtop(0x%lx) = 0x%lx\n&quot;, $kva, $kva - 0x8004000000</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 3. palloc 풀 경계 덤프 — kernel_pool과 user_pool의 시작/끝</span></span>
+<span data-line><span>define dump_pools</span></span>
+<span data-line><span>  printf &quot;=== kernel_pool ===\n&quot;</span></span>
+<span data-line><span>  printf &quot;  base=%p, pages=%d\n&quot;, kernel_pool.base, kernel_pool.page_cnt</span></span>
+<span data-line><span>  printf &quot;  range: PA 0x%lx ~ 0x%lx\n&quot;, \</span></span>
+<span data-line><span>         (unsigned long)kernel_pool.base - 0x8004000000, \</span></span>
+<span data-line><span>         (unsigned long)kernel_pool.base - 0x8004000000 + kernel_pool.page_cnt * 4096</span></span>
+<span data-line><span>  printf &quot;=== user_pool ===\n&quot;</span></span>
+<span data-line><span>  printf &quot;  base=%p, pages=%d\n&quot;, user_pool.base, user_pool.page_cnt</span></span>
+<span data-line><span>  printf &quot;  range: PA 0x%lx ~ 0x%lx\n&quot;, \</span></span>
+<span data-line><span>         (unsigned long)user_pool.base - 0x8004000000, \</span></span>
+<span data-line><span>         (unsigned long)user_pool.base - 0x8004000000 + user_pool.page_cnt * 4096</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 4. 특정 가상 주소가 커널인지 유저인지 판별 + PTE 조회</span></span>
+<span data-line><span>define classify_va</span></span>
+<span data-line><span>  set $va = (unsigned long)$arg0</span></span>
+<span data-line><span>  if $va >= 0x8004000000</span></span>
+<span data-line><span>    printf &quot;0x%lx → KERNEL (1:1 mapped), PA=0x%lx\n&quot;, $va, $va - 0x8004000000</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;0x%lx → USER (needs pml4 lookup)\n&quot;, $va</span></span>
+<span data-line><span>    set $pa = pml4_get_page(thread_current()->pml4, (void*)$va)</span></span>
+<span data-line><span>    if $pa != 0</span></span>
+<span data-line><span>      printf &quot;  mapped to frame KVA=%p\n&quot;, $pa</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot;  NOT MAPPED (will page fault)\n&quot;</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 5. 커널 스택 위치 확인 — struct thread와 같은 페이지 내에 있는지</span></span>
+<span data-line><span>define check_kstack</span></span>
+<span data-line><span>  set $t = thread_current()</span></span>
+<span data-line><span>  set $page_start = (unsigned long)$t &amp; ~0xfff</span></span>
+<span data-line><span>  set $rsp_page = (unsigned long)$rsp &amp; ~0xfff</span></span>
+<span data-line><span>  printf &quot;thread=%p (page 0x%lx), rsp=0x%lx (page 0x%lx)\n&quot;, \</span></span>
+<span data-line><span>         $t, $page_start, $rsp, $rsp_page</span></span>
+<span data-line><span>  if $page_start == $rsp_page</span></span>
+<span data-line><span>    printf &quot;  OK: RSP is within thread's 4KB page\n&quot;</span></span>
+<span data-line><span>    printf &quot;  stack used: %d bytes (of ~3.5 KB available)\n&quot;, \</span></span>
+<span data-line><span>           ($page_start + 4096) - (unsigned long)$rsp</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;  WARNING: RSP is outside thread's page!\n&quot;</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 6. fork 전후 유저/커널 영역 비교</span></span>
+<span data-line><span>define compare_addr_spaces</span></span>
+<span data-line><span>  set $parent_pml4 = (unsigned long)$arg0</span></span>
+<span data-line><span>  set $child_pml4 = (unsigned long)$arg1</span></span>
+<span data-line><span>  printf &quot;Parent PML4 PA = 0x%lx\n&quot;, $parent_pml4 - 0x8004000000</span></span>
+<span data-line><span>  printf &quot;Child  PML4 PA = 0x%lx\n&quot;, $child_pml4 - 0x8004000000</span></span>
+<span data-line><span>  printf &quot;Kernel entries (PML4[256+]): should be IDENTICAL\n&quot;</span></span>
+<span data-line><span>  printf &quot;User entries (PML4[0~255]): should be DIFFERENT\n&quot;</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-1-유저커널-영역-경계-실험--같은-물리-주소-두-가지-접근-경로">시나리오 1: 유저/커널 영역 경계 실험 — 같은 물리 주소, 두 가지 접근 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-1-유저커널-영역-경계-실험--같은-물리-주소-두-가지-접근-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>커널이 <code>palloc_get_page(PAL_USER)</code>로 할당한 유저 frame의 KVA와 유저 VA가 같은 물리 주소를 가리키는 것을 확인한다:</p>
+<pre><code># 1. palloc_get_page(PAL_USER) 호출
+(gdb) p/x palloc_get_page(PAL_USER)
+$1 = 0x8004800000          ← KVA (커널 가상 주소)
+
+# 2. 이 KVA의 물리 주소 계산
+(gdb) check_ptov 0x800000
+PA=0x800000 → ptov → KVA=0x8004800000
+# → 물리 주소 0x800000
+
+# 3. pml4_set_page로 유저 VA 0x400000에 매핑
+(gdb) p pml4_set_page(thread_current()->pml4, 0x400000, 0x8004800000, 1)
+
+# 4. 유저 VA에서 같은 물리 페이지 접근
+(gdb) classify_va 0x400000
+0x400000 → USER (needs pml4 lookup)
+  mapped to frame KVA=0x8004800000
+
+# → 커널은 KVA(0x8004800000)로, 유저는 VA(0x400000)로 같은 물리 주소 접근
+# → 1:1 매핑의 핵심: 커널이 유저 frame을 채울 때 KVA로 바로 memcpy 가능
+</code></pre>
+<h3 id="시나리오-2-프로세스-전환-시-커널-영역-공유--유저-영역-독립-확인">시나리오 2: 프로세스 전환 시 커널 영역 공유 / 유저 영역 독립 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-2-프로세스-전환-시-커널-영역-공유--유저-영역-독립-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>두 프로세스의 PML4를 비교하여 커널 영역 PTE는 동일하고 유저 영역 PTE는 다른 것을 확인한다:</p>
+<pre><code># 1. 프로세스 A (tid=3) 상태
+(gdb) show_layout
+KERN_BASE = 0x8004000000
+CR3 (current PML4 PA) = 0x123c000
+tid=3, pml4=0x800523c000
+
+# 2. PML4 상위 엔트리 (커널 영역) 덤프
+(gdb) x/4gx 0x800523c000 + 256*8
+# → 커널 PML4 엔트리들
+
+# 3. 프로세스 B (tid=4)로 전환 후 같은 위치 비교
+(gdb) x/4gx 0x8005240000 + 256*8
+# → 동일한 값! (pml4_create에서 커널 영역을 복사하기 때문)
+
+# 4. 유저 영역 엔트리는 다름
+(gdb) x/4gx 0x800523c000    ← A의 PML4[0]
+(gdb) x/4gx 0x8005240000    ← B의 PML4[0]
+# → 다른 값 (각 프로세스가 독립적인 유저 매핑을 가짐)
+</code></pre>
+<h2 id="linux-vs-pintos-메모리-레이아웃-비교">Linux vs PintOS 메모리 레이아웃 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-메모리-레이아웃-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux (x86-64)</th><th>PintOS</th></tr></thead><tbody><tr><td>커널/유저 분할</td><td>47-bit 기준: 유저 0<del>0x7FFFFFFFFFFF, 커널 0xFFFF800000000000</del></td><td>KERN_BASE=0x8004000000 기준</td></tr><tr><td>커널 매핑 방식</td><td>direct map (0xFFFF888000000000~) + vmalloc + kmap</td><td>1:1 매핑 (KERN_BASE + PA)</td></tr><tr><td>direct map 크기</td><td>최대 64 TB (물리 메모리 전체)</td><td>물리 메모리 전체 (보통 128 MB)</td></tr><tr><td>vmalloc 영역</td><td>비연속 가상 주소 → 임의 물리 프레임</td><td>없음 (모든 커널 메모리가 1:1 매핑)</td></tr><tr><td>KASLR</td><td>커널 시작 주소 랜덤화</td><td>없음 (고정 주소)</td></tr><tr><td>KPTI</td><td>유저/커널 PML4 분리 (Meltdown 방어)</td><td>없음 (단일 PML4)</td></tr><tr><td>유저 스택</td><td>아래로 성장, RLIMIT_STACK 제한</td><td>USER_STACK(0x47480000)부터 아래로</td></tr><tr><td>유저 힙</td><td>brk/mmap 기반 확장</td><td>mmap만 지원 (brk 없음)</td></tr><tr><td>공유 라이브러리</td><td>mmap으로 유저 영역에 매핑, ASLR</td><td>없음 (정적 링크만)</td></tr><tr><td>풀 분리</td><td>없음 (NUMA zone으로 관리)</td><td>kernel_pool / user_pool 이분할</td></tr><tr><td>per-CPU 영역</td><td>__per_cpu_offset[]으로 CPU별 독립 변수</td><td>없음 (단일 CPU)</td></tr><tr><td>커널 스택 크기</td><td>16 KB (4 pages, THREAD_SIZE)</td><td>4 KB (1 page, struct thread 포함)</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>핵심을 한 문장으로 요약하면, 커널 영역은 1:1 매핑이 이미 돼 있어서 palloc은 빈 페이지를 골라주기만 하고, 유저 영역은 매핑이 없어서 페이지 할당 후 pml4에 등록해야 쓸 수 있다.</p>
+<p>모든 스레드의 커널 스택은 같은 주소 공간에 있지만 서로 다른 물리 페이지를 받아서 rsp가 다른 곳을 가리키므로 충돌하지 않는다. 공유 라이브러리는 유저 영역에만 있고, 커널은 이미 전부 공유 상태라 별도 메커니즘이 필요 없다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">가상 주소가 물리 주소로 변환되는 전체 과정</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">pml4 → pdpt → pd → pt 4단계 walk</a></li>
+<li><a href="../../wiki/os/kernel-user-protection" class="internal internal-link alias" data-slug="wiki/os/kernel-user-protection">유저 모드에서 커널 접근을 막는 보호 메커니즘</a></li>
+<li><a href="../../wiki/os/canonical-address-space-hole" class="internal internal-link alias" data-slug="wiki/os/canonical-address-space-hole">Canonical Address와 비정규 홀</a></li>
+<li><a href="../../wiki/os/virtual-address-space" class="internal internal-link alias" data-slug="wiki/os/virtual-address-space">가상 주소 공간 전체 개관</a></li>
+<li><a href="../../wiki/os/user-kernel-mode" class="internal internal-link alias" data-slug="wiki/os/user-kernel-mode"> 커널 모드 전환</a></li>
+<li><a href="../../wiki/os/pml4-create-setup-knowledge" class="internal internal-link alias" data-slug="wiki/os/pml4-create-setup-knowledge">PML4 생성 시 커널 영역 복사</a></li>
+<li><a href="../../wiki/os/pintos-palloc-user-frame-address-alias-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-palloc-user-frame-address-alias-knowledge">palloc이 반환하는 주소의 의미</a></li>
+<li><a href="../../wiki/os/pintos-e820-palloc-pool-trace" class="internal internal-link alias" data-slug="wiki/os/pintos-e820-palloc-pool-trace">E820 맵에서 palloc 풀 초기화까지</a></li>
+<li><a href="../../wiki/os/thread-struct-memory-layout" class="internal internal-link alias" data-slug="wiki/os/thread-struct-memory-layout">4 KB 페이지 내 struct thread + 커널 스택 배치</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">유저 영역 페이지의 backing 정보를 관리하는 SPT</a></li>
+<li><a href="../../wiki/os/ipc-shared-memory" class="internal internal-link alias" data-slug="wiki/os/ipc-shared-memory">같은 물리 페이지를 공유하는 IPC 방식</a></li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">파일을 유저 영역에 매핑하는 mmap</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/os-responsibility-boundary" class="internal">OS 책임 경계</a></li><li><a href="../../wiki/os/canonical-address-space-hole" class="internal">x86-64 Canonical Address와 비정규 홀</a></li><li><a href="../../wiki/os/os-kernel-architecture" class="internal">OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel</a></li><li><a href="../../wiki/os/stack-heap-memory-layout" class="internal">Stack과 Heap — 프로그램 메모리는 어떻게 나뉘는가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-507" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#커널-영역과-유저-영역--가상-주소-공간은-어떻게-나뉘는가" data-for="커널-영역과-유저-영역--가상-주소-공간은-어떻게-나뉘는가">커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가</a></li><li class="depth-1"><a href="#가상-주소-공간의-전체-구조" data-for="가상-주소-공간의-전체-구조">가상 주소 공간의 전체 구조</a></li><li class="depth-1"><a href="#커널-영역--11-매핑의-의미" data-for="커널-영역--11-매핑의-의미">커널 영역 — 1:1 매핑의 의미</a></li><li class="depth-2"><a href="#11-매핑이란" data-for="11-매핑이란">”1:1 매핑”이란</a></li><li class="depth-2"><a href="#palloc은-매핑을-만드는-게-아니다" data-for="palloc은-매핑을-만드는-게-아니다">palloc은 매핑을 만드는 게 아니다</a></li><li class="depth-2"><a href="#커널-스택이-충돌하지-않는-이유" data-for="커널-스택이-충돌하지-않는-이유">커널 스택이 충돌하지 않는 이유</a></li><li class="depth-2"><a href="#커널-힙" data-for="커널-힙">커널 힙</a></li><li class="depth-1"><a href="#유저-영역--프로세스마다-다른-매핑" data-for="유저-영역--프로세스마다-다른-매핑">유저 영역 — 프로세스마다 다른 매핑</a></li><li class="depth-2"><a href="#유저-풀과-커널-풀" data-for="유저-풀과-커널-풀">유저 풀과 커널 풀</a></li><li class="depth-1"><a href="#공유-라이브러리--같은-물리-페이지-다른-가상-주소" data-for="공유-라이브러리--같은-물리-페이지-다른-가상-주소">공유 라이브러리 — 같은 물리 페이지, 다른 가상 주소</a></li><li class="depth-2"><a href="#pintos에는-없다" data-for="pintos에는-없다">PintOS에는 없다</a></li><li class="depth-2"><a href="#리눅스에서는" data-for="리눅스에서는">리눅스에서는</a></li><li class="depth-1"><a href="#커널과-유저-양쪽의-코드데이터스택-구조" data-for="커널과-유저-양쪽의-코드데이터스택-구조">커널과 유저 양쪽의 코드/데이터/스택 구조</a></li><li class="depth-1"><a href="#커널-영역과-유저-영역-값-추적" data-for="커널-영역과-유저-영역-값-추적">커널 영역과 유저 영역 값 추적</a></li><li class="depth-2"><a href="#pintos-주소-공간-경계" data-for="pintos-주소-공간-경계">PintOS 주소 공간 경계</a></li><li class="depth-2"><a href="#palloc-풀-분리" data-for="palloc-풀-분리">palloc 풀 분리</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-1-유저커널-영역-경계-실험--같은-물리-주소-두-가지-접근-경로" data-for="시나리오-1-유저커널-영역-경계-실험--같은-물리-주소-두-가지-접근-경로">시나리오 1: 유저/커널 영역 경계 실험 — 같은 물리 주소, 두 가지 접근 경로</a></li><li class="depth-2"><a href="#시나리오-2-프로세스-전환-시-커널-영역-공유--유저-영역-독립-확인" data-for="시나리오-2-프로세스-전환-시-커널-영역-공유--유저-영역-독립-확인">시나리오 2: 프로세스 전환 시 커널 영역 공유 / 유저 영역 독립 확인</a></li><li class="depth-1"><a href="#linux-vs-pintos-메모리-레이아웃-비교" data-for="linux-vs-pintos-메모리-레이아웃-비교">Linux vs PintOS 메모리 레이아웃 비교</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>QEMU가 하는 일 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="QEMU가 하는 일 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="QEMU가 하는 일 · 최우녕"/><meta name="twitter:description" content="QEMU가 하는 세 가지 — guest register 보관·주소 변환 재현·장치 I/O 처리."/><meta property="og:description" content="QEMU가 하는 세 가지 — guest register 보관·주소 변환 재현·장치 I/O 처리."/><meta property="og:image:alt" content="QEMU가 하는 세 가지 — guest register 보관·주소 변환 재현·장치 I/O 처리."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/qemu-does"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/qemu-does"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="QEMU가 하는 세 가지 — guest register 보관·주소 변환 재현·장치 I/O 처리."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/qemu-does" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-610" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-610" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>QEMU가 하는 일</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="qemu가-하는-일">QEMU가 하는 일<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-하는-일" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: QEMU가 하는 세 가지 — guest register 보관·주소 변환 재현·장치 I/O 처리.</p>
+</blockquote>
+<h2 id="qemu가-하는-일-상태">QEMU가 하는 일 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-하는-일-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 세 가지 일을 한다. <strong>guest register 보관</strong>, <strong>주소 변환 효과 재현</strong>, <strong>장치 I/O 처리</strong>. 이 세 가지는 모두 “하드웨어가 하는 일을 소프트웨어로 흉내내기”다. QEMU는 syscall 번호를 해석하지 않고, 프로세스를 관리하지 않으며, 파일 시스템 정책을 세우지 않는다. OS가 하는 일과 QEMU가 하는 일의 경계를 정확히 아는 것이 PintOS 디버깅의 전제다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-하드웨어-에뮬레이터의-역할">추상 개념 (하드웨어 에뮬레이터의 역할)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-하드웨어-에뮬레이터의-역할" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>물리 CPU는 레지스터에 값을 저장하고, 명령어를 fetch/decode/execute하며, MMU를 통해 가상→물리 주소 변환을 수행하고, I/O 포트나 MMIO를 통해 장치와 통신한다.</p>
+<p>QEMU는 이 물리 CPU 없이 동일한 효과를 만들어낸다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>물리 하드웨어의 일</th><th>QEMU의 재현 방식</th></tr></thead><tbody><tr><td>레지스터에 값 저장</td><td><code>CPUX86State.regs[]</code>, <code>eip</code>, <code>eflags</code>, <code>cr[]</code> 구조체 필드</td></tr><tr><td>명령어 실행</td><td>TCG(Tiny Code Generator)로 guest 명령어를 host 명령어로 번역 실행</td></tr><tr><td>MMU 주소 변환</td><td>softmmu: guest page table walk를 소프트웨어로 수행</td></tr><tr><td>장치 I/O</td><td>장치 모델(PIT, PIC, IDE)이 I/O 포트 접근에 응답</td></tr><tr><td>인터럽트 전달</td><td>가상 PIC/APIC 모델이 인터럽트 핀을 에뮬레이션</td></tr></tbody></table></div>
+<p>핵심: QEMU는 <strong>메커니즘</strong>(CPU가 어떻게 동작하는가)을 재현한다. <strong>정책</strong>(어떤 프로그램에게 어떤 자원을 줄 것인가)은 guest OS의 몫이다.</p>
+<h3 id="실제-os-관점에서의-qemu">실제 OS 관점에서의 QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-관점에서의-qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>실제 OS 개발에서 QEMU는 두 가지 역할로 쓰인다.</p>
+<ol>
+<li><strong>개발/테스트 환경</strong>: 물리 하드웨어 없이 OS를 부팅하고 테스트할 수 있다. 커널 크래시가 나도 호스트 OS는 안전하다.</li>
+<li><strong>디버깅 도구</strong>: GDB stub을 통해 guest CPU 상태를 멈추고, 레지스터와 메모리를 검사할 수 있다. 물리 CPU에서는 JTAG 같은 비싼 장비가 필요한 일을 소프트웨어로 할 수 있다.</li>
+</ol>
+<p>KVM 가속 모드에서는 guest 명령어가 물리 CPU에서 직접 실행된다. 이 경우 QEMU는 장치 모델 제공과 VM entry/exit 관리에 집중한다. PintOS는 KVM 없이 순수 TCG 에뮬레이션을 사용한다.</p>
+<h3 id="pintos에서의-qemu-역할">PintOS에서의 QEMU 역할<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서의-qemu-역할" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS를 실행할 때 QEMU가 하는 구체적인 일:</p>
+<p><strong>1. Guest register 보관</strong></p>
+<p>PintOS가 <code>RAX</code>에 syscall 번호를 넣고 <code>syscall</code> 명령을 실행하면, QEMU는 <code>CPUX86State.regs[R_EAX]</code>에 그 값을 보관하고, <code>syscall</code> 명령의 하드웨어 의미(RCX←RIP, R11←RFLAGS, RIP←LSTAR MSR 값)를 재현한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% syscall 명령에서 QEMU와 PintOS의 역할\nflowchart LR\n  user[\&quot;PintOS 유저&lt;br/>RAX = SYS_WRITE&lt;br/>syscall 실행\&quot;]\n  qemu[\&quot;QEMU TCG&lt;br/>regs[R_EAX] 업데이트&lt;br/>RIP를 LSTAR로 바꿈\&quot;]\n  kernel[\&quot;PintOS syscall_handler()&lt;br/>f-&amp;gt;R.rax를 SYS_WRITE로 해석\&quot;]\n  user -->|CPU 명령 효과| qemu\n  qemu -->|커널 진입 상태 제공| kernel&quot;">%% syscall 명령에서 QEMU와 PintOS의 역할
+flowchart LR
+  user[&quot;PintOS 유저&lt;br/>RAX = SYS_WRITE&lt;br/>syscall 실행&quot;]
+  qemu[&quot;QEMU TCG&lt;br/>regs[R_EAX] 업데이트&lt;br/>RIP를 LSTAR로 바꿈&quot;]
+  kernel[&quot;PintOS syscall_handler()&lt;br/>f-&amp;gt;R.rax를 SYS_WRITE로 해석&quot;]
+  user -->|CPU 명령 효과| qemu
+  qemu -->|커널 진입 상태 제공| kernel
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>QEMU는 <code>SYS_WRITE</code>가 무엇을 의미하는지 모른다. QEMU는 <code>RAX</code> 값을 보관하고 <code>syscall</code> 명령의 CPU 동작만 재현한다.</p>
+<p><strong>2. 주소 변환 효과 재현</strong></p>
+<p>PintOS가 <code>pml4_set_page()</code>로 PTE를 설치하면, 그 변경은 guest RAM 안의 page table 메모리에 쓰여진다. 이후 유저 코드가 해당 VA에 접근하면, QEMU softmmu가 guest page table을 walk하여 물리 프레임을 찾고, RAMBlock 호스트 메모리에서 실제 바이트를 읽어 결과를 돌려준다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 유저 VA 접근과 QEMU softmmu 주소 변환\nflowchart LR\n  user[\&quot;유저 코드&lt;br/>mov eax, [0x400000]\&quot;]\n  ram[\&quot;QEMU RAMBlock&lt;br/>host_mem[0x1234000]에서&lt;br/>4바이트 읽기\&quot;]\n  softmmu[\&quot;QEMU softmmu&lt;br/>guest PML4→PDPT→PD→PT&lt;br/>PA 0x1234000 계산\&quot;]\n  user -->|VA 0x400000 접근| softmmu\n  softmmu -->|guest PA 계산| ram&quot;">%% 유저 VA 접근과 QEMU softmmu 주소 변환
+flowchart LR
+  user[&quot;유저 코드&lt;br/>mov eax, [0x400000]&quot;]
+  ram[&quot;QEMU RAMBlock&lt;br/>host_mem[0x1234000]에서&lt;br/>4바이트 읽기&quot;]
+  softmmu[&quot;QEMU softmmu&lt;br/>guest PML4→PDPT→PD→PT&lt;br/>PA 0x1234000 계산&quot;]
+  user -->|VA 0x400000 접근| softmmu
+  softmmu -->|guest PA 계산| ram
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>3. 장치 I/O 처리</strong></p>
+<p>PintOS가 <code>disk_write()</code>로 IDE 컨트롤러에 섹터를 쓰면, QEMU IDE 장치 모델이 해당 I/O 포트 접근을 가로채고, BlockBackend을 통해 호스트 파일(<code>pintos.dsk</code> 등)에 데이터를 쓴다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% IDE 포트 쓰기와 호스트 파일 기록\nflowchart LR\n  pintos[\&quot;PintOS&lt;br/>outb(0x1F7, CMD_WRITE)\&quot;]\n  ide[\&quot;QEMU IDE model&lt;br/>port 0x1F7 접근 감지&lt;br/>write 명령 처리\&quot;]\n  block[\&quot;QEMU BlockBackend&lt;br/>호스트 파일에&lt;br/>512B 섹터 기록\&quot;]\n  pintos -->|I/O port 접근| ide\n  ide -->|sector write| block&quot;">%% IDE 포트 쓰기와 호스트 파일 기록
+flowchart LR
+  pintos[&quot;PintOS&lt;br/>outb(0x1F7, CMD_WRITE)&quot;]
+  ide[&quot;QEMU IDE model&lt;br/>port 0x1F7 접근 감지&lt;br/>write 명령 처리&quot;]
+  block[&quot;QEMU BlockBackend&lt;br/>호스트 파일에&lt;br/>512B 섹터 기록&quot;]
+  pintos -->|I/O port 접근| ide
+  ide -->|sector write| block
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>PIT(timer)와 PIC(interrupt controller)도 같은 방식이다. PIT 모델이 주기적으로 IRQ0을 발생시키면, PIC 모델이 CPU 인터럽트 핀을 올리고, QEMU가 guest의 인터럽트 벡터를 통해 PintOS의 <code>timer_interrupt()</code>를 호출하게 만든다.</p>
+<h3 id="qemu-에뮬레이션-자기-자신">QEMU 에뮬레이션 (자기 자신)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션-자기-자신" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU의 세 가지 하위 시스템 사이의 상호작용:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% QEMU 에뮬레이션 하위 시스템\nflowchart TD\n  tcg[\&quot;TCG 번역기&lt;br/>guest 명령어를&lt;br/>host 명령어로 변환\&quot;]\n  softmmu[\&quot;SoftMMU&lt;br/>TLB 조회·guest VA→PA 변환\&quot;]\n  ram[\&quot;RAMBlock&lt;br/>guest PA→host memory backing\&quot;]\n  device[\&quot;장치 모델&lt;br/>PIT · PIC · IDE\&quot;]\n  block[\&quot;BlockBackend\&quot;]\n  host[\&quot;호스트 파일\&quot;]\n  tcg -->|메모리 접근| softmmu\n  softmmu --> ram\n  tcg -->|I/O 포트 접근| device\n  device --> block\n  block --> host&quot;">%% QEMU 에뮬레이션 하위 시스템
+flowchart TD
+  tcg[&quot;TCG 번역기&lt;br/>guest 명령어를&lt;br/>host 명령어로 변환&quot;]
+  softmmu[&quot;SoftMMU&lt;br/>TLB 조회·guest VA→PA 변환&quot;]
+  ram[&quot;RAMBlock&lt;br/>guest PA→host memory backing&quot;]
+  device[&quot;장치 모델&lt;br/>PIT · PIC · IDE&quot;]
+  block[&quot;BlockBackend&quot;]
+  host[&quot;호스트 파일&quot;]
+  tcg -->|메모리 접근| softmmu
+  softmmu --> ram
+  tcg -->|I/O 포트 접근| device
+  device --> block
+  block --> host
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>TCG Translation Block은 guest 명령어 몇 개를 묶어 host 코드로 번역하고 캐시한다. 같은 guest 코드를 반복 실행하면 번역 오버헤드가 사라진다.</p>
+<h2 id="qemu가-하는-일-값-추적">QEMU가 하는 일 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-하는-일-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="qemu가-관리하는-guest-상태의-크기">QEMU가 관리하는 guest 상태의 크기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-관리하는-guest-상태의-크기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% CPUX86State 주요 필드와 크기 감각\nflowchart TD\n  state[\&quot;{CPUX86State 주요 필드&amp;#124;regs[16] = 16 x 8 = 128 바이트&lt;br/>eip = 8 바이트&lt;br/>eflags = 8 바이트&lt;br/>cr[5] = 5 x 8 = 40 바이트&lt;br/>segs[6] = 6 x 16 = 96 바이트&amp;#124;합계: 수백 바이트의 구조체&lt;br/>전체 CPUX86State는 수 KB}\&quot;]&quot;">%% CPUX86State 주요 필드와 크기 감각
+flowchart TD
+  state[&quot;{CPUX86State 주요 필드&amp;#124;regs[16] = 16 x 8 = 128 바이트&lt;br/>eip = 8 바이트&lt;br/>eflags = 8 바이트&lt;br/>cr[5] = 5 x 8 = 40 바이트&lt;br/>segs[6] = 6 x 16 = 96 바이트&amp;#124;합계: 수백 바이트의 구조체&lt;br/>전체 CPUX86State는 수 KB}&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="pintos-default-설정에서의-장치-모델">PintOS default 설정에서의 장치 모델<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-default-설정에서의-장치-모델" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS default 설정에서의 장치 모델\nflowchart LR\n  pit[\&quot;PIT&lt;br/>i8254, IRQ0&lt;br/>100 Hz (PintOS TIMER_FREQ)&lt;br/>10 ms마다 timer interrupt\&quot;]\n  pic[\&quot;PIC&lt;br/>i8259, master+slave&lt;br/>IRQ0(timer), IRQ14(IDE primary) 라우팅\&quot;]\n  ide[\&quot;IDE&lt;br/>primary channel&lt;br/>0x1F0-0x1F7&lt;br/>섹터 크기 512 B&lt;br/>pintos.dsk + swap.dsk\&quot;]\n  pit -->|IRQ0| pic\n  pic --> ide&quot;">%% PintOS default 설정에서의 장치 모델
+flowchart LR
+  pit[&quot;PIT&lt;br/>i8254, IRQ0&lt;br/>100 Hz (PintOS TIMER_FREQ)&lt;br/>10 ms마다 timer interrupt&quot;]
+  pic[&quot;PIC&lt;br/>i8259, master+slave&lt;br/>IRQ0(timer), IRQ14(IDE primary) 라우팅&quot;]
+  ide[&quot;IDE&lt;br/>primary channel&lt;br/>0x1F0-0x1F7&lt;br/>섹터 크기 512 B&lt;br/>pintos.dsk + swap.dsk&quot;]
+  pit -->|IRQ0| pic
+  pic --> ide
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="qemu-세-역할의-구조">QEMU 세 역할의 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-세-역할의-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% QEMU 세 역할과 PintOS 정책의 경계\nflowchart LR\n  REG[\&quot;guest register 보관&lt;br/>CPUX86State\&quot;]\n  MMU[\&quot;주소 변환 재현&lt;br/>softmmu\&quot;]\n  DEV[\&quot;장치 I/O 처리&lt;br/>PIT · PIC · IDE\&quot;]\n  SCHED[\&quot;스케줄링 정책\&quot;]\n  SYSCALL[\&quot;syscall 해석\&quot;]\n  FS[\&quot;파일 시스템 정책\&quot;]\n  VM[\&quot;가상 메모리 정책\&quot;]\n  REG -->|guest CPU 상태 제공| SCHED\n  REG -->|RAX=syscall 번호 보관| SYSCALL\n  MMU -->|page table walk 재현| VM\n  DEV -->|disk I/O 실행| FS\n  DEV -->|timer IRQ 전달| SCHED&quot;">%% QEMU 세 역할과 PintOS 정책의 경계
+flowchart LR
+  REG[&quot;guest register 보관&lt;br/>CPUX86State&quot;]
+  MMU[&quot;주소 변환 재현&lt;br/>softmmu&quot;]
+  DEV[&quot;장치 I/O 처리&lt;br/>PIT · PIC · IDE&quot;]
+  SCHED[&quot;스케줄링 정책&quot;]
+  SYSCALL[&quot;syscall 해석&quot;]
+  FS[&quot;파일 시스템 정책&quot;]
+  VM[&quot;가상 메모리 정책&quot;]
+  REG -->|guest CPU 상태 제공| SCHED
+  REG -->|RAX=syscall 번호 보관| SYSCALL
+  MMU -->|page table walk 재현| VM
+  DEV -->|disk I/O 실행| FS
+  DEV -->|timer IRQ 전달| SCHED
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="timer-interrupt-전체-경로-세-역할-협동">Timer Interrupt 전체 경로 (세 역할 협동)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-interrupt-전체-경로-세-역할-협동" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Timer Interrupt 전체 경로\nflowchart LR\n  pit[\&quot;QEMU PIT 모델\&quot;]\n  pic[\&quot;QEMU PIC 모델\&quot;]\n  tcg[\&quot;QEMU TCG\&quot;]\n  cpu[\&quot;CPUX86State\&quot;]\n  os[\&quot;PintOS 커널\&quot;]\n  pit -->|1. 10ms 경과 counter=0| pit\n  pit -->|2. raise IRQ0| pic\n  pic -->|3. interrupt pending 플래그 설정| tcg\n  tcg -->|4. TB 실행 직전 인터럽트 검사| tcg\n  tcg -->|5. RIP/RSP/RFLAGS 저장 intr_frame| cpu\n  tcg -->|6. RIP &amp;lt;- IDT vector 0x20| cpu\n  cpu -->|7. timer_interrupt 진입| os\n  os -->|8. thread_tick 스케줄링 결정| os\n  os -->|9. do_iret 레지스터 복원| tcg&quot;">%% Timer Interrupt 전체 경로
+flowchart LR
+  pit[&quot;QEMU PIT 모델&quot;]
+  pic[&quot;QEMU PIC 모델&quot;]
+  tcg[&quot;QEMU TCG&quot;]
+  cpu[&quot;CPUX86State&quot;]
+  os[&quot;PintOS 커널&quot;]
+  pit -->|1. 10ms 경과 counter=0| pit
+  pit -->|2. raise IRQ0| pic
+  pic -->|3. interrupt pending 플래그 설정| tcg
+  tcg -->|4. TB 실행 직전 인터럽트 검사| tcg
+  tcg -->|5. RIP/RSP/RFLAGS 저장 intr_frame| cpu
+  tcg -->|6. RIP &amp;lt;- IDT vector 0x20| cpu
+  cpu -->|7. timer_interrupt 진입| os
+  os -->|8. thread_tick 스케줄링 결정| os
+  os -->|9. do_iret 레지스터 복원| tcg
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="disk-write-전체-경로">Disk Write 전체 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#disk-write-전체-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Disk Write 전체 경로\nflowchart LR\n  os[\&quot;PintOS\&quot;]\n  tcg[\&quot;QEMU TCG\&quot;]\n  ide[\&quot;QEMU IDE 모델\&quot;]\n  bb[\&quot;BlockBackend\&quot;]\n  host[\&quot;호스트 파일\&quot;]\n  os -->|1. disk_write sector 8| os\n  os -->|2. outb port 0x1F7 CMD_WRITE| tcg\n  tcg -->|3. I/O port 0x1F7 접근 감지| ide\n  ide -->|4. ide_sector_write 호출| ide\n  ide -->|5. blk_aio_pwritev offset 4096| bb\n  bb -->|6. pwrite 512 B at 4096| host\n  host -->|7. 완료| bb\n  bb -->|8. 완료| ide\n  ide -->|9. IRQ14 발생 선택적| tcg&quot;">%% Disk Write 전체 경로
+flowchart LR
+  os[&quot;PintOS&quot;]
+  tcg[&quot;QEMU TCG&quot;]
+  ide[&quot;QEMU IDE 모델&quot;]
+  bb[&quot;BlockBackend&quot;]
+  host[&quot;호스트 파일&quot;]
+  os -->|1. disk_write sector 8| os
+  os -->|2. outb port 0x1F7 CMD_WRITE| tcg
+  tcg -->|3. I/O port 0x1F7 접근 감지| ide
+  ide -->|4. ide_sector_write 호출| ide
+  ide -->|5. blk_aio_pwritev offset 4096| bb
+  bb -->|6. pwrite 512 B at 4096| host
+  host -->|7. 완료| bb
+  bb -->|8. 완료| ide
+  ide -->|9. IRQ14 발생 선택적| tcg
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="qemu-역할-경계-비교표">QEMU 역할 경계 비교표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-역할-경계-비교표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>판단/동작</th><th style="text-align:center;">QEMU가 하는가?</th><th style="text-align:center;">PintOS(OS)가 하는가?</th><th>왜?</th></tr></thead><tbody><tr><td>명령어 fetch/execute</td><td style="text-align:center;">O</td><td style="text-align:center;">X</td><td>하드웨어 메커니즘</td></tr><tr><td>RAX=9를 “write”로 해석</td><td style="text-align:center;">X</td><td style="text-align:center;">O</td><td>OS 정책</td></tr><tr><td>page table walk</td><td style="text-align:center;">O</td><td style="text-align:center;">X</td><td>MMU 하드웨어 동작</td></tr><tr><td>어떤 page를 evict할지</td><td style="text-align:center;">X</td><td style="text-align:center;">O</td><td>교체 정책</td></tr><tr><td>timer interrupt 생성</td><td style="text-align:center;">O</td><td style="text-align:center;">X</td><td>PIT 하드웨어 동작</td></tr><tr><td>어떤 thread에 CPU 줄지</td><td style="text-align:center;">X</td><td style="text-align:center;">O</td><td>스케줄링 정책</td></tr><tr><td>disk sector I/O</td><td style="text-align:center;">O</td><td style="text-align:center;">X</td><td>IDE 하드웨어 동작</td></tr><tr><td>file→inode 매핑</td><td style="text-align:center;">X</td><td style="text-align:center;">O</td><td>파일 시스템 정책</td></tr><tr><td>page fault exception</td><td style="text-align:center;">O</td><td style="text-align:center;">X</td><td>CPU 하드웨어 동작</td></tr><tr><td>fault 시 page 설치 여부</td><td style="text-align:center;">X</td><td style="text-align:center;">O</td><td>VM 정책</td></tr></tbody></table></div>
+<h3 id="tcg-번역-비용">TCG 번역 비용<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#tcg-번역-비용" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>대략 값</th></tr></thead><tbody><tr><td>TB(Translation Block) 크기</td><td><del>100</del>500 host 명령어</td></tr><tr><td>TB 캐시 크기 (기본)</td><td>32 MB</td></tr><tr><td>최초 번역 비용</td><td>guest 명령어당 <del>10</del>100 ns</td></tr><tr><td>캐시 히트 시 오버헤드</td><td><del>2</del>5x native (간접 호출 비용)</td></tr><tr><td>KVM 가속 시 오버헤드</td><td>~1.05x native (VM entry/exit 비용)</td></tr></tbody></table></div>
+<p>PintOS는 KVM 없이 순수 TCG를 사용하므로 <del>2</del>5x 오버헤드가 발생하지만, OS 학습에는 충분한 속도다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>target/i386/cpu.h</code> (QEMU)</td><td><code>CPUX86State</code></td><td>guest register 전체 보관</td></tr><tr><td><code>target/i386/tcg/emit.c.inc</code> (QEMU)</td><td><code>gen_SYSCALL()</code></td><td>syscall 명령 TCG 번역</td></tr><tr><td><code>target/i386/tcg/system/seg_helper.c</code> (QEMU)</td><td><code>helper_syscall()</code></td><td>syscall CPU 동작 재현</td></tr><tr><td><code>hw/timer/i8254.c</code> (QEMU)</td><td><code>pit_irq_timer_update()</code></td><td>PIT 타이머 인터럽트 생성</td></tr><tr><td><code>hw/intc/i8259.c</code> (QEMU)</td><td><code>pic_set_irq()</code></td><td>PIC IRQ 라우팅</td></tr><tr><td><code>hw/ide/core.c</code> (QEMU)</td><td><code>ide_sector_write()</code></td><td>IDE 섹터 쓰기 처리</td></tr><tr><td><code>target/i386/gdbstub.c</code> (QEMU)</td><td><code>x86_cpu_gdb_read_register()</code></td><td>GDB에 guest register 제공</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/qemu-hardware-emulator" class="internal internal-link alias" data-slug="wiki/os/qemu-hardware-emulator">QEMU 에뮬레이터 전체 개요</a></li>
+<li><a href="../../wiki/os/qemu-is-not-os" class="internal internal-link alias" data-slug="wiki/os/qemu-is-not-os">QEMU가 OS가 아닌 이유 (상위)</a></li>
+<li><a href="../../wiki/os/qemu-does-not" class="internal internal-link alias" data-slug="wiki/os/qemu-does-not">QEMU가 하지 않는 일 (쌍)</a></li>
+<li><a href="../../wiki/os/guest-register-hosting" class="internal internal-link alias" data-slug="wiki/os/guest-register-hosting">guest register 보관 상세</a></li>
+<li><a href="../../wiki/os/address-translation-emulation" class="internal internal-link alias" data-slug="wiki/os/address-translation-emulation">주소 변환 재현 상세</a></li>
+<li><a href="../../wiki/os/device-io-emulation" class="internal internal-link alias" data-slug="wiki/os/device-io-emulation">O 처리 상세</a></li>
+<li><a href="../../wiki/os/qemu-tcg-translation-block" class="internal internal-link alias" data-slug="wiki/os/qemu-tcg-translation-block">TCG Translation Block 상세</a></li>
+<li><a href="../../wiki/os/qemu-tcg-translation" class="internal internal-link alias" data-slug="wiki/os/qemu-tcg-translation">TCG 코드 번역 개요</a></li>
+<li><a href="../../wiki/os/qemu-device-model" class="internal internal-link alias" data-slug="wiki/os/qemu-device-model">장치 모델 (PIT · PIC · IDE) 상세</a></li>
+<li><a href="../../wiki/os/i8254-pit-model" class="internal internal-link alias" data-slug="wiki/os/i8254-pit-model">PIT 타이머 모델 상세</a></li>
+<li><a href="../../wiki/os/i8259-pic-irq" class="internal internal-link alias" data-slug="wiki/os/i8259-pic-irq">PIC IRQ 라우팅 상세</a></li>
+<li><a href="../../wiki/os/ide-controller-model" class="internal internal-link alias" data-slug="wiki/os/ide-controller-model">IDE 컨트롤러 모델 상세</a></li>
+<li><a href="../../wiki/os/block-backend-host-file" class="internal internal-link alias" data-slug="wiki/os/block-backend-host-file">O</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/qemu-hardware-byte-debugging" class="internal">QEMU와 Byte 디버깅</a></li><li><a href="../../wiki/os/qemu-does-not" class="internal">QEMU가 하지 않는 일</a></li><li><a href="../../wiki/os/qemu-is-not-os" class="internal">QEMU는 OS가 아니다</a></li><li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal">실제 OS, PintOS, QEMU의 차이</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-608" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#qemu가-하는-일" data-for="qemu가-하는-일">QEMU가 하는 일</a></li><li class="depth-1"><a href="#qemu가-하는-일-상태" data-for="qemu가-하는-일-상태">QEMU가 하는 일 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-하드웨어-에뮬레이터의-역할" data-for="추상-개념-하드웨어-에뮬레이터의-역할">추상 개념 (하드웨어 에뮬레이터의 역할)</a></li><li class="depth-2"><a href="#실제-os-관점에서의-qemu" data-for="실제-os-관점에서의-qemu">실제 OS 관점에서의 QEMU</a></li><li class="depth-2"><a href="#pintos에서의-qemu-역할" data-for="pintos에서의-qemu-역할">PintOS에서의 QEMU 역할</a></li><li class="depth-2"><a href="#qemu-에뮬레이션-자기-자신" data-for="qemu-에뮬레이션-자기-자신">QEMU 에뮬레이션 (자기 자신)</a></li><li class="depth-1"><a href="#qemu가-하는-일-값-추적" data-for="qemu가-하는-일-값-추적">QEMU가 하는 일 값 추적</a></li><li class="depth-2"><a href="#qemu가-관리하는-guest-상태의-크기" data-for="qemu가-관리하는-guest-상태의-크기">QEMU가 관리하는 guest 상태의 크기</a></li><li class="depth-2"><a href="#pintos-default-설정에서의-장치-모델" data-for="pintos-default-설정에서의-장치-모델">PintOS default 설정에서의 장치 모델</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#qemu-세-역할의-구조" data-for="qemu-세-역할의-구조">QEMU 세 역할의 구조</a></li><li class="depth-2"><a href="#timer-interrupt-전체-경로-세-역할-협동" data-for="timer-interrupt-전체-경로-세-역할-협동">Timer Interrupt 전체 경로 (세 역할 협동)</a></li><li class="depth-2"><a href="#disk-write-전체-경로" data-for="disk-write-전체-경로">Disk Write 전체 경로</a></li><li class="depth-2"><a href="#qemu-역할-경계-비교표" data-for="qemu-역할-경계-비교표">QEMU 역할 경계 비교표</a></li><li class="depth-2"><a href="#tcg-번역-비용" data-for="tcg-번역-비용">TCG 번역 비용</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

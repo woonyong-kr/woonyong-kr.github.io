@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>락 획득과 해제 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="락 획득과 해제 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="락 획득과 해제 · 최우녕"/><meta name="twitter:description" content="lockacquire()와 lockrelease()는 Lock의 두 연산으로, 내부적으로 binary semaphore의 semadown()/semaup()을 감싼다."/><meta property="og:description" content="lockacquire()와 lockrelease()는 Lock의 두 연산으로, 내부적으로 binary semaphore의 semadown()/semaup()을 감싼다."/><meta property="og:image:alt" content="lockacquire()와 lockrelease()는 Lock의 두 연산으로, 내부적으로 binary semaphore의 semadown()/semaup()을 감싼다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/lock-acquire-release"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/lock-acquire-release"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="lockacquire()와 lockrelease()는 Lock의 두 연산으로, 내부적으로 binary semaphore의 semadown()/semaup()을 감싼다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/lock-acquire-release" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-522" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-522" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>락 획득과 해제</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="락-획득과-해제">락 획득과 해제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#락-획득과-해제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p><code>lock_acquire()</code>와 <code>lock_release()</code>는 binary semaphore의 down/up에 소유자 추적과 priority donation 처리를 얹어 임계 구역을 보호한다.</p>
+</blockquote>
+<h2 id="락-획득과-해제-차이">락 획득과 해제 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#락-획득과-해제-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>lock_acquire()</code>와 <code>lock_release()</code>는 Lock의 두 연산으로, 내부적으로 binary semaphore의 <code>sema_down()</code>/<code>sema_up()</code>을 감싼다. 여기에 <strong>소유자 등록, priority donation 전파, donation 철회</strong>가 붙으면서 단순한 0/1 세마포어가 “누가 잡았는지”를 아는 Lock이 된다. acquire는 holder가 있으면 donation chain을 따라 우선순위를 전파한 뒤 <code>sema_down()</code>으로 대기하고, release는 이 Lock을 기다리던 기부자들을 제거한 뒤 effective priority를 재계산하고 <code>sema_up()</code>으로 대기자를 깨운다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-lock-acquirerelease-의미론">추상 개념 (Lock Acquire/Release 의미론)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-lock-acquirerelease-의미론" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Lock acquire/release의 정확성 조건은 세 가지다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>조건</th><th>의미</th><th>위반 시</th></tr></thead><tbody><tr><td>상호 배제</td><td>동시에 두 스레드가 Lock을 잡을 수 없다</td><td>데이터 경쟁</td></tr><tr><td>소유자 일치</td><td>release는 acquire한 스레드만 가능</td><td>ASSERT 실패 (PintOS), undefined behavior (Linux)</td></tr><tr><td>비재귀</td><td>같은 Lock을 두 번 acquire 금지</td><td>데드락 (PintOS는 ASSERT로 사전 차단)</td></tr></tbody></table></div>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux <code>mutex_lock()</code> (kernel/locking/mutex.c)는 3단계 경로를 밟는다:</p>
+<ol>
+<li><strong>Fast path</strong>: <code>atomic_cmpxchg()</code>로 owner를 설정. 성공하면 즉시 반환 — syscall 없이 단일 CAS 명령어.</li>
+<li><strong>Midpath (optimistic spinning)</strong>: owner가 다른 CPU에서 실행 중이면 짧게 spin. context switch 비용(~수 us)보다 Lock 보유 시간이 짧을 때 유리.</li>
+<li><strong>Slowpath</strong>: wait queue에 <code>TASK_UNINTERRUPTIBLE</code>로 등록, <code>schedule()</code> 호출.</li>
+</ol>
+<p><code>mutex_unlock()</code>은 owner를 NULL로 하고 wait queue에서 다음 태스크를 깨운다. Linux는 priority donation 대신 <strong>priority inheritance (PI) mutex</strong> (<code>rt_mutex</code>)를 별도 제공한다.</p>
+<p>POSIX <code>pthread_mutex_lock()</code>은 유저 공간에서 futex 기반으로 구현된다. uncontended 경로는 커널 진입 없이 원자 연산 하나로 끝난다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<h4 id="lock_acquire-전체-흐름">lock_acquire() 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_acquire-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> lock_acquire</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_context</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">());</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                    // ISR에서 호출 금지</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_held_by_current_thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock));</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 재귀 금지</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 1: Priority Donation */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (lock->holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> lock->holder;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // ① curr를 holder의 donation_list에 우선순위 내림차순 삽입</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">holder->donation_list,</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">            &amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">curr->donation_elem,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">            thread_priority_donation_elem, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // ② curr가 어떤 Lock에 의해 대기하는지 기록</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        curr->waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // ③ 직접 기부: holder의 우선순위가 낮으면 끌어올림</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">            holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // ④ 중첩 기부: holder → holder의 holder ... (최대 8단계)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> idx </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (idx </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 7</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">next_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> holder->waiting_lock;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (next_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">break</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">            holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> next_lock->holder;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">break</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">                holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">            idx</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">        }</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 2: 실제 대기 */</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">lock->semaphore);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // value==0이면 BLOCKED</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 3: 소유권 확보 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    lock->holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong>Phase 1 상세 — donation 전파 경로:</strong></p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% lock_acquire() 중첩 donation 전파 경로\nflowchart TD\n  a[\&quot;Thread A&lt;br/>priority 60&lt;br/>lock_acquire(L1)\&quot;]\n  l1[\&quot;획득 시도&lt;br/>Lock L1&lt;br/>holder = Thread B\&quot;]\n  b[\&quot;직접 donation&lt;br/>Thread B&lt;br/>priority 30&lt;br/>waiting_lock = L2\&quot;]\n  l2[\&quot;중첩 대기&lt;br/>Lock L2&lt;br/>holder = Thread C\&quot;]\n  c[\&quot;중첩 donation&lt;br/>Thread C&lt;br/>priority 20&lt;br/>waiting_lock = NULL\&quot;]\n  result[\&quot;전파 결과&lt;br/>B.priority = 60&lt;br/>C.priority = 60&lt;br/>총 2단계\&quot;]\n  a --> l1\n  l1 --> b\n  b --> l2\n  l2 --> c\n  c --> result&quot;">%% lock_acquire() 중첩 donation 전파 경로
+flowchart TD
+  a[&quot;Thread A&lt;br/>priority 60&lt;br/>lock_acquire(L1)&quot;]
+  l1[&quot;획득 시도&lt;br/>Lock L1&lt;br/>holder = Thread B&quot;]
+  b[&quot;직접 donation&lt;br/>Thread B&lt;br/>priority 30&lt;br/>waiting_lock = L2&quot;]
+  l2[&quot;중첩 대기&lt;br/>Lock L2&lt;br/>holder = Thread C&quot;]
+  c[&quot;중첩 donation&lt;br/>Thread C&lt;br/>priority 20&lt;br/>waiting_lock = NULL&quot;]
+  result[&quot;전파 결과&lt;br/>B.priority = 60&lt;br/>C.priority = 60&lt;br/>총 2단계&quot;]
+  a --> l1
+  l1 --> b
+  b --> l2
+  l2 --> c
+  c --> result
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>결과: <code>B.priority = 60</code>, <code>C.priority = 60</code>. 깊이는 <code>A -> B (idx=0)</code>, <code>B -> C (idx=1)</code>로 총 2단계다.</p>
+<p>최대 8단계(<code>idx &lt; 7</code> + 초기 1단계)인 이유: 현실적인 Lock 중첩 깊이를 넘지 않으면서 무한 루프를 방지하기 위함이다. 데드락이 있으면 이 루프가 순환할 수 있으나, <code>idx &lt; 7</code> 가드가 이를 차단한다.</p>
+<h4 id="lock_release-전체-흐름">lock_release() 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_release-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> lock_release</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_held_by_current_thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock));</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">t </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 1: 이 Lock 대기자를 donation_list에서 제거 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> list_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">d_e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_begin</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">t->donation_list);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (d_e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_end</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">t->donation_list)) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">d_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> =</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(d_e, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> thread, donation_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> list_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">next </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_next</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(d_e);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 안전한 순회</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (d_t->waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">            list_remove</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(d_e);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        d_e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> next;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 2: effective priority 재계산 */</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    refresh_priority</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(t);</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // base_priority와 남은 donation 중 max</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* Phase 3: 소유권 해제 + 대기자 깨움 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    lock->holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">lock->semaphore);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 최고 우선순위 대기자 unblock</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong>Phase 1 상세 — 왜 <code>waiting_lock == lock</code>으로 필터링하는가:</strong></p>
+<p>스레드 T가 Lock A, Lock B를 동시에 보유할 수 있다. Lock A를 release할 때, Lock B를 기다리는 기부자까지 제거하면 안 된다. <code>d_t->waiting_lock</code>이 정확히 이 Lock인 경우만 제거한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% lock_release() donation 필터링 기준\nflowchart TD\n  t[\&quot;Thread T&lt;br/>Lock A, Lock B 보유&lt;br/>donation_list = X, Y, Z\&quot;]\n  x[\&quot;Thread X&lt;br/>waiting_lock = Lock A&lt;br/>필터 결과: 제거\&quot;]\n  y[\&quot;Thread Y&lt;br/>waiting_lock = Lock A&lt;br/>필터 결과: 제거\&quot;]\n  z[\&quot;Thread Z&lt;br/>waiting_lock = Lock B&lt;br/>필터 결과: 유지\&quot;]\n  remove[\&quot;Lock A release&lt;br/>X, Y donation_elem 제거\&quot;]\n  keep[\&quot;Lock B 대기 donation 유지&lt;br/>Z는 donation_list에 남음\&quot;]\n  refresh[\&quot;refresh_priority(T)&lt;br/>base_priority와 Z.priority 중 max\&quot;]\n  t --> x\n  t --> y\n  t --> z\n  x --> remove\n  y --> remove\n  z --> keep\n  remove --> refresh\n  keep --> refresh&quot;">%% lock_release() donation 필터링 기준
+flowchart TD
+  t[&quot;Thread T&lt;br/>Lock A, Lock B 보유&lt;br/>donation_list = X, Y, Z&quot;]
+  x[&quot;Thread X&lt;br/>waiting_lock = Lock A&lt;br/>필터 결과: 제거&quot;]
+  y[&quot;Thread Y&lt;br/>waiting_lock = Lock A&lt;br/>필터 결과: 제거&quot;]
+  z[&quot;Thread Z&lt;br/>waiting_lock = Lock B&lt;br/>필터 결과: 유지&quot;]
+  remove[&quot;Lock A release&lt;br/>X, Y donation_elem 제거&quot;]
+  keep[&quot;Lock B 대기 donation 유지&lt;br/>Z는 donation_list에 남음&quot;]
+  refresh[&quot;refresh_priority(T)&lt;br/>base_priority와 Z.priority 중 max&quot;]
+  t --> x
+  t --> y
+  t --> z
+  x --> remove
+  y --> remove
+  z --> keep
+  remove --> refresh
+  keep --> refresh
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>Lock A를 release할 때는 <code>X.waiting_lock == Lock A</code>, <code>Y.waiting_lock == Lock A</code>인 donation만 제거한다. <code>Z.waiting_lock == Lock B</code>인 donation은 남기고, <code>refresh_priority(T)</code>는 <code>base_priority</code>와 <code>Z.priority</code> 중 더 큰 값을 고른다.</p>
+<h4 id="lock_try_acquire--비차단-획득">lock_try_acquire() — 비차단 획득<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_try_acquire--비차단-획득" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> lock_try_acquire</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> success </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> sema_try_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">lock->semaphore);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (success)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        lock->holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> success;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>donation 없이 <code>sema_try_down()</code>만 호출한다. 실패하면 BLOCKED가 아니라 false를 반환하므로 donation이 불필요하다.</p>
+<h4 id="lock_held_by_current_thread--소유자">lock_held_by_current_thread() — 소유자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_held_by_current_thread--소유자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> lock_held_by_current_thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> lock->holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>lock_acquire()</code>의 재귀 방지 ASSERT와 <code>lock_release()</code>의 소유자 확인에 사용된다.</p>
+<h2 id="락-획득과-해제-값-추적">락 획득과 해제 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#락-획득과-해제-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>lock_acquire ASSERT 수</td><td>3개 (NULL, intr_context, held_by_current)</td></tr><tr><td>lock_release ASSERT 수</td><td>2개 (NULL, held_by_current)</td></tr><tr><td>중첩 donation 최대 깊이</td><td>8단계 (초기 1 + while idx &lt; 7)</td></tr><tr><td>sema_down 인터럽트 비활성 구간</td><td>while loop + thread_block()</td></tr><tr><td>sema_up check_preemption()</td><td>value++ 직후 호출 — 깨운 스레드가 더 높으면 즉시 yield</td></tr><tr><td>lock_try_acquire donation 여부</td><td>없음 (비차단이므로 불필요)</td></tr></tbody></table></div>
+<p><strong>타이밍 예제:</strong></p>
+<pre><code>시각 0: Thread A (pri 60) lock_acquire(L)
+  L.holder == NULL → Phase 1 건너뜀
+  sema_down: value 1→0, 즉시 통과
+  L.holder = A
+
+시각 1: Thread B (pri 40) lock_acquire(L)
+  L.holder == A → Phase 1 진입
+  donation_list에 B 삽입, but A.priority(60) > B.priority(40) → 기부 안 함
+  sema_down: value==0 → BLOCKED
+
+시각 2: Thread C (pri 50) lock_acquire(L)
+  L.holder == A → Phase 1 진입
+  donation_list에 C 삽입 (C(50) > B(40) 이므로 앞에)
+  A.priority(60) > C.priority(50) → 기부 안 함
+  sema_down: BLOCKED
+
+시각 3: A lock_release(L)
+  Phase 1: B, C 모두 waiting_lock==L → 모두 제거
+  refresh_priority: base_priority로 복원
+  sema_up: waiters 정렬 → C(50) 먼저 unblock
+</code></pre>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% lock_acquire()와 lock_release() 실행 순서\nflowchart TD\n  s1[\&quot;1. Thread A&lt;br/>priority 30&lt;br/>lock_acquire(L)\&quot;]\n  s2[\&quot;2. Lock L&lt;br/>holder = Thread B\&quot;]\n  s3[\&quot;3. holder != NULL&lt;br/>Phase 1 진입\&quot;]\n  s4[\&quot;4. B.donation_list에&lt;br/>A.donation_elem 삽입\&quot;]\n  s5[\&quot;5. A.waiting_lock = L&lt;br/>B.priority = max(20, 30)\&quot;]\n  s6[\&quot;6. sema_down(&amp;amp;L.semaphore)&lt;br/>A THREAD_BLOCKED\&quot;]\n  s7[\&quot;7. Thread B&lt;br/>boosted priority 30으로 실행\&quot;]\n  s8[\&quot;8. lock_release(L)&lt;br/>A donation_elem 제거\&quot;]\n  s9[\&quot;9. refresh_priority(B)&lt;br/>base priority 20 복원\&quot;]\n  s10[\&quot;10. L.holder = NULL&lt;br/>sema_up(&amp;amp;L.semaphore)\&quot;]\n  s11[\&quot;11. Thread A READY&lt;br/>sema_down 통과\&quot;]\n  s12[\&quot;12. A.waiting_lock = NULL&lt;br/>L.holder = Thread A\&quot;]\n  s1 --> s2\n  s2 --> s3\n  s3 --> s4\n  s4 --> s5\n  s5 --> s6\n  s6 --> s7\n  s7 --> s8\n  s8 --> s9\n  s9 --> s10\n  s10 --> s11\n  s11 --> s12&quot;">%% lock_acquire()와 lock_release() 실행 순서
+flowchart TD
+  s1[&quot;1. Thread A&lt;br/>priority 30&lt;br/>lock_acquire(L)&quot;]
+  s2[&quot;2. Lock L&lt;br/>holder = Thread B&quot;]
+  s3[&quot;3. holder != NULL&lt;br/>Phase 1 진입&quot;]
+  s4[&quot;4. B.donation_list에&lt;br/>A.donation_elem 삽입&quot;]
+  s5[&quot;5. A.waiting_lock = L&lt;br/>B.priority = max(20, 30)&quot;]
+  s6[&quot;6. sema_down(&amp;amp;L.semaphore)&lt;br/>A THREAD_BLOCKED&quot;]
+  s7[&quot;7. Thread B&lt;br/>boosted priority 30으로 실행&quot;]
+  s8[&quot;8. lock_release(L)&lt;br/>A donation_elem 제거&quot;]
+  s9[&quot;9. refresh_priority(B)&lt;br/>base priority 20 복원&quot;]
+  s10[&quot;10. L.holder = NULL&lt;br/>sema_up(&amp;amp;L.semaphore)&quot;]
+  s11[&quot;11. Thread A READY&lt;br/>sema_down 통과&quot;]
+  s12[&quot;12. A.waiting_lock = NULL&lt;br/>L.holder = Thread A&quot;]
+  s1 --> s2
+  s2 --> s3
+  s3 --> s4
+  s4 --> s5
+  s5 --> s6
+  s6 --> s7
+  s7 --> s8
+  s8 --> s9
+  s9 --> s10
+  s10 --> s11
+  s11 --> s12
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>threads/synch.c:202</td><td>lock_acquire()</td><td>donation 전파 + sema_down + holder 설정</td></tr><tr><td>threads/synch.c:255</td><td>lock_try_acquire()</td><td>비차단 획득, donation 없음</td></tr><tr><td>threads/synch.c:276</td><td>lock_release()</td><td>donation 철회 + refresh + sema_up</td></tr><tr><td>threads/synch.c:314</td><td>lock_held_by_current_thread()</td><td>holder == current 검사</td></tr><tr><td>threads/thread.c</td><td>refresh_priority()</td><td>base_priority와 donation max 비교</td></tr><tr><td>threads/synch.c</td><td>thread_priority_donation_elem()</td><td>donation_list 정렬 비교 함수</td></tr><tr><td>threads/synch.c:65</td><td>sema_down()</td><td>waiters 우선순위 삽입 + thread_block()</td></tr><tr><td>threads/synch.c:106</td><td>sema_up()</td><td>waiters 정렬 + unblock + check_preemption()</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/lock-mechanism" class="internal internal-link alias" data-slug="wiki/os/lock-mechanism">락 구조</a></li>
+<li><a href="../../wiki/os/semaphore-mechanism" class="internal internal-link alias" data-slug="wiki/os/semaphore-mechanism">세마포어 구조</a></li>
+<li><a href="../../wiki/os/sema-down-block" class="internal internal-link alias" data-slug="wiki/os/sema-down-block">세마포어 대기</a></li>
+<li><a href="../../wiki/os/sema-up-unblock" class="internal internal-link alias" data-slug="wiki/os/sema-up-unblock">세마포어 깨우기</a></li>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">우선순위 기부</a></li>
+<li><a href="../../wiki/os/nested-donation-propagation" class="internal internal-link alias" data-slug="wiki/os/nested-donation-propagation">중첩 기부 전파</a></li>
+<li><a href="../../wiki/os/waiting-lock-chain" class="internal internal-link alias" data-slug="wiki/os/waiting-lock-chain">대기 중인 락 체인</a></li>
+<li><a href="../../wiki/os/donation-list-effective-priority" class="internal internal-link alias" data-slug="wiki/os/donation-list-effective-priority">유효 우선순위</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/check-preemption" class="internal">check_preemption() 선점 판단</a></li><li><a href="../../wiki/os/lock-mechanism" class="internal">락 메커니즘 (Lock Mechanism)</a></li><li><a href="../../wiki/os/private-semaphore" class="internal">Private Semaphore 대기</a></li><li><a href="../../wiki/os/sema-down-block" class="internal">세마포어 down 블록 (Sema Down Block)</a></li><li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal">세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-520" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#락-획득과-해제" data-for="락-획득과-해제">락 획득과 해제</a></li><li class="depth-1"><a href="#락-획득과-해제-차이" data-for="락-획득과-해제-차이">락 획득과 해제 차이</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-lock-acquirerelease-의미론" data-for="추상-개념-lock-acquirerelease-의미론">추상 개념 (Lock Acquire/Release 의미론)</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-1"><a href="#락-획득과-해제-값-추적" data-for="락-획득과-해제-값-추적">락 획득과 해제 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

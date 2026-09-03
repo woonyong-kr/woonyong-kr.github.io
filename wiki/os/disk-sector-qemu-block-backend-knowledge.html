@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Disk sector는 QEMU block backend에서 어떤 byte offset이 되나 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Disk sector는 QEMU block backend에서 어떤 byte offset이 되나 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Disk sector는 QEMU block backend에서 어떤 byte offset이 되나 · 최우녕"/><meta name="twitter:description" content="PintOS의 sector 번호가 QEMU block backend에서 sector×512 바이트 오프셋이 되는 변환."/><meta property="og:description" content="PintOS의 sector 번호가 QEMU block backend에서 sector×512 바이트 오프셋이 되는 변환."/><meta property="og:image:alt" content="PintOS의 sector 번호가 QEMU block backend에서 sector×512 바이트 오프셋이 되는 변환."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/disk-sector-qemu-block-backend-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/disk-sector-qemu-block-backend-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PintOS의 sector 번호가 QEMU block backend에서 sector×512 바이트 오프셋이 되는 변환."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/disk-sector-qemu-block-backend-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-448" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-448" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Disk sector는 QEMU block backend에서 어떤 byte offset이 되나</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="disk-sector는-qemu-block-backend에서-어떤-byte-offset이-되나">Disk sector는 QEMU block backend에서 어떤 byte offset이 되나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#disk-sector는-qemu-block-backend에서-어떤-byte-offset이-되나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: PintOS의 sector 번호가 QEMU block backend에서 sector×512 바이트 오프셋이 되는 변환.</p>
+</blockquote>
+<h2 id="qemu-disk-sector-변화">QEMU disk sector 변화<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-disk-sector-변화" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 <code>disk_write(swap_disk, 24, buffer)</code>는 “24번 sector에 512바이트를 쓴다”는 뜻이다. QEMU까지 내려가면 이 sector 번호는 <code>24 * 512 = 12288 = 0x3000</code>이라는 byte offset이 된다. 핵심은 숫자 자체가 아니라, 같은 위치를 가리키는 값이 층마다 다른 단위를 쓴다는 것이다. PintOS VM은 swap slot을, disk driver는 sector 번호를, QEMU IDE는 LBA sector를, QEMU block backend는 byte offset을 사용한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>CPU/MMU 자체는 disk sector를 모른다. CPU가 아는 것은 I/O port에 값을 쓰고 읽는 것뿐이다. ATA(IDE) 프로토콜에서 disk 주소 지정은 LBA(Logical Block Addressing)를 사용하며, sector 크기는 전통적으로 512바이트다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>개념</th><th>크기</th><th>의미</th></tr></thead><tbody><tr><td>page</td><td>4096B</td><td>가상 메모리 관리 단위</td></tr><tr><td>frame</td><td>4096B</td><td>page가 올라가는 RAM 자리</td></tr><tr><td>sector</td><td>512B</td><td>disk I/O 주소 단위</td></tr><tr><td>file offset</td><td>byte 단위</td><td>파일 안의 위치</td></tr><tr><td>block backend offset</td><td>byte 단위</td><td>QEMU가 host image에 I/O 요청하는 위치</td></tr></tbody></table></div>
+<p>변환 체인:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS swap slot에서 QEMU block backend byte offset으로 내려가는 변환 체인\nflowchart TD\n  vm[\&quot;PintOS VM&lt;br/>swap slot 3\&quot;]\n  disk[\&quot;PintOS disk driver&lt;br/>sector 24~31\&quot;]\n  ide[\&quot;QEMU IDE model&lt;br/>LBA sector 24\&quot;]\n  block[\&quot;QEMU block backend&lt;br/>byte offset 0x3000\&quot;]\n  host[\&quot;Host OS&lt;br/>disk image 파일\&quot;]\n  step_slot[\&quot;slot × 8\&quot;]\n  step_ata[\&quot;ATA PIO command\&quot;]\n  step_shift[\&quot;sector &amp;lt;&amp;lt; 9\&quot;]\n  step_host[\&quot;host I/O\&quot;]\n  vm --> step_slot\n  step_slot --> disk\n  disk --> step_ata\n  step_ata --> ide\n  ide --> step_shift\n  step_shift --> block\n  block --> step_host\n  step_host --> host&quot;">%% PintOS swap slot에서 QEMU block backend byte offset으로 내려가는 변환 체인
+flowchart TD
+  vm[&quot;PintOS VM&lt;br/>swap slot 3&quot;]
+  disk[&quot;PintOS disk driver&lt;br/>sector 24~31&quot;]
+  ide[&quot;QEMU IDE model&lt;br/>LBA sector 24&quot;]
+  block[&quot;QEMU block backend&lt;br/>byte offset 0x3000&quot;]
+  host[&quot;Host OS&lt;br/>disk image 파일&quot;]
+  step_slot[&quot;slot × 8&quot;]
+  step_ata[&quot;ATA PIO command&quot;]
+  step_shift[&quot;sector &amp;lt;&amp;lt; 9&quot;]
+  step_host[&quot;host I/O&quot;]
+  vm --> step_slot
+  step_slot --> disk
+  disk --> step_ata
+  step_ata --> ide
+  ide --> step_shift
+  step_shift --> block
+  block --> step_host
+  step_host --> host
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>각 층의 책임:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>층</th><th>하는 일</th><th>모르는 것</th></tr></thead><tbody><tr><td>PintOS VM</td><td>page를 swap/file backing에 보존할지 결정</td><td>host disk image 구조</td></tr><tr><td>PintOS disk driver</td><td>sector 번호로 ATA PIO read/write 수행</td><td>이 sector가 swap인지 mmap writeback인지</td></tr><tr><td>QEMU IDE</td><td>guest ATA command와 LBA sector를 처리</td><td>PintOS struct page, SPT</td></tr><tr><td>QEMU block backend</td><td>byte offset/count로 host I/O 요청</td><td>guest OS의 VM 정책</td></tr></tbody></table></div>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>실제 OS도 storage를 다룰 때 유사한 층 구분이 있지만 훨씬 복잡하다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>sector 크기</td><td>논리/물리 sector 분리 가능, 4KB sector 장치 존재</td><td>유사</td><td>512B 고정</td></tr><tr><td>I/O 방식</td><td>DMA, queue, NVMe, io_uring</td><td>SCSI miniport, StorPort</td><td>ATA PIO만</td></tr><tr><td>cache</td><td>page cache + writeback</td><td>cache manager</td><td>없음</td></tr><tr><td>파일 시스템</td><td>ext4/btrfs의 block mapping, journaling</td><td>NTFS</td><td>없음 (raw sector)</td></tr><tr><td>swap 관리</td><td>swap area → page slot, swap PTE 인코딩</td><td>pagefile.sys</td><td>swap bitmap + slot</td></tr></tbody></table></div>
+<p>핵심은 같다: 메모리 page를 보존하려면 언젠가는 storage 주소와 byte range로 내려가야 한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS disk layer는 sector 크기를 512B로 고정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> DISK_SECTOR_SIZE</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 512</span></span></code></pre></figure>
+<p><code>disk_write(d, sec_no, buffer)</code> 호출 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS disk_write가 select_sector와 output_sector를 거쳐 ATA I/O port로 내려가는 흐름\nflowchart LR\n  vm[\&quot;PintOS VM&lt;br/>disk_write(swap_disk, sec_no, buffer)\&quot;]\n  disk_write[\&quot;disk_write()&lt;br/>channel lock 획득&lt;br/>WRITE command (0x30)&lt;br/>semaphore로 완료 interrupt 대기\&quot;]\n  select_sector[\&quot;select_sector(d, sec_no)&lt;br/>LBA 7:0 / 15:8 / 23:16 / 27:24 분해\&quot;]\n  output_sector[\&quot;output_sector(c, buffer)&lt;br/>outsw(data_port, buffer, 512/2)&lt;br/>16-bit word 256개\&quot;]\n  ata_port[\&quot;ATA I/O port&lt;br/>LBA register&lt;br/>data port\&quot;]\n  vm --> disk_write\n  disk_write --> select_sector\n  select_sector --> ata_port\n  disk_write --> output_sector\n  output_sector --> ata_port&quot;">%% PintOS disk_write가 select_sector와 output_sector를 거쳐 ATA I/O port로 내려가는 흐름
+flowchart LR
+  vm[&quot;PintOS VM&lt;br/>disk_write(swap_disk, sec_no, buffer)&quot;]
+  disk_write[&quot;disk_write()&lt;br/>channel lock 획득&lt;br/>WRITE command (0x30)&lt;br/>semaphore로 완료 interrupt 대기&quot;]
+  select_sector[&quot;select_sector(d, sec_no)&lt;br/>LBA 7:0 / 15:8 / 23:16 / 27:24 분해&quot;]
+  output_sector[&quot;output_sector(c, buffer)&lt;br/>outsw(data_port, buffer, 512/2)&lt;br/>16-bit word 256개&quot;]
+  ata_port[&quot;ATA I/O port&lt;br/>LBA register&lt;br/>data port&quot;]
+  vm --> disk_write
+  disk_write --> select_sector
+  select_sector --> ata_port
+  disk_write --> output_sector
+  output_sector --> ata_port
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><code>select_sector()</code>는 <code>sec_no</code>를 ATA LBA28 register에 나눈다. LBA low/mid/high에는 각각 bit 7:0, 15:8, 23:16을 기록하고, device/head register에는 bit 27:24를 기록한다. 이어서 <code>output_sector()</code>의 <code>outsw(reg_data(c), buffer, DISK_SECTOR_SIZE / 2)</code>가 512바이트를 16-bit word 256개로 전송한다.</p>
+<p>PintOS disk 배치:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0:0 - boot loader, kernel command line, kernel</span></span>
+<span data-line><span>0:1 - file system</span></span>
+<span data-line><span>1:0 - scratch</span></span>
+<span data-line><span>1:1 - swap</span></span></code></pre></figure>
+<p>VM swap 구현은 <code>disk_get(1, 1)</code>로 swap disk를 잡는 것에서 시작한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 “swap slot”이나 “mmap dirty page”라는 의미를 모른다. guest가 ATA device에 보낸 명령만 처리한다.</p>
+<p>QEMU IDE write 경로:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% QEMU IDE write가 blk_aio_pwritev의 byte offset 계산으로 내려가는 경로\nflowchart TD\n  guest[\&quot;guest&lt;br/>ATA WRITE(0x30) command\&quot;]\n  cmd[\&quot;cmd_write_pio()&lt;br/>hw/ide/core.c\&quot;]\n  transfer[\&quot;ide_transfer_start()&lt;br/>512B DMA/PIO 전송\&quot;]\n  sector_write[\&quot;ide_sector_write()\&quot;]\n  pwritev[\&quot;blk_aio_pwritev()&lt;br/>sector_num &amp;lt;&amp;lt; BDRV_SECTOR_BITS\&quot;]\n  host[\&quot;host file I/O&lt;br/>byte offset = sector × 512\&quot;]\n  guest --> cmd\n  cmd --> transfer\n  transfer --> sector_write\n  sector_write --> pwritev\n  pwritev --> host&quot;">%% QEMU IDE write가 blk_aio_pwritev의 byte offset 계산으로 내려가는 경로
+flowchart TD
+  guest[&quot;guest&lt;br/>ATA WRITE(0x30) command&quot;]
+  cmd[&quot;cmd_write_pio()&lt;br/>hw/ide/core.c&quot;]
+  transfer[&quot;ide_transfer_start()&lt;br/>512B DMA/PIO 전송&quot;]
+  sector_write[&quot;ide_sector_write()&quot;]
+  pwritev[&quot;blk_aio_pwritev()&lt;br/>sector_num &amp;lt;&amp;lt; BDRV_SECTOR_BITS&quot;]
+  host[&quot;host file I/O&lt;br/>byte offset = sector × 512&quot;]
+  guest --> cmd
+  cmd --> transfer
+  transfer --> sector_write
+  sector_write --> pwritev
+  pwritev --> host
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>핵심 상수:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> BDRV_SECTOR_BITS</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">   9</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> BDRV_SECTOR_SIZE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">   (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">ULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &lt;&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> BDRV_SECTOR_BITS)</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // = 512</span></span></code></pre></figure>
+<p><code>ide_sector_write()</code>에서의 핵심 호출:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">blk_aio_pwritev</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">blk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, sector_num </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> BDRV_SECTOR_BITS, ...)</span></span></code></pre></figure>
+<p>guest RAM backing과 disk image backing은 다른 층이다. <a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">Guest Physical Memory</a>의 guest RAM은 QEMU process의 memory region으로 backing되지만, disk sector write는 block backend를 통해 host disk image 파일로 내려간다.</p>
+<h3 id="ata-sector-count-register">ATA sector-count register<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ata-sector-count-register" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>select_sector()</code>는 LBA 주소 register뿐 아니라 <code>reg_nsect</code>를 <code>1</code>로 설정한다. 따라서 PintOS의 <code>disk_write()</code> 한 호출은 ATA 명령 하나로 sector 하나(512B)를 전송하며, 4KB swap page는 이러한 호출 8회로 기록된다.</p>
+<h2 id="qemu-disk-sector-값-추적">QEMU disk sector 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-disk-sector-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="sector-24의-byte-offset">sector 24의 byte offset<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#sector-24의-byte-offset" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sector_num       = 24</span></span>
+<span data-line><span>BDRV_SECTOR_BITS = 9</span></span>
+<span data-line> </span>
+<span data-line><span>byte_offset = 24 &lt;&lt; 9</span></span>
+<span data-line><span>            = 24 × 512</span></span>
+<span data-line><span>            = 12288</span></span>
+<span data-line><span>            = 0x3000</span></span></code></pre></figure>
+<h3 id="swap-slot-3의-전체-sector-범위">swap slot 3의 전체 sector 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-slot-3의-전체-sector-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PGSIZE           = 4096</span></span>
+<span data-line><span>DISK_SECTOR_SIZE = 512</span></span>
+<span data-line><span>sectors_per_page = 4096 / 512 = 8</span></span>
+<span data-line> </span>
+<span data-line><span>slot 3:</span></span>
+<span data-line><span>  base sector = 3 × 8 = 24</span></span>
+<span data-line><span>  sector 범위 = [24, 31]</span></span>
+<span data-line><span>  byte offset 범위 = [0x3000, 0x3E00 + 0x1FF]</span></span></code></pre></figure>
+<p>page 4096B가 8 sectors로 분할되는 모습:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>page byte 범위</th><th>disk sector</th><th>block offset</th></tr></thead><tbody><tr><td>0..511</td><td>24</td><td>0x3000</td></tr><tr><td>512..1023</td><td>25</td><td>0x3200</td></tr><tr><td>1024..1535</td><td>26</td><td>0x3400</td></tr><tr><td>1536..2047</td><td>27</td><td>0x3600</td></tr><tr><td>2048..2559</td><td>28</td><td>0x3800</td></tr><tr><td>2560..3071</td><td>29</td><td>0x3A00</td></tr><tr><td>3072..3583</td><td>30</td><td>0x3C00</td></tr><tr><td>3584..4095</td><td>31</td><td>0x3E00</td></tr></tbody></table></div>
+<h3 id="page-내-특정-byte의-위치-추적">page 내 특정 byte의 위치 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-내-특정-byte의-위치-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>swap slot 3 page에서 offset <code>0x888</code>(2184바이트) 위치의 byte:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sector_in_page  = 2184 / 512 = 4</span></span>
+<span data-line><span>offset_in_sector = 2184 % 512 = 136 = 0x88</span></span>
+<span data-line> </span>
+<span data-line><span>disk sector     = 24 + 4 = 28</span></span>
+<span data-line><span>block offset    = 28 × 512 + 136</span></span>
+<span data-line><span>                = 14336 + 136</span></span>
+<span data-line><span>                = 14472</span></span>
+<span data-line><span>                = 0x3888</span></span></code></pre></figure>
+<h3 id="같은-숫자도-층이-다르면-의미가-다르다">같은 숫자도 층이 다르면 의미가 다르다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#같은-숫자도-층이-다르면-의미가-다르다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>값 0x3000</th><th>층</th><th>의미</th></tr></thead><tbody><tr><td>VA = 0x3000</td><td>guest virtual address</td><td>유저/커널 가상 주소</td></tr><tr><td>PA = 0x3000</td><td>guest physical address</td><td>PintOS 물리 주소</td></tr><tr><td>offset = 0x3000</td><td>QEMU block backend</td><td>disk image 안 byte offset</td></tr></tbody></table></div>
+<p>디버깅할 때는 숫자보다 먼저 “지금 어느 층을 보고 있는가”를 물어야 한다.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="5층-변환-체인-요약">5층 변환 체인 요약<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5층-변환-체인-요약" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS VM부터 Host OS disk image byte까지 이어지는 5층 변환 체인\nflowchart TD\n  pintos_vm[\&quot;PintOS VM&lt;br/>swap slot 3&lt;br/>정책 계층\&quot;]\n  pintos_disk[\&quot;PintOS disk&lt;br/>sector 24~31&lt;br/>device 계층\&quot;]\n  qemu_ide[\&quot;QEMU IDE&lt;br/>LBA sector 24~31&lt;br/>가상 하드웨어\&quot;]\n  qemu_block[\&quot;QEMU block&lt;br/>offset 0x3000~0x3FFF&lt;br/>host I/O 계층\&quot;]\n  host_os[\&quot;Host OS&lt;br/>disk image 파일 byte&lt;br/>실제 저장소\&quot;]\n  step_slot[\&quot;slot × 8\&quot;]\n  step_ata[\&quot;ATA PIO command\&quot;]\n  step_shift[\&quot;sector &amp;lt;&amp;lt; 9\&quot;]\n  step_host[\&quot;host file write\&quot;]\n  pintos_vm --> step_slot\n  step_slot --> pintos_disk\n  pintos_disk --> step_ata\n  step_ata --> qemu_ide\n  qemu_ide --> step_shift\n  step_shift --> qemu_block\n  qemu_block --> step_host\n  step_host --> host_os&quot;">%% PintOS VM부터 Host OS disk image byte까지 이어지는 5층 변환 체인
+flowchart TD
+  pintos_vm[&quot;PintOS VM&lt;br/>swap slot 3&lt;br/>정책 계층&quot;]
+  pintos_disk[&quot;PintOS disk&lt;br/>sector 24~31&lt;br/>device 계층&quot;]
+  qemu_ide[&quot;QEMU IDE&lt;br/>LBA sector 24~31&lt;br/>가상 하드웨어&quot;]
+  qemu_block[&quot;QEMU block&lt;br/>offset 0x3000~0x3FFF&lt;br/>host I/O 계층&quot;]
+  host_os[&quot;Host OS&lt;br/>disk image 파일 byte&lt;br/>실제 저장소&quot;]
+  step_slot[&quot;slot × 8&quot;]
+  step_ata[&quot;ATA PIO command&quot;]
+  step_shift[&quot;sector &amp;lt;&amp;lt; 9&quot;]
+  step_host[&quot;host file write&quot;]
+  pintos_vm --> step_slot
+  step_slot --> pintos_disk
+  pintos_disk --> step_ata
+  step_ata --> qemu_ide
+  qemu_ide --> step_shift
+  step_shift --> qemu_block
+  qemu_block --> step_host
+  step_host --> host_os
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/상수</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>include/devices/disk.h</td><td>DISK_SECTOR_SIZE</td><td>—</td><td>512B sector 크기 상수</td></tr><tr><td>include/devices/disk.h</td><td>disk_sector_t</td><td>—</td><td>sector 번호 타입</td></tr><tr><td>devices/disk.c</td><td>disk_read()</td><td>207</td><td>sector 하나를 읽는 public API</td></tr><tr><td>devices/disk.c</td><td>disk_write()</td><td>230</td><td>sector 하나를 쓰는 public API</td></tr><tr><td>devices/disk.c</td><td>select_sector()</td><td>85(선언)</td><td>sec_no를 ATA LBA register로 분해</td></tr><tr><td>devices/disk.c</td><td>output_sector()</td><td>88(선언)</td><td>512B를 16-bit word 256개로 data port 전송</td></tr><tr><td>devices/disk.c</td><td>input_sector()</td><td>87(선언)</td><td>data port에서 512B 읽기</td></tr><tr><td>QEMU hw/ide/core.c</td><td>cmd_write_pio</td><td>—</td><td>guest WRITE command → QEMU handler</td></tr><tr><td>QEMU hw/ide/core.c</td><td>ide_sector_write()</td><td>—</td><td><code>sector_num &lt;&lt; BDRV_SECTOR_BITS</code> 계산</td></tr><tr><td>QEMU block/block-backend.c</td><td>blk_aio_pwritev()</td><td>—</td><td>byte offset/count로 host I/O 요청</td></tr><tr><td>QEMU include/block/block-common.h</td><td>BDRV_SECTOR_BITS = 9</td><td>—</td><td><code>1 &lt;&lt; 9 = 512</code></td></tr><tr><td>QEMU hw/ide/ide-internal.h</td><td>WIN_READ = 0x20, WIN_WRITE = 0x30</td><td>—</td><td>ATA command 상수</td></tr></tbody></table></div>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아래 스크립트로 PintOS에서 sector 번호가 disk driver를 거쳐 QEMU까지 내려가는 과정을 관찰할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 1. disk_write 호출 추적 — sector 번호와 호출자 확인</span></span>
+<span data-line><span>b disk_write</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[disk_write] disk=%s, sector=%d (0x%x), byte_offset=0x%x\n&quot;, \</span></span>
+<span data-line><span>    d->name, (int)sec_no, (int)sec_no, (int)(sec_no * 512)</span></span>
+<span data-line><span>  bt 3</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 2. disk_read 호출 추적 — swap-in / file read 경로 구분</span></span>
+<span data-line><span>b disk_read</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[disk_read] disk=%s, sector=%d (0x%x), byte_offset=0x%x\n&quot;, \</span></span>
+<span data-line><span>    d->name, (int)sec_no, (int)sec_no, (int)(sec_no * 512)</span></span>
+<span data-line><span>  bt 3</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 3. select_sector 내부 — LBA 레지스터에 분해되는 값 관찰</span></span>
+<span data-line><span>b select_sector</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $s = sec_no</span></span>
+<span data-line><span>  printf &quot;[select_sector] sec_no=%d → lbal=0x%02x, lbam=0x%02x, lbah=0x%02x, dev_bits=0x%02x\n&quot;, \</span></span>
+<span data-line><span>    (int)$s, (int)($s &amp; 0xff), (int)(($s >> 8) &amp; 0xff), \</span></span>
+<span data-line><span>    (int)(($s >> 16) &amp; 0xff), (int)(($s >> 24) &amp; 0x0f)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 4. output_sector — 실제 512B PIO 전송 직전</span></span>
+<span data-line><span>b output_sector</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[output_sector] channel=%s, first 8 bytes: &quot;, c->name</span></span>
+<span data-line><span>  x/2wx sector</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 5. swap_out에서 disk_write까지 — slot→sector 변환 확인</span></span>
+<span data-line><span>b disk_write if d == swap_disk</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[swap_write] sector=%d, slot=%d, byte_offset=0x%x\n&quot;, \</span></span>
+<span data-line><span>    (int)sec_no, (int)(sec_no / 8), (int)(sec_no * 512)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 6. completion_wait 세마포어 — disk I/O 완료 대기 시간 측정</span></span>
+<span data-line><span>b disk_write</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $before = ticks</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span>b *disk_write+120</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[disk_write done] waited %d ticks\n&quot;, (int)(ticks - $before)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p><strong>관찰 시나리오 1: swap-out 8 sectors 연속 기록 확인</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># swap_out이 한 page(4096B)를 8 sectors로 나눠 쓰는지 확인</span></span>
+<span data-line><span># anon_page_swap_out 또는 이에 상응하는 함수에 BP</span></span>
+<span data-line><span>b disk_write if d == swap_disk</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[swap sector] %d (slot %d, offset %d/8)\n&quot;, \</span></span>
+<span data-line><span>    (int)sec_no, (int)(sec_no / 8), (int)(sec_no % 8)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span># 출력 예시:</span></span>
+<span data-line><span>#   [swap sector] 0 (slot 0, offset 0/8)</span></span>
+<span data-line><span>#   [swap sector] 1 (slot 0, offset 1/8)</span></span>
+<span data-line><span>#   ...</span></span>
+<span data-line><span>#   [swap sector] 7 (slot 0, offset 7/8)</span></span>
+<span data-line><span># → 연속 8개 = 1 page = 4096B 확인</span></span></code></pre></figure>
+<p><strong>관찰 시나리오 2: mmap dirty writeback과 swap write의 disk 비교</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># mmap writeback은 filesys disk (hd0:1), swap은 swap disk (hd1:1)</span></span>
+<span data-line><span>b disk_write</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[disk_write] %s sector=%d\n&quot;, d->name, (int)sec_no</span></span>
+<span data-line><span>  if d == swap_disk</span></span>
+<span data-line><span>    printf &quot;  → SWAP (slot %d)\n&quot;, (int)(sec_no / 8)</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;  → FILESYS\n&quot;</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span># mmap munmap 시 dirty page는 filesys disk로, evicted anon은 swap disk로 간다</span></span></code></pre></figure>
+<h2 id="linux-vs-pintos-disk-io-경로-비교">Linux vs PintOS Disk I/O 경로 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-disk-io-경로-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>I/O 모드</td><td>DMA (AHCI/NVMe), PIO는 fallback</td><td>PIO only (IN/OUT 16-bit)</td></tr><tr><td>sector 크기</td><td>논리 512B/4KB, 물리 4KB 가능</td><td>512B 고정</td></tr><tr><td>I/O 스케줄러</td><td>mq-deadline, bfq, none</td><td>없음 (직렬, channel lock)</td></tr><tr><td>큐 깊이</td><td>NVMe: 64K per queue, SATA: 32 NCQ</td><td>1 (한 번에 1 sector)</td></tr><tr><td>캐시</td><td>page cache (writeback)</td><td>없음 (직접 I/O)</td></tr><tr><td>비동기</td><td>bio → request → dispatch (비동기)</td><td>sema_down으로 동기 대기</td></tr><tr><td>오류 처리</td><td>재시도 + error recovery</td><td>PANIC</td></tr><tr><td>인터럽트</td><td>MSI-X (NVMe), IRQ coalescing</td><td>IRQ14/15 (하드코딩)</td></tr><tr><td>swap 단위</td><td>page 크기(4KB) = contiguous sectors</td><td>page 크기(4KB) = 8 × 512B</td></tr><tr><td>디바이스 추상화</td><td>block_device → gendisk → request_queue</td><td>struct disk → channel</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">swap slot</a></li>
+<li><a href="../../wiki/os/swap-4kb-8sectors" class="internal internal-link alias" data-slug="wiki/os/swap-4kb-8sectors">4KB와 8 sectors</a></li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">swap Lab</a></li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">Swap Disk QEMU Trace</a></li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">mmap dirty write back</a></li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">guest physical memory</a></li>
+<li><a href="../../wiki/os/ide-controller-model" class="internal internal-link alias" data-slug="wiki/os/ide-controller-model">IDE 컨트롤러</a></li>
+<li><a href="../../wiki/os/block-backend-host-file" class="internal internal-link alias" data-slug="wiki/os/block-backend-host-file">QEMU BlockBackend</a></li>
+<li><a href="../../wiki/os/sector-number-to-offset" class="internal internal-link alias" data-slug="wiki/os/sector-number-to-offset">sector byte offset</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">frame eviction과 swap</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/qemu-hardware-byte-debugging" class="internal">QEMU와 Byte 디버깅</a></li><li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal">Anonymous Page와 Swap Slot</a></li><li><a href="../../wiki/os/bitmap-swap-table" class="internal">비트맵 스왑 테이블 (Bitmap Swap Table)</a></li><li><a href="../../wiki/os/block-backend-host-file" class="internal">BlockBackend에서 호스트 파일 I/O까지</a></li><li><a href="../../wiki/os/executable-deny-write-lab" class="internal">실행 파일 쓰기 금지</a></li><li><a href="../../wiki/os/fat-ffs-ext-filesystem" class="internal">FAT·FFS·EXT</a></li><li><a href="../../wiki/os/fd-number-meaning" class="internal">fd 숫자의 의미</a></li><li><a href="../../wiki/os/fd-table-per-process" class="internal">프로세스별 fd_table 배열</a></li><li><a href="../../wiki/os/file-system-abstraction" class="internal">파일 시스템 추상화</a></li><li><a href="../../wiki/os/fsync-guarantee" class="internal">fsync 보장 — 데이터가 디스크에 도달하는 순간</a></li><li><a href="../../wiki/os/ide-controller-model" class="internal">IDE 컨트롤러 모델</a></li><li><a href="../../wiki/os/journaling" class="internal">저널링</a></li><li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal">mmap dirty write-back은 어떻게 디스크 쓰기로 내려가나</a></li><li><a href="../../wiki/os/os-abstraction-protection-storage-responsibility" class="internal">OS 추상화, 보호, 저장 책임</a></li><li><a href="../../wiki/os/pintos-e820-palloc-pool-trace" class="internal">E820 메모리 맵에서 palloc Pool까지의 Trace</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/qemu-device-model" class="internal">장치 모델 (PIT · PIC · IDE)</a></li><li><a href="../../wiki/os/qemu-memory-region" class="internal">QEMU MemoryRegion — 게스트 메모리 공간 모델링</a></li><li><a href="../../wiki/os/ramblock-mechanism" class="internal">RAMBlock — host process 메모리로 backing</a></li><li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal">실제 OS, PintOS, QEMU의 차이</a></li><li><a href="../../wiki/os/sector-cluster-superblock" class="internal">섹터·클러스터·슈퍼블록</a></li><li><a href="../../wiki/os/sector-number-to-offset" class="internal">섹터와 바이트 오프셋</a></li><li><a href="../../wiki/os/storage-fsync-contract" class="internal">저장소 내구성 계약</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/syscall-end-to-end" class="internal">write(1, buffer, size) 전체 흐름 Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-446" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#disk-sector는-qemu-block-backend에서-어떤-byte-offset이-되나" data-for="disk-sector는-qemu-block-backend에서-어떤-byte-offset이-되나">Disk sector는 QEMU block backend에서 어떤 byte offset이 되나</a></li><li class="depth-1"><a href="#qemu-disk-sector-변화" data-for="qemu-disk-sector-변화">QEMU disk sector 변화</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-2"><a href="#ata-sector-count-register" data-for="ata-sector-count-register">ATA sector-count register</a></li><li class="depth-1"><a href="#qemu-disk-sector-값-추적" data-for="qemu-disk-sector-값-추적">QEMU disk sector 값 추적</a></li><li class="depth-2"><a href="#sector-24의-byte-offset" data-for="sector-24의-byte-offset">sector 24의 byte offset</a></li><li class="depth-2"><a href="#swap-slot-3의-전체-sector-범위" data-for="swap-slot-3의-전체-sector-범위">swap slot 3의 전체 sector 범위</a></li><li class="depth-2"><a href="#page-내-특정-byte의-위치-추적" data-for="page-내-특정-byte의-위치-추적">page 내 특정 byte의 위치 추적</a></li><li class="depth-2"><a href="#같은-숫자도-층이-다르면-의미가-다르다" data-for="같은-숫자도-층이-다르면-의미가-다르다">같은 숫자도 층이 다르면 의미가 다르다</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#5층-변환-체인-요약" data-for="5층-변환-체인-요약">5층 변환 체인 요약</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-1"><a href="#linux-vs-pintos-disk-io-경로-비교" data-for="linux-vs-pintos-disk-io-경로-비교">Linux vs PintOS Disk I/O 경로 비교</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

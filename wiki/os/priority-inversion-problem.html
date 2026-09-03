@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Priority Inversion · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Priority Inversion · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Priority Inversion · 최우녕"/><meta name="twitter:description" content="우선순위 기반 스케줄러는 높은 우선순위 스레드를 먼저 실행한다."/><meta property="og:description" content="우선순위 기반 스케줄러는 높은 우선순위 스레드를 먼저 실행한다."/><meta property="og:image:alt" content="우선순위 기반 스케줄러는 높은 우선순위 스레드를 먼저 실행한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/priority-inversion-problem"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/priority-inversion-problem"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="우선순위 기반 스케줄러는 높은 우선순위 스레드를 먼저 실행한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/priority-inversion-problem" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-587" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-587" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Priority Inversion</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="priority-inversion">Priority Inversion<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-inversion" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 Priority Inversion과 priority donation의 일반 원리 및 적용 기준을 설명하고, PintOS·Linux·QEMU 관련 코드 좌표, 구현 값, 복잡도와 동작 특성은 특정 구현에 관한 서술로 구분한다. 후자의 정확성과 실제 재현 여부는 해당 코드·버전 및 GDB·실행 기록이나 성능 측정을 별도로 확인해야 하며, 본문만으로 검증 결과를 의미하지 않는다.</p>
+</blockquote>
+<blockquote>
+<p>우선순위 스케줄러에서도 높은 우선순위 스레드가 항상 먼저 끝나는 것은 아니다. 낮은 우선순위 스레드가 lock을 들고 있고, 그 사이에 중간 우선순위 스레드가 CPU를 가져가면 높은 우선순위 스레드는 간접적으로 밀릴 수 있다.</p>
+</blockquote>
+<h2 id="priority-inversion은-왜-발생하는가">Priority Inversion은 왜 발생하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-inversion은-왜-발생하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>우선순위 기반 스케줄러는 높은 우선순위 스레드를 먼저 실행한다. 그러나 높은 우선순위 스레드 H가 낮은 우선순위 스레드 L이 보유한 lock을 요청하면, H는 lock을 얻을 때까지 BLOCKED 상태가 된다. L이 lock을 풀어야 H가 다시 실행될 수 있다.</p>
+<p>이때 중간 우선순위 스레드 M이 L을 선점하면 문제가 생긴다. M은 H보다 우선순위가 낮지만, H는 L이 lock을 해제할 때까지 기다려야 하므로 결과적으로 M보다 늦게 실행된다. lock 의존성이 스케줄러의 우선순위 순서를 뒤집는 이 상황을 Priority Inversion(우선순위 역전)이라고 한다.</p>
+<p>실시간 시스템에서는 이 지연이 데드라인 위반으로 이어질 수 있다. 이를 막으려면 lock holder인 L이 H의 우선순위를 일시적으로 이어받아 M의 선점을 피해야 한다. 이 메커니즘이 priority donation이다.</p>
+<h2 id="세-스레드로-보는-역전-과정">세 스레드로 보는 역전 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세-스레드로-보는-역전-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>H, M, L의 우선순위가 각각 31, 20, 10이고 L이 lock A를 보유한 상황을 보자.</p>
+<h3 id="priority-donation이-없을-때">Priority donation이 없을 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation이-없을-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% donation 없는 priority inversion 타이밍\nflowchart LR\n  t0[\&quot;t0&lt;br/>L(10)&lt;br/>lock A 획득&lt;br/>임계 영역 실행\&quot;]\n  t1[\&quot;t1&lt;br/>H(31)&lt;br/>lock_acquire(A)&lt;br/>L이 holder라 BLOCKED\&quot;]\n  t2[\&quot;t2&lt;br/>M(20) READY&lt;br/>M.pri &amp;gt; L.pri&lt;br/>L을 선점\&quot;]\n  t3[\&quot;t3&lt;br/>M 실행 완료&lt;br/>L 재개&lt;br/>lock_release(A)\&quot;]\n  hrun[\&quot;H(31)&lt;br/>lock A 획득&lt;br/>M보다 늦게 실행\&quot;]\n  wait[\&quot;H 대기 연장&lt;br/>L이 CPU를 못 받아&lt;br/>lock A 해제가 지연됨\&quot;]\n  problem[\&quot;역전&lt;br/>H(31) &amp;gt; M(20)이지만&lt;br/>M이 먼저 실행됨\&quot;]\n  t0 -->|H 도착| t1\n  t1 -->|H BLOCKED| t2\n  t2 -->|M이 L 선점| wait\n  wait --> problem\n  problem -->|M 종료 후| t3\n  t3 -->|L release -&amp;gt; sema_up| hrun&quot;">%% donation 없는 priority inversion 타이밍
+flowchart LR
+  t0[&quot;t0&lt;br/>L(10)&lt;br/>lock A 획득&lt;br/>임계 영역 실행&quot;]
+  t1[&quot;t1&lt;br/>H(31)&lt;br/>lock_acquire(A)&lt;br/>L이 holder라 BLOCKED&quot;]
+  t2[&quot;t2&lt;br/>M(20) READY&lt;br/>M.pri &amp;gt; L.pri&lt;br/>L을 선점&quot;]
+  t3[&quot;t3&lt;br/>M 실행 완료&lt;br/>L 재개&lt;br/>lock_release(A)&quot;]
+  hrun[&quot;H(31)&lt;br/>lock A 획득&lt;br/>M보다 늦게 실행&quot;]
+  wait[&quot;H 대기 연장&lt;br/>L이 CPU를 못 받아&lt;br/>lock A 해제가 지연됨&quot;]
+  problem[&quot;역전&lt;br/>H(31) &amp;gt; M(20)이지만&lt;br/>M이 먼저 실행됨&quot;]
+  t0 -->|H 도착| t1
+  t1 -->|H BLOCKED| t2
+  t2 -->|M이 L 선점| wait
+  wait --> problem
+  problem -->|M 종료 후| t3
+  t3 -->|L release -&amp;gt; sema_up| hrun
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>상태</th><th>결과</th></tr></thead><tbody><tr><td>t0</td><td>L이 lock A를 획득하고 임계 영역을 실행한다.</td><td>정상적으로 실행된다.</td></tr><tr><td>t1</td><td>H가 lock A를 요청하지만 L이 보유하고 있어 BLOCKED 상태가 된다.</td><td>L이 빨리 끝나야 H도 곧 실행될 수 있다.</td></tr><tr><td>t2</td><td>M이 도착하고 <code>M.pri > L.pri</code>이므로 L을 선점한다.</td><td>L의 lock 해제가 늦어지고 H의 대기도 길어진다.</td></tr><tr><td>t3</td><td>M이 끝난 뒤 L이 재개되어 lock A를 해제한다.</td><td>H는 M의 실행 시간만큼 더 기다린 뒤 실행된다.</td></tr></tbody></table></div>
+<p>따라서 H(31)가 M(20)보다 우선순위가 높은데도 M이 먼저 실행된다. M과 같은 중간 우선순위 스레드가 여러 개라면 H의 대기 시간이 무한히 늘어날 수 있는데, 이를 Unbounded priority inversion이라고 한다.</p>
+<p>1997년 7월 Mars Pathfinder에서는 VxWorks RTOS의 저우선순위 버스 관리 태스크가 Lock을 잡은 상태에서 중간 우선순위 통신 태스크에 선점됐다. 그 결과 고우선순위 watchdog이 시스템을 반복해서 리셋하는 장애가 발생했다.</p>
+<h3 id="priority-donation으로-holder를-먼저-실행하기">Priority Donation으로 holder를 먼저 실행하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation으로-holder를-먼저-실행하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>H가 기다리기 시작하면 lock holder인 L에게 자신의 우선순위를 “기부”한다. L의 effective priority가 10에서 31로 올라가면 M(20)은 L을 선점하지 못한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% priority donation 적용 후 타이밍\nflowchart LR\n  t0[\&quot;t0&lt;br/>L(10)&lt;br/>lock A 획득&lt;br/>임계 영역 실행\&quot;]\n  t1[\&quot;t1&lt;br/>H(31)&lt;br/>lock_acquire(A)&lt;br/>BLOCKED\&quot;]\n  donate[\&quot;donate 31 to L&lt;br/>L.effective = 31\&quot;]\n  t2[\&quot;t2&lt;br/>M(20) READY&lt;br/>L(31)보다 낮아&lt;br/>선점 실패\&quot;]\n  hrun[\&quot;H(31)&lt;br/>sema_up 후 READY&lt;br/>즉시 실행\&quot;]\n  mrun[\&quot;M(20)&lt;br/>H 뒤에 실행\&quot;]\n  release[\&quot;L(31)&lt;br/>lock_release(A)\&quot;]\n  t0 -->|H 도착| t1\n  t1 -->|holder=L| donate\n  donate -->|effective priority 상승| t2\n  t2 -->|Scheduler가 L 유지| release\n  release -->|lock A 해제| hrun\n  hrun -->|H 작업 완료 후| mrun&quot;">%% priority donation 적용 후 타이밍
+flowchart LR
+  t0[&quot;t0&lt;br/>L(10)&lt;br/>lock A 획득&lt;br/>임계 영역 실행&quot;]
+  t1[&quot;t1&lt;br/>H(31)&lt;br/>lock_acquire(A)&lt;br/>BLOCKED&quot;]
+  donate[&quot;donate 31 to L&lt;br/>L.effective = 31&quot;]
+  t2[&quot;t2&lt;br/>M(20) READY&lt;br/>L(31)보다 낮아&lt;br/>선점 실패&quot;]
+  hrun[&quot;H(31)&lt;br/>sema_up 후 READY&lt;br/>즉시 실행&quot;]
+  mrun[&quot;M(20)&lt;br/>H 뒤에 실행&quot;]
+  release[&quot;L(31)&lt;br/>lock_release(A)&quot;]
+  t0 -->|H 도착| t1
+  t1 -->|holder=L| donate
+  donate -->|effective priority 상승| t2
+  t2 -->|Scheduler가 L 유지| release
+  release -->|lock A 해제| hrun
+  hrun -->|H 작업 완료 후| mrun
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>L은 높아진 effective priority로 임계 영역을 마치고 lock A를 release한다. 이후 <code>sema_up</code>으로 H가 READY 상태가 되면 H가 바로 실행되고, M은 H의 작업이 끝난 뒤 실행된다.</p>
+<h3 id="nested-donation이-필요한-경우">Nested Donation이 필요한 경우<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#nested-donation이-필요한-경우" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>lock 대기가 연쇄적으로 이어질 수도 있다. H가 M이 보유한 Lock B를 기다리고, M도 L이 보유한 Lock A를 기다린다면 H의 donation은 M에서 멈추면 안 된다. L이 실행되어 Lock A를 풀어야 M과 H의 대기가 차례로 끝나기 때문이다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% nested donation chain\nflowchart LR\n  h[\&quot;H(31)&lt;br/>waiting_lock = B\&quot;]\n  lock_b[\&quot;Lock B&lt;br/>holder = M\&quot;]\n  lock_a[\&quot;Lock A&lt;br/>holder = L\&quot;]\n  limit[\&quot;PintOS 제한&lt;br/>최대 전파 깊이 8단계\&quot;]\n  m[\&quot;m\&quot;]\n  l[\&quot;l\&quot;]\n  h -->|waits| lock_b\n  lock_b -->|held by| m\n  m -->|waits| lock_a\n  lock_a -->|held by| l\n  h -. donate 31 .-> m\n  m -. propagate 31 .-> l\n  l -->|chain traversal| limit&quot;">%% nested donation chain
+flowchart LR
+  h[&quot;H(31)&lt;br/>waiting_lock = B&quot;]
+  lock_b[&quot;Lock B&lt;br/>holder = M&quot;]
+  lock_a[&quot;Lock A&lt;br/>holder = L&quot;]
+  limit[&quot;PintOS 제한&lt;br/>최대 전파 깊이 8단계&quot;]
+  m[&quot;m&quot;]
+  l[&quot;l&quot;]
+  h -->|waits| lock_b
+  lock_b -->|held by| m
+  m -->|waits| lock_a
+  lock_a -->|held by| l
+  h -. donate 31 .-> m
+  m -. propagate 31 .-> l
+  l -->|chain traversal| limit
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>이 경우 H의 우선순위 31이 M을 거쳐 L까지 전파되어야 한다. PintOS에서는 <code>waiting_lock → holder</code> 체인을 따라가며 donation을 전파하고, 최대 깊이를 8단계로 제한한다.</p>
+<h2 id="linux의-priority-inheritance와-priority-ceiling">Linux의 Priority Inheritance와 Priority Ceiling<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux의-priority-inheritance와-priority-ceiling" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux는 PI와 PP라는 두 프로토콜을 제공한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>프로토콜</th><th>메커니즘</th><th>용도</th></tr></thead><tbody><tr><td>PI (Priority Inheritance)</td><td>rt_mutex — <code>CONFIG_RT_MUTEXES</code></td><td>PREEMPT_RT 패치, 실시간 태스크</td></tr><tr><td>PP (Priority Ceiling)</td><td>PTHREAD_PRIO_PROTECT</td><td>POSIX — Lock에 정적 ceiling 설정</td></tr></tbody></table></div>
+<p><code>rt_mutex</code>는 <code>task_struct.pi_waiters</code> (Red-Black Tree)를 사용하여 O(log n) donation/restore를 구현한다. chain propagation depth는 기본 1024로 제한된다.</p>
+<h2 id="pintos의-priority-donation-구현">PintOS의 Priority Donation 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-priority-donation-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서는 <code>struct thread</code>에 effective priority와 원래 우선순위, donation 관계, 대기 중인 lock을 나타내는 필드를 둔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// include/threads/thread.h</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> thread {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> priority;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                    // effective priority (동적)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> base_priority;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">               // thread_set_priority에서 설정한 원래 값</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list donation_list;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // 나에게 기부한 스레드 목록</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem donation_elem;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 다른 스레드 donation_list의 원소</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">waiting_lock;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // 현재 기다리는 lock (chain 추적용)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<h3 id="lock_acquire에서-donation하기">lock_acquire에서 donation하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_acquire에서-donation하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>lock_acquire</code>의 <code>threads/synch.c:210</code>에서는 lock holder가 있을 때 현재 스레드를 holder의 <code>donation_list</code>에 넣고 <code>waiting_lock</code>을 기록한다. 현재 스레드의 우선순위가 holder보다 높으면 holder의 우선순위를 올린다. 이어서 <code>waiting_lock</code> 체인을 최대 8단계까지 따라가며 중첩 donation을 전파한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // holder의 donation_list에 자신을 삽입</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">holder->donation_list, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">curr->donation_elem, ...);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // holder보다 내가 높으면 기부</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 중첩 기부: waiting_lock chain 따라가기 (최대 8단계)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (idx </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 7</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        next_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> holder->waiting_lock;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">next_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">||</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">next_lock->holder) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">break</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> next_lock->holder;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">            holder->priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->priority;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        idx</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<h3 id="lock_release에서-donation-철회하기">lock_release에서 donation 철회하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_release에서-donation-철회하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>lock_release</code>의 <code>threads/synch.c:284</code>에서는 해제할 lock을 기다리던 스레드를 <code>donation_list</code>에서 제거한다. 그런 다음 <code>refresh_priority(t)</code>가 <code>base_priority</code>와 남은 donation 가운데 가장 높은 값을 비교해 effective priority를 다시 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// 이 lock을 기다리던 스레드를 donation_list에서 제거</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> each </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">d_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> in donation_list:</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">d_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        list_remove</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(d_e);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// effective priority 재계산</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">refresh_priority</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(t);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // max(base_priority, donation_list top)</span></span></code></pre></figure>
+<h2 id="세마포어에-donation을-바로-적용할-수-없는-이유">세마포어에 donation을 바로 적용할 수 없는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세마포어에-donation을-바로-적용할-수-없는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>세마포어에는 holder 개념이 없다. down한 스레드와 up하는 스레드가 다를 수 있으므로, 대기 중인 고우선순위 스레드가 누구에게 우선순위를 기부해야 하는지 결정할 수 없다. 반면 Lock은 holder를 추적하므로 donation의 대상을 정할 수 있다.</p>
+<h2 id="qemu에서-보이는-priority-inversion">QEMU에서 보이는 Priority Inversion<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu에서-보이는-priority-inversion" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 priority inversion 자체를 인식하지 못한다. QEMU가 보는 것은 guest CPU의 명령어 흐름이다. donation으로 <code>thread->priority</code>가 바뀌어도 QEMU에는 guest 메모리의 정수 값을 변경하는 일반 <code>store</code> 연산으로 보인다.</p>
+<p>다만 QEMU의 단일 vCPU 특성은 PintOS에서 priority inversion이 발생하고 재현되는 조건에 영향을 준다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>멀티코어 실제 하드웨어</th><th>QEMU 단일 vCPU (PintOS)</th></tr></thead><tbody><tr><td>M이 L을 선점하는 시점</td><td>M이 다른 코어에서 이미 실행 중일 수 있음</td><td>반드시 타이머 인터럽트에서 발생</td></tr><tr><td>선점 빈도</td><td>코어별 독립</td><td>TIME_SLICE(4 tick) 단위</td></tr><tr><td>inversion 지속 시간</td><td>M의 실행 시간 전체</td><td>M의 time slice 소진까지</td></tr><tr><td>디버깅 재현성</td><td>타이밍 의존, 비결정적</td><td>타이머 기반, 상대적으로 결정적</td></tr></tbody></table></div>
+<p>PintOS의 priority inversion은 단일 CPU에서 time-slicing으로 발생한다. 따라서 멀티코어 환경의 복잡한 경쟁 조건은 없으며 디버깅도 비교적 쉽다.</p>
+<h2 id="pintos-구현-값과-코드-좌표">PintOS 구현 값과 코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현-값과-코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>PintOS 우선순위 범위</td><td>PRI_MIN(0) ~ PRI_MAX(63)</td></tr><tr><td>중첩 기부 최대 깊이</td><td>8단계</td></tr><tr><td>donation_list 비교 함수</td><td>thread_priority_donation_elem (내림차순)</td></tr><tr><td>refresh_priority 복잡도</td><td>O(n log n) — list_sort on donation_list</td></tr><tr><td>Mars Pathfinder 사건</td><td>1997년 7월, VxWorks RTOS에서 발생</td></tr></tbody></table></div>
+<p>전체 처리 순서는 L의 lock 획득에서 시작한다. H가 같은 lock을 요청하면 donation이 발생하고, 높아진 우선순위의 L이 M보다 먼저 lock을 해제한다. <code>refresh_priority()</code>로 L의 우선순위를 복원한 뒤 <code>sema_up()</code>이 H를 깨우면 H가 lock을 획득해 실행한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% priority donation 처리 순서\nflowchart TD\n  start[\&quot;L(10)&lt;br/>lock_acquire(A)&lt;br/>holder = L\&quot;]\n  critical[\&quot;L&lt;br/>임계 영역 실행 중\&quot;]\n  h_block[\&quot;H(31)&lt;br/>lock_acquire(A)&lt;br/>BLOCKED\&quot;]\n  m_ready[\&quot;M(20)&lt;br/>READY\&quot;]\n  sched_keep_l[\&quot;Scheduler&lt;br/>L(31) &amp;gt; M(20)&lt;br/>L 계속 실행\&quot;]\n  release[\&quot;L&lt;br/>lock_release(A)&lt;br/>refresh_priority()&lt;br/>pri = 10\&quot;]\n  wake_h[\&quot;sema_up()&lt;br/>H READY\&quot;]\n  run_h[\&quot;Scheduler&lt;br/>H(31) 실행&lt;br/>lock A 획득 완료\&quot;]\n  run_m[\&quot;H 작업 완료 후&lt;br/>M(20) 실행\&quot;]\n  donate[\&quot;donate\&quot;]\n  start --> critical\n  critical -->|H 도착| h_block\n  h_block -->|holder 존재| donate\n  donate --> m_ready\n  m_ready --> sched_keep_l\n  sched_keep_l --> release\n  release --> wake_h\n  wake_h --> run_h\n  run_h --> run_m&quot;">%% priority donation 처리 순서
+flowchart TD
+  start[&quot;L(10)&lt;br/>lock_acquire(A)&lt;br/>holder = L&quot;]
+  critical[&quot;L&lt;br/>임계 영역 실행 중&quot;]
+  h_block[&quot;H(31)&lt;br/>lock_acquire(A)&lt;br/>BLOCKED&quot;]
+  m_ready[&quot;M(20)&lt;br/>READY&quot;]
+  sched_keep_l[&quot;Scheduler&lt;br/>L(31) &amp;gt; M(20)&lt;br/>L 계속 실행&quot;]
+  release[&quot;L&lt;br/>lock_release(A)&lt;br/>refresh_priority()&lt;br/>pri = 10&quot;]
+  wake_h[&quot;sema_up()&lt;br/>H READY&quot;]
+  run_h[&quot;Scheduler&lt;br/>H(31) 실행&lt;br/>lock A 획득 완료&quot;]
+  run_m[&quot;H 작업 완료 후&lt;br/>M(20) 실행&quot;]
+  donate[&quot;donate&quot;]
+  start --> critical
+  critical -->|H 도착| h_block
+  h_block -->|holder 존재| donate
+  donate --> m_ready
+  m_ready --> sched_keep_l
+  sched_keep_l --> release
+  release --> wake_h
+  wake_h --> run_h
+  run_h --> run_m
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/thread.h:133</td><td>donation_list</td><td>기부자 목록</td></tr><tr><td>include/threads/thread.h:134</td><td>donation_elem</td><td>donation_list 원소</td></tr><tr><td>include/threads/thread.h:135</td><td>waiting_lock</td><td>chain 추적용</td></tr><tr><td>threads/synch.c:210</td><td>lock_acquire() 기부 로직</td><td>holder에 donation, chain 전파</td></tr><tr><td>threads/synch.c:284</td><td>lock_release() 철회 로직</td><td>waiting_lock 일치 시 제거</td></tr><tr><td>threads/thread.c:813</td><td>refresh_priority()</td><td>base와 donation max 비교</td></tr><tr><td>threads/synch.c:440</td><td>thread_priority_donation_elem()</td><td>donation_list 정렬 비교</td></tr></tbody></table></div>
+<h2 id="gdb로-donation-상태-관찰하기">GDB로 donation 상태 관찰하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-donation-상태-관찰하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="donation-발생-포착">donation 발생 포착<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#donation-발생-포착" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b synch.c:215
+(gdb) commands
+  printf &quot;DONATE: %s(pri=%d) → %s(pri=%d→%d), lock=%p\n&quot;, \
+    thread_current()->name, thread_current()->priority, \
+    holder->name, holder->priority, thread_current()->priority, lock
+  c
+end
+</code></pre>
+<h3 id="lock_release-시-priority-복원-관찰">lock_release 시 priority 복원 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_release-시-priority-복원-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b synch.c:302
+(gdb) commands
+  printf &quot;RESTORE: %s, before refresh: pri=%d, base=%d\n&quot;, \
+    t->name, t->priority, t->base_priority
+  c
+end
+</code></pre>
+<h3 id="nested-donation-chain-추적">nested donation chain 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#nested-donation-chain-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b synch.c:227
+(gdb) commands
+  printf &quot;CHAIN[depth=%d]: propagate to %s(pri=%d)\n&quot;, idx, holder->name, holder->priority
+  c
+end
+</code></pre>
+<h3 id="donation이-없을-때-priority-inversion-감지">donation이 없을 때 priority inversion 감지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#donation이-없을-때-priority-inversion-감지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) define check_inversion
+  set $h = (struct thread *)$arg0
+  set $l = ((struct lock *)$h->waiting_lock)->holder
+  if $l->priority &lt; $h->priority
+    printf &quot;⚠ INVERSION: %s(pri=%d) blocked by %s(effective=%d, base=%d)\n&quot;, \
+      $h->name, $h->priority, $l->name, $l->priority, $l->base_priority
+  end
+end
+</code></pre>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">priority donation</a></li>
+<li><a href="../../wiki/os/lock-mechanism" class="internal internal-link alias" data-slug="wiki/os/lock-mechanism">lock</a></li>
+<li><a href="../../wiki/os/waiting-lock-chain" class="internal internal-link alias" data-slug="wiki/os/waiting-lock-chain">waiting lock chain</a></li>
+<li><a href="../../wiki/os/donation-list-effective-priority" class="internal internal-link alias" data-slug="wiki/os/donation-list-effective-priority">effective priority</a></li>
+<li><a href="../../wiki/os/priority-donation-chain-lab" class="internal internal-link alias" data-slug="wiki/os/priority-donation-chain-lab">priority donation chain Lab</a></li>
+<li><a href="../../wiki/os/nested-donation-propagation" class="internal internal-link alias" data-slug="wiki/os/nested-donation-propagation">nested donation</a></li>
+<li><a href="../../wiki/os/semaphore-mechanism" class="internal internal-link alias" data-slug="wiki/os/semaphore-mechanism">semaphore</a></li>
+<li><a href="../../wiki/os/thread-state-transition" class="internal internal-link alias" data-slug="wiki/os/thread-state-transition">스레드 상태 전이</a></li>
+<li><a href="../../wiki/os/ready-list-priority" class="internal internal-link alias" data-slug="wiki/os/ready-list-priority">ready list priority</a></li>
+<li><a href="../../wiki/os/check-preemption" class="internal internal-link alias" data-slug="wiki/os/check-preemption">preemption check</a></li>
+<li><a href="../../wiki/os/sema-up-unblock" class="internal internal-link alias" data-slug="wiki/os/sema-up-unblock">sema up() unblock</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/donation-list-effective-priority" class="internal">donation_list로 유효 우선순위 계산하기</a></li><li><a href="../../wiki/os/lock-mechanism" class="internal">락 메커니즘 (Lock Mechanism)</a></li><li><a href="../../wiki/os/nested-donation-propagation" class="internal">Nested Donation 전파 — A→B→C 체인</a></li><li><a href="../../wiki/os/pintos-threads-scheduling-execution-model" class="internal">PintOS Threads와 Scheduling</a></li><li><a href="../../wiki/os/priority-donation-knowledge" class="internal">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a></li><li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal">세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기</a></li><li><a href="../../wiki/os/waiting-lock-chain" class="internal">waiting_lock → holder 체인</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-585" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#priority-inversion" data-for="priority-inversion">Priority Inversion</a></li><li class="depth-1"><a href="#priority-inversion은-왜-발생하는가" data-for="priority-inversion은-왜-발생하는가">Priority Inversion은 왜 발생하는가</a></li><li class="depth-1"><a href="#세-스레드로-보는-역전-과정" data-for="세-스레드로-보는-역전-과정">세 스레드로 보는 역전 과정</a></li><li class="depth-2"><a href="#priority-donation이-없을-때" data-for="priority-donation이-없을-때">Priority donation이 없을 때</a></li><li class="depth-2"><a href="#priority-donation으로-holder를-먼저-실행하기" data-for="priority-donation으로-holder를-먼저-실행하기">Priority Donation으로 holder를 먼저 실행하기</a></li><li class="depth-2"><a href="#nested-donation이-필요한-경우" data-for="nested-donation이-필요한-경우">Nested Donation이 필요한 경우</a></li><li class="depth-1"><a href="#linux의-priority-inheritance와-priority-ceiling" data-for="linux의-priority-inheritance와-priority-ceiling">Linux의 Priority Inheritance와 Priority Ceiling</a></li><li class="depth-1"><a href="#pintos의-priority-donation-구현" data-for="pintos의-priority-donation-구현">PintOS의 Priority Donation 구현</a></li><li class="depth-2"><a href="#lock_acquire에서-donation하기" data-for="lock_acquire에서-donation하기">lock_acquire에서 donation하기</a></li><li class="depth-2"><a href="#lock_release에서-donation-철회하기" data-for="lock_release에서-donation-철회하기">lock_release에서 donation 철회하기</a></li><li class="depth-1"><a href="#세마포어에-donation을-바로-적용할-수-없는-이유" data-for="세마포어에-donation을-바로-적용할-수-없는-이유">세마포어에 donation을 바로 적용할 수 없는 이유</a></li><li class="depth-1"><a href="#qemu에서-보이는-priority-inversion" data-for="qemu에서-보이는-priority-inversion">QEMU에서 보이는 Priority Inversion</a></li><li class="depth-1"><a href="#pintos-구현-값과-코드-좌표" data-for="pintos-구현-값과-코드-좌표">PintOS 구현 값과 코드 좌표</a></li><li class="depth-1"><a href="#gdb로-donation-상태-관찰하기" data-for="gdb로-donation-상태-관찰하기">GDB로 donation 상태 관찰하기</a></li><li class="depth-2"><a href="#donation-발생-포착" data-for="donation-발생-포착">donation 발생 포착</a></li><li class="depth-2"><a href="#lock_release-시-priority-복원-관찰" data-for="lock_release-시-priority-복원-관찰">lock_release 시 priority 복원 관찰</a></li><li class="depth-2"><a href="#nested-donation-chain-추적" data-for="nested-donation-chain-추적">nested donation chain 추적</a></li><li class="depth-2"><a href="#donation이-없을-때-priority-inversion-감지" data-for="donation이-없을-때-priority-inversion-감지">donation이 없을 때 priority inversion 감지</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

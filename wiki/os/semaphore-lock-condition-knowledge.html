@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기 · 최우녕"/><meta name="twitter:description" content="semadown()·lockacquire()·condwait()는 모두 스레드를 재우지만 답하는 질문이 다르다"/><meta property="og:description" content="semadown()·lockacquire()·condwait()는 모두 스레드를 재우지만 답하는 질문이 다르다"/><meta property="og:image:alt" content="semadown()·lockacquire()·condwait()는 모두 스레드를 재우지만 답하는 질문이 다르다"/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/semaphore-lock-condition-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/semaphore-lock-condition-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="semadown()·lockacquire()·condwait()는 모두 스레드를 재우지만 답하는 질문이 다르다"/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/semaphore-lock-condition-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-633" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-633" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="세마포어-락-조건-변수-잠들고-깨우는-구조를-구분하기">세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세마포어-락-조건-변수-잠들고-깨우는-구조를-구분하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: <code>sema_down()</code>·<code>lock_acquire()</code>·<code>cond_wait()</code>는 모두 스레드를 재우지만 답하는 질문이 다르다 — semaphore는 남은 토큰 수, lock은 임계 구역의 소유자, condition variable은 거짓 조건에서 잠들 곳과 깨워 줄 주체를 정한다.</p>
+</blockquote>
+<h2 id="왜-동기화-도구가-세-개나-필요할까">왜 동기화 도구가 세 개나 필요할까<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#왜-동기화-도구가-세-개나-필요할까" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>sema_down()</code>, <code>lock_acquire()</code>, <code>cond_wait()</code>는 모두 스레드를 기다리게 만들 수 있다. 처음에는 모두 “잠깐 멈추는 함수”처럼 보이지만, 실제로는 서로 다른 질문에 답한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>도구</th><th>답하는 질문</th></tr></thead><tbody><tr><td>semaphore</td><td>지금 사용할 수 있는 토큰이 몇 개인가?</td></tr><tr><td>lock</td><td>이 임계 구역의 주인이 누구인가?</td></tr><tr><td>condition variable</td><td>조건이 아직 거짓이면 어디에서 잠들었다가 누가 깨워 주는가?</td></tr></tbody></table></div>
+<p>이 차이를 모르면 <code>thread.elem</code>이 어떤 waiters list에 들어갔는지, 왜 <code>lock</code>이 내부적으로 semaphore를 쓰는지, 왜 <code>cond_wait()</code>가 lock을 풀었다가 다시 잡는지 헷갈린다.</p>
+<p>동기화는 공유 상태를 안전하게 바꾸는 순서를 만드는 일이다. 큐를 공유하는 생산자와 소비자를 보면 세 도구가 맡는 역할을 함께 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_acquire</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">queue_empty</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">())</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  cond_wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">not_empty</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">item </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> queue_pop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_release</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>여기서는 세 가지 문제가 한꺼번에 생긴다.</p>
+<ul>
+<li>큐의 내부 포인터를 동시에 바꾸면 안 된다.</li>
+<li>큐가 비었으면 소비자는 CPU를 낭비하지 말고 자야 한다.</li>
+<li>생산자가 새 item을 넣으면 잠든 소비자 중 하나를 깨워야 한다.</li>
+</ul>
+<p><code>lock</code>은 큐의 공유 상태를 보호한다. <code>condition variable</code>은 큐가 비어 있는 동안 소비자가 잠들 장소와, 상태가 바뀌었을 때 깨우는 통로를 제공한다. <code>semaphore</code>는 더 낮은 레벨에서 “토큰이 없으면 잠들고, 토큰이 생기면 깨어난다”는 동작을 구현한다.</p>
+<h2 id="세-도구가-잠들고-깨우는-흐름">세 도구가 잠들고 깨우는 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세-도구가-잠들고-깨우는-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>세마포어는 카운터와 대기열로 구성된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct semaphore {</span></span>
+<span data-line><span>    unsigned value;      ← 남은 토큰 수</span></span>
+<span data-line><span>    struct list waiters; ← 토큰을 기다리는 thread.elem 리스트</span></span>
+<span data-line><span>};</span></span></code></pre></figure>
+<p>락은 “토큰이 1개뿐인 semaphore + holder 기록”이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct lock {</span></span>
+<span data-line><span>    struct thread *holder;    ← 현재 owner (donation 대상)</span></span>
+<span data-line><span>    struct semaphore semaphore; ← value=1인 binary semaphore</span></span>
+<span data-line><span>};</span></span></code></pre></figure>
+<p>조건 변수는 조건 자체를 저장하지 않는다. 실제 조건은 lock으로 보호받는 공유 상태에 있고, 조건 변수는 그 조건이 바뀌기를 기다리는 스레드가 잠드는 장소를 제공한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant T as Consumer Thread\n    participant L as Lock\n    participant C as Condition Variable\n    participant PS as Private Semaphore\n\n    T->>L: lock_release(lock)\n    T->>C: cond->waiters에 semaphore_elem 추가\n    T->>PS: sema_down(&amp;waiter.semaphore) → BLOCKED\n    Note over T: 조건이 참이 될 때까지 잠듦\n\n    Note right of C: ... Producer가 cond_signal() ...\n    C->>PS: sema_up(&amp;waiter.semaphore)\n    PS->>T: UNBLOCK\n    T->>L: lock_acquire(lock) → 다시 잡기\n    T->>T: while(조건) 재검사&quot;">sequenceDiagram
+    participant T as Consumer Thread
+    participant L as Lock
+    participant C as Condition Variable
+    participant PS as Private Semaphore
+
+    T->>L: lock_release(lock)
+    T->>C: cond->waiters에 semaphore_elem 추가
+    T->>PS: sema_down(&amp;waiter.semaphore) → BLOCKED
+    Note over T: 조건이 참이 될 때까지 잠듦
+
+    Note right of C: ... Producer가 cond_signal() ...
+    C->>PS: sema_up(&amp;waiter.semaphore)
+    PS->>T: UNBLOCK
+    T->>L: lock_acquire(lock) → 다시 잡기
+    T->>T: while(조건) 재검사
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>condition variable은 조건 검사를 대신하지 않는다. 깨어난 스레드는 lock을 다시 획득한 뒤 공유 상태의 조건을 재검사해야 하므로 보통 <code>if</code>가 아니라 <code>while</code>을 사용한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">queue_empty</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">())</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  cond_wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">not_empty</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>이 기본 흐름을 이해하면 구현을 살펴볼 때의 질문도 순서대로 정리된다.</p>
+<ul>
+<li>공유 상태를 보호하면서 조건이 맞을 때까지 CPU를 낭비하지 않고 기다리려면 어떤 도구가 필요한가?</li>
+<li>실제 OS는 mutex, semaphore, condition variable, wait queue, futex, dispatcher object 같은 대기·깨우기 구조를 어떻게 나누는가?</li>
+<li>PintOS는 이 구조를 <code>struct semaphore</code>, <code>struct lock</code>, <code>struct condition</code>과 intrusive list로 어떻게 단순화하는가?</li>
+<li>QEMU는 동기화 의미가 아니라 guest CPU 실행과 guest memory read/write 중 어느 부분을 흉내 내는가?</li>
+<li><code>sema->value</code>, <code>thread.elem</code>, <code>semaphore_elem.elem</code> 주소는 어떤 리스트 연결을 보여 주는가?</li>
+<li>GDB에서는 <code>sema_down()</code>, <code>sema_up()</code>, <code>cond_wait()</code>, <code>cond_signal()</code>의 waiters list와 thread status를 어디서 확인하는가?</li>
+</ul>
+<h2 id="세마포어-값과-대기-순서">세마포어 값과 대기 순서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세마포어-값과-대기-순서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>세마포어 값이 0인 상태에서 세 스레드가 기다린다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sema->value = 0</span></span>
+<span data-line><span>sema->waiters: [C(pri=31)] → [B(pri=33)] → [A(pri=35)]</span></span>
+<span data-line><span>               (priority 오름차순 삽입이면 이 순서)</span></span></code></pre></figure>
+<p>PintOS의 이 코드베이스는 <code>sema_down()</code>에서 waiter를 priority 내림차순으로 넣고, <code>sema_up()</code>에서 <code>list_sort()</code>로 다시 정렬한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sema_up() 호출 시:</span></span>
+<span data-line><span>  list_sort → [A(35)] → [B(33)] → [C(31)]</span></span>
+<span data-line><span>  list_pop_front → A(35)가 UNBLOCK</span></span>
+<span data-line><span>  sema->value++ (0→1, 그리고 A가 가져가므로 다시 0)</span></span></code></pre></figure>
+<p><code>priority-sema</code> 테스트는 이 순서를 확인한다.</p>
+<p>조건 변수는 semaphore를 한 단계 더 감싼다.</p>
+<ul>
+<li>cond->waiters (semaphore_elem list):</li>
+<li>semaphore_elem A | | semaphore_elem B</li>
+<li>.semaphore | | .semaphore</li>
+<li>.value = 0 | | .value = 0</li>
+<li>.waiters: | | .waiters:</li>
+<li>[Thread A] | | [Thread B]</li>
+</ul>
+<p><code>cond_signal()</code>은 <code>cond.waiters</code> 안의 private semaphore들을 비교해서, 그 semaphore 안에서 기다리는 스레드 priority가 가장 높은 쪽을 고른다.</p>
+<h2 id="실제-운영체제에서는-무엇이-달라지는가">실제 운영체제에서는 무엇이 달라지는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제에서는-무엇이-달라지는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>앞의 구조는 “공유 상태 보호”, “대기”, “깨우기”라는 역할을 구분하기 위한 모델이다. 실제 운영체제에서도 이 역할은 필요하지만, 실행 문맥과 지원 정책이 더 다양하므로 하나의 단순한 대기열 구조로 일반화할 수 없다.</p>
+<p>Linux 사용자 공간에는 POSIX mutex, condition variable, semaphore가 있으며, 내부적으로 futex 같은 커널 대기 원시 연산과 연결될 수 있다. 커널 내부에는 wait queue, spinlock, mutex, rwsem, completion 같은 더 많은 도구가 있다.</p>
+<p>이름이 비슷해도 구현과 보장 범위는 다르다. 어떤 lock은 sleep할 수 있고, 어떤 lock은 interrupt context에서 써서는 안 되며, 어떤 lock은 priority inheritance를 지원한다. 따라서 도구를 구분할 때는 이름만 보지 말고, 스레드가 잠들 수 있는지와 어떤 실행 문맥에서 사용할 수 있는지, 어떤 스케줄링 정책이 결합되는지를 함께 봐야 한다.</p>
+<p>Windows도 mutex, semaphore, condition variable, event, SRWLOCK 같은 여러 동기화 도구를 제공한다. Windows 커널은 dispatcher object와 wait 상태를 통해 스레드를 재운다. 이 구조를 PintOS처럼 <code>struct thread.elem</code> 하나를 직접 waiters list에 넣는 형태로 일반화하면 안 된다.</p>
+<p>현실 OS에서 구조가 더 복잡해지는 이유는 다음과 같다.</p>
+<ul>
+<li>여러 CPU가 동시에 같은 자료구조에 접근한다.</li>
+<li>interrupt context, user thread context, kernel worker context가 나뉜다.</li>
+<li>timeout, cancellation, alertable wait, priority boost, realtime scheduling 같은 정책이 붙는다.</li>
+<li>메모리 배리어와 원자 연산이 필요하다.</li>
+</ul>
+<p>이 차이를 기준으로 보면 PintOS는 동기화 의미를 학습할 수 있도록 자료구조와 실행 경로를 작게 드러낸 구현이고, QEMU는 그 PintOS 코드가 실행되는 더 낮은 층을 제공한다.</p>
+<h2 id="pintos가-세-도구를-구현하는-방식">PintOS가 세 도구를 구현하는 방식<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos가-세-도구를-구현하는-방식" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 동기화 도구는 <code>threads/synch.c</code>와 <code>include/threads/synch.h</code>에 모여 있다.</p>
+<p>세마포어는 남은 토큰 수인 <code>value</code>와 토큰을 기다리는 스레드 list인 <code>waiters</code>를 가진다. waiter list의 원소는 <code>struct thread.elem</code>이다.</p>
+<p>락은 현재 owner인 <code>holder</code>와 초기값 1인 <code>semaphore</code>를 가진다. priority donation은 lock holder를 알 수 있을 때만 의미가 있다.</p>
+<p>조건 변수의 <code>waiters</code>는 <code>struct semaphore_elem</code> list다. 각 <code>semaphore_elem</code> 안에는 private semaphore가 하나 있으며, 실제로 잠드는 스레드는 이 private semaphore의 <code>waiters</code>에 들어간다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>연산</th><th>실제 동작</th></tr></thead><tbody><tr><td><code>sema_down()</code></td><td>value>0이면 value—, 아니면 thread.elem을 waiters에 넣고 block</td></tr><tr><td><code>sema_up()</code></td><td>waiters 정렬 후 하나 unblock, value++</td></tr><tr><td><code>lock_acquire()</code></td><td>donation 설정 → <code>sema_down(&amp;lock->semaphore)</code> → holder 설정</td></tr><tr><td><code>lock_release()</code></td><td>donation 해제 → holder=NULL → <code>sema_up(&amp;lock->semaphore)</code></td></tr><tr><td><code>cond_wait()</code></td><td>private sema 생성 → cond->waiters에 추가 → lock 해제 → sema_down → lock 재획득</td></tr><tr><td><code>cond_signal()</code></td><td>cond->waiters 정렬 → 최고 priority의 private sema를 sema_up</td></tr></tbody></table></div>
+<p>여기서는 <code>thread.elem</code>의 재사용 제약이 중요하다. <code>struct thread</code>의 <code>elem</code>은 <code>ready_list</code>와 semaphore waiters에서 함께 쓰이지만, 한 스레드가 두 상태에 동시에 있지 않기 때문에 가능하다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>상태</th><th><code>thread.elem</code>이 들어갈 수 있는 곳</th></tr></thead><tbody><tr><td>READY</td><td><code>ready_list</code></td></tr><tr><td>BLOCKED on semaphore</td><td><code>sema->waiters</code></td></tr><tr><td>BLOCKED on sleep</td><td><code>sleep_list</code></td></tr></tbody></table></div>
+<p>반대로 <a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a>의 <code>donation_elem</code>은 별도 필드다. lock을 기다리는 스레드는 semaphore waiters에 <code>elem</code>으로 들어가는 동시에 holder의 donation list에는 <code>donation_elem</code>으로 들어갈 수 있기 때문이다.</p>
+<h2 id="qemu가-담당하는-경계">QEMU가 담당하는 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-담당하는-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 semaphore, lock, condition variable의 의미를 해석하지 않는다.</p>
+<ul>
+<li>guest CPU가 <code>sema_down()</code> 같은 PintOS 커널 함수를 실행한다.</li>
+<li>guest memory 안의 <code>struct semaphore</code>, <code>struct lock</code>, <code>struct condition</code>, <code>struct list_elem</code> 바이트가 바뀐다.</li>
+<li>GDB stub을 통해 guest register와 guest memory를 읽을 수 있다.</li>
+<li>timer interrupt 같은 하드웨어 사건은 QEMU 장치 모델과 interrupt controller를 통해 guest에 전달될 수 있다.</li>
+</ul>
+<p><code>sema->waiters</code>에 어떤 스레드가 들어갔다는 의미는 PintOS가 만든다. QEMU는 그 주소의 바이트를 보관하고 접근을 에뮬레이션할 뿐이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>semaphore</th><th>lock</th><th>condition variable</th></tr></thead><tbody><tr><td>실제 OS</td><td>커널/라이브러리별로 timeout, cancellation, PI 등 정책이 붙을 수 있음</td><td>mutex, spinlock, rwlock 등으로 세분화</td><td>wait queue와 mutex 재획득 규칙이 복잡</td></tr><tr><td>PintOS</td><td><code>value + waiters</code>로 구현</td><td>binary semaphore와 holder</td><td>private semaphore를 <code>cond->waiters</code>에 매단 구조</td></tr><tr><td>QEMU</td><td>의미를 해석하지 않음</td><td>의미를 해석하지 않음</td><td>의미를 해석하지 않음</td></tr></tbody></table></div>
+<h2 id="pintos-코드에서-확인하는-구현">PintOS 코드에서 확인하는 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-코드에서-확인하는-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="semaphore는-value와-waiters다">semaphore는 value와 waiters다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#semaphore는-value와-waiters다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/include/threads/synch.h</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  unsigned</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> value;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list waiters;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>sema_down()</code>은 value가 0이면 현재 스레드의 <code>elem</code>을 waiters에 넣고 block한다.</p>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/synch.c</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">value </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">sema->waiters, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">()->elem,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">                      thread_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  thread_block</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">value</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">--</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><code>sema_up()</code>은 waiters를 priority 순서로 정렬한 뒤 하나를 ready 상태로 돌린다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_sort</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, thread_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_unblock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_pop_front</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">),</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">                          struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem));</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">value</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">check_preemption</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span></code></pre></figure>
+<p>이 흐름은 <a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">스레드 스케줄러 (Thread Scheduler) Trace</a>의 <code>thread_block()</code>과 <code>thread_unblock()</code>으로 이어진다.</p>
+<h3 id="lock은-binary-semaphore에-owner를-더한다">lock은 binary semaphore에 owner를 더한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock은-binary-semaphore에-owner를-더한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/include/threads/synch.h</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">holder;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore semaphore;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>초기화할 때 semaphore value를 1로 둔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">semaphore</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>획득은 semaphore down 뒤 holder를 현재 스레드로 바꾼다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">semaphore</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span></code></pre></figure>
+<p>해제는 holder를 비우고 semaphore up으로 waiter를 깨운다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">lock</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">semaphore</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>이 <code>holder</code> 필드 때문에 priority donation도 가능해진다. semaphore 자체에는 owner가 없으므로 누구에게 priority를 빌려줄지 알 수 없다.</p>
+<h3 id="condition-variable은-private-semaphore를-사용한다">condition variable은 private semaphore를 사용한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#condition-variable은-private-semaphore를-사용한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/synch.c</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore_elem {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem elem;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore semaphore;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>cond_wait()</code>은 stack 위에 <code>semaphore_elem waiter</code>를 만들고 <code>cond->waiters</code>에 넣는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> semaphore_elem waiter;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">waiter.semaphore, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_push_back</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">cond</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">waiter.elem);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_release</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">waiter.semaphore);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_acquire</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(lock);</span></span></code></pre></figure>
+<p>여기에는 두 단계 list가 있다.</p>
+<ul>
+<li><code>cond->waiters</code>는 <code>semaphore_elem.elem</code>을 담는다.</li>
+<li>각 private semaphore의 <code>waiters</code>는 <code>thread.elem</code>을 담는다.</li>
+</ul>
+<p><code>cond_signal()</code>은 condition waiters를 동적 priority 기준으로 정렬한 뒤 private semaphore를 up한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_sort</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">cond</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, cmp_sema_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_pop_front</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">cond</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">),</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">                    struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> semaphore_elem</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem)</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">semaphore</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>비교 함수는 각 private semaphore의 waiters에서 가장 앞 스레드를 꺼내 priority를 비교한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ta </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_front</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sa</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">semaphore.waiters),</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">                               struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">tb </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_front</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sb</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">semaphore.waiters),</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">                               struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> ta</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> tb</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">priority;</span></span></code></pre></figure>
+<p>이 구현은 signal 시점에 private semaphore waiters에서 실제 blocked thread를 읽어 priority를 판단한다. 따라서 <code>cond_signal()</code>을 디버깅할 때는 <code>cond->waiters</code>만 보지 말고 각 private semaphore의 <code>waiters</code>까지 내려가야 한다.</p>
+<h3 id="테스트가-확인하는-기대-순서">테스트가 확인하는 기대 순서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#테스트가-확인하는-기대-순서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 테스트에는 다음 파일이 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/tests/threads/priority-sema.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/tests/threads/priority-condvar.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/tests/threads/priority-donate-sema.c</code></li>
+</ul>
+<p><code>priority-sema.c</code>는 semaphore에서 가장 높은 priority thread가 먼저 깨어나는지 본다. <code>priority-condvar.c</code>는 <code>cond_signal()</code>이 <code>cond_wait()</code> 중인 스레드 가운데 가장 높은 priority를 깨우는지 본다.</p>
+<p><code>priority-donate-sema.c</code>는 lock donation과 semaphore blocking이 함께 섞인 순서를 만든다. 낮은 priority L이 lock을 들고 semaphore에서 자고, 높은 priority H가 그 lock을 기다려 L에게 donation한다. main이 semaphore를 올리면 L이 먼저 깨어나 lock을 풀고 H가 이어서 진행한다.</p>
+<h3 id="qemu에서-보이는-경계">QEMU에서 보이는 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu에서-보이는-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU에서 확인할 파일은 다음과 같다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/gdbstub/gdbstub.c" class="external external-link">gdbstub/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>gdb_read_register</code></li>
+<li><code>gdb_write_register</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/gdbstub.c" class="external external-link">target/i386/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>x86_cpu_gdb_read_register</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/system/physmem.c" class="external external-link">system/physmem.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>cpu_memory_rw_debug</code></li>
+</ul>
+</li>
+</ul>
+<p><code>cpu_memory_rw_debug()</code>는 guest virtual address를 debug 경로로 guest physical memory 접근으로 바꿔 읽고 쓴다. 이 덕분에 GDB에서 <code>sema->value</code>나 <code>thread_current()->status</code> 같은 PintOS guest memory를 볼 수 있다.</p>
+<h2 id="값과-주소를-따라가기">값과 주소를 따라가기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#값과-주소를-따라가기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="semaphore-waiters에-들어가는-주소">semaphore waiters에 들어가는 주소<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#semaphore-waiters에-들어가는-주소" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>가정: thread T가 주소 <code>0x8004_7000</code>에 있고, <code>elem</code> 필드의 offset이 <code>0x18</code>이라면, <code>sema_down()</code>에서 waiters list에 들어가는 주소는 <code>T</code> 자체가 아니라 <code>T->elem</code> 주소다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>&amp;T->elem = 0x8004_7000 + 0x18 = 0x8004_7018</span></span></code></pre></figure>
+<p>waiters의 원소를 thread로 되돌릴 때는 다음처럼 해석한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_front</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">sema</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">waiters</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">), </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem)</span></span></code></pre></figure>
+<h3 id="condition-variable의-두-단계-주소">condition variable의 두 단계 주소<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#condition-variable의-두-단계-주소" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>cond->waiters의 원소: semaphore_elem.elem (offset 0x00)</span></span>
+<span data-line><span>  → list_entry(..., struct semaphore_elem, elem)</span></span>
+<span data-line><span>    → semaphore_elem.semaphore (offset 0x10)</span></span>
+<span data-line><span>      → semaphore.waiters의 원소: thread.elem</span></span>
+<span data-line><span>        → list_entry(..., struct thread, elem) → 실제 thread</span></span></code></pre></figure>
+<p><code>cond->waiters</code>를 <code>struct thread</code>로 바로 캐스팅하면 틀린다. 먼저 <code>struct semaphore_elem</code>으로 되돌린 뒤 그 안의 semaphore waiters를 봐야 한다.</p>
+<h3 id="semaphore-value-변화">semaphore value 변화<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#semaphore-value-변화" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>초기값 0 semaphore에서 한 스레드가 기다리고 나중에 <code>up</code>이 호출되면 다음 순서로 값이 바뀐다.</p>
+<ul>
+<li>시점 | sema->value | waiters | 동작</li>
+<li>초기 | 0 | []</li>
+<li>T1 down | 0 (유지) | [T1] | value==0 → T1 block</li>
+<li>T2 up | 1 | [] (T1 꺼냄) | T1 unblock, value++</li>
+<li>T1 재개 | 0 | [] | value— (while 루프 탈출)</li>
+</ul>
+<p>기다리는 스레드가 없으면 <code>sema_up()</code>은 <code>waiters</code>에서 원소를 꺼내지 않고 value만 증가시킨다.</p>
+<h2 id="gdb로-실행-상태-확인하기">GDB로 실행 상태 확인하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-실행-상태-확인하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 관찰 지점은 코드 구조를 실행 중 자료구조와 연결한다. 명령을 사용할 때 <code>list_front()</code>는 빈 리스트에 적용하면 안 되므로 먼저 <code>list_empty()</code>를 확인해야 한다.</p>
+<h3 id="semaphore에서-잠드는-순간">semaphore에서 잠드는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#semaphore에서-잠드는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b sema_down</span></span>
+<span data-line><span>p sema->value</span></span>
+<span data-line><span>p sema->waiters</span></span>
+<span data-line><span>p thread_current()->name</span></span>
+<span data-line><span>p thread_current()->priority</span></span></code></pre></figure>
+<h3 id="semaphore에서-깨우는-순간">semaphore에서 깨우는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#semaphore에서-깨우는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b sema_up</span></span>
+<span data-line><span>p sema->value</span></span>
+<span data-line><span>p list_empty(&amp;sema->waiters)</span></span>
+<span data-line><span>p list_entry(list_front(&amp;sema->waiters), struct thread, elem)->name</span></span>
+<span data-line><span>p list_entry(list_front(&amp;sema->waiters), struct thread, elem)->priority</span></span></code></pre></figure>
+<h3 id="lock이-semaphore-위에서-동작하는-순간">lock이 semaphore 위에서 동작하는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock이-semaphore-위에서-동작하는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b lock_acquire</span></span>
+<span data-line><span>p lock->holder</span></span>
+<span data-line><span>p lock->semaphore.value</span></span></code></pre></figure>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b lock_release</span></span>
+<span data-line><span>p lock->holder</span></span>
+<span data-line><span>p lock->semaphore.waiters</span></span></code></pre></figure>
+<h3 id="condition-variable의-두-단계-list">condition variable의 두 단계 list<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#condition-variable의-두-단계-list" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b cond_wait</span></span>
+<span data-line><span>p &amp;waiter</span></span>
+<span data-line><span>p &amp;waiter.elem</span></span>
+<span data-line><span>p &amp;waiter.semaphore</span></span></code></pre></figure>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b cond_signal</span></span>
+<span data-line><span>p cond->waiters</span></span>
+<span data-line><span>p list_entry(list_front(&amp;cond->waiters), struct semaphore_elem, elem)</span></span></code></pre></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>테스트</th><th>기대 순서</th><th>확인하는 것</th></tr></thead><tbody><tr><td>priority-sema</td><td>높은 priority 먼저 출력</td><td>sema_up이 최고 priority waiter를 깨움</td></tr><tr><td>priority-condvar</td><td>높은 priority 먼저 출력</td><td>cond_signal이 최고 priority의 private sema를 up</td></tr><tr><td>priority-donate-sema</td><td>L → H 순서</td><td>donation된 L이 먼저 실행, lock 해제 후 H</td></tr></tbody></table></div>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>include/threads/synch.h</code></td><td><code>struct semaphore</code></td><td>value + waiters 정의</td></tr><tr><td><code>include/threads/synch.h</code></td><td><code>struct lock</code></td><td>holder + semaphore 정의</td></tr><tr><td><code>include/threads/synch.h</code></td><td><code>struct condition</code></td><td>waiters (semaphore_elem list) 정의</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_down()</code></td><td>value 검사, waiters 삽입, thread_block</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_up()</code></td><td>waiters 정렬, thread_unblock, value++</td></tr><tr><td><code>threads/synch.c</code></td><td><code>lock_acquire()</code></td><td>donation 설정 → sema_down → holder 설정</td></tr><tr><td><code>threads/synch.c</code></td><td><code>lock_release()</code></td><td>donation 해제 → holder=NULL → sema_up</td></tr><tr><td><code>threads/synch.c</code></td><td><code>cond_wait()</code></td><td>private sema 생성, lock 해제, sema_down, lock 재획득</td></tr><tr><td><code>threads/synch.c</code></td><td><code>cond_signal()</code></td><td>cond->waiters 정렬, 최고 priority sema_up</td></tr><tr><td><code>threads/synch.c</code></td><td><code>cmp_sema_priority()</code></td><td>private sema의 waiter priority 비교</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_block()</code></td><td>status=BLOCKED, schedule()</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_unblock()</code></td><td>status=READY, ready_list 삽입</td></tr></tbody></table></div>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="sema_down-block-진입-추적">sema_down block 진입 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#sema_down-block-진입-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-sema-down</span></span>
+<span data-line><span>  break sema_down</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $s = (struct semaphore *)$rdi</span></span>
+<span data-line><span>    set $t = (struct thread *)thread_current()</span></span>
+<span data-line><span>    printf &quot;sema_down: sema=%p value=%d thread=%s(pri=%d)\n&quot;, $s, $s->value, $t->name, $t->priority</span></span>
+<span data-line><span>    if $s->value == 0</span></span>
+<span data-line><span>      printf &quot;  → will BLOCK (value==0)\n&quot;</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot;  → will pass (value→%d)\n&quot;, $s->value - 1</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="sema_up-unblock-추적">sema_up unblock 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#sema_up-unblock-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-sema-up</span></span>
+<span data-line><span>  break sema_up</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $s = (struct semaphore *)$rdi</span></span>
+<span data-line><span>    printf &quot;sema_up: sema=%p value=%d→%d&quot;, $s, $s->value, $s->value + 1</span></span>
+<span data-line><span>    if !list_empty(&amp;$s->waiters)</span></span>
+<span data-line><span>      set $front = list_entry(list_front(&amp;$s->waiters), struct thread, elem)</span></span>
+<span data-line><span>      printf &quot; waking=%s(pri=%d)&quot;, $front->name, $front->priority</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot; (no waiters)&quot;</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    printf &quot;\n&quot;</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="lock-contention-감지">lock contention 감지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock-contention-감지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-lock-contention</span></span>
+<span data-line><span>  break lock_acquire</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $lk = (struct lock *)$rdi</span></span>
+<span data-line><span>    set $t = (struct thread *)thread_current()</span></span>
+<span data-line><span>    if $lk->holder != 0</span></span>
+<span data-line><span>      printf &quot;CONTENTION: thread=%s(pri=%d) wants lock=%p held by %s(pri=%d)\n&quot;, $t->name, $t->priority, $lk, ((struct thread *)$lk->holder)->name, ((struct thread *)$lk->holder)->priority</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot;lock_acquire: thread=%s gets lock=%p (uncontested)\n&quot;, $t->name, $lk</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="lock_release와-donation-해제-추적">lock_release와 donation 해제 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock_release와-donation-해제-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-lock-release</span></span>
+<span data-line><span>  break lock_release</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $lk = (struct lock *)$rdi</span></span>
+<span data-line><span>    set $t = (struct thread *)thread_current()</span></span>
+<span data-line><span>    printf &quot;lock_release: thread=%s lock=%p\n&quot;, $t->name, $lk</span></span>
+<span data-line><span>    printf &quot;  priority before release: %d (effective)\n&quot;, $t->priority</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  break *lock_release+80</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $t = (struct thread *)thread_current()</span></span>
+<span data-line><span>    printf &quot;  priority after  release: %d\n&quot;, $t->priority</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="cond_wait와-cond_signal-추적">cond_wait와 cond_signal 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cond_wait와-cond_signal-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define watch-cond</span></span>
+<span data-line><span>  break cond_wait</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $t = (struct thread *)thread_current()</span></span>
+<span data-line><span>    printf &quot;cond_wait: thread=%s → creating private sema, releasing lock\n&quot;, $t->name</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  break cond_signal</span></span>
+<span data-line><span>  commands</span></span>
+<span data-line><span>    silent</span></span>
+<span data-line><span>    set $c = (struct condition *)$rdi</span></span>
+<span data-line><span>    if !list_empty(&amp;$c->waiters)</span></span>
+<span data-line><span>      printf &quot;cond_signal: waking highest-priority waiter from %d waiters\n&quot;, (int)list_size(&amp;$c->waiters)</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot;cond_signal: no waiters (spurious)\n&quot;</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="waiters-list-순서-덤프">waiters list 순서 덤프<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#waiters-list-순서-덤프" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define dump-sema-waiters</span></span>
+<span data-line><span>  set $s = (struct semaphore *)$arg0</span></span>
+<span data-line><span>  set $e = $s->waiters.head.next</span></span>
+<span data-line><span>  set $i = 0</span></span>
+<span data-line><span>  printf &quot;sema %p waiters (value=%d):\n&quot;, $s, $s->value</span></span>
+<span data-line><span>  while $e != &amp;$s->waiters.tail</span></span>
+<span data-line><span>    set $t = (struct thread *)((uint64_t)$e - 0x28)</span></span>
+<span data-line><span>    printf &quot;  [%d] %s priority=%d status=%d\n&quot;, $i, $t->name, $t->priority, $t->status</span></span>
+<span data-line><span>    set $e = $e->next</span></span>
+<span data-line><span>    set $i = $i + 1</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  if $i == 0</span></span>
+<span data-line><span>    printf &quot;  (empty)\n&quot;</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="priority-sema에서-sema_up이-고르는-스레드">priority-sema에서 sema_up이 고르는 스레드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-sema에서-sema_up이-고르는-스레드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li><code>watch-sema-up</code> 정의 후 <code>priority-sema</code> 테스트 실행</li>
+<li>여러 스레드가 sema_down에서 block된 후, main이 sema_up 할 때마다 “waking=xxx(pri=NN)” 출력</li>
+<li>priority 내림차순으로 깨워지는지 확인 (63→62→61…)</li>
+<li>중간에 <code>dump-sema-waiters &amp;sema</code> 실행하여 waiters list가 priority 순 정렬인지 확인</li>
+</ol>
+<h3 id="lock-contention과-priority-donation">lock contention과 priority donation<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lock-contention과-priority-donation" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li><code>watch-lock-contention</code>과 <code>watch-lock-release</code> 정의 후 <code>priority-donate-one</code> 실행</li>
+<li>H가 lock을 요청할 때 “CONTENTION: thread=H(pri=31) wants lock held by L(pri=21)” 출력</li>
+<li>L이 lock_release 할 때 “priority before release: 31” → “priority after release: 21”로 priority 복원 확인</li>
+</ol>
+<p>이 시나리오는 관찰 절차와 기대 상태를 제시한다. 문서 안에는 실제 실행 결과가 포함되어 있지 않으므로, 출력 순서와 priority 변화는 GDB에서 직접 확인해야 한다.</p>
+<h2 id="linux와-pintos의-동기화-프리미티브">Linux와 PintOS의 동기화 프리미티브<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux와-pintos의-동기화-프리미티브" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>semaphore 구현</td><td><code>struct semaphore</code> (atomic + waitqueue)</td><td>value + list waiters</td></tr><tr><td>mutex/lock</td><td><code>struct mutex</code> (optimistic spin + sleeping)</td><td>value-1 semaphore + holder</td></tr><tr><td>condition variable</td><td><code>wait_event()</code> / <code>wake_up()</code> 매크로</td><td>private sema + lock release/acquire</td></tr><tr><td>priority inheritance</td><td>rt_mutex에서만 지원</td><td>lock_acquire에서 직접 구현</td></tr><tr><td>spinlock</td><td><code>spin_lock()</code> (SMP 필수)</td><td>PintOS는 단일 CPU → interrupt disable</td></tr><tr><td>atomic 연산</td><td><code>atomic_t</code>, <code>cmpxchg</code>, <code>lock prefix</code></td><td>interrupt disable로 대체</td></tr><tr><td>futex</td><td>user/kernel 하이브리드</td><td>없음 (커널 전용)</td></tr><tr><td>reader-writer lock</td><td><code>rwlock_t</code>, <code>rw_semaphore</code></td><td>없음</td></tr><tr><td>RCU</td><td>read-copy-update (lock-free read)</td><td>없음</td></tr><tr><td>waitqueue 정렬</td><td>FIFO (일반), priority (rt)</td><td>priority 기준 정렬</td></tr><tr><td>preemption 제어</td><td><code>preempt_disable()</code> / CONFIG_PREEMPT</td><td><code>intr_disable()</code> / <code>intr_enable()</code></td></tr></tbody></table></div>
+<h2 id="다시-구분하는-기준">다시 구분하는 기준<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#다시-구분하는-기준" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>semaphore는 <code>value</code>와 <code>waiters</code>로 토큰이 없을 때 잠들고 토큰이 생겼을 때 깨우는 흐름을 만든다. lock은 value 1인 semaphore에 <code>holder</code>를 붙여 owner가 있는 임계 구역을 만든다. condition variable은 조건 자체가 아니라 조건이 바뀔 때까지 잠드는 장소이며, PintOS의 <code>cond_wait()</code>은 private semaphore를 만들고 <code>cond_signal()</code>은 그 semaphore를 <code>sema_up()</code>한다.</p>
+<p>이 의미와 구현을 관찰하는 층도 구분해야 한다. PintOS는 waiters list와 스레드 상태를 관리하고, QEMU는 그 의미를 해석하지 않은 채 guest CPU 실행과 guest memory의 바이트를 에뮬레이션한다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a>
+<ul>
+<li><code>thread_block()</code>과 <code>thread_unblock()</code>이 READY/BLOCKED 상태를 어떻게 바꾸는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/condition-wait-signal-trace" class="internal internal-link alias" data-slug="wiki/os/condition-wait-signal-trace">signal</a>
+<ul>
+<li><code>cond_wait()</code>과 <code>cond_signal()</code>이 private semaphore를 통해 이어지는 순서.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">priority donation</a>
+<ul>
+<li>lock holder가 있을 때 priority donation이 왜 가능해지는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-intrusive-list-lab" class="internal internal-link alias" data-slug="wiki/os/pintos-intrusive-list-lab">intrusive list Lab</a>
+<ul>
+<li><code>thread.elem</code>과 <code>semaphore_elem.elem</code> 주소를 구분해서 보는 방법.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/why-intr-yield-on-return" class="internal internal-link alias" data-slug="wiki/os/why-intr-yield-on-return">intr yield on return()</a>
+<ul>
+<li>sleep 가능한 동기화 함수가 interrupt context에서 위험한 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/semaphore-mechanism" class="internal internal-link alias" data-slug="wiki/os/semaphore-mechanism">semaphore</a>
+<ul>
+<li>semaphore 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lock-mechanism" class="internal internal-link alias" data-slug="wiki/os/lock-mechanism">lock</a>
+<ul>
+<li>lock 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/condition-variable-mechanism" class="internal internal-link alias" data-slug="wiki/os/condition-variable-mechanism">condition variable</a>
+<ul>
+<li>condition variable 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/sema-down-block" class="internal internal-link alias" data-slug="wiki/os/sema-down-block">sema down()</a>
+<ul>
+<li><code>sema_down()</code>의 block 동작.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/sema-up-unblock" class="internal internal-link alias" data-slug="wiki/os/sema-up-unblock">sema up()</a>
+<ul>
+<li><code>sema_up()</code>의 unblock 동작.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lock-acquire-release" class="internal internal-link alias" data-slug="wiki/os/lock-acquire-release">release</a>
+<ul>
+<li><code>lock_acquire()</code>와 <code>lock_release()</code> 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/private-semaphore" class="internal internal-link alias" data-slug="wiki/os/private-semaphore">private semaphore</a>
+<ul>
+<li><code>cond_wait()</code>의 private semaphore 구조.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/priority-inversion-problem" class="internal internal-link alias" data-slug="wiki/os/priority-inversion-problem">priority inversion</a>
+<ul>
+<li>priority donation의 근본 동기.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/list-elem-structure" class="internal internal-link alias" data-slug="wiki/os/list-elem-structure">list elem</a>
+<ul>
+<li>PintOS intrusive list 기본 구조.</li>
+</ul>
+</li>
+</ul>
+<p>연결 문서: <a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">컨텍스트 스위치 (Context Switch) Trace</a></p></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/atomic-operation" class="internal">원자적 연산</a></li><li><a href="../../wiki/os/condition-variable-mechanism" class="internal">조건 변수 메커니즘 (Condition Variable)</a></li><li><a href="../../wiki/os/deadlock" class="internal">데드락</a></li><li><a href="../../wiki/os/ipc-message-passing" class="internal">IPC Message Passing — 커널을 경유하는 프로세스 간 통신</a></li><li><a href="../../wiki/os/linux-windows-real-os" class="internal">Linux/Windows 실제 운영체제</a></li><li><a href="../../wiki/os/mlfqs-scheduler" class="internal">MLFQS 스케줄러</a></li><li><a href="../../wiki/os/pintos-directory-structure" class="internal">PintOS 디렉터리 구조</a></li><li><a href="../../wiki/os/priority-donation-chain-lab" class="internal">Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기</a></li><li><a href="../../wiki/os/priority-donation-knowledge" class="internal">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a></li><li><a href="../../wiki/os/process-wait-exit-trace" class="internal">부모는 자식의 exit status를 어떻게 받는가</a></li><li><a href="../../wiki/os/race-condition" class="internal">경쟁 조건 — 공유 자원에 동시 접근하면 결과가 달라진다</a></li><li><a href="../../wiki/os/semaphore-mechanism" class="internal">세마포어 메커니즘 (Semaphore Mechanism)</a></li><li><a href="../../wiki/os/thread-priority-preemption-lab" class="internal">Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간</a></li><li><a href="../../wiki/os/thread-scheduler-trace" class="internal">스레드 스케줄러 (Thread Scheduler) Trace</a></li><li><a href="../../wiki/os/thread-state-transition" class="internal">Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING</a></li><li><a href="../../wiki/os/why-intr-yield-on-return" class="internal">인터럽트 끝에서 yield하는 이유</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-631" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#세마포어-락-조건-변수-잠들고-깨우는-구조를-구분하기" data-for="세마포어-락-조건-변수-잠들고-깨우는-구조를-구분하기">세마포어, 락, 조건 변수: 잠들고 깨우는 구조를 구분하기</a></li><li class="depth-1"><a href="#왜-동기화-도구가-세-개나-필요할까" data-for="왜-동기화-도구가-세-개나-필요할까">왜 동기화 도구가 세 개나 필요할까</a></li><li class="depth-1"><a href="#세-도구가-잠들고-깨우는-흐름" data-for="세-도구가-잠들고-깨우는-흐름">세 도구가 잠들고 깨우는 흐름</a></li><li class="depth-1"><a href="#세마포어-값과-대기-순서" data-for="세마포어-값과-대기-순서">세마포어 값과 대기 순서</a></li><li class="depth-1"><a href="#실제-운영체제에서는-무엇이-달라지는가" data-for="실제-운영체제에서는-무엇이-달라지는가">실제 운영체제에서는 무엇이 달라지는가</a></li><li class="depth-1"><a href="#pintos가-세-도구를-구현하는-방식" data-for="pintos가-세-도구를-구현하는-방식">PintOS가 세 도구를 구현하는 방식</a></li><li class="depth-1"><a href="#qemu가-담당하는-경계" data-for="qemu가-담당하는-경계">QEMU가 담당하는 경계</a></li><li class="depth-1"><a href="#pintos-코드에서-확인하는-구현" data-for="pintos-코드에서-확인하는-구현">PintOS 코드에서 확인하는 구현</a></li><li class="depth-2"><a href="#semaphore는-value와-waiters다" data-for="semaphore는-value와-waiters다">semaphore는 value와 waiters다</a></li><li class="depth-2"><a href="#lock은-binary-semaphore에-owner를-더한다" data-for="lock은-binary-semaphore에-owner를-더한다">lock은 binary semaphore에 owner를 더한다</a></li><li class="depth-2"><a href="#condition-variable은-private-semaphore를-사용한다" data-for="condition-variable은-private-semaphore를-사용한다">condition variable은 private semaphore를 사용한다</a></li><li class="depth-2"><a href="#테스트가-확인하는-기대-순서" data-for="테스트가-확인하는-기대-순서">테스트가 확인하는 기대 순서</a></li><li class="depth-2"><a href="#qemu에서-보이는-경계" data-for="qemu에서-보이는-경계">QEMU에서 보이는 경계</a></li><li class="depth-1"><a href="#값과-주소를-따라가기" data-for="값과-주소를-따라가기">값과 주소를 따라가기</a></li><li class="depth-2"><a href="#semaphore-waiters에-들어가는-주소" data-for="semaphore-waiters에-들어가는-주소">semaphore waiters에 들어가는 주소</a></li><li class="depth-2"><a href="#condition-variable의-두-단계-주소" data-for="condition-variable의-두-단계-주소">condition variable의 두 단계 주소</a></li><li class="depth-2"><a href="#semaphore-value-변화" data-for="semaphore-value-변화">semaphore value 변화</a></li><li class="depth-1"><a href="#gdb로-실행-상태-확인하기" data-for="gdb로-실행-상태-확인하기">GDB로 실행 상태 확인하기</a></li><li class="depth-2"><a href="#semaphore에서-잠드는-순간" data-for="semaphore에서-잠드는-순간">semaphore에서 잠드는 순간</a></li><li class="depth-2"><a href="#semaphore에서-깨우는-순간" data-for="semaphore에서-깨우는-순간">semaphore에서 깨우는 순간</a></li><li class="depth-2"><a href="#lock이-semaphore-위에서-동작하는-순간" data-for="lock이-semaphore-위에서-동작하는-순간">lock이 semaphore 위에서 동작하는 순간</a></li><li class="depth-2"><a href="#condition-variable의-두-단계-list" data-for="condition-variable의-두-단계-list">condition variable의 두 단계 list</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#sema_down-block-진입-추적" data-for="sema_down-block-진입-추적">sema_down block 진입 추적</a></li><li class="depth-2"><a href="#sema_up-unblock-추적" data-for="sema_up-unblock-추적">sema_up unblock 추적</a></li><li class="depth-2"><a href="#lock-contention-감지" data-for="lock-contention-감지">lock contention 감지</a></li><li class="depth-2"><a href="#lock_release와-donation-해제-추적" data-for="lock_release와-donation-해제-추적">lock_release와 donation 해제 추적</a></li><li class="depth-2"><a href="#cond_wait와-cond_signal-추적" data-for="cond_wait와-cond_signal-추적">cond_wait와 cond_signal 추적</a></li><li class="depth-2"><a href="#waiters-list-순서-덤프" data-for="waiters-list-순서-덤프">waiters list 순서 덤프</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#priority-sema에서-sema_up이-고르는-스레드" data-for="priority-sema에서-sema_up이-고르는-스레드">priority-sema에서 sema_up이 고르는 스레드</a></li><li class="depth-2"><a href="#lock-contention과-priority-donation" data-for="lock-contention과-priority-donation">lock contention과 priority donation</a></li><li class="depth-1"><a href="#linux와-pintos의-동기화-프리미티브" data-for="linux와-pintos의-동기화-프리미티브">Linux와 PintOS의 동기화 프리미티브</a></li><li class="depth-1"><a href="#다시-구분하는-기준" data-for="다시-구분하는-기준">다시 구분하는 기준</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

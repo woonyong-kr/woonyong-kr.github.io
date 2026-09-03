@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간) · 최우녕"/><meta name="twitter:description" content="닫힌 fd 번호가 다음 open에서 다시 쓰이는 순간을 코드로 확인하는 실험."/><meta property="og:description" content="닫힌 fd 번호가 다음 open에서 다시 쓰이는 순간을 코드로 확인하는 실험."/><meta property="og:image:alt" content="닫힌 fd 번호가 다음 open에서 다시 쓰이는 순간을 코드로 확인하는 실험."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/fd-close-reuse-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/fd-close-reuse-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="닫힌 fd 번호가 다음 open에서 다시 쓰이는 순간을 코드로 확인하는 실험."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/fd-close-reuse-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-460" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-460" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="fd-closereuse-lab-닫힌-fd-번호가-다시-쓰이는-순간">fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-lab-닫힌-fd-번호가-다시-쓰이는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: 닫힌 fd 번호가 다음 open에서 다시 쓰이는 순간을 코드로 확인하는 실험.</p>
+</blockquote>
+<h2 id="다음-코드에서-c는-몇-번-fd가-될까">다음 코드에서 <code>c</code>는 몇 번 fd가 될까<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#다음-코드에서-c는-몇-번-fd가-될까" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> b </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (a);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> c </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>처음 보면 “한 번 쓴 fd 번호를 다시 써도 될까?”라는 의문이 생긴다. fd는 파일에 영구히 붙는 ID가 아니라 <strong>현재 프로세스의 fd table에서 사용 중인 칸 번호</strong>다. 따라서 <code>close(a)</code>가 해당 칸을 비우면 다음 <code>open()</code>이 그 번호를 다시 사용할 수 있다.</p>
+<p>이 장면에서 살펴볼 질문은 두 가지다.</p>
+<ul>
+<li><code>close(fd)</code>로 비운 번호를 다음 <code>open()</code>이 왜 다시 사용할 수 있을까?</li>
+<li><code>remove(name)</code>으로 파일 이름을 지운 뒤에도 이미 열린 fd로 왜 계속 읽고 쓸 수 있을까?</li>
+</ul>
+<h2 id="fd-closereuse-오해">fd close/reuse 오해<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-오해" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>fd를 “파일 그 자체”라고 생각하면 다음 세 상황을 혼동하기 쉽다.</p>
+<ul>
+<li><code>close(2)</code> 뒤에 fd <code>2</code>를 다시 받아도 되는가?</li>
+<li>이미 닫은 fd를 한 번 더 <code>close(2)</code>하면 무슨 일이 일어나는가?</li>
+<li><code>remove(&quot;a.txt&quot;)</code>는 열린 fd까지 닫는가?</li>
+</ul>
+<p>세 질문은 fd와 파일 이름이 서로 다른 자료구조에 속한다는 사실로 설명할 수 있다.</p>
+<blockquote>
+<p>fd는 파일 이름도, 디스크 주소도, 커널 포인터도 아니다. fd는 현재 프로세스의 fd table index다.</p>
+</blockquote>
+<p><code>close(fd)</code>는 fd table에서 해당 index의 칸을 비운다. 반면 <code>remove(name)</code>은 디렉터리에서 이름을 지운다. 두 작업은 서로 다른 자료구조를 변경한다.</p>
+<h2 id="fd-closereuse-흐름">fd close/reuse 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>먼저 fd table을 포인터 배열로 생각해 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>current thread</span></span>
+<span data-line><span>  fd_table</span></span>
+<span data-line><span>    [0] reserved for stdin</span></span>
+<span data-line><span>    [1] reserved for stdout</span></span>
+<span data-line><span>    [2] -> struct file A</span></span>
+<span data-line><span>    [3] -> struct file B</span></span>
+<span data-line><span>    [4] -> NULL</span></span></code></pre></figure>
+<p><code>close(2)</code>를 호출하면 다음과 같이 2번 칸이 비워진다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>before close(2):</span></span>
+<span data-line><span>  fd_table[2] -> struct file A</span></span>
+<span data-line> </span>
+<span data-line><span>after close(2):</span></span>
+<span data-line><span>  fd_table[2] -> NULL</span></span></code></pre></figure>
+<p>그다음 <code>open()</code>은 빈 칸에 새 <code>struct file *</code>를 넣고 그 칸의 번호를 사용자에게 반환한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>open(&quot;sample.txt&quot;)</span></span>
+<span data-line><span>  -> struct file C 생성</span></span>
+<span data-line><span>  -> fd_table[2]가 비어 있음</span></span>
+<span data-line><span>  -> fd_table[2] = struct file C</span></span>
+<span data-line><span>  -> return 2</span></span></code></pre></figure>
+<p>fd 재사용은 특별한 예외가 아니라 비워진 배열 index를 다시 사용하는 과정이다.</p>
+<h2 id="이번-lab에서-분리해-볼-세-가지-상황">이번 Lab에서 분리해 볼 세 가지 상황<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#이번-lab에서-분리해-볼-세-가지-상황" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-같은-파일을-두-번-열기">1) 같은 파일을 두 번 열기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-같은-파일을-두-번-열기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h1 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h2 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>두 호출은 같은 파일 이름에서 출발하지만 서로 다른 fd를 반환해야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] -> struct file A -> same inode</span></span>
+<span data-line><span>fd_table[3] -> struct file B -> same inode</span></span></code></pre></figure>
+<p>두 <code>struct file</code>이 같은 inode를 가리키더라도 현재 위치 <code>pos</code>와 같은 열린 상태는 따로 움직일 수 있다.</p>
+<h3 id="2-닫은-fd-번호-재사용">2) 닫은 fd 번호 재사용<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-닫은-fd-번호-재사용" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 보통 2</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> b </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 보통 3</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (a);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> c </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 이 구현에서는 다시 2가 될 수 있음</span></span></code></pre></figure>
+<p><code>close(a)</code> 뒤에도 C 변수 <code>a</code>에는 값 <code>2</code>가 남아 있다. 그러나 커널의 <code>fd_table[2]</code>는 이미 비워진 상태다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>close(a) 이후:</span></span>
+<span data-line><span>  a = 2                  # 유저 변수에 남은 낡은 숫자</span></span>
+<span data-line><span>  fd_table[2] = NULL      # 커널 table에서는 더 이상 열린 파일이 아님</span></span>
+<span data-line> </span>
+<span data-line><span>open(...) 이후:</span></span>
+<span data-line><span>  c = 2</span></span>
+<span data-line><span>  fd_table[2] -> struct file C</span></span></code></pre></figure>
+<p>따라서 <code>close(a)</code> 뒤에 <code>write(a, ...)</code>를 호출한다고 해서 예전 파일 A에 쓰는 것은 아니다. 그때도 <code>fd_table[2]</code>가 비어 있으면 호출은 실패한다. 그 사이에 새 파일 C가 2번 칸에 들어왔다면 같은 숫자가 C를 가리킬 수 있다.</p>
+<h3 id="3-이름을-지운-뒤-열린-fd로-계속-쓰기">3) 이름을 지운 뒤 열린 fd로 계속 쓰기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-이름을-지운-뒤-열린-fd로-계속-쓰기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;deleteme&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">remove</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;deleteme&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">write</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd, buf, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1234</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">seek</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd, out, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1234</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd);</span></span></code></pre></figure>
+<p><code>remove(&quot;deleteme&quot;)</code>는 fd table을 비우지 않는다. 디렉터리 entry에서 이름을 지우고 inode를 “삭제 예정” 상태로 표시한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] -> struct file -> inode(removed = true, open_cnt > 0)</span></span></code></pre></figure>
+<p>열린 fd가 모두 닫히면 inode 자원이 실제로 해제된다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서도 fd는 프로세스별 fd table의 index다. <code>open()</code>은 보통 사용할 수 있는 가장 낮은 fd 번호를 반환한다. 따라서 <code>close(3)</code> 뒤의 <code>open()</code>이 다시 <code>3</code>을 반환하는 것은 자연스럽다.</p>
+<p>Linux의 <code>unlink()</code>도 이름과 열린 fd를 분리해서 이해해야 한다. <code>unlink(&quot;a.txt&quot;)</code>는 directory entry를 제거한다. 이미 열린 fd가 있다면 파일 내용은 마지막 참조가 사라질 때까지 남을 수 있다.</p>
+<p>Windows에서는 같은 문제를 <code>HANDLE</code>과 object lifetime으로 다룬다. Win32 <code>HANDLE</code>은 Linux fd와 같은 “작은 정수 배열 index”라기보다 불투명한 handle 값으로 보는 편이 낫다. 삭제에는 share mode, delete disposition, handle 참조 수 같은 정책이 얽혀 있으므로 Unix의 <code>unlink</code> 규칙을 그대로 적용하면 안 된다.</p>
+<blockquote>
+<p>유저에게 보이는 작은 식별자와 실제 커널 객체의 생명주기는 분리되어 있다.</p>
+</blockquote>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 저장소의 PintOS는 fd table을 <code>struct thread</code>에 둔다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/threads/thread.h</code>
+<ul>
+<li><code>struct file **fd_table</code></li>
+<li><code>int next_fd</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code>
+<ul>
+<li><code>process_add_file</code></li>
+<li><code>process_get_file</code></li>
+<li><code>process_close_file</code></li>
+<li><code>duplicate_fd_table</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/syscall.c</code>
+<ul>
+<li><code>open</code></li>
+<li><code>close</code></li>
+<li><code>remove</code></li>
+</ul>
+</li>
+</ul>
+<p>초기 유저 프로세스는 0으로 채운 <code>fd_table</code> 한 페이지를 받고 <code>next_fd</code>를 2로 시작한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table = palloc_get_page(PAL_ZERO)</span></span>
+<span data-line><span>next_fd  = 2</span></span></code></pre></figure>
+<p>현재 <code>process_add_file()</code>은 <code>next_fd</code>부터 검색하지 않는다. 매번 fd <code>2</code>부터 <code>FD_MAX</code>까지 빈 칸을 훑는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>for fd = 2 .. FD_MAX-1:</span></span>
+<span data-line><span>  if fd_table[fd] == NULL:</span></span>
+<span data-line><span>    fd_table[fd] = file</span></span>
+<span data-line><span>    if fd >= next_fd:</span></span>
+<span data-line><span>      next_fd = fd + 1</span></span>
+<span data-line><span>    return fd</span></span></code></pre></figure>
+<p>이 구현에서 fd 재사용이 일어나는 이유는 <code>next_fd</code>만이 아니다. <strong>할당 루프가 2번 칸부터 빈 칸을 다시 찾기 때문에</strong> 닫힌 낮은 fd가 먼저 재사용된다.</p>
+<p><code>process_close_file()</code>은 파일을 닫은 뒤 해당 칸을 비우고 <code>next_fd</code>를 조정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>file_close(fd_table[fd])</span></span>
+<span data-line><span>fd_table[fd] = NULL</span></span>
+<span data-line><span>if fd &lt; next_fd:</span></span>
+<span data-line><span>  next_fd = fd</span></span></code></pre></figure>
+<p>현재 구현에서 <code>next_fd</code>는 “다음 할당 시작점”이라기보다 복제 범위와 힌트에 가깝다. <code>duplicate_fd_table()</code>은 <code>fd &lt; parent->next_fd</code>인 범위만 복제한다. 중간 fd를 닫은 뒤 더 큰 fd가 살아 있다면 GDB에서 <code>next_fd</code>와 살아 있는 fd 범위를 함께 확인해야 한다.</p>
+<blockquote>
+<p><code>fd 2, 3, 4</code>가 열린 상태에서 <code>close(3)</code>만 하면 <code>next_fd</code>가 3으로 내려간다. 그 직후 <code>fork()</code>가 fd 4까지 복제할까?</p>
+</blockquote>
+<p>이 Lab에서는 답을 미리 단정하지 않고 현재 코드에서 직접 확인할 방법을 살펴본다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 guest fd가 뜻하는 바를 알지 못한다.</p>
+<p><code>fd_table[2] = NULL</code>과 같은 변화는 PintOS 커널이 guest memory에 기록한 포인터 값의 변화다. QEMU는 그 바이트를 저장하고 실행할 뿐, “2번 fd가 닫혔다”는 의미를 해석하지 않는다.</p>
+<p>파일 내용이 디스크로 내려갈 때는 QEMU의 장치 모델을 거친다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS write(fd, ...)</span></span>
+<span data-line><span>  -> file_write()</span></span>
+<span data-line><span>  -> inode_write_at()</span></span>
+<span data-line><span>  -> disk_write()</span></span>
+<span data-line><span>  -> guest ATA/IDE 명령</span></span>
+<span data-line><span>  -> QEMU hw/ide/core.c</span></span>
+<span data-line><span>  -> QEMU block/block-backend.c</span></span>
+<span data-line><span>  -> host backing file</span></span></code></pre></figure>
+<p>관련 코드는 다음 위치에서 볼 수 있다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/ide/core.c" class="external external-link">hw/ide/core.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>ide_sector_read</code></li>
+<li><code>ide_sector_write</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/block/block-backend.c" class="external external-link">block/block-backend.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>blk_co_preadv</code></li>
+<li><code>blk_co_pwritev_part</code></li>
+</ul>
+</li>
+</ul>
+<p>QEMU의 host fd와 PintOS의 guest fd는 서로 다른 층에 속한 번호다. PintOS fd <code>2</code>는 guest kernel 자료구조의 index다. QEMU 내부의 host fd는 디스크 이미지 파일이나 socket을 다루는 host process의 자원이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>fd/handle 재사용</td><td>Linux는 낮은 빈 fd 재사용, Windows는 opaque handle 재사용 가능</td><td><code>process_add_file()</code>이 fd 2부터 빈 칸을 스캔</td><td>guest fd 의미를 모름</td></tr><tr><td><code>close(fd)</code></td><td>열린 파일 참조를 줄이고 fd table 칸을 해제</td><td><code>file_close()</code> 후 <code>fd_table[fd] = NULL</code></td><td>guest memory 변화일 뿐</td></tr><tr><td><code>remove(name)</code></td><td>Linux <code>unlink</code>는 이름 제거와 열린 fd 생명주기 분리</td><td><code>dir_remove()</code>가 entry를 지우고 <code>inode_remove()</code>가 삭제 표시</td><td>block write/read만 처리</td></tr><tr><td>열린 파일 상태</td><td>VFS, open file description, refcount 등 복잡</td><td><code>struct file</code>과 <code>struct inode</code> 중심</td><td>BlockBackend와 device model</td></tr><tr><td>교육용 단순화</td><td>실제 OS는 fd flags, dup, close-on-exec, 권한, 락까지 다룸</td><td>0/1 예약, 파일 중심 fd table</td><td>OS 정책 없음</td></tr></tbody></table></div>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="fd-재사용-흐름">fd 재사용 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-재사용-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;open('sample.txt')\&quot;] --> B[\&quot;filesys_open() → struct file 생성\&quot;]\n    B --> C[\&quot;process_add_file()\&quot;]\n    C --> D{\&quot;fd=2부터&lt;br/>FD_MAX까지&lt;br/>빈 칸 탐색\&quot;}\n    D -->|\&quot;fd_table[fd]==NULL\&quot;| E[\&quot;fd_table[fd] = file&lt;br/>return fd\&quot;]\n    D -->|\&quot;모든 칸 사용 중\&quot;| F[\&quot;return -1\&quot;]\n\n    G[\&quot;close(fd)\&quot;] --> H[\&quot;process_close_file()\&quot;]\n    H --> I[\&quot;file_close(fd_table[fd])\&quot;]\n    I --> J[\&quot;fd_table[fd] = NULL\&quot;]\n    J --> K{\&quot;fd &lt; next_fd?\&quot;}\n    K -->|yes| L[\&quot;next_fd = fd\&quot;]\n    K -->|no| M[\&quot;next_fd 유지\&quot;]&quot;">flowchart TD
+    A[&quot;open('sample.txt')&quot;] --> B[&quot;filesys_open() → struct file 생성&quot;]
+    B --> C[&quot;process_add_file()&quot;]
+    C --> D{&quot;fd=2부터&lt;br/>FD_MAX까지&lt;br/>빈 칸 탐색&quot;}
+    D -->|&quot;fd_table[fd]==NULL&quot;| E[&quot;fd_table[fd] = file&lt;br/>return fd&quot;]
+    D -->|&quot;모든 칸 사용 중&quot;| F[&quot;return -1&quot;]
+
+    G[&quot;close(fd)&quot;] --> H[&quot;process_close_file()&quot;]
+    H --> I[&quot;file_close(fd_table[fd])&quot;]
+    I --> J[&quot;fd_table[fd] = NULL&quot;]
+    J --> K{&quot;fd &lt; next_fd?&quot;}
+    K -->|yes| L[&quot;next_fd = fd&quot;]
+    K -->|no| M[&quot;next_fd 유지&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="remove와-fd-table의-독립성">remove와 fd table의 독립성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#remove와-fd-table의-독립성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as User Program\n    participant S as syscall_handler\n    participant FS as filesys/directory\n    participant I as inode\n\n    U->>S: open(\&quot;deleteme\&quot;) → fd=2\n    Note over S: fd_table[2] → struct file → inode\n    U->>S: remove(\&quot;deleteme\&quot;)\n    S->>FS: filesys_remove(\&quot;deleteme\&quot;)\n    FS->>FS: dir_remove() → e.in_use=false\n    FS->>I: inode_remove() → removed=true\n    Note over S: fd_table[2]는 그대로!\n    U->>S: write(fd=2, buf, size)\n    S->>I: inode_write_at() → 정상 기록\n    U->>S: close(fd=2)\n    S->>I: inode_close() → open_cnt==0 → sector 해제&quot;">sequenceDiagram
+    participant U as User Program
+    participant S as syscall_handler
+    participant FS as filesys/directory
+    participant I as inode
+
+    U->>S: open(&quot;deleteme&quot;) → fd=2
+    Note over S: fd_table[2] → struct file → inode
+    U->>S: remove(&quot;deleteme&quot;)
+    S->>FS: filesys_remove(&quot;deleteme&quot;)
+    FS->>FS: dir_remove() → e.in_use=false
+    FS->>I: inode_remove() → removed=true
+    Note over S: fd_table[2]는 그대로!
+    U->>S: write(fd=2, buf, size)
+    S->>I: inode_write_at() → 정상 기록
+    U->>S: close(fd=2)
+    S->>I: inode_close() → open_cnt==0 → sector 해제
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>userprog/process.c:647</td><td><code>process_add_file()</code></td><td>fd 2부터 빈 칸을 찾아 <code>struct file *</code>을 꽂고 fd 반환</td></tr><tr><td>userprog/process.c:671</td><td><code>process_get_file()</code></td><td>fd → <code>struct file *</code> 변환 (범위/NULL 검사)</td></tr><tr><td>userprog/process.c:681</td><td><code>process_close_file()</code></td><td><code>filesys_lock</code> 잡고 <code>process_close_file_unlocked()</code> 호출</td></tr><tr><td>userprog/process.c:688</td><td><code>process_close_file_unlocked()</code></td><td><code>file_close()</code> 후 slot NULL, <code>next_fd</code> 조정</td></tr><tr><td>userprog/process.c:274</td><td><code>duplicate_fd_table()</code></td><td>fork 시 <code>fd &lt; parent->next_fd</code> 범위만 복제</td></tr><tr><td>userprog/syscall.c</td><td><code>open</code> / <code>close</code> / <code>remove</code></td><td>syscall 진입점에서 인자 추출 후 위 함수 호출</td></tr><tr><td>filesys/filesys.c</td><td><code>filesys_open()</code> / <code>filesys_remove()</code></td><td>파일 시스템 계층 open/remove</td></tr><tr><td>filesys/directory.c</td><td><code>dir_remove()</code></td><td>directory entry의 <code>in_use</code> 해제</td></tr><tr><td>filesys/inode.c</td><td><code>inode_remove()</code> / <code>inode_close()</code></td><td><code>removed</code> 플래그 설정 / 마지막 close 시 sector 해제</td></tr><tr><td>include/threads/thread.h</td><td><code>struct file **fd_table</code> / <code>int next_fd</code></td><td>프로세스별 fd table과 할당 힌트</td></tr></tbody></table></div>
+<h2 id="fd-closereuse-코드">fd close/reuse 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-fd-table은-한-페이지짜리-포인터-배열이다">1) fd table은 한 페이지짜리 포인터 배열이다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-fd-table은-한-페이지짜리-포인터-배열이다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심 정의:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> FD_MAX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (PGSIZE </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> sizeof</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">))</span></span></code></pre></figure>
+<p>64비트 환경에서 <code>PGSIZE = 4096</code>이고 포인터 크기가 8바이트라면 fd slot은 512개다.</p>
+<h3 id="2-open은-열린-파일-객체를-fd-table에-넣는다">2) <code>open()</code>은 열린 파일 객체를 fd table에 넣는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-open은-열린-파일-객체를-fd-table에-넣는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/syscall.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">opened_file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> filesys_open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (file);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> process_add_file</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (opened_file);</span></span></code></pre></figure>
+<p>사용자에게 반환되는 값은 <code>struct file *</code>의 주소가 아니라 fd table의 index다.</p>
+<h3 id="3-process_add_file은-낮은-빈-칸부터-찾는다">3) <code>process_add_file()</code>은 낮은 빈 칸부터 찾는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-process_add_file은-낮은-빈-칸부터-찾는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">; fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> FD_MAX; fd</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (curr->fd_table[fd] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        continue</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->fd_table[fd] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> f;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> curr->next_fd)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        curr->next_fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> fd;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 코드 때문에 닫혀서 <code>NULL</code>이 된 낮은 fd가 다음 <code>open()</code>에서 먼저 재사용될 수 있다.</p>
+<h3 id="4-process_close_file은-fd-table의-칸을-비운다">4) <code>process_close_file()</code>은 fd table의 칸을 비운다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-process_close_file은-fd-table의-칸을-비운다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">file_close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">fd_table</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[fd]);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">fd_table</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[fd] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">next_fd)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">next_fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> fd;</span></span></code></pre></figure>
+<p>사용자 변수가 닫힌 fd 숫자를 계속 들고 있더라도 커널 table의 해당 slot은 더 이상 이전 <code>struct file</code>을 가리키지 않는다.</p>
+<h3 id="5-remove는-fd-table을-건드리지-않는다">5) <code>remove()</code>는 fd table을 건드리지 않는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-remove는-fd-table을-건드리지-않는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/syscall.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/filesys/filesys.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/filesys/directory.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/filesys/inode.c</code></li>
+</ul>
+<p>호출은 다음 순서로 내려간다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>remove(name)</span></span>
+<span data-line><span>  -> filesys_remove(name)</span></span>
+<span data-line><span>  -> dir_remove(dir, name)</span></span>
+<span data-line><span>  -> e.in_use = false</span></span>
+<span data-line><span>  -> inode_remove(inode)</span></span>
+<span data-line><span>  -> inode->removed = true</span></span></code></pre></figure>
+<p><code>inode_close()</code>는 마지막 opener가 닫힐 때 <code>inode->removed</code>를 확인하고 sector를 해제한다.</p>
+<h2 id="fd-closereuse-값-추적">fd close/reuse 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="fd-table-slot-주소-계산">fd table slot 주소 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-table-slot-주소-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 값을 가정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table base          = 0x80045000</span></span>
+<span data-line><span>sizeof(struct file *)  = 8</span></span>
+<span data-line><span>struct file A          = 0x80041230</span></span>
+<span data-line><span>struct file B          = 0x80041380</span></span></code></pre></figure>
+<p>각 slot의 주소는 다음과 같이 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd 2 slot = 0x80045000 + 2 * 8 = 0x80045010</span></span>
+<span data-line><span>fd 3 slot = 0x80045000 + 3 * 8 = 0x80045018</span></span></code></pre></figure>
+<p><code>open()</code>을 두 번 호출한 뒤의 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] = 0x80041230</span></span>
+<span data-line><span>fd_table[3] = 0x80041380</span></span>
+<span data-line><span>next_fd     = 4</span></span></code></pre></figure>
+<p>메모리에서는 little-endian 방식에 따라 포인터 <code>0x80041230</code>의 낮은 바이트부터 배치된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x80045010: 30 12 04 80 00 00 00 00</span></span>
+<span data-line><span>0x80045018: 80 13 04 80 00 00 00 00</span></span></code></pre></figure>
+<p><code>close(2)</code>를 호출한 뒤에는 다음과 같이 바뀐다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] = NULL</span></span>
+<span data-line><span>fd_table[3] = 0x80041380</span></span>
+<span data-line><span>next_fd     = 2</span></span></code></pre></figure>
+<p>메모리에서는 2번 slot의 8바이트가 0이 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x80045010: 00 00 00 00 00 00 00 00</span></span>
+<span data-line><span>0x80045018: 80 13 04 80 00 00 00 00</span></span></code></pre></figure>
+<p>다음 <code>open()</code>이 새 파일 C를 <code>0x80041420</code>에 만들었다면 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] = 0x80041420</span></span>
+<span data-line><span>c           = 2</span></span></code></pre></figure>
+<p>이때 <code>a == c == 2</code>일 수 있지만 두 숫자가 같은 파일을 뜻하지는 않는다. 같은 index가 서로 다른 시점에 다른 <code>struct file</code>을 가리킨 것이다.</p>
+<h3 id="remove와-fd-table의-분리"><code>remove()</code>와 fd table의 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#remove와-fd-table의-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>remove(&quot;deleteme&quot;)</code>를 호출한 직후에도 fd table은 그대로일 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] -> struct file</span></span>
+<span data-line><span>                 inode -> removed = true</span></span>
+<span data-line><span>                          open_cnt > 0</span></span></code></pre></figure>
+<p>디렉터리에서 이름은 사라졌지만 열린 <code>struct file</code>로 이어지는 경로는 남아 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>write(fd, ...)</span></span>
+<span data-line><span>  -> fd_table[2]</span></span>
+<span data-line><span>  -> struct file</span></span>
+<span data-line><span>  -> inode_write_at()</span></span></code></pre></figure>
+<p>따라서 <code>syn-remove</code> 테스트는 <code>remove()</code> 뒤에도 <code>write</code>, <code>seek</code>, <code>read</code>가 가능한지 확인한다.</p>
+<h2 id="fd-closereuse-gdb">fd close/reuse GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-fd-재사용을-gdb로-보기">1) fd 재사용을 GDB로 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-fd-재사용을-gdb로-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS GDB에서 다음 breakpoint를 설정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b process_add_file</span></span>
+<span data-line><span>b process_close_file</span></span></code></pre></figure>
+<p><code>open</code>, <code>open</code>, <code>close</code>, <code>open</code> 순서로 실행하면서 다음 값을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p fd</span></span>
+<span data-line><span>p thread_current()->next_fd</span></span>
+<span data-line><span>p/x thread_current()->fd_table</span></span>
+<span data-line><span>p/x thread_current()->fd_table[2]</span></span>
+<span data-line><span>p/x thread_current()->fd_table[3]</span></span></code></pre></figure>
+<p>다음 질문을 따라가면 fd table의 변화를 볼 수 있다.</p>
+<ul>
+<li>첫 번째 <code>open()</code>은 몇 번 slot을 채우는가?</li>
+<li><code>close(2)</code> 뒤 <code>fd_table[2]</code>는 <code>0x0</code>이 되는가?</li>
+<li>다음 <code>open()</code>은 다시 2번 slot을 사용하는가?</li>
+<li><code>next_fd</code>는 실제 할당 시작점처럼 쓰이는가, 아니면 별도 힌트처럼 보이는가?</li>
+</ul>
+<h3 id="2-close-twice-테스트로-닫힌-fd-재사용-위험-보기">2) close-twice 테스트로 닫힌 fd 재사용 위험 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-close-twice-테스트로-닫힌-fd-재사용-위험-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/close-twice.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/close-twice.ck</code></li>
+</ul>
+<p>이 테스트는 같은 fd를 두 번 닫는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>open &quot;sample.txt&quot;</span></span>
+<span data-line><span>close &quot;sample.txt&quot;</span></span>
+<span data-line><span>close &quot;sample.txt&quot; again</span></span></code></pre></figure>
+<p>현재 구현의 <code>process_close_file()</code>은 이미 비어 있는 slot을 만나면 그대로 return한다. 따라서 두 번째 close가 같은 파일을 다시 닫지는 않는다.</p>
+<h3 id="3-remove-후-열린-fd를-계속-쓰는지-보기">3) remove 후 열린 fd를 계속 쓰는지 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-remove-후-열린-fd를-계속-쓰는지-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/filesys/base/syn-remove.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/filesys/base/syn-remove.ck</code></li>
+</ul>
+<p>GDB breakpoint:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b remove</span></span>
+<span data-line><span>b dir_remove</span></span>
+<span data-line><span>b inode_remove</span></span>
+<span data-line><span>b inode_close</span></span>
+<span data-line><span>b process_close_file</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p fd</span></span>
+<span data-line><span>p/x thread_current()->fd_table[fd]</span></span>
+<span data-line><span>p ((struct inode *)((struct file *)thread_current()->fd_table[fd])->inode)->removed</span></span>
+<span data-line><span>p ((struct inode *)((struct file *)thread_current()->fd_table[fd])->inode)->open_cnt</span></span></code></pre></figure>
+<p>다음 흐름에 맞춰 값이 변하는지 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>remove(&quot;deleteme&quot;)</span></span>
+<span data-line><span>  -> inode->removed = true</span></span>
+<span data-line><span>  -> fd_table[fd]는 아직 struct file을 가리킴</span></span>
+<span data-line><span>write(fd, ...)</span></span>
+<span data-line><span>  -> 같은 struct file로 내려감</span></span>
+<span data-line><span>close(fd)</span></span>
+<span data-line><span>  -> 마지막 opener라면 inode_close()에서 sector 해제</span></span></code></pre></figure>
+<h3 id="4-fork-복제-범위-질문-만들기">4) fork 복제 범위 질문 만들기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-fork-복제-범위-질문-만들기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현재 구현의 복제 범위를 확인하려면 다음 상황을 만들 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 2</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> b </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 3</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> c </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 4</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (b);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                    // next_fd가 3으로 내려갈 수 있음</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+<p>GDB에서 다음 값을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b duplicate_fd_table</span></span>
+<span data-line><span>p parent->next_fd</span></span>
+<span data-line><span>p/x parent->fd_table[2]</span></span>
+<span data-line><span>p/x parent->fd_table[3]</span></span>
+<span data-line><span>p/x parent->fd_table[4]</span></span></code></pre></figure>
+<blockquote>
+<p><code>duplicate_fd_table()</code>이 <code>fd &lt; parent->next_fd</code>까지만 돈다면, fd 4는 복제 대상에 들어갈까?</p>
+</blockquote>
+<p>이 질문은 fd table의 빈 칸 재사용과 <code>next_fd</code> 관리가 함께 설계되어야 하는 이유를 보여 준다. 자세한 답은 <a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork하면 fd table은 어떻게 복제되는가</a>에서 <code>file_duplicate()</code>와 <code>next_fd</code> 복제 범위를 함께 보며 이어간다.</p>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>fd는 파일의 영구 ID가 아니라 현재 프로세스 fd table의 index다.</li>
+<li><code>close(fd)</code>는 <code>file_close()</code>를 호출하고 fd table slot을 <code>NULL</code>로 비운다.</li>
+<li>다음 <code>open()</code>은 비워진 slot을 다시 사용할 수 있다.</li>
+<li><code>remove(name)</code>은 파일 이름과 inode의 삭제 표시를 다루며 이미 열린 fd table slot을 직접 비우지 않는다.</li>
+<li>QEMU는 guest fd의 의미를 해석하지 않고 guest memory와 disk I/O 장치 동작을 제공한다.</li>
+<li>현재 PintOS 구현에서는 <code>process_add_file()</code>이 fd 2부터 빈 칸을 검색하므로 <code>next_fd</code>가 실제 할당 시작점인지 코드를 통해 확인해야 한다.</li>
+</ul>
+<h2 id="fd-closereuse-관련-문서">fd close/reuse 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-closereuse-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a>
+<ul>
+<li>fd 숫자가 커널의 열린 파일 객체로 바뀌는 기본 모델</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fd table fork 복제</a>
+<ul>
+<li>닫힌 fd와 큰 fd가 섞인 상태에서 <code>fork()</code> 복제 범위를 확인하는 방법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fork-fd-table-gap-lab" class="internal internal-link alias" data-slug="wiki/os/fork-fd-table-gap-lab">fork fd table gap</a>
+<ul>
+<li><code>next_fd</code>가 낮아진 뒤 큰 fd가 자식에게 빠지는지 확인하는 실험</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li><code>open</code>, <code>close</code>, <code>remove</code> syscall 인자가 register로 들어오는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/user-pointer-validation-trace" class="internal internal-link alias" data-slug="wiki/os/user-pointer-validation-trace">유저 포인터 검증</a>
+<ul>
+<li><code>open(file)</code>과 <code>write(fd, buffer, size)</code>에서 유저 포인터를 검증해야 하는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li><code>mmap</code>에서 fd close와 mapping 생명주기를 분리해야 하는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal internal-link alias" data-slug="wiki/hubs/user-program-execution-boundary">User Programs 실행 경계</a>
+<ul>
+<li>User Programs 실행 경계 전체</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/file-system-storage" class="internal">파일시스템과 저장소</a></li><li><a href="../../wiki/os/fd-number-meaning" class="internal">fd 숫자의 의미</a></li><li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal">fork하면 fd table은 어떻게 복제되는가</a></li><li><a href="../../wiki/os/fork-fd-table-gap-lab" class="internal">fork fd table gap Lab (중간 fd를 닫은 뒤 큰 fd가 복제되는가)</a></li><li><a href="../../wiki/os/stdin-stdout-fd" class="internal">표준 입출력 fd</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-458" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#fd-closereuse-lab-닫힌-fd-번호가-다시-쓰이는-순간" data-for="fd-closereuse-lab-닫힌-fd-번호가-다시-쓰이는-순간">fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간)</a></li><li class="depth-1"><a href="#다음-코드에서-c는-몇-번-fd가-될까" data-for="다음-코드에서-c는-몇-번-fd가-될까">다음 코드에서 c는 몇 번 fd가 될까</a></li><li class="depth-1"><a href="#fd-closereuse-오해" data-for="fd-closereuse-오해">fd close/reuse 오해</a></li><li class="depth-1"><a href="#fd-closereuse-흐름" data-for="fd-closereuse-흐름">fd close/reuse 흐름</a></li><li class="depth-1"><a href="#이번-lab에서-분리해-볼-세-가지-상황" data-for="이번-lab에서-분리해-볼-세-가지-상황">이번 Lab에서 분리해 볼 세 가지 상황</a></li><li class="depth-2"><a href="#1-같은-파일을-두-번-열기" data-for="1-같은-파일을-두-번-열기">1) 같은 파일을 두 번 열기</a></li><li class="depth-2"><a href="#2-닫은-fd-번호-재사용" data-for="2-닫은-fd-번호-재사용">2) 닫은 fd 번호 재사용</a></li><li class="depth-2"><a href="#3-이름을-지운-뒤-열린-fd로-계속-쓰기" data-for="3-이름을-지운-뒤-열린-fd로-계속-쓰기">3) 이름을 지운 뒤 열린 fd로 계속 쓰기</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-2"><a href="#fd-재사용-흐름" data-for="fd-재사용-흐름">fd 재사용 흐름</a></li><li class="depth-2"><a href="#remove와-fd-table의-독립성" data-for="remove와-fd-table의-독립성">remove와 fd table의 독립성</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#fd-closereuse-코드" data-for="fd-closereuse-코드">fd close/reuse 코드</a></li><li class="depth-2"><a href="#1-fd-table은-한-페이지짜리-포인터-배열이다" data-for="1-fd-table은-한-페이지짜리-포인터-배열이다">1) fd table은 한 페이지짜리 포인터 배열이다</a></li><li class="depth-2"><a href="#2-open은-열린-파일-객체를-fd-table에-넣는다" data-for="2-open은-열린-파일-객체를-fd-table에-넣는다">2) open()은 열린 파일 객체를 fd table에 넣는다</a></li><li class="depth-2"><a href="#3-process_add_file은-낮은-빈-칸부터-찾는다" data-for="3-process_add_file은-낮은-빈-칸부터-찾는다">3) process_add_file()은 낮은 빈 칸부터 찾는다</a></li><li class="depth-2"><a href="#4-process_close_file은-fd-table의-칸을-비운다" data-for="4-process_close_file은-fd-table의-칸을-비운다">4) process_close_file()은 fd table의 칸을 비운다</a></li><li class="depth-2"><a href="#5-remove는-fd-table을-건드리지-않는다" data-for="5-remove는-fd-table을-건드리지-않는다">5) remove()는 fd table을 건드리지 않는다</a></li><li class="depth-1"><a href="#fd-closereuse-값-추적" data-for="fd-closereuse-값-추적">fd close/reuse 값 추적</a></li><li class="depth-2"><a href="#fd-table-slot-주소-계산" data-for="fd-table-slot-주소-계산">fd table slot 주소 계산</a></li><li class="depth-2"><a href="#remove와-fd-table의-분리" data-for="remove와-fd-table의-분리">remove()와 fd table의 분리</a></li><li class="depth-1"><a href="#fd-closereuse-gdb" data-for="fd-closereuse-gdb">fd close/reuse GDB</a></li><li class="depth-2"><a href="#1-fd-재사용을-gdb로-보기" data-for="1-fd-재사용을-gdb로-보기">1) fd 재사용을 GDB로 보기</a></li><li class="depth-2"><a href="#2-close-twice-테스트로-닫힌-fd-재사용-위험-보기" data-for="2-close-twice-테스트로-닫힌-fd-재사용-위험-보기">2) close-twice 테스트로 닫힌 fd 재사용 위험 보기</a></li><li class="depth-2"><a href="#3-remove-후-열린-fd를-계속-쓰는지-보기" data-for="3-remove-후-열린-fd를-계속-쓰는지-보기">3) remove 후 열린 fd를 계속 쓰는지 보기</a></li><li class="depth-2"><a href="#4-fork-복제-범위-질문-만들기" data-for="4-fork-복제-범위-질문-만들기">4) fork 복제 범위 질문 만들기</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#fd-closereuse-관련-문서" data-for="fd-closereuse-관련-문서">fd close/reuse 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>fork 세마포어 동기화 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="fork 세마포어 동기화 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="fork 세마포어 동기화 · 최우녕"/><meta name="twitter:description" content="PintOS에서 threadcreate()가 반환했다는 말은 자식 스레드가 READY 큐에 들어갔다는 뜻이지, 자식의 dofork()가 성공했다는 뜻은 아니다."/><meta property="og:description" content="PintOS에서 threadcreate()가 반환했다는 말은 자식 스레드가 READY 큐에 들어갔다는 뜻이지, 자식의 dofork()가 성공했다는 뜻은 아니다."/><meta property="og:image:alt" content="PintOS에서 threadcreate()가 반환했다는 말은 자식 스레드가 READY 큐에 들어갔다는 뜻이지, 자식의 dofork()가 성공했다는 뜻은 아니다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/fork-semaphore-sync"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/fork-semaphore-sync"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PintOS에서 threadcreate()가 반환했다는 말은 자식 스레드가 READY 큐에 들어갔다는 뜻이지, 자식의 dofork()가 성공했다는 뜻은 아니다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/fork-semaphore-sync" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-475" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-475" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>fork 세마포어 동기화</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="fork-세마포어-동기화">fork 세마포어 동기화<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-세마포어-동기화" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 PintOS의 fork 세마포어 handshake가 필요한 일반 원리와 구현 시 지켜야 할 선택 기준을 설명한다. 제시된 코드 좌표, 구조체 크기, QEMU·GDB 동작 및 타이밍 비교는 특정 코드 버전이나 실제 실행·성능 측정으로 검증한 결과가 아니라 입력 본문의 예시이므로, 적용 전에 대상 구현과 실행 기록을 별도로 확인해야 한다.</p>
+</blockquote>
+<blockquote>
+<p><code>fork()</code>는 자식을 만들었다고 바로 성공한 것이 아니다. 부모는 자식이 주소 공간과 파일 디스크립터 복제를 끝냈는지 확인한 뒤에야 fork 결과를 돌려줄 수 있다.</p>
+</blockquote>
+<h2 id="부모가-먼저-달려가면-안-되는-이유">부모가 먼저 달려가면 안 되는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#부모가-먼저-달려가면-안-되는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 <code>thread_create()</code>가 반환했다는 말은 자식 스레드가 READY 큐에 들어갔다는 뜻이지, 자식의 <code>__do_fork()</code>가 성공했다는 뜻은 아니다. 자식이 CPU를 받아 주소 공간 복제, fd 테이블 복제, 반환값 설정을 마칠 때까지 부모가 먼저 진행하면 실패를 성공처럼 돌려줄 수 있다. 그래서 부모는 <code>fork_sema</code>에서 잠들고, 자식은 초기화 결과를 <code>fork_success</code>에 기록한 뒤 <code>sema_up()</code>으로 부모를 깨운다.</p>
+<h2 id="handshake가-필요한-지점">handshake가 필요한 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#handshake가-필요한-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="fork-동기화-문제">fork 동기화 문제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-동기화-문제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>fork()</code>의 핵심 난제는 <strong>비동기 복제</strong>다. 부모가 <code>thread_create()</code>를 호출하면 자식 스레드가 생성되지만, 자식의 실제 초기화(<code>__do_fork</code>)는 자식이 CPU를 받은 뒤에야 실행된다. 부모가 fork의 반환값(자식 tid)을 받는 시점에 자식이 아직 주소 공간을 복제하지 못했다면, 부모는 “성공한 줄 알고” 진행하다가 자식이 실패해도 알 방법이 없다.</p>
+<p>따라서 부모는 자식의 초기화 결과(성공/실패)를 확인한 뒤에야 fork를 반환해야 한다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux <code>fork()</code>는 <code>copy_process()</code> 안에서 주소 공간 복제(COW 설정)를 동기적으로 수행한다. 부모 컨텍스트에서 직접 페이지 테이블을 복사하므로, <code>copy_process()</code>가 반환하면 복제는 이미 완료된 상태다. 세마포어 handshake가 따로 필요 없다.</p>
+<p>PintOS는 자식 스레드의 <code>__do_fork()</code>에서 비동기적으로 복제하기 때문에, 세마포어 기반 handshake가 필수적이다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<h4 id="데이터-구조">데이터 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#데이터-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// userprog/process.c</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> fork_args {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">parent;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // fork를 호출한 부모</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> intr_frame if_;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // 부모의 유저 레지스터 스냅샷</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> child_status </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">cs;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">     // 부모가 만든 자식 상태 레코드</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>child_status</code> 안에 <code>fork_sema</code>와 <code>fork_success</code> 필드가 있다.</p>
+<h4 id="부모-측-process_fork">부모 측 (process_fork)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#부모-측-process_fork" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">tid_t</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> process_fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> char</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">name</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> intr_frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">if_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 1. child_status 할당 및 초기화</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    cs->fork_success </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">cs->fork_sema, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // 초기값 0 → down하면 바로 블록</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 2. fork_args에 부모 정보 패킹</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    args->parent </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> curr;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    args->if_ </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">if_;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">               // intr_frame 값 복사</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    args->cs </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> cs;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 3. 자식 스레드 생성</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    tid </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(name, PRI_DEFAULT, __do_fork, args);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 4. 자식 초기화 완료를 대기</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">cs->fork_sema);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">      // ← 여기서 부모 BLOCKED</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 5. 결과 확인</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">cs->fork_success)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        tid </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> TID_ERROR;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">            // 자식이 실패 통보</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> tid;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<h4 id="자식-측-__do_fork">자식 측 (__do_fork)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#자식-측-__do_fork" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> __do_fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">aux</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fork_args </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">args </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> aux;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 1. 페이지 테이블 복제</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    supplemental_page_table_copy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">curr->spt, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">parent->spt);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 2. fd 테이블 복제</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    duplicate_fd_table</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(curr, parent);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 3. fork 반환값 설정</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    if_.R.rax </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 자식의 fork() 반환값 = 0</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 4. 성공 통보 → 부모 깨움</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->self_status->fork_success </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">curr->self_status->fork_sema);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // ← 부모 UNBLOCK</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    do_iret</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">if_);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 유저 모드 진입</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error:</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 실패 시에도 반드시 부모를 깨워야 한다</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    cs->fork_success </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    cs->exited </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">cs->fork_sema);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">         // ← 실패해도 부모 UNBLOCK</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_exit</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<h3 id="핵심-불변식">핵심 불변식<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#핵심-불변식" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li><strong>부모는 반드시 한 번만 sema_down한다.</strong> <code>process_fork()</code>에서 <code>thread_create</code> 성공 후 정확히 한 번.</li>
+<li><strong>자식은 반드시 한 번만 sema_up한다.</strong> 성공 경로든 실패 경로든, 정확히 한 번 <code>sema_up</code>을 호출해야 부모가 영원히 블록되지 않는다.</li>
+<li><strong>fork_success는 sema_up 직전에 설정한다.</strong> 부모가 깨어났을 때 이미 올바른 값을 읽을 수 있도록 보장한다 (happens-before 관계).</li>
+</ol>
+<h2 id="fork-세마포어-동기화-값-추적">fork 세마포어 동기화 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-세마포어-동기화-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>비고</th></tr></thead><tbody><tr><td>fork_sema 초기값</td><td>0</td><td>부모가 down하면 즉시 BLOCKED</td></tr><tr><td>sema_up 호출 횟수</td><td>정확히 1</td><td>성공 또는 실패 중 하나의 경로에서만</td></tr><tr><td>부모 블록 기간</td><td>자식 스케줄 + 복제 시간</td><td>페이지 테이블/fd 복제가 끝날 때까지</td></tr><tr><td>fork_args 크기</td><td>8 + sizeof(intr_frame) + 8 bytes</td><td>포인터 2개 + intr_frame 복사본</td></tr><tr><td>intr_frame 크기</td><td>184 bytes</td><td>x86-64 레지스터 전체 스냅샷</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU-TCG 관점에서 <code>sema_down()</code>/<code>sema_up()</code>은 특별한 것이 아니다. 모두 일반 메모리 읽기/쓰기와 인터럽트 비활성화(<code>intr_disable()</code>)의 조합일 뿐이다. 그러나 fork handshake를 디버깅할 때 QEMU의 GDB stub을 활용하면 동기화 흐름을 정확히 추적할 수 있다.</p>
+<h4 id="gdb에서-fork-handshake-관찰">GDB에서 fork handshake 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb에서-fork-handshake-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<pre><code># 부모의 sema_down 진입 관찰
+(gdb) break process.c:210    # sema_down(&amp;cs->fork_sema)
+(gdb) commands
+  silent
+  printf &quot;PARENT tid=%d blocking on fork_sema at %p, value=%d\n&quot;, \
+         $lx_current().tid, &amp;cs->fork_sema, cs->fork_sema.value
+  continue
+end
+
+# 자식의 sema_up 관찰
+(gdb) break process.c:391    # sema_up (성공 경로)
+(gdb) break process.c:403    # sema_up (실패 경로)
+(gdb) commands 2-3
+  silent
+  printf &quot;CHILD tid=%d signaling fork_sema, fork_success=%d\n&quot;, \
+         $lx_current().tid, cs->fork_success
+  continue
+end
+</code></pre>
+<h4 id="tcg에서의-타이밍-비결정성">TCG에서의 타이밍 비결정성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#tcg에서의-타이밍-비결정성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<p>실제 하드웨어에서는 부모가 <code>sema_down()</code>에서 블록되고, timer interrupt가 오면 자식이 스케줄된다. QEMU에서는 TCG 실행 루프가 일정 수의 명령어를 실행한 후 timer 인터럽트를 주입하는데, 이 “일정 수”가 비결정적이다. 따라서:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>실제 하드웨어</th><th>QEMU TCG</th></tr></thead><tbody><tr><td>timer interrupt 주기</td><td>정확히 PIT 프로그래밍 값</td><td>TCG icount에 의존, 약간의 지터</td></tr><tr><td>부모→자식 전환 타이밍</td><td>timer tick에 동기화</td><td>TB 실행 경계에서 인터럽트 확인</td></tr><tr><td>디버깅 재현성</td><td>결정적 (같은 하드웨어)</td><td>비결정적 (호스트 부하에 따라 변동)</td></tr></tbody></table></div>
+<p><code>sema_down()</code> 호출 시 자식이 아직 READY 큐에 없을 수는 없다 — <code>thread_create()</code>가 이미 반환했으므로 자식은 READY 상태다. 그러나 자식이 CPU를 <strong>언제</strong> 얻느냐는 QEMU timer 주입 타이밍에 달려 있다.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% fork 세마포어 동기화\nflowchart TD\n  s_parent_init[\&quot;부모 process_fork()&lt;br/>cs 할당&lt;br/>fork_sema = 0&lt;br/>fork_success = false\&quot;]\n  s_pack[\&quot;fork_args 패킹&lt;br/>parent, intr_frame, child_status\&quot;]\n  s_create[\&quot;thread_create(__do_fork)&lt;br/>자식 READY 큐 진입\&quot;]\n  s_down[\&quot;부모 sema_down(&amp;amp;fork_sema)&lt;br/>fork_sema=0이면 BLOCKED\&quot;]\n  s_child_run[\&quot;스케줄러가 자식에게 CPU 할당\&quot;]\n  pml4[\&quot;curr-&amp;gt;pml4 = pml4_create()\&quot;]\n  pml4_failed{\&quot;pml4 == NULL?\&quot;}\n  s_copy[\&quot;supplemental_page_table_copy()&lt;br/>duplicate_fd_table()\&quot;]\n  s_rax[\&quot;if_.R.rax = 0&lt;br/>자식의 fork() 반환값\&quot;]\n  s_success[\&quot;fork_success = true\&quot;]\n  s_up[\&quot;sema_up(&amp;amp;fork_sema)&lt;br/>부모 UNBLOCK\&quot;]\n  s_iret[\&quot;do_iret(&amp;amp;if_)&lt;br/>자식 유저 모드 진입\&quot;]\n  s_return[\&quot;부모 재개&lt;br/>fork_success == true&lt;br/>return tid\&quot;]\n  f_error[\&quot;goto error&lt;br/>fork_success = false&lt;br/>exited = true\&quot;]\n  f_up[\&quot;sema_up(&amp;amp;fork_sema)&lt;br/>실패해도 부모 UNBLOCK\&quot;]\n  f_exit[\&quot;thread_exit()\&quot;]\n  f_return[\&quot;부모 재개&lt;br/>fork_success == false&lt;br/>tid = TID_ERROR\&quot;]\n  s_parent_init --> s_pack\n  s_pack --> s_create\n  s_create -->|부모| s_down\n  s_create -->|스케줄 이후 자식| s_child_run\n  s_child_run --> pml4 --> pml4_failed\n  pml4_failed -->|No| s_copy\n  pml4_failed -->|Yes: 메모리 부족| f_error\n  s_copy --> s_rax\n  s_rax --> s_success\n  s_success --> s_up\n  s_up -->|부모 깨움| s_return\n  s_up -->|자식 계속 실행| s_iret\n  f_error --> f_up\n  f_up -->|부모 깨움| f_return\n  f_up -->|자식 종료| f_exit&quot;">%% fork 세마포어 동기화
+flowchart TD
+  s_parent_init[&quot;부모 process_fork()&lt;br/>cs 할당&lt;br/>fork_sema = 0&lt;br/>fork_success = false&quot;]
+  s_pack[&quot;fork_args 패킹&lt;br/>parent, intr_frame, child_status&quot;]
+  s_create[&quot;thread_create(__do_fork)&lt;br/>자식 READY 큐 진입&quot;]
+  s_down[&quot;부모 sema_down(&amp;amp;fork_sema)&lt;br/>fork_sema=0이면 BLOCKED&quot;]
+  s_child_run[&quot;스케줄러가 자식에게 CPU 할당&quot;]
+  pml4[&quot;curr-&amp;gt;pml4 = pml4_create()&quot;]
+  pml4_failed{&quot;pml4 == NULL?&quot;}
+  s_copy[&quot;supplemental_page_table_copy()&lt;br/>duplicate_fd_table()&quot;]
+  s_rax[&quot;if_.R.rax = 0&lt;br/>자식의 fork() 반환값&quot;]
+  s_success[&quot;fork_success = true&quot;]
+  s_up[&quot;sema_up(&amp;amp;fork_sema)&lt;br/>부모 UNBLOCK&quot;]
+  s_iret[&quot;do_iret(&amp;amp;if_)&lt;br/>자식 유저 모드 진입&quot;]
+  s_return[&quot;부모 재개&lt;br/>fork_success == true&lt;br/>return tid&quot;]
+  f_error[&quot;goto error&lt;br/>fork_success = false&lt;br/>exited = true&quot;]
+  f_up[&quot;sema_up(&amp;amp;fork_sema)&lt;br/>실패해도 부모 UNBLOCK&quot;]
+  f_exit[&quot;thread_exit()&quot;]
+  f_return[&quot;부모 재개&lt;br/>fork_success == false&lt;br/>tid = TID_ERROR&quot;]
+  s_parent_init --> s_pack
+  s_pack --> s_create
+  s_create -->|부모| s_down
+  s_create -->|스케줄 이후 자식| s_child_run
+  s_child_run --> pml4 --> pml4_failed
+  pml4_failed -->|No| s_copy
+  pml4_failed -->|Yes: 메모리 부족| f_error
+  s_copy --> s_rax
+  s_rax --> s_success
+  s_success --> s_up
+  s_up -->|부모 깨움| s_return
+  s_up -->|자식 계속 실행| s_iret
+  f_error --> f_up
+  f_up -->|부모 깨움| f_return
+  f_up -->|자식 종료| f_exit
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>userprog/process.c:47</td><td><code>struct fork_args</code></td><td>부모→자식 정보 전달 구조체</td></tr><tr><td>userprog/process.c:159</td><td><code>process_fork()</code></td><td>부모 측 fork 진입점</td></tr><tr><td>userprog/process.c:176</td><td><code>sema_init(&amp;cs->fork_sema, 0)</code></td><td>세마포어 초기화</td></tr><tr><td>userprog/process.c:193</td><td><code>sema_down(&amp;cs->fork_sema)</code></td><td>부모 대기</td></tr><tr><td>userprog/process.c:316</td><td><code>__do_fork()</code></td><td>자식 측 복제 진입점</td></tr><tr><td>userprog/process.c:353</td><td><code>sema_up(&amp;cs->fork_sema)</code></td><td>성공 통보</td></tr><tr><td>userprog/process.c:366</td><td><code>sema_up(&amp;cs->fork_sema)</code></td><td>실패 통보</td></tr><tr><td>userprog/process.c:387</td><td><code>if_.R.rax = 0</code></td><td>자식 fork 반환값 설정</td></tr><tr><td>userprog/process.c:389</td><td><code>process_init()</code></td><td>자식 fd 테이블 등 초기화</td></tr><tr><td>userprog/process.c:394</td><td><code>do_iret(&amp;if_)</code></td><td>자식 유저 모드 진입</td></tr><tr><td>threads/synch.c</td><td><code>sema_down()</code></td><td>세마포어 값 0이면 BLOCKED, waiter 큐에 삽입</td></tr><tr><td>threads/synch.c</td><td><code>sema_up()</code></td><td>waiter 큐에서 꺼내 UNBLOCK, 선점 검사</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/process-fork-mechanism" class="internal internal-link alias" data-slug="wiki/os/process-fork-mechanism">fork 메커니즘</a></li>
+<li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal internal-link alias" data-slug="wiki/os/process-fork-initialization-handshake-trace">fork handshake Trace</a></li>
+<li><a href="../../wiki/os/semaphore-mechanism" class="internal internal-link alias" data-slug="wiki/os/semaphore-mechanism">semaphore</a></li>
+<li><a href="../../wiki/os/sema-down-block" class="internal internal-link alias" data-slug="wiki/os/sema-down-block">sema down() block</a></li>
+<li><a href="../../wiki/os/sema-up-unblock" class="internal internal-link alias" data-slug="wiki/os/sema-up-unblock">sema up() unblock</a></li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">SPT fork copy</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">쓰기 시 복사</a></li>
+<li><a href="../../wiki/os/fork-intr-frame-copy" class="internal internal-link alias" data-slug="wiki/os/fork-intr-frame-copy">fork intr frame 복사</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fd table fork copy</a></li>
+<li><a href="../../wiki/os/process-fork-wait-exit" class="internal internal-link alias" data-slug="wiki/os/process-fork-wait-exit">exit</a></li>
+<li><a href="../../wiki/os/thread-state-transition" class="internal internal-link alias" data-slug="wiki/os/thread-state-transition">스레드 상태 전이</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/child-status-struct" class="internal">자식 상태 구조체</a></li><li><a href="../../wiki/os/exit-status-preservation" class="internal">종료 상태 보존 (Exit Status Preservation)</a></li><li><a href="../../wiki/os/fork-intr-frame-copy" class="internal">fork — intr_frame 복사와 rax=0</a></li><li><a href="../../wiki/os/init-adopts-orphan" class="internal">Orphan 입양</a></li><li><a href="../../wiki/os/process-child-status-record-knowledge" class="internal">Process Record는 왜 thread와 따로 필요한가</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/process-fork-mechanism" class="internal">fork -- 주소 공간 복제</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/process-orphan-reparent-trace" class="internal">부모가 먼저 종료되면 자식 상태는 누가 수거하는가</a></li><li><a href="../../wiki/os/semaphore-mechanism" class="internal">세마포어 메커니즘 (Semaphore Mechanism)</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-473" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#fork-세마포어-동기화" data-for="fork-세마포어-동기화">fork 세마포어 동기화</a></li><li class="depth-1"><a href="#부모가-먼저-달려가면-안-되는-이유" data-for="부모가-먼저-달려가면-안-되는-이유">부모가 먼저 달려가면 안 되는 이유</a></li><li class="depth-1"><a href="#handshake가-필요한-지점" data-for="handshake가-필요한-지점">handshake가 필요한 지점</a></li><li class="depth-2"><a href="#fork-동기화-문제" data-for="fork-동기화-문제">fork 동기화 문제</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#핵심-불변식" data-for="핵심-불변식">핵심 불변식</a></li><li class="depth-1"><a href="#fork-세마포어-동기화-값-추적" data-for="fork-세마포어-동기화-값-추적">fork 세마포어 동기화 값 추적</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

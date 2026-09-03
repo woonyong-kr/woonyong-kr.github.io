@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>process cleanup은 SPT page들을 어떤 순서로 해제하나 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="process cleanup은 SPT page들을 어떤 순서로 해제하나 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="process cleanup은 SPT page들을 어떤 순서로 해제하나 · 최우녕"/><meta name="twitter:description" content="pintos-vm-implementation-prep의 구현 체크리스트에는 이런 질문이 있다."/><meta property="og:description" content="pintos-vm-implementation-prep의 구현 체크리스트에는 이런 질문이 있다."/><meta property="og:image:alt" content="pintos-vm-implementation-prep의 구현 체크리스트에는 이런 질문이 있다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/vm-process-cleanup-spt-kill-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/vm-process-cleanup-spt-kill-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="pintos-vm-implementation-prep의 구현 체크리스트에는 이런 질문이 있다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/vm-process-cleanup-spt-kill-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-703" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-703" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>process cleanup은 SPT page들을 어떤 순서로 해제하나</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="process-cleanup은-spt-page들을-어떤-순서로-해제하나">process cleanup은 SPT page들을 어떤 순서로 해제하나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup은-spt-page들을-어떤-순서로-해제하나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 프로세스 종료·exec 시 SPT와 페이지 유형별 자원을 정리하는 일반 원리와 PintOS 구현 시 선택 기준을 설명한다. 제시된 호출 순서, 코드 좌표, 페이지·swap·write-back 예시는 구현 방향과 추적 방법이며, 특정 코드 버전에서의 동작이나 수치, 성능을 실제 실행으로 검증한 결과는 아니다.</p>
+</blockquote>
+<h2 id="process-cleanup-쟁점">process cleanup 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-implementation-prep">PintOS VM 구현 준비</a>의 구현 체크리스트에는 이런 질문이 있다.</p>
+<blockquote>
+<p>process exit 때 SPT, frame, swap slot, mmap metadata가 정리되는가?</p>
+</blockquote>
+<p>처음에는 <code>process_exit()</code>이 열린 파일만 닫고 끝나는 것처럼 보인다. 하지만 VM을 구현한 뒤에는 프로세스가 끝날 때 주소 공간의 의미도 같이 사라져야 한다.</p>
+<p>이 Trace는 <code>process_exit()</code> 또는 <code>process_exec()</code>가 <code>process_cleanup()</code>으로 들어간 뒤, <a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT</a> 안의 page들이 type별 destroy 경로로 내려가는 흐름을 따라간다.</p>
+<h2 id="꼬리-질문">꼬리 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#꼬리-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>왜 <code>pml4_destroy()</code>만으로 VM page 정리가 끝나지 않을까?</li>
+<li>실제 OS에서는 process address space teardown이 무엇을 회수할까?</li>
+<li>PintOS에서는 <code>supplemental_page_table_kill()</code>이 어떤 page들을 순회해야 할까?</li>
+<li><code>UNINIT</code>, <code>ANON</code>, <code>FILE</code> page의 destroy 책임은 어떻게 다를까?</li>
+<li>swapped-out anonymous page가 process exit으로 사라지면 slot은 언제 free되어야 할까?</li>
+<li>dirty file-backed mmap page는 exit 경로에서 어디로 write-back되어야 할까?</li>
+<li>QEMU는 process cleanup이나 SPT kill을 알고 있을까?</li>
+<li>GDB로 어디를 보면 page가 한 번만 destroy되는지 확인할 수 있을까?</li>
+</ul>
+<h2 id="process-cleanup-필요성">process cleanup 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM 이후의 주소 공간은 단순한 page table이 아니다.</p>
+<p>PML4는 CPU가 걷는 hardware page table이고, SPT는 PintOS가 “이 유저 VA는 원래 어떤 page인가”를 기억하는 커널 metadata다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4:</span></span>
+<span data-line><span>  현재 resident page의 VA -> frame mapping</span></span>
+<span data-line> </span>
+<span data-line><span>SPT:</span></span>
+<span data-line><span>  resident page</span></span>
+<span data-line><span>  아직 첫 접근이 없는 lazy page</span></span>
+<span data-line><span>  swap disk로 내려간 anonymous page</span></span>
+<span data-line><span>  mmap file offset과 dirty write-back 의미</span></span></code></pre></figure>
+<p>이 말은 즉, <code>pml4_destroy()</code>는 page table page들을 해제할 수 있지만, SPT가 들고 있는 backing 의미까지 자동으로 정리하지 않는다.</p>
+<p>process teardown에서 SPT 정리가 빠지면 이런 버그가 생긴다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>빠진 정리</th><th>결과</th></tr></thead><tbody><tr><td>resident frame 해제</td><td>user pool frame 누수</td></tr><tr><td>swapped-out anon slot free</td><td>swap slot 누수</td></tr><tr><td>dirty mmap write-back</td><td>파일 수정 내용 손실</td></tr><tr><td>uninit lazy aux 해제</td><td>file reference 또는 aux metadata 누수</td></tr><tr><td>SPT entry 제거</td><td>종료한 process의 page metadata가 남음</td></tr></tbody></table></div>
+<h2 id="process-cleanup-흐름">process cleanup 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>process cleanup의 VM 부분은 이렇게 읽으면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>process_exit()</span></span>
+<span data-line><span>  -> close_open_files()</span></span>
+<span data-line><span>  -> process_cleanup()</span></span>
+<span data-line><span>       -> supplemental_page_table_kill(&amp;curr->spt)</span></span>
+<span data-line><span>            -> SPT의 모든 page를 순회</span></span>
+<span data-line><span>            -> page type별 destroy(page)</span></span>
+<span data-line><span>            -> struct page free</span></span>
+<span data-line><span>       -> pml4_activate(NULL)</span></span>
+<span data-line><span>       -> pml4_destroy(old_pml4)</span></span></code></pre></figure>
+<p><code>process_exec()</code>도 같은 cleanup 경로를 쓴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>process_exec(new_program)</span></span>
+<span data-line><span>  -> process_cleanup()</span></span>
+<span data-line><span>       기존 주소 공간 제거</span></span>
+<span data-line><span>  -> load(new_program)</span></span>
+<span data-line><span>       새 ELF, 새 stack, 새 SPT page 등록</span></span></code></pre></figure>
+<p>핵심은 <code>supplemental_page_table_kill()</code>이 <code>pml4_destroy()</code>보다 먼저 와야 한다는 점이다. page destructor가 현재 page의 frame, dirty bit, PTE 상태를 확인해야 할 수 있기 때문이다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;process_exit() / process_exec()\&quot;] --> B[\&quot;process_cleanup()\&quot;]\n    B --> C[\&quot;supplemental_page_table_kill(&amp;spt)\&quot;]\n    C --> D{\&quot;SPT 순회: 각 page\&quot;}\n    D --> E[\&quot;page type?\&quot;]\n    E -->|UNINIT| F[\&quot;uninit_destroy(page)\\naux/file ref 정리\&quot;]\n    E -->|ANON resident| G[\&quot;anon_destroy(page)\\nframe 반환\&quot;]\n    E -->|ANON swapped| H[\&quot;anon_destroy(page)\\nswap slot free\&quot;]\n    E -->|FILE dirty| I[\&quot;file_backed_destroy(page)\\nwrite-back + frame 반환\&quot;]\n    E -->|FILE clean| J[\&quot;file_backed_destroy(page)\\nframe 반환만\&quot;]\n    F --> K[\&quot;vm_dealloc_page(page)\\nfree(page)\&quot;]\n    G --> K\n    H --> K\n    I --> K\n    J --> K\n    K --> D\n    D -->|순회 끝| L[\&quot;SPT container 정리\&quot;]\n    L --> M[\&quot;curr->pml4 = NULL\&quot;]\n    M --> N[\&quot;pml4_activate(NULL)\&quot;]\n    N --> O[\&quot;pml4_destroy(old_pml4)\&quot;]&quot;">flowchart TD
+    A[&quot;process_exit() / process_exec()&quot;] --> B[&quot;process_cleanup()&quot;]
+    B --> C[&quot;supplemental_page_table_kill(&amp;spt)&quot;]
+    C --> D{&quot;SPT 순회: 각 page&quot;}
+    D --> E[&quot;page type?&quot;]
+    E -->|UNINIT| F[&quot;uninit_destroy(page)\naux/file ref 정리&quot;]
+    E -->|ANON resident| G[&quot;anon_destroy(page)\nframe 반환&quot;]
+    E -->|ANON swapped| H[&quot;anon_destroy(page)\nswap slot free&quot;]
+    E -->|FILE dirty| I[&quot;file_backed_destroy(page)\nwrite-back + frame 반환&quot;]
+    E -->|FILE clean| J[&quot;file_backed_destroy(page)\nframe 반환만&quot;]
+    F --> K[&quot;vm_dealloc_page(page)\nfree(page)&quot;]
+    G --> K
+    H --> K
+    I --> K
+    J --> K
+    K --> D
+    D -->|순회 끝| L[&quot;SPT container 정리&quot;]
+    L --> M[&quot;curr->pml4 = NULL&quot;]
+    M --> N[&quot;pml4_activate(NULL)&quot;]
+    N --> O[&quot;pml4_destroy(old_pml4)&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="한-프로세스가-다음-page들을-갖고-있다고-하자">한 프로세스가 다음 page들을 갖고 있다고 하자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#한-프로세스가-다음-page들을-갖고-있다고-하자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>한 프로세스가 다음 page들을 갖고 있다고 하자.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>VA</th><th>상태</th><th>정리해야 할 것</th></tr></thead><tbody><tr><td><code>0x400000</code></td><td>lazy code page, 아직 접근 안 함</td><td>lazy aux, reopened file reference</td></tr><tr><td><code>0x401000</code></td><td>resident anonymous page</td><td>frame, PTE, page metadata</td></tr><tr><td><code>0x402000</code></td><td>swapped-out anonymous page</td><td>swap slot, page metadata</td></tr><tr><td><code>0x403000</code></td><td>dirty mmap file page</td><td>file write-back, frame/PTE, file metadata</td></tr></tbody></table></div>
+<p>프로세스가 종료되면 유저 VA들은 더 이상 의미가 없다. 하지만 cleanup이 해야 할 일은 page 상태마다 다르다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>lazy page:</span></span>
+<span data-line><span>  frame이 없으므로 palloc_free_page(frame)는 하지 않음</span></span>
+<span data-line><span>  aux와 file reference를 정리</span></span>
+<span data-line> </span>
+<span data-line><span>resident anon page:</span></span>
+<span data-line><span>  PTE 제거 또는 pml4_destroy 전 상태 정리</span></span>
+<span data-line><span>  frame을 user pool로 반환</span></span>
+<span data-line> </span>
+<span data-line><span>swapped-out anon page:</span></span>
+<span data-line><span>  frame은 없음</span></span>
+<span data-line><span>  page->anon.slot이 가리키는 bitmap bit를 free로 되돌림</span></span>
+<span data-line> </span>
+<span data-line><span>dirty file page:</span></span>
+<span data-line><span>  dirty 여부 확인</span></span>
+<span data-line><span>  file_write_at(file, kva, read_bytes, offset)</span></span>
+<span data-line><span>  file reference 정리</span></span></code></pre></figure>
+<p>정리의 목표는 “종료한 process의 주소 공간을 다시 fault로 살릴 수 없게 하는 것”만이 아니다. 더 중요한 목표는 그 주소 공간이 잡고 있던 커널 자원을 정확히 한 번씩 회수하는 것이다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서는 <code>exit()</code>나 <code>execve()</code>가 성공할 때 기존 <code>mm_struct</code>와 VMA, page table, file-backed mapping, anonymous page, swap entry 같은 자원을 정리한다. 실제 구현은 reference count, reverse mapping, page cache, TLB shootdown, file write-back 정책과 얽힌다.</p>
+<p>Windows도 process address space를 구성하는 VAD, section object, prototype PTE, working set, pagefile-backed private page 같은 자원을 정리한다. Unix식 <code>fork()</code> 모델과는 다르지만, process가 소유한 private address space metadata를 teardown해야 한다는 점은 같다.</p>
+<p>현실 OS는 PintOS보다 훨씬 복잡하다. 여러 CPU가 같은 process를 실행할 수 있고, mapping이 공유될 수 있으며, write-back과 page cache 정책도 포함된다. PintOS는 이 복잡도를 <code>supplemental_page_table_kill()</code>과 page operation table로 축소해 연습하게 한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>비교 항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>주소 공간 구조</td><td><code>mm_struct</code> + VMA red-black tree</td><td>VAD AVL tree</td><td>SPT hash table</td></tr><tr><td>page 소유권</td><td>page cache + reverse mapping</td><td>prototype PTE + working set</td><td><code>struct page</code> union</td></tr><tr><td>swap 자원</td><td>swap entry in PTE, swap cache</td><td>pagefile slot in PTE</td><td><code>anon_page.slot</code> + bitmap</td></tr><tr><td>file-backed 정리</td><td>page cache writeback + inode refcount</td><td>section object dereference</td><td><code>file_write_at()</code> + <code>file_close()</code></td></tr><tr><td>TLB 정리</td><td>TLB shootdown IPI (다중 CPU)</td><td><code>KeFlushProcessTb()</code></td><td>단일 CPU, <code>pml4_destroy()</code>가 암묵적 flush</td></tr><tr><td>공유 mapping</td><td><code>MAP_SHARED</code> refcount</td><td>section object refcount</td><td>공유 없음 (COW는 private copy)</td></tr></tbody></table></div>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 cleanup 경로는 두 진입점에서 시작한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>진입점</th><th>의미</th></tr></thead><tbody><tr><td><code>process_exit()</code></td><td>process가 완전히 끝남</td></tr><tr><td><code>process_exec()</code></td><td>같은 thread가 기존 주소 공간을 버리고 새 프로그램으로 바뀜</td></tr></tbody></table></div>
+<p>두 함수 모두 <code>SW_AI-W11-pintos/pintos/userprog/process.c</code>의 <code>process_cleanup()</code>으로 들어간다.</p>
+<p>VM이 켜져 있으면 <code>process_cleanup()</code>은 먼저 <code>supplemental_page_table_kill(&amp;curr->spt)</code>를 호출한다. 그 뒤 <code>curr->pml4 = NULL</code>, <code>pml4_activate(NULL)</code>, <code>pml4_destroy(pml4)</code> 순서로 page table 자체를 파괴한다.</p>
+<p>현재 기준 저장소의 VM 코드는 skeleton이다. <code>SW_AI-W11-pintos/pintos/vm/vm.c</code>의 <code>supplemental_page_table_kill()</code>에는 아직 TODO만 있다.</p>
+<p>구현자가 채워야 할 큰 흐름은 다음이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>supplemental_page_table_kill(spt)</span></span>
+<span data-line><span>  -> SPT 내부 hash/list의 모든 page 순회</span></span>
+<span data-line><span>  -> 각 page에 대해 vm_dealloc_page(page)</span></span>
+<span data-line><span>       -> destroy(page)</span></span>
+<span data-line><span>            -> uninit_destroy / anon_destroy / file_backed_destroy</span></span>
+<span data-line><span>       -> free(page)</span></span>
+<span data-line><span>  -> SPT container 자체 정리</span></span></code></pre></figure>
+<p>SPT를 hash table로 구현했다면 <code>SW_AI-W11-pintos/pintos/lib/kernel/hash.c</code>의 <code>hash_destroy(h, destructor)</code> 패턴을 쓸 수 있다. destructor는 각 hash element를 받아 <code>struct page</code>로 되돌린 뒤 <code>vm_dealloc_page(page)</code>를 호출하는 식이 된다.</p>
+<p>주의할 점은 <code>destroy(page)</code>와 <code>free(page)</code>를 섞지 않는 것이다. type별 destroy 함수는 page가 잡은 외부 자원을 정리하고, <code>vm_dealloc_page()</code>가 마지막에 <code>struct page</code> 메모리를 해제한다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS process도, SPT도, <code>struct page</code>도 모른다.</p>
+<p>QEMU가 제공하는 것은 더 낮은 층이다.</p>
+<ul>
+<li>CPU가 page table walk를 하다가 실패하면 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 만든다.</li>
+<li>guest store가 성공하면 x86 규칙에 따라 PTE dirty bit가 세팅될 수 있다.</li>
+<li>PintOS가 disk sector read/write를 요청하면 IDE/block backend로 처리한다.</li>
+<li>GDB stub을 통해 guest register와 memory를 관찰하게 해 준다.</li>
+</ul>
+<p>예를 들어 dirty mmap page를 exit 때 파일로 write-back하면 PintOS 내부에서는 <code>file_write_at()</code> 계열 호출이 일어나고, 더 아래에서는 disk sector write가 발생할 수 있다. QEMU의 <code>hw/ide/core.c</code>는 <code>ide_sector_write()</code>에서 sector 번호를 얻고, <code>blk_aio_pwritev()</code>에 <code>sector_num &lt;&lt; BDRV_SECTOR_BITS</code> byte offset을 넘긴다.</p>
+<p>하지만 QEMU는 이것이 “process exit 때문에 dirty mmap page를 되돌리는 write-back”인지 모른다. QEMU 입장에서는 guest가 특정 sector에 write를 보낸 것이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>주소 공간 teardown은 누가 하나?</td><td>실제 커널 VM subsystem</td><td><code>process_cleanup()</code>과 <code>supplemental_page_table_kill()</code></td><td>모름</td></tr><tr><td>page별 backing 의미는 어디 있나?</td><td>VMA/PTE/page metadata/pagefile 구조</td><td>SPT와 <code>struct page</code> union</td><td>모름</td></tr><tr><td>dirty mmap write-back은 누가 결정하나?</td><td>VM/VFS/page cache 정책</td><td><code>file_backed_destroy()</code> 또는 <code>munmap</code> 공통 정리</td><td>sector write만 수행</td></tr><tr><td>swapped-out anon slot free는 누가 하나?</td><td>swap subsystem</td><td><code>anon_destroy()</code></td><td>모름</td></tr><tr><td>PML4/page table 해제는 무엇을 의미하나?</td><td>hardware translation 구조 해제</td><td><code>pml4_destroy()</code></td><td>guest memory write 효과만 재현</td></tr></tbody></table></div>
+<h2 id="process-cleanup-코드">process cleanup 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-exec와-exit는-둘-다-process_cleanup을-지난다">1. <code>exec()</code>와 <code>exit()</code>는 둘 다 <code>process_cleanup()</code>을 지난다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-exec와-exit는-둘-다-process_cleanup을-지난다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>SW_AI-W11-pintos/pintos/userprog/process.c</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">process_exec</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(...)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> process_cleanup</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">()</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> load</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(...)</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">process_exit</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">()</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> close_open_files</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(...)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> process_cleanup</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">()</span></span></code></pre></figure>
+<p><code>exec()</code>에서 cleanup이 먼저 나오는 이유는 새 ELF를 로드하기 전에 기존 주소 공간을 버려야 하기 때문이다.</p>
+<h3 id="2-vm-cleanup은-pml4-destroy보다-먼저-호출된다">2. VM cleanup은 PML4 destroy보다 먼저 호출된다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-vm-cleanup은-pml4-destroy보다-먼저-호출된다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>같은 파일의 <code>process_cleanup()</code>은 VM 빌드에서 먼저 SPT를 kill한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#ifdef</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> VM</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">supplemental_page_table_kill</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">spt</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#endif</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_activate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pml4);</span></span></code></pre></figure>
+<p>이 순서는 중요하다. page별 destroy가 PTE dirty bit나 frame 연결을 봐야 한다면 PML4가 먼저 사라지면 판단 근거가 줄어든다.</p>
+<h3 id="3-destroypage는-page-operation-table로-분기한다">3. <code>destroy(page)</code>는 page operation table로 분기한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-destroypage는-page-operation-table로-분기한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>SW_AI-W11-pintos/pintos/include/vm/vm.h</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page_operations {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">swap_in) (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">swap_out) (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">destroy) (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> vm_type type;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((page)->operations->destroy) (page)->operations->destroy (page)</span></span></code></pre></figure>
+<p>따라서 SPT kill은 page type을 직접 <code>switch</code>로 모두 알아도 되지만, 기본 설계는 page가 가진 operation table로 정리 책임을 위임하는 쪽이다.</p>
+<h3 id="4-type별-destroy-자리는-이미-나뉘어-있다">4. type별 destroy 자리는 이미 나뉘어 있다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-type별-destroy-자리는-이미-나뉘어-있다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/vm/uninit.c</code>
+<ul>
+<li><code>uninit_destroy()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/vm/anon.c</code>
+<ul>
+<li><code>anon_destroy()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/vm/file.c</code>
+<ul>
+<li><code>file_backed_destroy()</code></li>
+</ul>
+</li>
+</ul>
+<p>이 함수들은 현재 TODO다. 그래서 VM 구현에서는 “page를 free한다”와 “page가 가진 외부 자원을 정리한다”를 분리해서 채워야 한다.</p>
+<h3 id="5-qemu는-dirty-bit와-disk-sector-write-효과만-본다">5. QEMU는 dirty bit와 disk sector write 효과만 본다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-qemu는-dirty-bit와-disk-sector-write-효과만-본다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU의 x86 MMU helper는 store 접근에서 dirty bit를 세울 수 있다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>access_type == MMU_DATA_STORE</code>이면 <code>PG_DIRTY_MASK</code>를 set 대상에 포함한다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/cpu.h" class="external external-link">target/i386/cpu.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>PG_DIRTY_BIT = 6</code></li>
+<li><code>PG_DIRTY_MASK</code></li>
+</ul>
+</li>
+</ul>
+<p>또한 <a href="https://github.com/woonyong-kr/qemu/blob/master/hw/ide/core.c" class="external external-link">hw/ide/core.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>의 <code>ide_sector_write()</code>는 sector 번호를 byte offset으로 바꿔 block backend에 넘긴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pio_aiocb </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> blk_aio_pwritev</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">blk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">                               sector_num </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> BDRV_SECTOR_BITS,</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">                               &amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">qiov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">                               ide_sector_write_cb, s);</span></span></code></pre></figure>
+<p><code>BDRV_SECTOR_BITS</code>는 <a href="https://github.com/woonyong-kr/qemu/blob/master/include/block/block-common.h" class="external external-link">include/block/block-common.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>에서 9로 정의된다. 즉 sector 하나는 <code>1 &lt;&lt; 9 = 512B</code>다.</p>
+<h2 id="process-cleanup-값-추적">process cleanup 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-process-cleanup-전후-page-수-감각">1. process cleanup 전후 page 수 감각<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-process-cleanup-전후-page-수-감각" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>예를 들어 SPT에 page 4개가 있다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SPT before cleanup:</span></span>
+<span data-line><span>  0x400000 -> UNINIT lazy code</span></span>
+<span data-line><span>  0x401000 -> ANON resident frame F1</span></span>
+<span data-line><span>  0x402000 -> ANON swapped slot 3</span></span>
+<span data-line><span>  0x403000 -> FILE dirty mmap frame F2</span></span>
+<span data-line> </span>
+<span data-line><span>SPT after cleanup:</span></span>
+<span data-line><span>  empty</span></span></code></pre></figure>
+<p>정리 대상은 frame 개수와 다르다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SPT pages = 4</span></span>
+<span data-line><span>resident frames = 2</span></span>
+<span data-line><span>swap slots held = 1</span></span>
+<span data-line><span>dirty file-backed pages = 1</span></span></code></pre></figure>
+<p>그래서 cleanup은 “PTE가 있는 page만” 보면 안 된다. 아직 resident가 아닌 page도 SPT에는 남아 있고, 그 page가 swap slot이나 lazy aux를 잡고 있을 수 있다.</p>
+<h3 id="2-swapped-out-page의-slot-계산">2. swapped-out page의 slot 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-swapped-out-page의-slot-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page VA = 0x402000</span></span>
+<span data-line><span>slot    = 3</span></span>
+<span data-line><span>PGSIZE  = 4096</span></span>
+<span data-line><span>sector  = 512</span></span>
+<span data-line><span>sectors_per_page = 4096 / 512 = 8</span></span></code></pre></figure>
+<p>slot 3이 차지하는 sector:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>base sector = 3 * 8 = 24</span></span>
+<span data-line><span>range       = 24..31</span></span></code></pre></figure>
+<p>process exit에서 이 page가 RAM으로 돌아오지 않고 사라진다면, <code>anon_destroy()</code>는 slot 3을 free로 되돌려야 한다. disk bytes를 0으로 지우는 것이 핵심이 아니라, slot allocator가 다시 slot 3을 줄 수 있게 만드는 것이 핵심이다.</p>
+<h3 id="3-dirty-file-backed-page의-write-back-범위">3. dirty file-backed page의 write-back 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-dirty-file-backed-page의-write-back-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page VA     = 0x403000</span></span>
+<span data-line><span>file offset = 8192</span></span>
+<span data-line><span>read_bytes  = 3000</span></span>
+<span data-line><span>zero_bytes  = 1096</span></span>
+<span data-line><span>dirty       = true</span></span></code></pre></figure>
+<p>이 page는 4096B frame을 갖지만, 파일에 되돌릴 수 있는 범위는 보통 <code>read_bytes</code>만큼이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>write-back:</span></span>
+<span data-line><span>  file offset 8192부터 3000B</span></span>
+<span data-line> </span>
+<span data-line><span>write-back하면 안 되는 부분:</span></span>
+<span data-line><span>  frame offset 3000..4095의 zero fill 영역</span></span></code></pre></figure>
+<h2 id="process-cleanup-gdb">process cleanup GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구현 후에는 아래 breakpoint로 cleanup 경로를 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b process_exit</span></span>
+<span data-line><span>b process_exec</span></span>
+<span data-line><span>b process_cleanup</span></span>
+<span data-line><span>b supplemental_page_table_kill</span></span>
+<span data-line><span>b vm_dealloc_page</span></span>
+<span data-line><span>b uninit_destroy</span></span>
+<span data-line><span>b anon_destroy</span></span>
+<span data-line><span>b file_backed_destroy</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p thread_current()->pml4</span></span>
+<span data-line><span>p &amp;thread_current()->spt</span></span>
+<span data-line><span>p page->va</span></span>
+<span data-line><span>p page->operations->type</span></span>
+<span data-line><span>p page->frame</span></span>
+<span data-line><span>p/x page->va</span></span></code></pre></figure>
+<p>swap을 구현한 뒤에는 swapped-out page cleanup에서 slot 상태를 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b anon_destroy</span></span>
+<span data-line><span>p page->anon</span></span>
+<span data-line><span>p swap_bitmap</span></span></code></pre></figure>
+<p>mmap을 구현한 뒤에는 dirty file-backed page가 exit 경로에서 write-back되는지 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b file_backed_destroy</span></span>
+<span data-line><span>b file_write_at</span></span>
+<span data-line><span>p page->file</span></span>
+<span data-line><span>p page->frame</span></span></code></pre></figure>
+<p>cleanup 버그를 드러내기 쉬운 테스트 계열은 아래와 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>tests/vm/mmap-exit</span></span>
+<span data-line><span>tests/vm/swap-anon</span></span>
+<span data-line><span>tests/vm/swap-fork</span></span>
+<span data-line><span>tests/vm/swap-iter</span></span></code></pre></figure>
+<h2 id="type별-destroy-흐름-상세">type별 destroy 흐름 상세<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#type별-destroy-흐름-상세" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant SK as spt_kill 순회\n    participant UD as uninit_destroy\n    participant AD as anon_destroy\n    participant FD as file_backed_destroy\n    participant FW as file_write_at\n    participant PA as palloc_free_page\n    participant SB as swap bitmap\n\n    SK->>SK: hash_destroy(spt, destructor)\n    Note over SK: 각 hash_elem → struct page\n\n    alt UNINIT page (lazy, 첫 접근 없음)\n        SK->>UD: destroy(page)\n        UD->>UD: aux 정리 (malloc'd metadata)\n        UD->>UD: file reference 정리 (해당 시)\n        Note over UD: frame 없음 → palloc 불필요\n    else ANON resident (frame 보유)\n        SK->>AD: destroy(page)\n        AD->>PA: palloc_free_page(frame->kva)\n        Note over AD: PTE는 pml4_destroy가 정리\n    else ANON swapped (frame 없음, slot 보유)\n        SK->>AD: destroy(page)\n        AD->>SB: bitmap_set(swap_table, slot, false)\n        Note over AD: disk bytes는 지우지 않음\n    else FILE dirty (frame 보유, dirty bit set)\n        SK->>FD: destroy(page)\n        FD->>FD: pml4_is_dirty() 확인\n        FD->>FW: file_write_at(file, kva, read_bytes, ofs)\n        FD->>PA: palloc_free_page(frame->kva)\n        FD->>FD: file metadata 정리\n    else FILE clean (frame 보유, dirty 아님)\n        SK->>FD: destroy(page)\n        FD->>FD: file metadata 정리\n    end\n\n    SK->>SK: free(page)&quot;">sequenceDiagram
+    participant SK as spt_kill 순회
+    participant UD as uninit_destroy
+    participant AD as anon_destroy
+    participant FD as file_backed_destroy
+    participant FW as file_write_at
+    participant PA as palloc_free_page
+    participant SB as swap bitmap
+
+    SK->>SK: hash_destroy(spt, destructor)
+    Note over SK: 각 hash_elem → struct page
+
+    alt UNINIT page (lazy, 첫 접근 없음)
+        SK->>UD: destroy(page)
+        UD->>UD: aux 정리 (malloc'd metadata)
+        UD->>UD: file reference 정리 (해당 시)
+        Note over UD: frame 없음 → palloc 불필요
+    else ANON resident (frame 보유)
+        SK->>AD: destroy(page)
+        AD->>PA: palloc_free_page(frame->kva)
+        Note over AD: PTE는 pml4_destroy가 정리
+    else ANON swapped (frame 없음, slot 보유)
+        SK->>AD: destroy(page)
+        AD->>SB: bitmap_set(swap_table, slot, false)
+        Note over AD: disk bytes는 지우지 않음
+    else FILE dirty (frame 보유, dirty bit set)
+        SK->>FD: destroy(page)
+        FD->>FD: pml4_is_dirty() 확인
+        FD->>FW: file_write_at(file, kva, read_bytes, ofs)
+        FD->>PA: palloc_free_page(frame->kva)
+        FD->>FD: file metadata 정리
+    else FILE clean (frame 보유, dirty 아님)
+        SK->>FD: destroy(page)
+        FD->>FD: file metadata 정리
+    end
+
+    SK->>SK: free(page)
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th style="text-align:right;">줄</th><th>역할</th></tr></thead><tbody><tr><td>userprog/process.c</td><td><code>process_exit()</code></td><td style="text-align:right;">622</td><td>exit 진입, cleanup 호출</td></tr><tr><td>userprog/process.c</td><td><code>process_cleanup()</code></td><td style="text-align:right;">706</td><td>SPT kill → pml4 destroy 순서 관리</td></tr><tr><td>userprog/process.c</td><td><code>supplemental_page_table_kill()</code> 호출</td><td style="text-align:right;">710</td><td>VM 빌드에서 SPT 정리 진입</td></tr><tr><td>userprog/process.c</td><td><code>pml4_destroy(pml4)</code></td><td style="text-align:right;">730</td><td>hardware page table 해제</td></tr><tr><td>userprog/process.c</td><td><code>process_exec()</code> → <code>process_cleanup()</code></td><td style="text-align:right;">446</td><td>exec 시 기존 주소 공간 정리</td></tr><tr><td>userprog/process.c</td><td><code>close_open_files()</code></td><td style="text-align:right;">519</td><td>fd table 정리 (SPT과 별도)</td></tr><tr><td>vm/vm.c</td><td><code>vm_dealloc_page()</code></td><td style="text-align:right;">309</td><td>destroy(page) + free(page)</td></tr><tr><td>include/vm/vm.h</td><td><code>struct page_operations</code></td><td style="text-align:right;">81</td><td>swap_in/swap_out/destroy vtable</td></tr><tr><td>include/vm/vm.h</td><td><code>#define destroy(page)</code></td><td style="text-align:right;">90</td><td>operations->destroy 매크로</td></tr><tr><td>vm/uninit.c</td><td><code>uninit_destroy()</code></td><td style="text-align:right;">62</td><td>lazy aux/file ref 정리</td></tr><tr><td>vm/anon.c</td><td><code>anon_destroy()</code></td><td style="text-align:right;">49</td><td>frame 반환 + swap slot free</td></tr><tr><td>vm/anon.c</td><td><code>swap_disk</code></td><td style="text-align:right;">7</td><td>swap disk handle (TODO)</td></tr><tr><td>vm/file.c</td><td><code>file_backed_destroy()</code></td><td style="text-align:right;">45</td><td>dirty write-back + frame 반환</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_destroy()</code></td><td style="text-align:right;">77</td><td>hash 순회 + destructor 콜백</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_clear()</code></td><td style="text-align:right;">49</td><td>hash_destroy의 실제 순회 구현</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><code>pml4_destroy()</code>는 hardware page table 구조를 해제하지만, SPT가 기억한 VM backing 의미를 대신 정리하지 않는다.</li>
+<li><code>supplemental_page_table_kill()</code>은 process exit과 exec cleanup에서 SPT의 모든 page를 순회해야 한다.</li>
+<li>page별 실제 정리는 <code>destroy(page)</code>를 통해 <code>uninit_destroy()</code>, <code>anon_destroy()</code>, <code>file_backed_destroy()</code>로 내려간다.</li>
+<li>swapped-out anonymous page는 frame이 없어도 swap slot을 회수해야 한다.</li>
+<li>dirty file-backed page는 process exit에서도 <code>munmap()</code>과 같은 write-back 의미를 가져야 한다.</li>
+<li>QEMU는 이 정책을 모르고, page fault와 disk sector I/O 같은 하드웨어 효과만 제공한다.</li>
+</ul>
+<h2 id="process-cleanup-관련-개념">process cleanup 관련 개념<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-cleanup-관련-개념" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>[VM 구현 체크리스트](/wiki/os/pintos-vm-implementation-prep#구현 체크리스트)</li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT와 PML4</a>
+<ul>
+<li>SPT가 page table과 따로 필요한 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">Anonymous Page와 Swap Slot</a>
+<ul>
+<li>anonymous page가 swap slot을 기억하는 위치</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-munmap-range-trace">munmap 범위</a>
+<ul>
+<li><code>munmap()</code>과 process exit의 file-backed 정리 의미</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">dirty mmap write back</a>
+<ul>
+<li>dirty mmap page가 disk write로 내려가는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork SPT 복사</a>
+<ul>
+<li><code>fork()</code>/<code>exec()</code> 경계에서 SPT copy와 cleanup이 만나는 지점</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/process-exit-cleanup" class="internal internal-link alias" data-slug="wiki/os/process-exit-cleanup">process exit() cleanup</a>
+<ul>
+<li>exit 경로의 전체 자원 회수 순서</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델</a>
+<ul>
+<li>page 생명주기와 operations vtable 구조</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction과 Swap</a>
+<ul>
+<li>eviction이 swap out을 호출하는 앞 단계</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/uninit-page-type" class="internal internal-link alias" data-slug="wiki/os/uninit-page-type">UNINIT Page</a>
+<ul>
+<li>UNINIT page의 aux 구조와 전환 시점</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/clock-algorithm-victim" class="internal internal-link alias" data-slug="wiki/os/clock-algorithm-victim">Clock victim 선정</a>
+<ul>
+<li>victim 선정이 cleanup과 만나는 지점</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">Copy on Write</a>
+<ul>
+<li>COW fork 후 cleanup의 frame 소유권</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal">Lazy Load aux/file 수명 Trace</a></li><li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal">mmap munmap 범위 흐름 (Mmap Munmap Range Trace)</a></li><li><a href="../../wiki/os/page-operations-dispatch" class="internal">page_operations 분기</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/process-exit-cleanup" class="internal">프로세스 종료 자원 회수</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/process-resource-teardown" class="internal">프로세스 자원 정리</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/supplemental-page-table-hash" class="internal">SPT 해시 테이블</a></li><li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal">Supplemental Page Table은 왜 필요한가</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/swapped-anon-fork-snapshot-trace" class="internal">swapped anonymous page fork snapshot 흐름</a></li><li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal">UNINIT swap_in 실패 롤백 Trace</a></li><li><a href="../../wiki/os/vm-claim-rollback-trace" class="internal">pml4_set_page 실패 뒤 claim 롤백 Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-701" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#process-cleanup은-spt-page들을-어떤-순서로-해제하나" data-for="process-cleanup은-spt-page들을-어떤-순서로-해제하나">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li><li class="depth-1"><a href="#process-cleanup-쟁점" data-for="process-cleanup-쟁점">process cleanup 쟁점</a></li><li class="depth-1"><a href="#꼬리-질문" data-for="꼬리-질문">꼬리 질문</a></li><li class="depth-1"><a href="#process-cleanup-필요성" data-for="process-cleanup-필요성">process cleanup 필요성</a></li><li class="depth-1"><a href="#process-cleanup-흐름" data-for="process-cleanup-흐름">process cleanup 흐름</a></li><li class="depth-1"><a href="#한-프로세스가-다음-page들을-갖고-있다고-하자" data-for="한-프로세스가-다음-page들을-갖고-있다고-하자">한 프로세스가 다음 page들을 갖고 있다고 하자</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#process-cleanup-코드" data-for="process-cleanup-코드">process cleanup 코드</a></li><li class="depth-2"><a href="#1-exec와-exit는-둘-다-process_cleanup을-지난다" data-for="1-exec와-exit는-둘-다-process_cleanup을-지난다">1. exec()와 exit()는 둘 다 process_cleanup()을 지난다</a></li><li class="depth-2"><a href="#2-vm-cleanup은-pml4-destroy보다-먼저-호출된다" data-for="2-vm-cleanup은-pml4-destroy보다-먼저-호출된다">2. VM cleanup은 PML4 destroy보다 먼저 호출된다</a></li><li class="depth-2"><a href="#3-destroypage는-page-operation-table로-분기한다" data-for="3-destroypage는-page-operation-table로-분기한다">3. destroy(page)는 page operation table로 분기한다</a></li><li class="depth-2"><a href="#4-type별-destroy-자리는-이미-나뉘어-있다" data-for="4-type별-destroy-자리는-이미-나뉘어-있다">4. type별 destroy 자리는 이미 나뉘어 있다</a></li><li class="depth-2"><a href="#5-qemu는-dirty-bit와-disk-sector-write-효과만-본다" data-for="5-qemu는-dirty-bit와-disk-sector-write-효과만-본다">5. QEMU는 dirty bit와 disk sector write 효과만 본다</a></li><li class="depth-1"><a href="#process-cleanup-값-추적" data-for="process-cleanup-값-추적">process cleanup 값 추적</a></li><li class="depth-2"><a href="#1-process-cleanup-전후-page-수-감각" data-for="1-process-cleanup-전후-page-수-감각">1. process cleanup 전후 page 수 감각</a></li><li class="depth-2"><a href="#2-swapped-out-page의-slot-계산" data-for="2-swapped-out-page의-slot-계산">2. swapped-out page의 slot 계산</a></li><li class="depth-2"><a href="#3-dirty-file-backed-page의-write-back-범위" data-for="3-dirty-file-backed-page의-write-back-범위">3. dirty file-backed page의 write-back 범위</a></li><li class="depth-1"><a href="#process-cleanup-gdb" data-for="process-cleanup-gdb">process cleanup GDB</a></li><li class="depth-1"><a href="#type별-destroy-흐름-상세" data-for="type별-destroy-흐름-상세">type별 destroy 흐름 상세</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#process-cleanup-관련-개념" data-for="process-cleanup-관련-개념">process cleanup 관련 개념</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법) · 최우녕"/><meta name="twitter:description" content="프로그램이 RAM보다 큰 anonymous memory를 쓰면, 운영체제는 그 데이터를 어디에 숨겨 두었다가 다시 가져올까?"/><meta property="og:description" content="프로그램이 RAM보다 큰 anonymous memory를 쓰면, 운영체제는 그 데이터를 어디에 숨겨 두었다가 다시 가져올까?"/><meta property="og:image:alt" content="프로그램이 RAM보다 큰 anonymous memory를 쓰면, 운영체제는 그 데이터를 어디에 숨겨 두었다가 다시 가져올까?"/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/swap-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/swap-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="프로그램이 RAM보다 큰 anonymous memory를 쓰면, 운영체제는 그 데이터를 어디에 숨겨 두었다가 다시 가져올까?"/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/swap-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-657" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-657" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="swap-lab-anonymous-page가-디스크-슬롯으로-나갔다-돌아오는-법">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-lab-anonymous-page가-디스크-슬롯으로-나갔다-돌아오는-법" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<h2 id="swap-쟁점">Swap 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>프로그램이 RAM보다 큰 anonymous memory를 쓰면, 운영체제는 그 데이터를 어디에 숨겨 두었다가 다시 가져올까?</p>
+<p>예를 들어 <code>swap-anon</code> 테스트는 10MB 메모리 설정에서 20MB짜리 배열을 4KB 간격으로 건드린다. 모든 페이지를 RAM에 계속 둘 수 없다면, 어떤 페이지는 잠깐 디스크로 밀려나야 한다.</p>
+<p>이 Lab의 질문은 이것이다.</p>
+<blockquote>
+<p>4KB짜리 anonymous page 한 장은 swap disk의 몇 번째 sector들에 저장될까?</p>
+</blockquote>
+<h2 id="swap-필요성">Swap 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">프레임 교체 (Frame Eviction) Trace</a>는 빈 frame이 없을 때 victim page를 골라 frame을 재사용해야 한다고 설명한다. 하지만 victim이 anonymous page라면 한 가지 문제가 남는다.</p>
+<p>anonymous page는 실행 파일이나 mmap 파일처럼 “원본 파일의 offset”으로 돌아갈 곳이 없다.</p>
+<p>예:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> char</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal"> big_chunks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">20</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1024</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1024</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">];</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">big_chunks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[i </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 4096</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">char</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) i;</span></span></code></pre></figure>
+<p>이 바이트는 프로그램이 실행 중에 만든 값이다. frame을 비우기 전에 이 값을 어딘가에 저장하지 않으면, 나중에 같은 주소를 다시 읽을 때 값이 사라진다.</p>
+<p>그래서 swap은 이런 질문에 답한다.</p>
+<ul>
+<li>RAM에서 쫓겨난 anonymous page의 4096B를 어디에 보관할까?</li>
+<li>나중에 page fault가 다시 나면 어느 위치에서 읽어 올까?</li>
+<li>그 위치가 이미 사용 중인지 아닌지는 누가 기억할까?</li>
+</ul>
+<h2 id="swap-흐름">Swap 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>처음에는 swap을 “RAM 밖에 있는 임시 4KB 보관함 배열”로 생각하면 된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>개념</th><th>뜻</th></tr></thead><tbody><tr><td>frame</td><td>지금 RAM에 올라와 있는 4KB 자리</td></tr><tr><td>anonymous page</td><td>파일 원본 없이 실행 중에 생긴 page</td></tr><tr><td>swap disk</td><td>anonymous page 내용을 임시 저장하는 디스크</td></tr><tr><td>swap slot</td><td>page 하나를 저장하는 swap disk의 연속 sector 묶음</td></tr><tr><td>slot bitmap</td><td>어떤 swap slot이 비었는지 표시하는 표</td></tr></tbody></table></div>
+<p>흐름은 두 방향이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>swap out:</span></span>
+<span data-line><span>  victim frame 선택</span></span>
+<span data-line><span>  -> page가 VM_ANON인지 확인</span></span>
+<span data-line><span>  -> 빈 swap slot 선택</span></span>
+<span data-line><span>  -> frame의 4096B를 disk sector 8개에 기록</span></span>
+<span data-line><span>  -> page metadata에 slot 번호 저장</span></span>
+<span data-line><span>  -> page table mapping 제거</span></span>
+<span data-line> </span>
+<span data-line><span>swap in:</span></span>
+<span data-line><span>  같은 VA 접근으로 page fault 발생</span></span>
+<span data-line><span>  -> SPT에서 struct page 찾기</span></span>
+<span data-line><span>  -> frame 새로 확보</span></span>
+<span data-line><span>  -> page metadata의 slot 번호 확인</span></span>
+<span data-line><span>  -> disk sector 8개를 frame으로 읽음</span></span>
+<span data-line><span>  -> slot을 free로 되돌림</span></span>
+<span data-line><span>  -> page table mapping 설치</span></span></code></pre></figure>
+<p>이 말은 즉, swap은 <a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT</a>와 함께 동작한다. page table은 “지금 resident인가”만 말해 주고, SPT와 page metadata가 “resident가 아니라면 swap slot 몇 번에 있는가”를 기억해야 한다.</p>
+<h2 id="swap-사례">Swap 사례<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-사례" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>pintos/tests/vm/swap-anon.c</code>는 다음 상황을 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>CHUNK_SIZE = 20MB</span></span>
+<span data-line><span>PAGE_SIZE  = 4096B</span></span>
+<span data-line><span>PAGE_COUNT = 20MB / 4096B = 5120 pages</span></span></code></pre></figure>
+<p>테스트는 각 page의 첫 바이트에 값을 쓴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page 0    첫 바이트 = 0</span></span>
+<span data-line><span>page 1    첫 바이트 = 1</span></span>
+<span data-line><span>page 511  첫 바이트 = 255</span></span>
+<span data-line><span>page 512  첫 바이트 = 0</span></span></code></pre></figure>
+<p><code>(char) i</code>로 저장하므로 256마다 값이 반복된다. 중요한 것은 모든 페이지의 첫 바이트가 나중에 다시 읽어도 같은 값이어야 한다는 점이다.</p>
+<p>겉으로는 단순한 배열 검사지만, 내부에서는 이런 일이 일어날 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>write big_chunks[4096 * i]</span></span>
+<span data-line><span>  -> page fault</span></span>
+<span data-line><span>  -> frame 확보</span></span>
+<span data-line><span>  -> 메모리에 값 기록</span></span>
+<span data-line><span>  -> frame 부족</span></span>
+<span data-line><span>  -> 오래된 anonymous page swap out</span></span>
+<span data-line><span>  -> 나중에 다시 접근</span></span>
+<span data-line><span>  -> swap in</span></span>
+<span data-line><span>  -> 값 비교</span></span></code></pre></figure>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows도 anonymous memory를 RAM에 계속 둘 수 없으면 swap/pagefile 같은 backing store를 사용할 수 있다.</p>
+<p>하지만 현실 OS는 PintOS보다 훨씬 많은 상태를 본다.</p>
+<ul>
+<li>Linux는 anonymous page, file-backed page, page cache, reclaim, cgroup, NUMA, dirty/writeback 상태를 함께 고려한다.</li>
+<li>Windows는 working set, standby/modified page list, pagefile, memory compression 같은 정책을 함께 다룬다.</li>
+</ul>
+<p>현실 OS에서도 핵심 질문은 같다.</p>
+<blockquote>
+<p>파일 원본이 없는 page를 RAM에서 내보내려면, 나중에 복원할 수 있는 backing store가 필요하다.</p>
+</blockquote>
+<p>다만 현실 OS의 swap은 단순한 “slot 배열”보다 훨씬 복잡하고, 성능과 보안 정책도 함께 들어간다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현재 로컬 PintOS 구현에서는 anonymous page의 swap 흐름이 <code>pintos/vm/anon.c</code>에 모여 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/vm/anon.c</code>
+<ul>
+<li><code>vm_anon_init()</code></li>
+<li><code>swap_slot_alloc()</code></li>
+<li><code>swap_slot_ref()</code></li>
+<li><code>swap_slot_unref()</code></li>
+<li><code>anon_swap_in()</code></li>
+<li><code>anon_swap_out()</code></li>
+<li><code>anon_destroy()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/include/vm/anon.h</code>
+<ul>
+<li><code>struct anon_page</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/devices/disk.c</code>
+<ul>
+<li><code>disk_get()</code></li>
+<li><code>disk_read()</code></li>
+<li><code>disk_write()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/include/devices/disk.h</code>
+<ul>
+<li><code>DISK_SECTOR_SIZE</code></li>
+</ul>
+</li>
+</ul>
+<p>현재 코드에서 중요한 점은, swap slot이 단순한 번호 하나만으로 끝나지 않는다는 것이다. <code>anon_swap_out()</code>은 frame을 공유하는 owner 수를 보고 같은 swap slot의 참조 수를 맞춘다. 그래서 한 frame을 여러 page metadata가 가리키던 경우에도, 마지막 참조가 사라질 때까지 slot을 free로 돌리지 않는다.</p>
+<p><code>vm_anon_init()</code>은 swap disk와 slot 관리 구조를 초기화한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> disk </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">swap_disk;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> bitmap</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> disk_bitmap;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> size_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">swap_ref_count;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swap_slot_count;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock swap_lock;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_anon_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    swap_disk </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> disk_get</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">swap_disk)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        PANIC</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;NO DISK&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="property">    disk_sector_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> sectors </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> disk_size</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(swap_disk);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    swap_slot_count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> sectors </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> SWAP_SLOT;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    disk_bitmap </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> bitmap_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(swap_slot_count);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    swap_ref_count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> malloc</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">sizeof</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">swap_ref_count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> swap_slot_count);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    lock_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">swap_lock);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>그리고 <code>struct anon_page</code>는 해당 page가 swap에 나가 있는지와 어느 slot에 있는지를 기억한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swap_idx;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swapped;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 말은 즉, page table PTE가 지워져도 <code>struct page</code>의 metadata에는 복원에 필요한 좌표가 남는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct anon_page</span></span>
+<span data-line><span>  -> swap_idx: swap disk 안의 slot 번호</span></span>
+<span data-line><span>  -> swapped: 지금 frame에 없고 swap slot에 저장되어 있는지 여부</span></span></code></pre></figure>
+<p>PintOS의 디스크 배치는 <code>disk.c</code> 주석에 명시되어 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0:0 - 부트 로더, 커널 명령줄 인자, 운영체제 커널</span></span>
+<span data-line><span>0:1 - 파일 시스템</span></span>
+<span data-line><span>1:0 - scratch</span></span>
+<span data-line><span>1:1 - swap</span></span></code></pre></figure>
+<p>따라서 현재 구현에서 swap disk를 잡는 흐름은 <code>disk_get(1, 1)</code>이다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 “이 sector가 swap slot이다”라는 의미를 모른다.</p>
+<p>QEMU가 보는 것은 guest인 PintOS가 ATA 디스크 명령을 보내고, 어떤 sector를 읽거나 쓰는 동작이다.</p>
+<p>PintOS 쪽에서는 <code>disk_read()</code>와 <code>disk_write()</code>가 ATA PIO 포트에 명령을 보낸다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/devices/disk.c</code>
+<ul>
+<li><code>select_sector()</code></li>
+<li><code>issue_pio_command()</code></li>
+<li><code>output_sector()</code></li>
+<li><code>input_sector()</code></li>
+</ul>
+</li>
+</ul>
+<p>QEMU 쪽에서는 IDE 장치 모델이 그 명령을 block backend I/O로 바꾼다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/ide/core.c" class="external external-link">hw/ide/core.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>WIN_READ</code> -> <code>cmd_read_pio</code></li>
+<li><code>WIN_WRITE</code> -> <code>cmd_write_pio</code></li>
+<li><code>ide_sector_read()</code></li>
+<li><code>ide_sector_write()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/block/block-backend.c" class="external external-link">block/block-backend.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>blk_aio_preadv()</code></li>
+<li><code>blk_aio_pwritev()</code></li>
+</ul>
+</li>
+</ul>
+<p>이 말은 즉:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS anon_swap_out()</span></span>
+<span data-line><span>  -> PintOS disk_write(swap_disk, sector, buffer)</span></span>
+<span data-line><span>  -> guest ATA PIO write</span></span>
+<span data-line><span>  -> QEMU IDE model</span></span>
+<span data-line><span>  -> QEMU block backend write</span></span>
+<span data-line><span>  -> host의 swap.dsk 파일에 bytes 반영</span></span></code></pre></figure>
+<p>PintOS의 swap 정책은 PintOS가 정한다. QEMU는 그 정책을 이해하지 않고, 디스크처럼 보이는 장치를 제공한다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>swap 의미</td><td>커널 VM 정책의 일부</td><td><code>anon_swap_in/out</code> 과제 구현</td><td>의미를 모름</td></tr><tr><td>저장 위치</td><td>swap partition/file, pagefile 등</td><td><code>disk_get(1, 1)</code>로 얻는 swap disk</td><td>host 파일을 block device처럼 제공</td></tr><tr><td>page 크기</td><td>보통 4KB지만 huge page 등 다양</td><td><code>PGSIZE = 4096</code></td><td>guest가 요청한 sector I/O만 처리</td></tr><tr><td>slot 관리</td><td>복잡한 allocator와 reclaim 정책</td><td>bitmap/배열 등으로 직접 구현</td><td>slot 개념 없음</td></tr><tr><td>실패 처리</td><td>OOM, reclaim, pagefile 확장 등</td><td>slot 부족 시 실패/panic/test fail 가능</td><td>I/O 성공/실패만 전달</td></tr></tbody></table></div>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="swap-out-흐름">swap out 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-out-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;vm_evict_frame() → victim 선택\&quot;] --> B[\&quot;anon_swap_out(page)\&quot;]\n    B --> C{\&quot;frame과 owner가 있는가?\&quot;}\n    C -->|no| D[\&quot;return false\&quot;]\n    C -->|yes| E[\&quot;swap_slot_alloc()\&quot;]\n    E --> F[\&quot;bitmap_scan_and_flip(disk_bitmap, 0, 1, false)\&quot;]\n    F --> G{\&quot;slot == BITMAP_ERROR?\&quot;}\n    G -->|yes| H[\&quot;return false\&quot;]\n    G -->|no| I[\&quot;disk_write × 8회&lt;br/>slot*8+i 번 sector에&lt;br/>kva+512*i 기록\&quot;]\n    I --> J[\&quot;모든 owner page에&lt;br/>anon.swapped = true&lt;br/>anon.swap_idx = slot\&quot;]\n    J --> K[\&quot;owner_count만큼&lt;br/>swap_ref_count 조정\&quot;]\n    K --> L[\&quot;return true\&quot;]&quot;">flowchart TD
+    A[&quot;vm_evict_frame() → victim 선택&quot;] --> B[&quot;anon_swap_out(page)&quot;]
+    B --> C{&quot;frame과 owner가 있는가?&quot;}
+    C -->|no| D[&quot;return false&quot;]
+    C -->|yes| E[&quot;swap_slot_alloc()&quot;]
+    E --> F[&quot;bitmap_scan_and_flip(disk_bitmap, 0, 1, false)&quot;]
+    F --> G{&quot;slot == BITMAP_ERROR?&quot;}
+    G -->|yes| H[&quot;return false&quot;]
+    G -->|no| I[&quot;disk_write × 8회&lt;br/>slot*8+i 번 sector에&lt;br/>kva+512*i 기록&quot;]
+    I --> J[&quot;모든 owner page에&lt;br/>anon.swapped = true&lt;br/>anon.swap_idx = slot&quot;]
+    J --> K[&quot;owner_count만큼&lt;br/>swap_ref_count 조정&quot;]
+    K --> L[&quot;return true&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="swap-in-흐름">swap in 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-in-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;page fault → vm_try_handle_fault\&quot;] --> B[\&quot;vm_do_claim_page(page)\&quot;]\n    B --> C[\&quot;anon_swap_in(page, kva)\&quot;]\n    C --> D[\&quot;swap_idx = page→anon.swap_idx\&quot;]\n    D --> E[\&quot;disk_read × 8회&lt;br/>swap_idx*8+i 번 sector에서&lt;br/>kva+512*i 로 읽기\&quot;]\n    E --> F[\&quot;swap_slot_unref(swap_idx)\&quot;]\n    F --> G[\&quot;swapped = false&lt;br/>swap_idx = BITMAP_ERROR\&quot;]\n    G --> H[\&quot;return true\&quot;]&quot;">flowchart TD
+    A[&quot;page fault → vm_try_handle_fault&quot;] --> B[&quot;vm_do_claim_page(page)&quot;]
+    B --> C[&quot;anon_swap_in(page, kva)&quot;]
+    C --> D[&quot;swap_idx = page→anon.swap_idx&quot;]
+    D --> E[&quot;disk_read × 8회&lt;br/>swap_idx*8+i 번 sector에서&lt;br/>kva+512*i 로 읽기&quot;]
+    E --> F[&quot;swap_slot_unref(swap_idx)&quot;]
+    F --> G[&quot;swapped = false&lt;br/>swap_idx = BITMAP_ERROR&quot;]
+    G --> H[&quot;return true&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="swap-slot--sector-매핑">swap slot ↔ sector 매핑<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-slot--sector-매핑" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    subgraph \&quot;Swap Disk (sector 단위)\&quot;\n        S0[\&quot;slot 0&lt;br/>sector 0~7\&quot;]\n        S1[\&quot;slot 1&lt;br/>sector 8~15\&quot;]\n        S2[\&quot;slot 2&lt;br/>sector 16~23\&quot;]\n        S3[\&quot;slot 3&lt;br/>sector 24~31\&quot;]\n    end\n    subgraph \&quot;RAM (page 단위)\&quot;\n        P[\&quot;page (4096B)\&quot;]\n    end\n    P -->|\&quot;swap out&lt;br/>disk_write ×8\&quot;| S3\n    S3 -->|\&quot;swap in&lt;br/>disk_read ×8\&quot;| P&quot;">flowchart LR
+    subgraph &quot;Swap Disk (sector 단위)&quot;
+        S0[&quot;slot 0&lt;br/>sector 0~7&quot;]
+        S1[&quot;slot 1&lt;br/>sector 8~15&quot;]
+        S2[&quot;slot 2&lt;br/>sector 16~23&quot;]
+        S3[&quot;slot 3&lt;br/>sector 24~31&quot;]
+    end
+    subgraph &quot;RAM (page 단위)&quot;
+        P[&quot;page (4096B)&quot;]
+    end
+    P -->|&quot;swap out&lt;br/>disk_write ×8&quot;| S3
+    S3 -->|&quot;swap in&lt;br/>disk_read ×8&quot;| P
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>pintos/vm/anon.c:39</td><td><code>vm_anon_init()</code></td><td><code>disk_get(1,1)</code>로 swap disk 확보, slot bitmap/ref count/lock 생성</td></tr><tr><td>pintos/vm/anon.c:60</td><td><code>swap_slot_alloc()</code></td><td>빈 slot을 사용 표시하고 ref count를 1로 설정</td></tr><tr><td>pintos/vm/anon.c:73</td><td><code>swap_slot_ref()</code></td><td>공유된 swapped page가 같은 slot을 더 참조하게 함</td></tr><tr><td>pintos/vm/anon.c:85</td><td><code>swap_slot_unref()</code></td><td>ref count를 내리고 0이 되면 bitmap slot 해제</td></tr><tr><td>pintos/vm/anon.c:101</td><td><code>anon_initializer()</code></td><td><code>struct anon_page</code> 초기화 (<code>swapped=false</code>, <code>swap_idx=BITMAP_ERROR</code>)</td></tr><tr><td>pintos/vm/anon.c:116</td><td><code>anon_swap_in()</code></td><td>slot에서 8 sector를 읽어 frame에 복원하고 slot 참조 해제</td></tr><tr><td>pintos/vm/anon.c:134</td><td><code>anon_swap_out()</code></td><td>빈 slot 확보, frame → 8 sector 기록, 모든 owner page에 slot 기록</td></tr><tr><td>pintos/vm/anon.c:176</td><td><code>anon_destroy()</code></td><td>swapped 상태이면 slot 참조 해제</td></tr><tr><td>pintos/vm/anon.c:190</td><td><code>anon_copy()</code></td><td>swapped page 복사 시 같은 slot을 참조하도록 ref count 증가</td></tr><tr><td>pintos/include/vm/anon.h:7</td><td><code>struct anon_page</code></td><td><code>swap_idx</code>, <code>swapped</code> 필드</td></tr><tr><td>devices/disk.c</td><td><code>disk_read()</code> / <code>disk_write()</code></td><td>ATA PIO로 512B sector 읽기/쓰기</td></tr><tr><td>include/devices/disk.h</td><td><code>DISK_SECTOR_SIZE</code></td><td>512B 상수</td></tr><tr><td>include/threads/vaddr.h</td><td><code>PGSIZE</code> / <code>PGBITS</code></td><td>4096B / 12bit 상수</td></tr><tr><td>lib/kernel/bitmap.c</td><td><code>bitmap_scan_and_flip()</code></td><td>빈 slot 찾아 사용 표시</td></tr></tbody></table></div>
+<h2 id="swap-코드">Swap 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-page-하나는-4096b다">1. page 하나는 4096B다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-page-하나는-4096b다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/vaddr.h</code></li>
+</ul>
+<p>핵심 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PGBITS</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 12</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PGSIZE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &lt;&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PGBITS)</span></span></code></pre></figure>
+<p>따라서 PintOS page/frame 하나는 <code>2^12 = 4096B</code>다.</p>
+<h3 id="2-disk-sector-하나는-512b다">2. disk sector 하나는 512B다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-disk-sector-하나는-512b다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/devices/disk.h</code></li>
+</ul>
+<p>핵심 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> DISK_SECTOR_SIZE</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 512</span></span></code></pre></figure>
+<p>따라서 anonymous page 한 장을 통째로 저장하려면 sector 8개가 필요하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>4096B / 512B = 8 sectors</span></span></code></pre></figure>
+<h3 id="3-swap-disk는-네-번째-drive로-붙는다">3. swap disk는 네 번째 drive로 붙는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-swap-disk는-네-번째-drive로-붙는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/utils/pintos</code></li>
+<li><code>SW_AI-W11-pintos/pintos/devices/disk.c</code></li>
+</ul>
+<p><code>pintos</code> 실행 스크립트는 drive를 다음 순서로 QEMU에 붙인다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>index 0 -> os</span></span>
+<span data-line><span>index 1 -> fs</span></span>
+<span data-line><span>index 2 -> scratch</span></span>
+<span data-line><span>index 3 -> swap</span></span></code></pre></figure>
+<p>PintOS의 <code>disk.c</code>는 이것을 <code>1:1 - swap</code>으로 설명한다. 그래서 guest PintOS 코드에서는 swap disk를 <code>disk_get(1, 1)</code>로 잡는 흐름이 자연스럽다.</p>
+<h3 id="4-swap-테스트는-실제로-메모리-압박을-만든다">4. swap 테스트는 실제로 메모리 압박을 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-swap-테스트는-실제로-메모리-압박을-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/tests/vm/swap-anon.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/tests/vm/Make.tests</code></li>
+</ul>
+<p><code>swap-anon</code>은 <code>CHUNK_SIZE = 20MB</code> 배열을 page 단위로 건드리고, 테스트 설정은 <code>MEMORY = 10</code>, <code>SWAP_DISK = 30</code>을 사용한다.</p>
+<p>이 테스트는 “anonymous page를 쫓아냈다가 다시 읽어도 값이 유지되는가”를 확인한다.</p>
+<h2 id="swap-값-추적">Swap 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-slot-3은-어느-sector를-쓰는가">1. slot 3은 어느 sector를 쓰는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-slot-3은-어느-sector를-쓰는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>입력:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PGSIZE            = 4096</span></span>
+<span data-line><span>DISK_SECTOR_SIZE  = 512</span></span>
+<span data-line><span>sectors_per_page  = 4096 / 512 = 8</span></span>
+<span data-line><span>slot              = 3</span></span></code></pre></figure>
+<p>계산:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>base sector = slot * sectors_per_page</span></span>
+<span data-line><span>            = 3 * 8</span></span>
+<span data-line><span>            = 24</span></span>
+<span data-line> </span>
+<span data-line><span>slot 3이 쓰는 sector = 24, 25, 26, 27, 28, 29, 30, 31</span></span></code></pre></figure>
+<p>메모리 복사 모델:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame kva + 0       -> sector 24</span></span>
+<span data-line><span>frame kva + 512     -> sector 25</span></span>
+<span data-line><span>frame kva + 1024    -> sector 26</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>frame kva + 3584    -> sector 31</span></span></code></pre></figure>
+<p>즉 <code>disk_write()</code>를 8번 호출하거나, 같은 의미의 루프를 돌며 512B씩 나누어 기록해야 한다.</p>
+<h3 id="2-swap-anon의-크기-감각">2. <code>swap-anon</code>의 크기 감각<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-swap-anon의-크기-감각" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>swap-anon.c</code>의 큰 배열은 다음 크기다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>20MB = 20 * 1024 * 1024 = 20,971,520B</span></span>
+<span data-line><span>page count = 20,971,520 / 4096 = 5120 pages</span></span></code></pre></figure>
+<p><code>pintos/tests/vm/Make.tests</code>는 <code>swap-anon</code>에 <code>SWAP_DISK = 30</code>을 준다.</p>
+<p>현재 <code>pintos/utils/pintos</code> 스크립트는 정수 disk 크기를 임시 파일로 만들 때 <code>0xfc000 * size</code> 바이트를 쓴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>swap disk bytes = 0xfc000 * 30</span></span>
+<span data-line><span>                = 1,032,192 * 30</span></span>
+<span data-line><span>                = 30,965,760B</span></span>
+<span data-line> </span>
+<span data-line><span>sectors = 30,965,760 / 512 = 60,480</span></span>
+<span data-line><span>slots   = 60,480 / 8 = 7,560 page slots</span></span></code></pre></figure>
+<p>이 숫자만 보면 <code>swap-anon</code>의 5120 pages를 담을 수 있는 slot 수가 있다. 물론 실제 실행에서는 커널, 파일 시스템, frame table 구현, eviction 정책, pinning 여부가 함께 영향을 준다.</p>
+<h2 id="swap-gdb">Swap GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아래 체크리스트는 구현이 들어간 뒤 GDB로 확인할 지점이다.</p>
+<h3 id="1-swap-disk가-잡히는지-확인">1. swap disk가 잡히는지 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-swap-disk가-잡히는지-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>break vm_anon_init</span></span>
+<span data-line><span>next</span></span>
+<span data-line><span>p swap_disk</span></span>
+<span data-line><span>p swap_disk->name</span></span></code></pre></figure>
+<p>기대 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>swap_disk != NULL</span></span>
+<span data-line><span>swap_disk->name == &quot;hd1:1&quot; 또는 같은 의미의 swap drive</span></span></code></pre></figure>
+<h3 id="2-swap-out이-sector-8개를-쓰는지-확인">2. swap out이 sector 8개를 쓰는지 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-swap-out이-sector-8개를-쓰는지-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>break anon_swap_out</span></span>
+<span data-line><span>break disk_write</span></span>
+<span data-line><span>continue</span></span>
+<span data-line><span>p page->va</span></span>
+<span data-line><span>p page->frame->kva</span></span>
+<span data-line><span>p swap_idx</span></span>
+<span data-line><span>p i</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>slot 3이면 sector 24..31이 연속으로 기록되는가?</span></span>
+<span data-line><span>disk_write 호출 횟수가 page 하나당 8번인가?</span></span></code></pre></figure>
+<h3 id="3-swap-in-뒤-값이-돌아오는지-확인">3. swap in 뒤 값이 돌아오는지 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-swap-in-뒤-값이-돌아오는지-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>break anon_swap_in</span></span>
+<span data-line><span>break disk_read</span></span>
+<span data-line><span>continue</span></span>
+<span data-line><span>x/16xb kva</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>swap out 전에 frame에 있던 첫 바이트와</span></span>
+<span data-line><span>swap in 뒤 frame의 첫 바이트가 같은가?</span></span></code></pre></figure>
+<p>추가로 frame을 여러 owner가 공유했다면 같은 <code>swap_idx</code>를 참조하는 page들이 있고, 하나가 해제될 때 <code>swap_ref_count</code>가 바로 0으로 떨어지지 않는지도 함께 본다.</p>
+<h3 id="4-테스트로-확인">4. 테스트로 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-테스트로-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>cd SW_AI-W11-pintos/pintos</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/swap-anon</span></span></code></pre></figure>
+<p>이 명령은 anonymous page가 swap out/in을 거친 뒤에도 값이 유지되는지 보는 회귀 테스트다. 테스트가 실패하면 먼저 <code>anon_swap_out()</code>이 slot 8개 sector를 모두 쓰는지, <code>anon_swap_in()</code>이 같은 slot에서 읽는지, <code>swap_slot_unref()</code>가 slot을 너무 빨리 해제하지 않는지 확인한다.</p>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>anonymous page는 원본 파일이 없으므로 eviction 때 swap backing이 필요하다.</li>
+<li>PintOS의 page는 4096B이고 disk sector는 512B라서, page 하나는 sector 8개로 나뉜다.</li>
+<li><code>anon_swap_out()</code>은 frame의 4096B를 빈 swap slot에 기록하고, 모든 owner page에 <code>swap_idx</code>를 남긴다.</li>
+<li><code>anon_swap_in()</code>은 같은 slot에서 다시 읽은 뒤 <code>swap_slot_unref()</code>로 참조를 줄인다.</li>
+<li>PintOS가 swap slot 정책을 구현하지만, QEMU는 그 의미를 모른다. QEMU는 IDE/block I/O만 에뮬레이션한다.</li>
+</ul>
+<h2 id="swap-관련-문서">Swap 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">Frame Eviction Trace</a>
+<ul>
+<li>swap out이 호출되는 앞 단계.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous page swap slot</a>
+<ul>
+<li>SPT와 <code>struct anon_page</code>가 swap slot을 기억해야 하는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">Swap Disk QEMU Trace</a>
+<ul>
+<li>slot 번호가 PintOS sector I/O와 QEMU block backend offset으로 내려가는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">Page Fault Trace</a>
+<ul>
+<li>swap in이 다시 시작되는 입구.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT</a>
+<ul>
+<li>page metadata가 resident/swap 상태를 기억해야 하는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li>anonymous page와 file-backed page의 backing 차이.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/swap-fork-process-isolation-lab">swap fork isolation Lab</a>
+<ul>
+<li>한 프로세스의 swap을 여러 child 격리 문제로 확장해서 보는 Lab.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal">Anonymous Page와 Swap Slot</a></li><li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal">Clock hand로 victim frame 고르기 Lab</a></li><li><a href="../../wiki/os/disk-sector-qemu-block-backend-knowledge" class="internal">Disk sector는 QEMU block backend에서 어떤 byte offset이 되나</a></li><li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal">fork에서 swapped-out anonymous page는 어떻게 복사해야 하나</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/pte-dirty-bit" class="internal">PTE 더티 Bit (PTE Dirty Bit)</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal">swap-fork Lab (fork/exec 뒤 child별 swap 상태가 섞이지 않는가)</a></li><li><a href="../../wiki/os/swapped-anon-fork-snapshot-trace" class="internal">swapped anonymous page fork snapshot 흐름</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-655" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#swap-lab-anonymous-page가-디스크-슬롯으로-나갔다-돌아오는-법" data-for="swap-lab-anonymous-page가-디스크-슬롯으로-나갔다-돌아오는-법">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></li><li class="depth-1"><a href="#swap-쟁점" data-for="swap-쟁점">Swap 쟁점</a></li><li class="depth-1"><a href="#swap-필요성" data-for="swap-필요성">Swap 필요성</a></li><li class="depth-1"><a href="#swap-흐름" data-for="swap-흐름">Swap 흐름</a></li><li class="depth-1"><a href="#swap-사례" data-for="swap-사례">Swap 사례</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-2"><a href="#swap-out-흐름" data-for="swap-out-흐름">swap out 흐름</a></li><li class="depth-2"><a href="#swap-in-흐름" data-for="swap-in-흐름">swap in 흐름</a></li><li class="depth-2"><a href="#swap-slot--sector-매핑" data-for="swap-slot--sector-매핑">swap slot ↔ sector 매핑</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#swap-코드" data-for="swap-코드">Swap 코드</a></li><li class="depth-2"><a href="#1-page-하나는-4096b다" data-for="1-page-하나는-4096b다">1. page 하나는 4096B다</a></li><li class="depth-2"><a href="#2-disk-sector-하나는-512b다" data-for="2-disk-sector-하나는-512b다">2. disk sector 하나는 512B다</a></li><li class="depth-2"><a href="#3-swap-disk는-네-번째-drive로-붙는다" data-for="3-swap-disk는-네-번째-drive로-붙는다">3. swap disk는 네 번째 drive로 붙는다</a></li><li class="depth-2"><a href="#4-swap-테스트는-실제로-메모리-압박을-만든다" data-for="4-swap-테스트는-실제로-메모리-압박을-만든다">4. swap 테스트는 실제로 메모리 압박을 만든다</a></li><li class="depth-1"><a href="#swap-값-추적" data-for="swap-값-추적">Swap 값 추적</a></li><li class="depth-2"><a href="#1-slot-3은-어느-sector를-쓰는가" data-for="1-slot-3은-어느-sector를-쓰는가">1. slot 3은 어느 sector를 쓰는가</a></li><li class="depth-2"><a href="#2-swap-anon의-크기-감각" data-for="2-swap-anon의-크기-감각">2. swap-anon의 크기 감각</a></li><li class="depth-1"><a href="#swap-gdb" data-for="swap-gdb">Swap GDB</a></li><li class="depth-2"><a href="#1-swap-disk가-잡히는지-확인" data-for="1-swap-disk가-잡히는지-확인">1. swap disk가 잡히는지 확인</a></li><li class="depth-2"><a href="#2-swap-out이-sector-8개를-쓰는지-확인" data-for="2-swap-out이-sector-8개를-쓰는지-확인">2. swap out이 sector 8개를 쓰는지 확인</a></li><li class="depth-2"><a href="#3-swap-in-뒤-값이-돌아오는지-확인" data-for="3-swap-in-뒤-값이-돌아오는지-확인">3. swap in 뒤 값이 돌아오는지 확인</a></li><li class="depth-2"><a href="#4-테스트로-확인" data-for="4-테스트로-확인">4. 테스트로 확인</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#swap-관련-문서" data-for="swap-관련-문서">Swap 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

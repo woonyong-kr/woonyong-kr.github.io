@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Lazy Loading Segment 흐름 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Lazy Loading Segment 흐름 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Lazy Loading Segment 흐름 · 최우녕"/><meta name="twitter:description" content="loadsegment()는 ELF 내용을 바로 RAM에 읽지 않고 &quot;이 주소는 합법이고 나중에 파일 어디서 채운다&quot;는 약속만 SPT에 적어 둔다."/><meta property="og:description" content="loadsegment()는 ELF 내용을 바로 RAM에 읽지 않고 &quot;이 주소는 합법이고 나중에 파일 어디서 채운다&quot;는 약속만 SPT에 적어 둔다."/><meta property="og:image:alt" content="loadsegment()는 ELF 내용을 바로 RAM에 읽지 않고 &quot;이 주소는 합법이고 나중에 파일 어디서 채운다&quot;는 약속만 SPT에 적어 둔다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/lazy-loading-segment-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/lazy-loading-segment-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="loadsegment()는 ELF 내용을 바로 RAM에 읽지 않고 &quot;이 주소는 합법이고 나중에 파일 어디서 채운다&quot;는 약속만 SPT에 적어 둔다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/lazy-loading-segment-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-514" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-514" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Lazy Loading Segment 흐름</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="lazy-loading-segment-흐름">Lazy Loading Segment 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy-loading-segment-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 demand paging과 lazy loading의 일반 원리 및 PintOS에서 예상되는 처리 흐름을 설명한다. 제시된 함수·코드 좌표·운영체제별 세부 동작과 비용·성능 판단은 특정 구현과 버전의 실제 코드, 실행 기록 및 측정 결과를 별도로 확인해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: <code>load_segment()</code>는 ELF 내용을 바로 RAM에 읽지 않고 “이 주소는 합법이고 나중에 파일 어디서 채운다”는 약속만 SPT에 적어 둔다. 실제 읽기는 그 주소를 처음 건드려 <a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> 났을 때 <code>lazy_load_segment()</code>가 수행한다 — demand paging의 뼈대다.</p>
+</blockquote>
+<h2 id="lazy-loading-segment-흐름에서-먼저-헷갈리는-지점">Lazy Loading Segment 흐름에서 먼저 헷갈리는 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy-loading-segment-흐름에서-먼저-헷갈리는-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>ELF 파일을 실행할 때 PintOS는 왜 <code>load_segment()</code>에서 곧바로 파일 내용을 전부 RAM에 읽지 않고, <code>lazy_load_segment()</code>를 나중에 호출하도록 남겨둘까?</p>
+<p>답은 demand paging이다.</p>
+<p>프로그램의 주소 공간에는 “나중에 필요하면 가져와도 되는 페이지”가 많다. 처음부터 모두 읽으면 실행 시작이 느려지고 RAM도 낭비된다. 그래서 커널은 처음에는 “이 주소는 합법이고, 나중에 어디서 어떻게 채워야 한다”는 약속만 SPT에 적어 둔다.</p>
+<hr/>
+<h2 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>CPU와 MMU가 제공하는 하드웨어 규칙이 lazy loading을 가능하게 만든다.</p>
+<p><strong>1. 페이지 테이블의 Present 비트</strong></p>
+<p>CPU가 가상 주소를 물리 주소로 변환할 때 page table entry(PTE)의 Present 비트를 검사한다. Present = 0이면 CPU는 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a>(Page Fault, 인터럽트 14번)를 발생시킨다. 이것이 lazy loading의 핵심 메커니즘이다. 커널은 의도적으로 PTE를 설치하지 않음으로써 “나중에 필요할 때 채우겠다”는 뜻을 표현한다.</p>
+<p><strong>2. CR2 레지스터</strong></p>
+<p>Page fault가 발생하면 CPU는 fault를 일으킨 가상 주소를 CR2 레지스터에 저장한다. 커널의 fault handler는 CR2를 읽어서 어떤 페이지가 필요한지 알아낸다.</p>
+<p><strong>3. 명령어 재실행 (Instruction Restart)</strong></p>
+<p>Page fault handler가 정상적으로 복귀하면 CPU는 fault를 일으킨 바로 그 명령어를 다시 실행한다. 이번에는 PTE가 설치되어 있으므로 정상적으로 메모리 접근이 성공한다. 유저 프로세스는 fault가 발생했다는 사실조차 모른다.</p>
+<p><strong>4. TLB 무효화</strong></p>
+<p>커널이 새로운 PTE를 설치한 뒤에는 TLB(Translation Lookaside Buffer)를 무효화해야 한다. 그렇지 않으면 CPU가 이전의 “not present” 캐시를 계속 사용할 수 있다. x86-64에서는 <code>invlpg</code> 명령어 또는 CR3 재로드로 TLB를 플러시한다.</p>
+<p>이 네 가지 하드웨어 규칙이 없으면 demand paging은 불가능하다. 소프트웨어(커널)는 이 규칙 위에서 정책을 결정할 뿐이다.</p>
+<hr/>
+<h2 id="핵심-흐름">핵심 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#핵심-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="flowchart">Flowchart<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#flowchart" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Lazy Loading Segment 전체 흐름\nflowchart TD\n  Load[\&quot;load_segment(file, ofs, upage,&lt;br/>read_bytes, zero_bytes, writable)\&quot;]\n  Calc[\&quot;page_read_bytes /&lt;br/>page_zero_bytes 계산\&quot;]\n  Aux[\&quot;aux = malloc();&lt;br/>file_reopen(file)으로 aux 채움\&quot;]\n  Alloc[\&quot;vm_alloc_page_with_initializer(&lt;br/>VM_ANON, upage, writable,&lt;br/>lazy_load_segment, aux)\&quot;]\n  New[\&quot;uninit_new(page, upage,&lt;br/>init=lazy_load_segment,&lt;br/>type=VM_ANON, aux,&lt;br/>initializer=anon_initializer)\&quot;]\n  Insert[\&quot;spt_insert_page(spt, page)\&quot;]\n  Access[\&quot;유저 코드가 upage 접근\&quot;]\n  Fault[\&quot;page_fault():&lt;br/>CR2 = fault_addr\&quot;]\n  Try[\&quot;vm_try_handle_fault()\&quot;]\n  Find[\&quot;spt_find_page(spt, fault_addr)\&quot;]\n  Claim[\&quot;vm_do_claim_page(page)\&quot;]\n  Uninit[\&quot;uninit_initialize()\&quot;]\n  InitType[\&quot;anon_initializer(page,&lt;br/>VM_ANON, kva)\&quot;]\n  Lazy[\&quot;lazy_load_segment(page, aux)\&quot;]\n  Zero[\&quot;memset(kva + read_bytes,&lt;br/>0, zero_bytes)\&quot;]\n  Retry[\&quot;같은 명령어 재실행&lt;br/>정상 접근\&quot;]\n  Frame[\&quot;Frame\&quot;]\n  Link[\&quot;Link\&quot;]\n  SwapIn[\&quot;SwapIn\&quot;]\n  Read[\&quot;Read\&quot;]\n  Close[\&quot;Close\&quot;]\n  Load --> Calc\n  Calc --> Aux\n  Aux --> Alloc\n  Alloc --> New\n  New --> Insert\n  Insert --> Access\n  Access --> Fault\n  Fault --> Try\n  Try --> Find\n  Find --> Claim\n  Claim --> Frame\n  Frame --> Link\n  Link --> SwapIn\n  SwapIn --> Uninit\n  Uninit --> InitType\n  Uninit --> Lazy\n  Lazy --> Read\n  Read --> Zero\n  Zero --> Close\n  Close --> Retry&quot;">%% Lazy Loading Segment 전체 흐름
+flowchart TD
+  Load[&quot;load_segment(file, ofs, upage,&lt;br/>read_bytes, zero_bytes, writable)&quot;]
+  Calc[&quot;page_read_bytes /&lt;br/>page_zero_bytes 계산&quot;]
+  Aux[&quot;aux = malloc();&lt;br/>file_reopen(file)으로 aux 채움&quot;]
+  Alloc[&quot;vm_alloc_page_with_initializer(&lt;br/>VM_ANON, upage, writable,&lt;br/>lazy_load_segment, aux)&quot;]
+  New[&quot;uninit_new(page, upage,&lt;br/>init=lazy_load_segment,&lt;br/>type=VM_ANON, aux,&lt;br/>initializer=anon_initializer)&quot;]
+  Insert[&quot;spt_insert_page(spt, page)&quot;]
+  Access[&quot;유저 코드가 upage 접근&quot;]
+  Fault[&quot;page_fault():&lt;br/>CR2 = fault_addr&quot;]
+  Try[&quot;vm_try_handle_fault()&quot;]
+  Find[&quot;spt_find_page(spt, fault_addr)&quot;]
+  Claim[&quot;vm_do_claim_page(page)&quot;]
+  Uninit[&quot;uninit_initialize()&quot;]
+  InitType[&quot;anon_initializer(page,&lt;br/>VM_ANON, kva)&quot;]
+  Lazy[&quot;lazy_load_segment(page, aux)&quot;]
+  Zero[&quot;memset(kva + read_bytes,&lt;br/>0, zero_bytes)&quot;]
+  Retry[&quot;같은 명령어 재실행&lt;br/>정상 접근&quot;]
+  Frame[&quot;Frame&quot;]
+  Link[&quot;Link&quot;]
+  SwapIn[&quot;SwapIn&quot;]
+  Read[&quot;Read&quot;]
+  Close[&quot;Close&quot;]
+  Load --> Calc
+  Calc --> Aux
+  Aux --> Alloc
+  Alloc --> New
+  New --> Insert
+  Insert --> Access
+  Access --> Fault
+  Fault --> Try
+  Try --> Find
+  Find --> Claim
+  Claim --> Frame
+  Frame --> Link
+  Link --> SwapIn
+  SwapIn --> Uninit
+  Uninit --> InitType
+  Uninit --> Lazy
+  Lazy --> Read
+  Read --> Zero
+  Zero --> Close
+  Close --> Retry
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="sequence-diagram-시간-순서">Sequence Diagram (시간 순서)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#sequence-diagram-시간-순서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Lazy Loading Segment 시간 순서\nflowchart TD\n  Exec[\&quot;프로그램 시작 시 exec&lt;br/>load() / load_segment()\&quot;]\n  Parse[\&quot;ELF 파싱&lt;br/>PT_LOAD 세그먼트마다 load_segment() 호출\&quot;]\n  LoopCalc[\&quot;각 페이지:&lt;br/>page_read_bytes, page_zero_bytes 계산\&quot;]\n  LoopAux[\&quot;aux = malloc()&lt;br/>file_reopen(file)\&quot;]\n  SptAlloc[\&quot;SPT 등록 요청:&lt;br/>vm_alloc_page_with_initializer(...)\&quot;]\n  UninitNew[\&quot;uninit_new()&lt;br/>page를 VM_UNINIT 타입으로 생성\&quot;]\n  SptInsert[\&quot;spt_insert_page()&lt;br/>SPT에 등록\&quot;]\n  MetadataOnly[\&quot;RAM에 실제 데이터 없음&lt;br/>PTE도 없음\&quot;]\n  UserAccess[\&quot;나중에 유저 코드가 upage 접근&lt;br/>mov eax, [upage]\&quot;]\n  FaultFind[\&quot;page_fault handler:&lt;br/>spt_find_page(spt, fault_addr)\&quot;]\n  PageFound[\&quot;SPT가 page(VM_UNINIT) 반환\&quot;]\n  Claim[\&quot;vm_do_claim_page(page)\&quot;]\n  Frame[\&quot;vm_get_frame()&lt;br/>물리 프레임 확보\&quot;]\n  SwapIn[\&quot;swap_in(page, kva)&lt;br/>uninit_initialize()\&quot;]\n  AnonInit[\&quot;anon_initializer(page, VM_ANON, kva)&lt;br/>page 타입 전환\&quot;]\n  LazyInit[\&quot;lazy_load_segment(page, aux)\&quot;]\n  ZeroFill[\&quot;memset(kva + read_bytes, 0, zero_bytes)\&quot;]\n  Return[\&quot;true 반환 후 handler 복귀&lt;br/>iret\&quot;]\n  Retry[\&quot;CPU가 같은 명령어 재실행&lt;br/>PTE Present = 1&lt;br/>물리 주소 변환 성공\&quot;]\n  Done[\&quot;유저 프로세스에 데이터 반환\&quot;]\n  CpuFault[\&quot;CpuFault\&quot;]\n  Map[\&quot;Map\&quot;]\n  DiskRead[\&quot;DiskRead\&quot;]\n  Cleanup[\&quot;Cleanup\&quot;]\n  Exec --> Parse\n  Parse --> LoopCalc\n  LoopCalc --> LoopAux\n  LoopAux --> SptAlloc\n  SptAlloc --> UninitNew\n  UninitNew --> SptInsert\n  SptInsert --> MetadataOnly\n  MetadataOnly --> UserAccess\n  UserAccess --> CpuFault\n  CpuFault --> FaultFind\n  FaultFind --> PageFound\n  PageFound --> Claim\n  Claim --> Frame\n  Frame --> Map\n  Map --> SwapIn\n  SwapIn --> AnonInit\n  AnonInit --> LazyInit\n  LazyInit --> DiskRead\n  DiskRead --> ZeroFill\n  ZeroFill --> Cleanup\n  Cleanup --> Return\n  Return --> Retry\n  Retry --> Done&quot;">%% Lazy Loading Segment 시간 순서
+flowchart TD
+  Exec[&quot;프로그램 시작 시 exec&lt;br/>load() / load_segment()&quot;]
+  Parse[&quot;ELF 파싱&lt;br/>PT_LOAD 세그먼트마다 load_segment() 호출&quot;]
+  LoopCalc[&quot;각 페이지:&lt;br/>page_read_bytes, page_zero_bytes 계산&quot;]
+  LoopAux[&quot;aux = malloc()&lt;br/>file_reopen(file)&quot;]
+  SptAlloc[&quot;SPT 등록 요청:&lt;br/>vm_alloc_page_with_initializer(...)&quot;]
+  UninitNew[&quot;uninit_new()&lt;br/>page를 VM_UNINIT 타입으로 생성&quot;]
+  SptInsert[&quot;spt_insert_page()&lt;br/>SPT에 등록&quot;]
+  MetadataOnly[&quot;RAM에 실제 데이터 없음&lt;br/>PTE도 없음&quot;]
+  UserAccess[&quot;나중에 유저 코드가 upage 접근&lt;br/>mov eax, [upage]&quot;]
+  FaultFind[&quot;page_fault handler:&lt;br/>spt_find_page(spt, fault_addr)&quot;]
+  PageFound[&quot;SPT가 page(VM_UNINIT) 반환&quot;]
+  Claim[&quot;vm_do_claim_page(page)&quot;]
+  Frame[&quot;vm_get_frame()&lt;br/>물리 프레임 확보&quot;]
+  SwapIn[&quot;swap_in(page, kva)&lt;br/>uninit_initialize()&quot;]
+  AnonInit[&quot;anon_initializer(page, VM_ANON, kva)&lt;br/>page 타입 전환&quot;]
+  LazyInit[&quot;lazy_load_segment(page, aux)&quot;]
+  ZeroFill[&quot;memset(kva + read_bytes, 0, zero_bytes)&quot;]
+  Return[&quot;true 반환 후 handler 복귀&lt;br/>iret&quot;]
+  Retry[&quot;CPU가 같은 명령어 재실행&lt;br/>PTE Present = 1&lt;br/>물리 주소 변환 성공&quot;]
+  Done[&quot;유저 프로세스에 데이터 반환&quot;]
+  CpuFault[&quot;CpuFault&quot;]
+  Map[&quot;Map&quot;]
+  DiskRead[&quot;DiskRead&quot;]
+  Cleanup[&quot;Cleanup&quot;]
+  Exec --> Parse
+  Parse --> LoopCalc
+  LoopCalc --> LoopAux
+  LoopAux --> SptAlloc
+  SptAlloc --> UninitNew
+  UninitNew --> SptInsert
+  SptInsert --> MetadataOnly
+  MetadataOnly --> UserAccess
+  UserAccess --> CpuFault
+  CpuFault --> FaultFind
+  FaultFind --> PageFound
+  PageFound --> Claim
+  Claim --> Frame
+  Frame --> Map
+  Map --> SwapIn
+  SwapIn --> AnonInit
+  AnonInit --> LazyInit
+  LazyInit --> DiskRead
+  DiskRead --> ZeroFill
+  ZeroFill --> Cleanup
+  Cleanup --> Return
+  Return --> Retry
+  Retry --> Done
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<hr/>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="linux-execve--mmap--demand-paging">Linux: execve → mmap → demand paging<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-execve--mmap--demand-paging" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서 <code>execve()</code>가 ELF 바이너리를 실행하면 커널은 <code>load_elf_binary()</code>를 호출한다. 이 함수는 ELF의 각 PT_LOAD 세그먼트에 대해 <code>elf_map()</code> → <code>do_mmap()</code>을 호출한다. 이때 파일의 해당 영역을 프로세스의 주소 공간에 file-backed memory mapping으로 등록한다. 실제 파일 데이터를 RAM에 읽지는 않는다.</p>
+<p>유저 코드가 해당 주소에 처음 접근하면 page fault가 발생하고, 커널의 <code>do_page_fault()</code> → <code>handle_mm_fault()</code> → <code>filemap_fault()</code>가 호출된다. 이 경로에서 page cache를 확인하고, 캐시에 없으면 디스크에서 읽어온다.</p>
+<p>Linux가 PintOS보다 복잡한 지점들:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>측면</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>캐싱</td><td>page cache를 공유. 같은 바이너리의 여러 인스턴스가 같은 물리 페이지를 공유</td><td>page cache 없음. 프로세스마다 독립적으로 파일에서 읽음</td></tr><tr><td>readahead</td><td>fault 주변의 여러 페이지를 미리 읽어옴 (prefault)</td><td>한 페이지씩만 읽음</td></tr><tr><td>COW</td><td>text 영역은 공유, data 영역은 COW로 처리</td><td>COW 없음</td></tr><tr><td>파일 매핑</td><td>VMA(vm_area_struct)가 파일, offset, 길이, 권한 정보를 보관</td><td>SPT의 uninit page가 aux로 파일 정보를 보관</td></tr><tr><td>권한</td><td>text=r-x, data=rw-, rodata=r— 세밀하게 구분</td><td>writable 플래그 하나로만 구분</td></tr><tr><td>ASLR</td><td>매핑 주소를 랜덤화</td><td>고정 주소</td></tr></tbody></table></div>
+<h3 id="windows-section-object--demand">Windows: Section Object + Demand<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#windows-section-object--demand" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Windows에서 실행 파일(.exe)을 로드하면 커널은 PE(Portable Executable) 헤더를 파싱하고 Section Object를 만든다. 각 섹션(.text, .data, .rdata 등)은 <code>NtMapViewOfSection()</code>으로 프로세스의 가상 주소 공간에 매핑된다.</p>
+<p>접근 시 page fault가 발생하면 Memory Manager가 페이지를 Modified Page List 또는 디스크(pagefile/원본 exe)에서 가져온다. Windows도 같은 DLL/EXE의 code section을 여러 프로세스가 공유하며, COW를 사용한다.</p>
+<p><strong>공통점</strong>: Linux, Windows, PintOS 모두 “ELF/PE 파싱 → 메타데이터만 등록 → 첫 접근 시 fault → 실제 로드”라는 동일한 demand paging 패턴을 따른다.</p>
+<hr/>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS VM 과제의 핵심은 이 실제 OS 흐름을 작게 구현하는 것이다.</p>
+<h3 id="load_segment의-페이지-분할-로직">load_segment()의 페이지 분할 로직<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#load_segment의-페이지-분할-로직" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>load_segment()</code>는 세그먼트를 PGSIZE(4096) 단위로 쪼개어 페이지마다 다음 값을 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page_read_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> read_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PGSIZE </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> read_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PGSIZE;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page_zero_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PGSIZE </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page_read_bytes;</span></span></code></pre></figure>
+<p>그 다음 aux를 할당하고 <code>file_reopen(file)</code>으로 독립적인 파일 핸들을 만들어 aux에 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lazy_load_arg </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> malloc</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">sizeof</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">aux</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> file_reopen</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (file);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ofs </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ofs;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">read_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page_read_bytes;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">zero_bytes </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page_zero_bytes;</span></span></code></pre></figure>
+<p>그리고 SPT에 uninit page를 등록한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_alloc_page_with_initializer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (VM_ANON, upage, writable,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">                                lazy_load_segment, aux)</span></span></code></pre></figure>
+<h3 id="file_reopen을-쓰는-이유">file_reopen()을 쓰는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#file_reopen을-쓰는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>원본 <code>file</code>은 load() 안에서 열고 닫는 수명을 갖는다. lazy_load_segment()는 나중에(첫 page fault 시점에) 호출되므로, 그때까지 살아 있을 독립적인 파일 핸들이 필요하다. <code>file_reopen()</code>은 같은 inode를 참조하지만 독립적인 position과 수명을 갖는 새 <code>struct file</code>을 반환한다. 자세한 흐름은 <a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">file 수명 Trace</a>에서 다룬다.</p>
+<h3 id="aux-구조체">aux 구조체<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aux-구조체" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lazy_load_arg {</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* process.c:1301 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">file;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* file_reopen()으로 얻은 독립 핸들 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    off_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ofs;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">            /* 파일 내 읽기 시작 offset */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> read_bytes;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* frame 앞쪽에 채울 바이트 수 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> zero_bytes;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* 나머지 0 패딩 바이트 수 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>aux</code> 자체의 수명: <code>load_segment()</code>에서 malloc → 첫 page fault에서 <code>lazy_load_segment()</code>가 사용 후 free. Fault가 한 번도 나지 않은 page는 <code>uninit_destroy()</code>에서 정리되어야 한다.</p>
+<h3 id="uninit_initialize의-이중-호출-구조">uninit_initialize()의 이중 호출 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#uninit_initialize의-이중-호출-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* uninit.c:54 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_initializer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page, uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">type</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, kva) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    (init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page, aux) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>이 한 줄에 두 가지 초기화가 들어 있다:</p>
+<ol>
+<li><code>page_initializer</code> = <code>anon_initializer</code>: page의 operations를 <code>anon_ops</code>로 바꿔서 타입을 VM_ANON으로 전환한다.</li>
+<li><code>init</code> = <code>lazy_load_segment</code>: 실제 파일 데이터를 frame의 kva에 채운다.</li>
+</ol>
+<h3 id="lazy_load_segment의-실제-동작">lazy_load_segment()의 실제 동작<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy_load_segment의-실제-동작" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* process.c:1309 */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lazy_load_segment</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">aux_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lazy_load_arg </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> aux_;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uint8_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">kva </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> page->frame->kva;</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // file_read_at()으로 파일 데이터를 kva에 읽고</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // memset()으로 나머지를 0으로 채우고</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // file_close(aux->file), free(aux)로 정리</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<hr/>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td><code>userprog/process.c</code></td><td><code>struct lazy_load_arg</code></td><td>1301</td><td>aux 구조체: file, ofs, read_bytes, zero_bytes</td></tr><tr><td><code>userprog/process.c</code></td><td><code>lazy_load_segment()</code></td><td>1309</td><td>page fault 시 실행. file_read_at()으로 데이터 채움, 정리</td></tr><tr><td><code>userprog/process.c</code></td><td><code>load_segment()</code></td><td>1351</td><td>세그먼트를 페이지 단위로 분할, aux 생성, SPT에 uninit page 등록</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_alloc_page_with_initializer()</code></td><td>89</td><td>uninit page 생성, SPT에 삽입</td></tr><tr><td><code>vm/vm.c</code></td><td><code>spt_find_page()</code></td><td>129</td><td>VA로 SPT에서 page 검색</td></tr><tr><td><code>vm/vm.c</code></td><td><code>spt_insert_page()</code></td><td>143</td><td>page를 SPT에 삽입</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_do_claim_page()</code></td><td>329</td><td>frame 확보 → page↔frame 연결 → pml4_set_page() → swap_in()</td></tr><tr><td><code>vm/uninit.c</code></td><td><code>uninit_new()</code></td><td>26</td><td>page를 VM_UNINIT으로 초기화, init/aux/page_initializer 저장</td></tr><tr><td><code>vm/uninit.c</code></td><td><code>uninit_initialize()</code></td><td>46</td><td>page_initializer 호출 후 init(lazy_load_segment) 호출</td></tr><tr><td><code>vm/uninit.c</code></td><td><code>uninit_destroy()</code></td><td>62</td><td>한번도 fault 안 난 uninit page의 aux 정리</td></tr><tr><td><code>vm/uninit.c</code></td><td><code>uninit_ops</code></td><td>17</td><td>swap_in=uninit_initialize, destroy=uninit_destroy</td></tr></tbody></table></div>
+<hr/>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>lazy_load_segment()</code>라는 함수를 모른다.</p>
+<p>QEMU가 관찰하는 것은 더 낮은 층이다.</p>
+<ol>
+<li>guest CPU가 어떤 VA를 읽는다.</li>
+<li>guest page table에 present PTE가 없으면 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 만든다.</li>
+<li>PintOS handler가 guest RAM 안의 PML4/PTE를 수정한다.</li>
+<li>handler가 <code>iret</code>으로 돌아오면 CPU는 같은 명령어를 다시 실행한다.</li>
+</ol>
+<p>QEMU의 역할은 x86-64 CPU와 MMU의 동작을 에뮬레이션하는 것이다. Page fault를 만들고, CR2에 fault 주소를 넣고, PTE를 해석하는 것은 모두 QEMU가 수행하는 하드웨어 시뮬레이션이다. Lazy loading 정책은 PintOS 커널의 책임이고, QEMU는 그 정책이 실행될 수 있는 CPU/MMU/메모리 환경을 흉내 낸다.</p>
+<p>QEMU의 소프트웨어 TLB도 관련이 있다. QEMU는 자체 TLB 캐시를 유지하며, guest가 PTE를 수정하면 해당 TLB 엔트리를 무효화해야 한다. 이 과정이 올바르게 동작하지 않으면 fault handler가 PTE를 설치해도 CPU가 여전히 old translation을 사용할 수 있다.</p>
+<hr/>
+<h2 id="lazy-loading-segment-흐름-값-추적">Lazy Loading Segment 흐름 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy-loading-segment-흐름-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="예제-1-세그먼트가-2페이지에-걸치는-경우">예제 1: 세그먼트가 2페이지에 걸치는 경우<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-1-세그먼트가-2페이지에-걸치는-경우" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>ELF segment의 파라미터가 다음과 같다고 하자.</p>
+<ul>
+<li><code>upage = 0x401000</code></li>
+<li><code>ofs = 0x2000</code></li>
+<li><code>read_bytes = 6000</code></li>
+<li><code>zero_bytes = 2192</code></li>
+<li><code>PGSIZE = 4096</code></li>
+</ul>
+<p>검증: <code>read_bytes + zero_bytes = 6000 + 2192 = 8192 = 2 * PGSIZE</code>. 정상.</p>
+<p><strong>첫 번째 반복 (i=0):</strong></p>
+<pre><code>page_read_bytes = min(6000, 4096) = 4096
+page_zero_bytes = 4096 - 4096 = 0
+aux = { file=reopened, ofs=0x2000, read_bytes=4096, zero_bytes=0 }
+→ vm_alloc_page_with_initializer(VM_ANON, 0x401000, writable, lazy_load_segment, aux)
+
+read_bytes -= 4096  → 1904 남음
+zero_bytes -= 0     → 2192 남음
+upage += 4096       → 0x402000
+ofs += 4096         → 0x3000
+</code></pre>
+<p><strong>두 번째 반복 (i=1):</strong></p>
+<pre><code>page_read_bytes = min(1904, 4096) = 1904
+page_zero_bytes = 4096 - 1904 = 2192
+aux = { file=reopened, ofs=0x3000, read_bytes=1904, zero_bytes=2192 }
+→ vm_alloc_page_with_initializer(VM_ANON, 0x402000, writable, lazy_load_segment, aux)
+
+read_bytes -= 1904  → 0
+zero_bytes -= 2192  → 0
+루프 종료
+</code></pre>
+<p><strong>두 번째 페이지의 frame 내부 레이아웃:</strong></p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 두 번째 페이지의 frame 내부 레이아웃\nflowchart LR\n  Kva[\&quot;0x402000 (kva)\&quot;]\n  Frame[\&quot;{frame 내부 레이아웃&amp;#124;{[0 .. 1903]&lt;br/>파일 offset 0x3000에서 읽은 1904 바이트&amp;#124;[1904 .. 4095]&lt;br/>0x00으로 채운 2192 바이트 (BSS 영역)}}\&quot;]\n  Kva --> Frame&quot;">%% 두 번째 페이지의 frame 내부 레이아웃
+flowchart LR
+  Kva[&quot;0x402000 (kva)&quot;]
+  Frame[&quot;{frame 내부 레이아웃&amp;#124;{[0 .. 1903]&lt;br/>파일 offset 0x3000에서 읽은 1904 바이트&amp;#124;[1904 .. 4095]&lt;br/>0x00으로 채운 2192 바이트 (BSS 영역)}}&quot;]
+  Kva --> Frame
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="예제-2-순수-bss-페이지-read_bytes0">예제 2: 순수 BSS 페이지 (read_bytes=0)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-2-순수-bss-페이지-read_bytes0" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>어떤 세그먼트의 마지막 부분에서:</p>
+<pre><code>read_bytes = 0
+zero_bytes = 4096
+</code></pre>
+<p>이 경우:</p>
+<pre><code>page_read_bytes = min(0, 4096) = 0
+page_zero_bytes = 4096 - 0 = 4096
+</code></pre>
+<p><code>lazy_load_segment()</code>에서 <code>file_read_at()</code>은 0바이트를 읽고(사실상 no-op), <code>memset(kva, 0, 4096)</code>으로 전체 페이지를 0으로 채운다. 이것이 <code>.bss</code> 섹션의 전형적인 패턴이다.</p>
+<h3 id="예제-3-메모리-비용-계산">예제 3: 메모리 비용 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-3-메모리-비용-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>10개의 PT_LOAD 페이지를 가진 프로그램이 시작된다고 하자.</p>
+<p><strong>즉시 로딩 (eager loading) 비용:</strong></p>
+<ul>
+<li>물리 메모리: 10 * 4096 = 40,960 바이트</li>
+<li>디스크 I/O: 10번의 파일 읽기</li>
+<li>시작 시간: 모든 읽기가 끝나야 실행 시작</li>
+</ul>
+<p><strong>Lazy loading 비용 (프로그램이 3페이지만 실제 접근):</strong></p>
+<ul>
+<li>물리 메모리: 3 * 4096 = 12,288 바이트 (70% 절약)</li>
+<li>디스크 I/O: 3번의 파일 읽기</li>
+<li>SPT 오버헤드: 10 * sizeof(struct spt_entry) + 10 * sizeof(struct lazy_load_arg) (수백 바이트)</li>
+<li>page fault 처리 비용: 3번의 fault handler 실행</li>
+</ul>
+<p>Trade-off: page fault마다 수백~수천 사이클의 오버헤드가 추가되지만, 사용하지 않는 7페이지의 메모리와 I/O를 아끼는 이득이 훨씬 크다.</p>
+<hr/>
+<h2 id="lazy-loading-segment-흐름-gdb">Lazy Loading Segment 흐름 GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy-loading-segment-흐름-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>GDB 확인 순서:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b load_segment</span></span>
+<span data-line><span>b vm_alloc_page_with_initializer</span></span>
+<span data-line><span>b page_fault</span></span>
+<span data-line><span>b uninit_initialize</span></span>
+<span data-line><span>b lazy_load_segment</span></span>
+<span data-line><span>run</span></span></code></pre></figure>
+<p><strong>load_segment 시점:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x upage</span></span>
+<span data-line><span>p page_read_bytes</span></span>
+<span data-line><span>p page_zero_bytes</span></span>
+<span data-line><span>p aux</span></span>
+<span data-line><span>p aux->file</span></span>
+<span data-line><span>p/x aux->ofs</span></span></code></pre></figure>
+<p><strong>page_fault 시점:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x fault_addr</span></span></code></pre></figure>
+<p><strong>uninit_initialize 시점:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p page->operations == &amp;uninit_ops</span></span>
+<span data-line><span>p page->uninit.init</span></span>
+<span data-line><span>p page->uninit.aux</span></span></code></pre></figure>
+<p><strong>lazy_load_segment 직후:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p *aux</span></span>
+<span data-line><span>x/32xb page->frame->kva</span></span>
+<span data-line><span>x/32xb page->frame->kva + aux->read_bytes</span></span></code></pre></figure>
+<p>확인해야 할 것:</p>
+<ol>
+<li><code>load_segment()</code> 시점에는 실제 frame bytes가 아직 채워지지 않았을 수 있다. (frame 자체가 없다)</li>
+<li><code>lazy_load_segment()</code> 뒤에는 <code>frame->kva</code>에 파일 바이트와 0 패딩이 실제로 들어간다.</li>
+<li><code>uninit_initialize()</code> 안에서 <code>page->operations</code>가 <code>uninit_ops</code>에서 <code>anon_ops</code>로 바뀐다.</li>
+<li><code>aux->file</code>이 원본 <code>file</code>과 다른 포인터인지 확인 (file_reopen 검증).</li>
+</ol>
+<hr/>
+<h2 id="lazy-loading-segment-흐름-관련-개념">Lazy Loading Segment 흐름 관련 개념<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lazy-loading-segment-흐름-관련-개념" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/pintos-vm-visual" class="internal internal-link alias" data-slug="wiki/hubs/pintos-vm-visual">PintOS 가상 메모리 흐름</a></li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델 — struct page, frame, operations가 나누는 책임</a></li>
+<li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">file 수명 Trace</a></li>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">vm try handle fault 판단 흐름 Trace</a></li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page는 fault를 실제 frame mapping으로 바꾼다</a></li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li>
+<li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-demand-paging">Lazy Loading과 Demand Paging — 필요할 때만 물리 메모리 할당</a></li>
+<li><a href="../../wiki/os/uninit-page-type" class="internal internal-link alias" data-slug="wiki/os/uninit-page-type">UNINIT Page — 지연 로딩을 위한 초기화 전 페이지</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table은 왜 필요한가</a></li>
+<li><a href="../../wiki/os/program-header-pt-load" class="internal internal-link alias" data-slug="wiki/os/program-header-pt-load">Program Header와 PT LOAD</a></li>
+<li><a href="../../wiki/os/load-segment-function" class="internal internal-link alias" data-slug="wiki/os/load-segment-function">ELF 세그먼트 적재 흐름</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction과 Swap</a></li>
+<li><a href="../../wiki/os/elf-loader-knowledge" class="internal internal-link alias" data-slug="wiki/os/elf-loader-knowledge">ELF 로더는 파일을 어떻게 실행 중인 메모리로 바꾸는가</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/elf-header-structure" class="internal">ELF Header 구조</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal">Lazy Load aux/file 수명 Trace</a></li><li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal">Lazy Loading과 Demand Paging — 필요할 때만 물리 메모리 할당</a></li><li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal">lazy page aux cleanup 구현 체크리스트 Trace</a></li><li><a href="../../wiki/os/load-segment-function" class="internal">ELF 세그먼트 적재 흐름</a></li><li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal">Page Fault 뒤 user VA와 frame offset 바이트 비교 Lab</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/program-header-pt-load" class="internal">Program Header와 PT_LOAD</a></li><li><a href="../../wiki/os/spt-copy-lazy-page" class="internal">Lazy UNINIT Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/uninit-page-type" class="internal">UNINIT Page — 지연 로딩을 위한 초기화 전 페이지</a></li><li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal">UNINIT swap_in 실패 롤백 Trace</a></li><li><a href="../../wiki/os/validate-segment" class="internal">validate_segment() — ELF 세그먼트 유효성 검증</a></li><li><a href="../../wiki/pintos/" class="internal">PintOS 운영체제 학습 프로젝트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-512" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#lazy-loading-segment-흐름" data-for="lazy-loading-segment-흐름">Lazy Loading Segment 흐름</a></li><li class="depth-1"><a href="#lazy-loading-segment-흐름에서-먼저-헷갈리는-지점" data-for="lazy-loading-segment-흐름에서-먼저-헷갈리는-지점">Lazy Loading Segment 흐름에서 먼저 헷갈리는 지점</a></li><li class="depth-1"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-1"><a href="#핵심-흐름" data-for="핵심-흐름">핵심 흐름</a></li><li class="depth-2"><a href="#flowchart" data-for="flowchart">Flowchart</a></li><li class="depth-2"><a href="#sequence-diagram-시간-순서" data-for="sequence-diagram-시간-순서">Sequence Diagram (시간 순서)</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-2"><a href="#linux-execve--mmap--demand-paging" data-for="linux-execve--mmap--demand-paging">Linux: execve → mmap → demand paging</a></li><li class="depth-2"><a href="#windows-section-object--demand" data-for="windows-section-object--demand">Windows: Section Object + Demand</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-2"><a href="#load_segment의-페이지-분할-로직" data-for="load_segment의-페이지-분할-로직">load_segment()의 페이지 분할 로직</a></li><li class="depth-2"><a href="#file_reopen을-쓰는-이유" data-for="file_reopen을-쓰는-이유">file_reopen()을 쓰는 이유</a></li><li class="depth-2"><a href="#aux-구조체" data-for="aux-구조체">aux 구조체</a></li><li class="depth-2"><a href="#uninit_initialize의-이중-호출-구조" data-for="uninit_initialize의-이중-호출-구조">uninit_initialize()의 이중 호출 구조</a></li><li class="depth-2"><a href="#lazy_load_segment의-실제-동작" data-for="lazy_load_segment의-실제-동작">lazy_load_segment()의 실제 동작</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#lazy-loading-segment-흐름-값-추적" data-for="lazy-loading-segment-흐름-값-추적">Lazy Loading Segment 흐름 값 추적</a></li><li class="depth-2"><a href="#예제-1-세그먼트가-2페이지에-걸치는-경우" data-for="예제-1-세그먼트가-2페이지에-걸치는-경우">예제 1: 세그먼트가 2페이지에 걸치는 경우</a></li><li class="depth-2"><a href="#예제-2-순수-bss-페이지-read_bytes0" data-for="예제-2-순수-bss-페이지-read_bytes0">예제 2: 순수 BSS 페이지 (read_bytes=0)</a></li><li class="depth-2"><a href="#예제-3-메모리-비용-계산" data-for="예제-3-메모리-비용-계산">예제 3: 메모리 비용 계산</a></li><li class="depth-1"><a href="#lazy-loading-segment-흐름-gdb" data-for="lazy-loading-segment-흐름-gdb">Lazy Loading Segment 흐름 GDB</a></li><li class="depth-1"><a href="#lazy-loading-segment-흐름-관련-개념" data-for="lazy-loading-segment-흐름-관련-개념">Lazy Loading Segment 흐름 관련 개념</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>유저 포인터 안전 복사는 왜 별도 규칙이 필요한가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="유저 포인터 안전 복사는 왜 별도 규칙이 필요한가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="유저 포인터 안전 복사는 왜 별도 규칙이 필요한가 · 최우녕"/><meta name="twitter:description" content="커널은 유저가 넘긴 포인터를 그대로 믿으면 안 된다."/><meta property="og:description" content="커널은 유저가 넘긴 포인터를 그대로 믿으면 안 된다."/><meta property="og:image:alt" content="커널은 유저가 넘긴 포인터를 그대로 믿으면 안 된다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/user-pointer-safe-copy-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/user-pointer-safe-copy-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="커널은 유저가 넘긴 포인터를 그대로 믿으면 안 된다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/user-pointer-safe-copy-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-692" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-692" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>유저 포인터 안전 복사는 왜 별도 규칙이 필요한가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="유저-포인터-안전-복사는-왜-별도-규칙이-필요한가">유저 포인터 안전 복사는 왜 별도 규칙이 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-포인터-안전-복사는-왜-별도-규칙이-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: 커널은 유저가 넘긴 포인터를 그대로 믿으면 안 된다. NULL·커널 주소·unmapped 주소·page 경계 침범을 걸러내야 유저가 커널 권한을 악용하는 일을 막을 수 있다.</p>
+</blockquote>
+<h2 id="syscall에서-유저-포인터가-위험한-이유">syscall에서 유저 포인터가 위험한 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#syscall에서-유저-포인터가-위험한-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>커널이 syscall을 처리할 때는 유저 프로그램이 넘긴 포인터를 그대로 사용해서는 안 된다. 이 포인터는 NULL이거나 커널 영역을 가리킬 수 있다. 주소가 매핑되지 않았거나, 요청한 범위 중 일부만 매핑되어 있을 수도 있다.</p>
+<p>커널은 유저 프로그램보다 높은 권한으로 메모리에 접근한다. 따라서 유저 주소를 검증하지 않고 읽거나 쓰면 커널 메모리가 노출되거나 커널이 crash할 수 있다. 유저 포인터 검증은 단순한 입력 검사가 아니라, 유저가 커널 권한을 악용하지 못하도록 막는 경계 검사다.</p>
+<h2 id="유저-포인터를-검증하는-두-모델">유저 포인터를 검증하는 두 모델<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-포인터를-검증하는-두-모델" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>CPU와 MMU의 규칙 위에서 유저 포인터를 다루는 방법은 크게 두 가지다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>모델</th><th>방식</th><th>장점</th><th>단점</th></tr></thead><tbody><tr><td><strong>선검증 (Verify-then-use)</strong></td><td>접근 전에 주소 범위 + PTE 확인</td><td>구현 단순, fault 없이 실패 반환</td><td>TOCTOU 취약, page 경계 누락 위험</td></tr><tr><td><strong>후처리 (Use-with-fault-handling)</strong></td><td>접근 시도 후 fault를 잡아 처리</td><td>race 없음, demand paging과 자연스럽게 통합</td><td>커널 fault handler 복잡</td></tr></tbody></table></div>
+<p>x86-64 MMU는 PTE의 U/S 비트로 user/kernel 접근을 구분한다. 그러나 커널 모드(CPL=0)에서는 user page도 읽을 수 있다. 커널이 유저 주소에 잘못 접근하더라도 MMU가 항상 자동으로 막아주는 것은 아니다. SMAP/SMEP이 있는 최신 CPU에서는 커널의 유저 접근을 추가로 제한할 수 있다.</p>
+<h3 id="linux와-windows의-처리-방식">Linux와 Windows의 처리 방식<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux와-windows의-처리-방식" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>주요 모델</td><td>후처리 (<code>copy_from_user</code>/<code>copy_to_user</code>)</td><td>IRP method (Buffered I/O, Direct I/O, Neither I/O)</td></tr><tr><td>메커니즘</td><td><code>_ASM_EXTABLE</code>로 fault 복구 주소 등록 → fault 시 오류 반환</td><td><code>ProbeForRead</code>/<code>ProbeForWrite</code> + SEH</td></tr><tr><td>page 경계</td><td>fault가 나면 그 시점에 처리, 사전 전체 검사 불필요</td><td>probe 후 lock/MDL로 page 고정</td></tr><tr><td>실패 결과</td><td><code>-EFAULT</code> 반환 (프로세스는 계속)</td><td>STATUS_ACCESS_VIOLATION</td></tr><tr><td>SMP 고려</td><td>다른 스레드가 <code>munmap</code> 가능 → 후처리 모델 필수</td><td>유사 race 존재</td></tr></tbody></table></div>
+<p>Linux는 먼저 주소를 완벽하게 검사해 이후의 fault를 없애는 방식에 의존하지 않는다. 대신 유저 주소에 접근하는 구간을 특별한 위험 구간으로 취급하고, 그 구간에서 발생한 fault를 커널이 통제할 수 있는 결과로 바꾼다.</p>
+<h2 id="pintos의-선검증-흐름">PintOS의 선검증 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-선검증-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS는 교육용으로 선검증 모델을 기본으로 사용한다. syscall이 버퍼를 받으면 먼저 범위와 각 page를 검사한다. 모든 검사가 끝난 뒤에야 실제 I/O 함수가 버퍼를 사용한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as 유저 프로그램\n    participant SC as syscall_handler()\n    participant VA as validate_user_buffer()\n    participant TC as try_claim_user_addr()\n    participant MM as pml4_get_page() / spt_find_page()\n    participant IO as file_write() / putbuf()\n\n    U->>SC: write(fd, buffer=0x8048ff0, size=0x30)\n    SC->>VA: validate_user_buffer(buffer, size, false, f)\n    VA->>VA: buffer != NULL, size > 0, no overflow\n    loop 각 page base\n        VA->>TC: validate_user_addr(addr, write, f)\n        TC->>TC: addr != NULL, is_user_vaddr(addr)\n        TC->>MM: user_page_accessible(curr, addr, write)\n        alt PTE present + 권한 OK\n            MM-->>TC: true\n        else PTE 없음 → SPT 조회 / stack growth\n            TC->>MM: vm_claim_page() 또는 vm_try_handle_fault()\n            MM-->>TC: true/false\n        end\n        TC-->>VA: true/false (false면 exit(-1))\n    end\n    VA-->>SC: 모든 page 검증 완료\n    SC->>IO: file_write(file, buffer, size)&quot;">sequenceDiagram
+    participant U as 유저 프로그램
+    participant SC as syscall_handler()
+    participant VA as validate_user_buffer()
+    participant TC as try_claim_user_addr()
+    participant MM as pml4_get_page() / spt_find_page()
+    participant IO as file_write() / putbuf()
+
+    U->>SC: write(fd, buffer=0x8048ff0, size=0x30)
+    SC->>VA: validate_user_buffer(buffer, size, false, f)
+    VA->>VA: buffer != NULL, size > 0, no overflow
+    loop 각 page base
+        VA->>TC: validate_user_addr(addr, write, f)
+        TC->>TC: addr != NULL, is_user_vaddr(addr)
+        TC->>MM: user_page_accessible(curr, addr, write)
+        alt PTE present + 권한 OK
+            MM-->>TC: true
+        else PTE 없음 → SPT 조회 / stack growth
+            TC->>MM: vm_claim_page() 또는 vm_try_handle_fault()
+            MM-->>TC: true/false
+        end
+        TC-->>VA: true/false (false면 exit(-1))
+    end
+    VA-->>SC: 모든 page 검증 완료
+    SC->>IO: file_write(file, buffer, size)
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><code>try_claim_user_addr()</code>는 주소 하나를 세 단계로 검사한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1단계: addr == NULL 또는 !is_user_vaddr(addr) → false</span></span>
+<span data-line> </span>
+<span data-line><span>   is_user_vaddr(addr): addr &lt; KERN_BASE (0x8004000000)</span></span>
+<span data-line><span>   커널 주소가 들어오면 여기서 차단</span></span>
+<span data-line> </span>
+<span data-line><span>2단계: user_page_accessible(curr, addr, write) → PML4 walk</span></span>
+<span data-line><span>   PTE present + (write면 PTE_W도 확인) → true</span></span>
+<span data-line> </span>
+<span data-line><span>3단계 (VM 활성 시): SPT에서 page 찾아 claim하거나 stack growth</span></span>
+<span data-line><span>   spt_find_page(&amp;curr->spt, pg_round_down(addr))</span></span>
+<span data-line><span>   → vm_claim_page(upage) 또는 vm_try_handle_fault()</span></span></code></pre></figure>
+<p>첫 단계에서는 NULL과 커널 영역 주소를 거부한다. 두 번째 단계에서는 PML4를 따라가 PTE가 존재하는지 확인하고, 쓰기 접근이라면 <code>PTE_W</code> 권한도 검사한다. VM이 활성화된 경우에는 세 번째 단계에서 SPT를 조회한다. 대상 page를 찾으면 claim하고, 필요한 경우 stack growth를 시도한다.</p>
+<p>주소 하나만 검사해서는 버퍼 전체가 안전하다고 판단할 수 없다. 버퍼의 시작 주소가 유효해도 범위가 다음 page로 넘어갈 수 있기 때문이다. <code>validate_user_buffer()</code>는 버퍼가 걸치는 모든 page base를 순회하며 각각을 검사한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>buffer = 0x8048ff0, size = 0x30</span></span>
+<span data-line> </span>
+<span data-line><span>접근 범위: [0x8048ff0, 0x8049020)</span></span>
+<span data-line><span>page 1: 0x8048000 (buffer의 시작 page)</span></span>
+<span data-line><span>page 2: 0x8049000 (buffer + 16에서 넘어감)</span></span>
+<span data-line> </span>
+<span data-line><span>검증 순서:</span></span>
+<span data-line><span>  validate_user_addr(0x8048ff0)  → page 0x8048000 확인</span></span>
+<span data-line><span>  next_page = 0x8049000</span></span>
+<span data-line><span>  validate_user_addr(0x8049000)  → page 0x8049000 확인</span></span>
+<span data-line><span>  next_page = 0x804a000 > end → 종료</span></span></code></pre></figure>
+<h3 id="page-경계를-계산하는-방법">page 경계를 계산하는 방법<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-경계를-계산하는-방법" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>위 버퍼는 시작 page의 마지막 16 bytes와 다음 page의 첫 32 bytes를 사용한다. 따라서 두 page가 모두 유효해야 전체 48 bytes에 안전하게 접근할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>buffer = 0x8048ff0, size = 0x30</span></span>
+<span data-line> </span>
+<span data-line><span>start  = 0x8048ff0</span></span>
+<span data-line><span>end    = 0x8048ff0 + 0x30 = 0x8049020</span></span>
+<span data-line><span>last   = 0x8048ff0 + 0x2f = 0x804901f</span></span>
+<span data-line> </span>
+<span data-line><span>page base(start) = 0x8048ff0 &amp; ~0xfff = 0x8048000</span></span>
+<span data-line><span>page base(last)  = 0x804901f &amp; ~0xfff = 0x8049000</span></span>
+<span data-line> </span>
+<span data-line><span>걸치는 page 수: 2개</span></span>
+<span data-line><span>  page 0x8048000: offset 0xff0에서 0xfff까지 (16 bytes)</span></span>
+<span data-line><span>  page 0x8049000: offset 0x000에서 0x01f까지 (32 bytes)</span></span>
+<span data-line><span>  합계: 48 bytes = 0x30 ✓</span></span></code></pre></figure>
+<h3 id="커널-주소를-차단하는-방법">커널 주소를 차단하는 방법<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-주소를-차단하는-방법" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>is_user_vaddr()</code>는 주소가 <code>KERN_BASE</code>보다 작은지 확인한다. 경계와 같거나 그보다 큰 주소는 유저 주소로 인정하지 않는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>KERN_BASE = 0x8004000000</span></span>
+<span data-line> </span>
+<span data-line><span>is_user_vaddr(0x8048ff0)       = true   (0x8048ff0 &lt; 0x8004000000)</span></span>
+<span data-line><span>is_user_vaddr(0x8004000000)    = false  (= KERN_BASE)</span></span>
+<span data-line><span>is_user_vaddr(0xffff800000000000) = false  (커널 영역 깊숙이)</span></span>
+<span data-line> </span>
+<span data-line><span>악의적 호출: read(fd, (char *)0xffff800000001000, 8)</span></span>
+<span data-line><span>  → is_user_vaddr() 실패 → exit(-1)</span></span>
+<span data-line><span>  → 커널 메모리 노출 차단</span></span></code></pre></figure>
+<h3 id="세-가지-실패-유형">세 가지 실패 유형<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세-가지-실패-유형" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS가 막아야 하는 입력은 다음 세 유형으로 볼 수 있다.</p>
+<ul>
+<li><code>write(1, NULL, 5)</code>처럼 NULL 또는 unmapped 주소가 들어오면 <code>try_claim_user_addr()</code>의 <code>addr == NULL</code> 검사나 매핑 검사에서 실패한다.</li>
+<li><code>read(fd, 0xffff800000000000, 8)</code>처럼 커널 주소가 들어오면 <code>!is_user_vaddr(addr)</code> 검사에서 실패한다.</li>
+<li><code>write(1, 0x8048ff0, 0x30)</code>처럼 버퍼 일부만 매핑되어 있으면 첫 page가 유효하더라도 다음 page 검사에서 실패한다.</li>
+</ul>
+<p>세 경우 모두 <code>validate_user_addr()</code>가 실패를 확인하면 <code>exit(-1)</code>로 이어진다.</p>
+<h2 id="검증을-빠뜨렸을-때-qemu에서-보이는-일">검증을 빠뜨렸을 때 QEMU에서 보이는 일<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#검증을-빠뜨렸을-때-qemu에서-보이는-일" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>check_address()</code>나 <code>validate_user_buffer()</code>의 존재를 알지 못한다. QEMU가 재현하는 것은 guest CPU가 실행하는 명령어와 page table의 효과다.</p>
+<p>PintOS의 선검증이 성공하면 guest 코드는 정상적으로 계속 실행된다. 반대로 검증하지 않은 커널 코드가 잘못된 유저 주소를 실제로 읽으면 QEMU MMU가 PML4 walk를 수행한다. PTE가 없거나 권한을 위반하면 page fault가 발생하고 guest의 <code>page_fault()</code>로 진입한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>커널 코드 → 유저 VA 접근 시도</span></span>
+<span data-line><span>  → QEMU MMU: PML4 walk</span></span>
+<span data-line><span>  → PTE not present 또는 권한 위반</span></span>
+<span data-line><span>  → env->cr[2] = fault_addr</span></span>
+<span data-line><span>  → EXCP0E_PAGE + error_code</span></span>
+<span data-line><span>  → guest page_fault() 진입</span></span>
+<span data-line><span>  → user=0 (커널 모드 fault!) → 심각한 상황</span></span></code></pre></figure>
+<p>이때 error code를 보면 fault가 커널 모드의 읽기 또는 쓰기에서 발생했는지 구분할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>커널이 unmapped 유저 주소를 읽으려 한 경우:</span></span>
+<span data-line><span>  error_code = 0x0 (kernel read, not-present)</span></span>
+<span data-line><span>  bit 2 (U): 0 → kernel mode!</span></span>
+<span data-line><span>  bit 1 (W): 0 → read</span></span>
+<span data-line><span>  bit 0 (P): 0 → not present</span></span>
+<span data-line> </span>
+<span data-line><span>커널이 unmapped 유저 주소에 쓰려 한 경우:</span></span>
+<span data-line><span>  error_code = 0x2 (kernel write, not-present)</span></span></code></pre></figure>
+<h2 id="구현을-따라갈-때-볼-코드-좌표">구현을 따라갈 때 볼 코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현을-따라갈-때-볼-코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>userprog/syscall.c:422</td><td><code>try_claim_user_addr()</code></td><td>주소 하나의 유효성 검증 (NULL/커널주소/PTE/SPT/stack)</td></tr><tr><td>userprog/syscall.c:433</td><td><code>is_user_vaddr(addr)</code> 호출</td><td>커널 주소 차단</td></tr><tr><td>userprog/syscall.c:436</td><td><code>user_page_accessible()</code> 호출</td><td>PTE present + 권한 확인</td></tr><tr><td>userprog/syscall.c:444</td><td><code>spt_find_page()</code> 호출</td><td>VM 모드에서 SPT 조회</td></tr><tr><td>userprog/syscall.c:447</td><td><code>vm_claim_page()</code> 호출</td><td>lazy page claim</td></tr><tr><td>userprog/syscall.c:456</td><td><code>vm_try_handle_fault()</code> 호출</td><td>stack growth 시도</td></tr><tr><td>userprog/syscall.c:467</td><td><code>validate_user_addr()</code></td><td>try_claim 실패 시 exit(-1)</td></tr><tr><td>userprog/syscall.c:474</td><td><code>check_address()</code></td><td>validate_user_addr 래퍼</td></tr><tr><td>userprog/syscall.c:478</td><td><code>validate_user_buffer()</code></td><td>page 단위 순회 검증</td></tr><tr><td>userprog/syscall.c:501</td><td><code>pg_round_down(addr) + PGSIZE</code></td><td>다음 page 경계로 이동</td></tr><tr><td>include/threads/vaddr.h</td><td><code>is_user_vaddr()</code>, <code>KERN_BASE</code></td><td>유저/커널 주소 경계</td></tr><tr><td>include/threads/vaddr.h</td><td><code>pg_round_down()</code>, <code>PGSIZE</code></td><td>page base 계산</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_get_page()</code></td><td>PTE present 확인 + KVA 반환</td></tr><tr><td>QEMU target/i386/emulate/x86_mmu.c</td><td><code>mmu_gva_to_gpa()</code></td><td>guest VA→PA 변환 실패 시 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a></td></tr></tbody></table></div>
+<h2 id="gdb로-검증-흐름-관찰하기">GDB로 검증 흐름 관찰하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-검증-흐름-관찰하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 스크립트는 각 검증 지점에 breakpoint를 두고 전달된 주소와 판단 경로를 관찰하는 데 사용한다. 아래에 적힌 출력은 스크립트가 확인하려는 대상이며, 실제 실행 결과를 뜻하지는 않는다.</p>
+<h3 id="1-validate_user_buffer-호출-추적">1) validate_user_buffer 호출 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-validate_user_buffer-호출-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b validate_user_buffer</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[validate] buffer=%p  size=%d  write=%d\n&quot;, buffer, size, write</span></span>
+<span data-line><span>  set $pages = ((unsigned long)(buffer + size - 1) >> 12) - ((unsigned long)buffer >> 12) + 1</span></span>
+<span data-line><span>  printf &quot;  걸치는 page 수: %d\n&quot;, $pages</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p><code>write(1, 0x8048ff0, 0x30)</code> 호출에서 buffer, size, page 수를 확인한다.</p>
+<h3 id="2-try_claim_user_addr-단계별-판단-추적">2) try_claim_user_addr 단계별 판단 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-try_claim_user_addr-단계별-판단-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b try_claim_user_addr</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[try_claim] addr=%p&quot;, addr</span></span>
+<span data-line><span>  if addr == 0</span></span>
+<span data-line><span>    printf &quot; → NULL 차단\n&quot;</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    if (unsigned long)addr >= 0x8004000000</span></span>
+<span data-line><span>      printf &quot; → 커널 주소 차단 (>= KERN_BASE)\n&quot;</span></span>
+<span data-line><span>    else</span></span>
+<span data-line><span>      printf &quot; → 유저 주소, PTE 확인 진행\n&quot;</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>이 breakpoint에서는 주소가 NULL인지, <code>KERN_BASE</code> 이상인지, PTE 확인으로 진행하는지를 구분한다.</p>
+<h3 id="3-page-경계-순회-확인">3) page 경계 순회 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-page-경계-순회-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b validate_user_buffer</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $base = (unsigned long)buffer &amp; ~0xfff</span></span>
+<span data-line><span>  set $end = (unsigned long)buffer + size</span></span>
+<span data-line><span>  set $cur = $base</span></span>
+<span data-line><span>  set $n = 0</span></span>
+<span data-line><span>  while $cur &lt; $end</span></span>
+<span data-line><span>    printf &quot;  page[%d] = %p\n&quot;, $n, $cur</span></span>
+<span data-line><span>    set $cur = $cur + 0x1000</span></span>
+<span data-line><span>    set $n = $n + 1</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>계산된 시작 page부터 버퍼의 끝까지 어떤 page base를 순회하는지 확인한다.</p>
+<h3 id="4-검증-실패-시-exit-1-추적">4) 검증 실패 시 exit(-1) 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-검증-실패-시-exit-1-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b validate_user_addr</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  # try_claim_user_addr가 false를 반환하면 exit(-1)로 간다</span></span>
+<span data-line><span>  printf &quot;[validate_addr] addr=%p\n&quot;, addr</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># exit(-1) 호출을 잡는다</span></span>
+<span data-line><span>b thread_exit</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[EXIT] tid=%d  status=%d  ← 검증 실패?\n&quot;, \</span></span>
+<span data-line><span>    thread_current()->tid, thread_current()->exit_status</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p><code>validate_user_addr()</code>에 들어온 주소와 이후의 <code>thread_exit</code>를 함께 관찰한다. <code>thread_exit</code> 출력만으로 원인을 확정하지 않고, 앞선 검증 흐름과 연결해 판단해야 한다.</p>
+<h3 id="5-커널-주소-주입-공격-시뮬레이션-관찰">5) 커널 주소 주입 공격 시뮬레이션 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-커널-주소-주입-공격-시뮬레이션-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># read(fd, 커널주소, 8) 같은 악의적 syscall 관찰</span></span>
+<span data-line><span>b is_user_vaddr</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  if (unsigned long)$rdi >= 0x8004000000</span></span>
+<span data-line><span>    printf &quot;[DEFENSE] 커널 주소 %p 차단됨\n&quot;, $rdi</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p><code>read(fd, 커널주소, 8)</code>와 같은 호출에서 <code>is_user_vaddr</code>에 전달된 주소가 경계를 넘는지 관찰한다.</p>
+<h3 id="6-vm-모드에서-lazy-page-claim-관찰">6) VM 모드에서 lazy page claim 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-vm-모드에서-lazy-page-claim-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b try_claim_user_addr</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  # PTE 없고 SPT에서 찾는 경로</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span>b spt_find_page</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[SPT] va=%p → page=%p\n&quot;, pg_round_down(va), \</span></span>
+<span data-line><span>    hash_entry(hash_find(&amp;spt->pages, &amp;p.hash_elem), struct page, hash_elem)</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span>b vm_claim_page</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[CLAIM] va=%p  lazy page claim 시도\n&quot;, va</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>PTE가 없는 주소가 SPT 조회와 <code>vm_claim_page</code> 경로로 이어지는지 관찰한다.</p>
+<h2 id="linux와-pintos의-차이">Linux와 PintOS의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux와-pintos의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>두 운영체제는 유저 주소를 위험한 입력으로 다루지만, fault를 통제하는 시점과 실패 결과가 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>검증 모델</td><td>후처리 (fault 기반)</td><td>선검증 (접근 전 확인)</td></tr><tr><td>핵심 함수</td><td><code>copy_from_user()</code> / <code>copy_to_user()</code></td><td><code>validate_user_buffer()</code> / <code>try_claim_user_addr()</code></td></tr><tr><td>fault 처리</td><td><code>_ASM_EXTABLE</code> → 복구 주소로 점프 → <code>-EFAULT</code> 반환</td><td>page fault handler에서 kernel mode fault → PANIC (검증 빼먹으면)</td></tr><tr><td>TOCTOU</td><td>race 면역 (fault 시점에 판단)</td><td>선검증은 TOCTOU 가능하나 PintOS는 단일 CPU + 인터럽트 비활성화로 회피</td></tr><tr><td>page 경계</td><td>fault 나면 그 page만 처리</td><td>사전에 모든 page base를 순회</td></tr><tr><td>SMAP/SMEP</td><td>CR4 비트로 커널의 유저 접근 차단, <code>stac</code>/<code>clac</code>로 일시 허용</td><td>미적용 (x86-64 SMAP 미사용)</td></tr><tr><td>VM 연동</td><td>fault → handle_mm_fault() → page table 설치</td><td>try_claim → spt_find_page → vm_claim_page</td></tr><tr><td>실패 결과</td><td><code>-EFAULT</code> (프로세스 계속)</td><td><code>exit(-1)</code> (프로세스 종료)</td></tr><tr><td>SMP 고려</td><td>다른 CPU에서 munmap 가능 → 후처리 필수</td><td>단일 CPU, race 없음</td></tr></tbody></table></div>
+<p>Linux는 실제 접근 시점의 fault를 복구 가능한 오류로 바꾼다. PintOS는 접근 전에 모든 page를 검사하고, 검증 실패 시 해당 프로세스를 종료한다. 따라서 PintOS에서 선검증을 빠뜨린 채 커널이 잘못된 주소에 접근하면 kernel mode page fault로 이어질 수 있다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/pintos-user-programs-execution-boundary" class="internal internal-link alias" data-slug="wiki/os/pintos-user-programs-execution-boundary">User Kernel 경계</a>
+<ul>
+<li>User-Kernel 경계 총론.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/user-pointer-validation-trace" class="internal internal-link alias" data-slug="wiki/os/user-pointer-validation-trace">유저 포인터 검증 Trace</a>
+<ul>
+<li>PintOS syscall에서 검증이 호출되는 실제 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/is-user-vaddr-check" class="internal internal-link alias" data-slug="wiki/os/is-user-vaddr-check">is user vaddr()</a>
+<ul>
+<li><code>is_user_vaddr()</code> 검사 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-based-validation" class="internal internal-link alias" data-slug="wiki/os/page-fault-based-validation">page fault 기반 검증</a>
+<ul>
+<li>page fault 기반 검증 방식.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-boundary-crossing" class="internal internal-link alias" data-slug="wiki/os/page-boundary-crossing">page boundary crossing</a>
+<ul>
+<li>buffer가 page 경계를 넘는 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pml4-get-page-mapping" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-mapping">PML4 walk</a>
+<ul>
+<li>PML4 walk으로 매핑 확인.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/read-write-buffer-boundary-lab" class="internal internal-link alias" data-slug="wiki/os/read-write-buffer-boundary-lab">write buffer boundary</a>
+<ul>
+<li><code>read()</code>/<code>write()</code> 버퍼의 방향, page 경계, writable 권한 실험.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/read-buffer-writable-pte-question" class="internal internal-link alias" data-slug="wiki/os/read-buffer-writable-pte-question">read buffer writable PTE</a>
+<ul>
+<li><code>pml4_get_page()</code> 이후 <code>PTE_W</code>를 별도로 봐야 하는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal internal-link alias" data-slug="wiki/os/syscall-entry-stack-switch-trace">syscall stack switch</a>
+<ul>
+<li>유저 register 인자가 커널의 <code>struct intr_frame</code>으로 들어오는 순간.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">Page Fault Error Code</a>
+<ul>
+<li><code>PF_P/PF_W/PF_U</code> error code를 해석하는 기준.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">instruction retry</a>
+<ul>
+<li>page fault를 살릴 때 같은 명령어로 돌아가는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a>
+<ul>
+<li><code>pml4_get_page()</code>가 “매핑되어 있다”를 판단하는 배경.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/kernel-user-protection" class="internal internal-link alias" data-slug="wiki/os/kernel-user-protection">유저 보호</a>
+<ul>
+<li>커널/유저 보호의 상위 개념.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-handler-dispatch" class="internal internal-link alias" data-slug="wiki/os/syscall-handler-dispatch">syscall handler() 분기</a>
+<ul>
+<li>syscall 번호별 분기.</li>
+</ul>
+</li>
+</ul>
+<p>연결 문서: <a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환과 메모리</a></p></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/file-descriptor-knowledge" class="internal">파일 디스크립터</a></li><li><a href="../../wiki/os/is-user-vaddr-check" class="internal">is_user_vaddr() — 유저 주소 범위 확인</a></li><li><a href="../../wiki/os/kernel-user-protection" class="internal">보호 (Protection)</a></li><li><a href="../../wiki/os/page-boundary-crossing" class="internal">Page Boundary Crossing — 페이지 경계를 넘는 유저 버퍼 검증</a></li><li><a href="../../wiki/os/page-fault-based-validation" class="internal">Page Fault 기반 유저 포인터 검증</a></li><li><a href="../../wiki/os/pintos-user-programs-execution-boundary" class="internal">PintOS User Programs 실행 경계와 System Call</a></li><li><a href="../../wiki/os/pml4-get-page-mapping" class="internal">pml4_get_page() — PML4 walk으로 매핑 확인</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/read-buffer-writable-pte-question" class="internal">`read()` 버퍼는 왜 PTE_W까지 확인해야 하나?</a></li><li><a href="../../wiki/os/read-write-buffer-boundary-lab" class="internal">read/write 버퍼 경계 검증 Lab</a></li><li><a href="../../wiki/os/syscall-boundary" class="internal">syscall 경계</a></li><li><a href="../../wiki/os/syscall-end-to-end" class="internal">write(1, buffer, size) 전체 흐름 Trace</a></li><li><a href="../../wiki/os/syscall-handler-dispatch" class="internal">syscall_handler() — 번호별 분기</a></li><li><a href="../../wiki/os/user-pointer-validation-trace" class="internal">유저 포인터 검증 (User Pointer Validation) Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-690" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#유저-포인터-안전-복사는-왜-별도-규칙이-필요한가" data-for="유저-포인터-안전-복사는-왜-별도-규칙이-필요한가">유저 포인터 안전 복사는 왜 별도 규칙이 필요한가</a></li><li class="depth-1"><a href="#syscall에서-유저-포인터가-위험한-이유" data-for="syscall에서-유저-포인터가-위험한-이유">syscall에서 유저 포인터가 위험한 이유</a></li><li class="depth-1"><a href="#유저-포인터를-검증하는-두-모델" data-for="유저-포인터를-검증하는-두-모델">유저 포인터를 검증하는 두 모델</a></li><li class="depth-2"><a href="#linux와-windows의-처리-방식" data-for="linux와-windows의-처리-방식">Linux와 Windows의 처리 방식</a></li><li class="depth-1"><a href="#pintos의-선검증-흐름" data-for="pintos의-선검증-흐름">PintOS의 선검증 흐름</a></li><li class="depth-2"><a href="#page-경계를-계산하는-방법" data-for="page-경계를-계산하는-방법">page 경계를 계산하는 방법</a></li><li class="depth-2"><a href="#커널-주소를-차단하는-방법" data-for="커널-주소를-차단하는-방법">커널 주소를 차단하는 방법</a></li><li class="depth-2"><a href="#세-가지-실패-유형" data-for="세-가지-실패-유형">세 가지 실패 유형</a></li><li class="depth-1"><a href="#검증을-빠뜨렸을-때-qemu에서-보이는-일" data-for="검증을-빠뜨렸을-때-qemu에서-보이는-일">검증을 빠뜨렸을 때 QEMU에서 보이는 일</a></li><li class="depth-1"><a href="#구현을-따라갈-때-볼-코드-좌표" data-for="구현을-따라갈-때-볼-코드-좌표">구현을 따라갈 때 볼 코드 좌표</a></li><li class="depth-1"><a href="#gdb로-검증-흐름-관찰하기" data-for="gdb로-검증-흐름-관찰하기">GDB로 검증 흐름 관찰하기</a></li><li class="depth-2"><a href="#1-validate_user_buffer-호출-추적" data-for="1-validate_user_buffer-호출-추적">1) validate_user_buffer 호출 추적</a></li><li class="depth-2"><a href="#2-try_claim_user_addr-단계별-판단-추적" data-for="2-try_claim_user_addr-단계별-판단-추적">2) try_claim_user_addr 단계별 판단 추적</a></li><li class="depth-2"><a href="#3-page-경계-순회-확인" data-for="3-page-경계-순회-확인">3) page 경계 순회 확인</a></li><li class="depth-2"><a href="#4-검증-실패-시-exit-1-추적" data-for="4-검증-실패-시-exit-1-추적">4) 검증 실패 시 exit(-1) 추적</a></li><li class="depth-2"><a href="#5-커널-주소-주입-공격-시뮬레이션-관찰" data-for="5-커널-주소-주입-공격-시뮬레이션-관찰">5) 커널 주소 주입 공격 시뮬레이션 관찰</a></li><li class="depth-2"><a href="#6-vm-모드에서-lazy-page-claim-관찰" data-for="6-vm-모드에서-lazy-page-claim-관찰">6) VM 모드에서 lazy page claim 관찰</a></li><li class="depth-1"><a href="#linux와-pintos의-차이" data-for="linux와-pintos의-차이">Linux와 PintOS의 차이</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

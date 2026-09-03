@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>PintOS VM 구현 준비 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="PintOS VM 구현 준비 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="PintOS VM 구현 준비 · 최우녕"/><meta name="twitter:description" content="PintOS Project 3 VM을 구현하기 전에 주소 변환·SPT·lazy loading·eviction·mmap/fork 영역별로 먼저 답해야 할 질문과 관련 문서를 묶은 체크리스트다."/><meta property="og:description" content="PintOS Project 3 VM을 구현하기 전에 주소 변환·SPT·lazy loading·eviction·mmap/fork 영역별로 먼저 답해야 할 질문과 관련 문서를 묶은 체크리스트다."/><meta property="og:image:alt" content="PintOS Project 3 VM을 구현하기 전에 주소 변환·SPT·lazy loading·eviction·mmap/fork 영역별로 먼저 답해야 할 질문과 관련 문서를 묶은 체크리스트다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/pintos-vm-implementation-prep"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/pintos-vm-implementation-prep"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PintOS Project 3 VM을 구현하기 전에 주소 변환·SPT·lazy loading·eviction·mmap/fork 영역별로 먼저 답해야 할 질문과 관련 문서를 묶은 체크리스트다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/pintos-vm-implementation-prep" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-574" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-574" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>PintOS VM 구현 준비</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pintos-vm-구현-준비">PintOS VM 구현 준비<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-vm-구현-준비" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 PintOS Project 3 VM 구현을 준비하기 위한 개념 설명과 설계·검증 질문, 권장 구현 순서를 정리한 체크리스트다. 제시된 코드 좌표, 분기 흐름, 수치 예시와 GDB 확인 항목은 특정 구현에서 실제로 검증된 결과를 보장하지 않으므로, 적용 중인 코드와 버전 및 실행·성능 측정 기록을 별도로 확인해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: PintOS Project 3 VM을 구현하기 전에 주소 변환·SPT·lazy loading·eviction·mmap/fork 영역별로 먼저 답해야 할 질문과 관련 문서를 묶은 체크리스트다. 코드를 짜기 전에 개념 구멍을 메우는 준비 문서.</p>
+</blockquote>
+<h2 id="pintos-vm-구현-키워드">PintOS VM 구현 키워드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-vm-구현-키워드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>PintOS VM 구현
+<ul>
+<li>주소 변환과 page fault
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a>: VA, page base, offset을 숫자로 분해</li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">Page Fault Error Code</a>: <code>PF_P/PF_W/PF_U</code>로 fault 성격 판단</li>
+<li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-gdb-cr2-spt-lab">Page Fault GDB 관찰</a>: <code>CR2</code>, <code>RIP</code>, SPT entry를 GDB에서 확인</li>
+</ul>
+</li>
+<li>SPT / page / frame
+<ul>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT와 PML4</a>: page table만으로 부족한 page 의미</li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델</a>: <code>struct page</code>, <code>struct frame</code>, SPT 관계</li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page()</a>: page claim과 frame mapping</li>
+</ul>
+</li>
+<li>lazy loading / aux
+<ul>
+<li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-segment-trace">Lazy Loading Segment</a>: <code>load_segment()</code>가 실제 read를 미루는 흐름</li>
+<li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-ownership-contract-knowledge">lazy aux ownership</a>: <code>aux</code> close/free 책임</li>
+<li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal internal-link alias" data-slug="wiki/os/lazy-aux-failure-injection-lab">lazy aux 실패 주입</a>: 실패 경로에서 ownership 확인</li>
+</ul>
+</li>
+<li>eviction / swap / stack
+<ul>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty bit</a>: accessed/dirty bit 판단</li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">Swap Lab</a>: anonymous page swap in/out</li>
+<li><a href="../../wiki/os/stack-growth-boundary-lab" class="internal internal-link alias" data-slug="wiki/os/stack-growth-boundary-lab">스택 성장 경계</a>: stack growth 허용 경계</li>
+</ul>
+</li>
+<li>mmap / fork / cleanup
+<ul>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>: file-backed page 모델</li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork SPT 복사</a>: fork 때 page 의미 복사</li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup</a>: exec/exit cleanup 순서</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="pintos-vm-구현-쟁점">PintOS VM 구현 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-vm-구현-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS VM을 구현하기 전에 가장 먼저 생기는 질문은 보통 이것이다.</p>
+<blockquote>
+<p>“page fault가 나면 도대체 어디서 무엇을 찾아서, 어떤 메모리에 무엇을 채우고, 어떤 비트를 세팅해야 다시 실행될까?”</p>
+</blockquote>
+<p>목표는 VM 코드를 쓰기 전에 다음을 머릿속에 연결하는 것이다.</p>
+<ul>
+<li>[주소 참조 과정](/wiki/hubs/pintos-vm-visual#주소 참조와 page fault): CPU가 주소를 읽다가 왜 커널로 들어오는가</li>
+<li>[코드 로딩 과정](/wiki/hubs/pintos-vm-visual#lazy code loading): <code>load_segment()</code>는 왜 실제 바이트를 바로 읽지 않는가</li>
+<li>[VM 데이터 구조](/wiki/hubs/pintos-vm-visual#page type 구조): <code>UNINIT</code>, <code>ANON</code>, <code>FILE</code>은 언제 바뀌는가</li>
+<li>[ SPT API](/wiki/hubs/pintos-vm-visual#Frame과 SPT API): <code>frame</code>, <code>page</code>, <code>SPT</code>, <code>PML4</code>는 서로 무엇을 기억하는가</li>
+<li>바이트와 캐스팅: 같은 메모리도 어떤 타입으로 읽느냐에 따라 의미가 달라지는가</li>
+</ul>
+<h2 id="vm을-한-문장으로-말하면">VM을 한 문장으로 말하면<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#vm을-한-문장으로-말하면" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM은 “프로그램이 보는 주소”와 “실제 RAM의 바이트” 사이에 커널이 정책을 끼워 넣는 장치다.</p>
+<p>이 말은 즉, 유저 프로그램이 <code>0x401000</code>을 읽는다고 해서 바로 RAM의 <code>0x401000</code>을 읽는 것이 아니다.</p>
+<p>중간에 다음 질문들이 들어간다.</p>
+<ul>
+<li>이 주소는 이 프로세스에게 합법적인가?</li>
+<li>지금 RAM에 올라와 있는가?</li>
+<li>없으면 파일에서 읽어야 하는가, swap에서 읽어야 하는가, 0으로 채워야 하는가?</li>
+<li>읽기만 가능한가, 쓰기도 가능한가?</li>
+<li>접근 후에는 accessed/dirty bit를 어떻게 해석해야 하는가?</li>
+</ul>
+<p>관련 문서:</p>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환과 메모리</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">x86 64 페이지 테이블 워크</a></li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">페이지 테이블 엔트리 비트 — CPU가 주소 변환 중에 읽고 쓰는 플래그들</a></li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">페이지 폴트 error code</a></li>
+</ul>
+<h2 id="구현-전-전체-그림">구현 전 전체 그림<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-전-전체-그림" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>먼저 [VM 전체 그림](/wiki/hubs/pintos-vm-visual#원본 시각 자료)을 본다.</p>
+<p>핵심 흐름은 이렇게 읽으면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="typescript" data-theme="github-light github-dark"><code data-language="typescript" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">유저 명령어가 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">VA</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> 접근</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> CPU</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">MMU가 현재 CR3의 PML4를 따라감</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> present PTE가 없으면 page fault</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> page_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">()가 CR2와 error_code를 읽음</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_try_handle_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">()가 </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;살릴 fault인가&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> 판단</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> SPT에서 page를 찾거나 stack growth page를 만듦</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_do_claim_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">()가 frame을 얻고 PML4에 PTE를 설치</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> swap_in</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">()이 page type에 맞게 바이트를 채움</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">  -></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> handler가 돌아가면 같은 명령어가 다시 실행됨</span></span></code></pre></figure>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;유저 명령어: mov [0x401234], rax\&quot;] --> B[\&quot;CPU/MMU: PML4 walk\&quot;]\n    B -->|PTE present| C[\&quot;정상 접근 — RAM 바이트 읽기/쓰기\&quot;]\n    B -->|PTE absent| D[\&quot;#PF exception → page_fault()\&quot;]\n    D --> E[\&quot;CR2=0x401234, error_code 해석\&quot;]\n    E --> F{\&quot;vm_try_handle_fault()\&quot;}\n    F -->|\&quot;SPT hit\&quot;| G[\&quot;vm_do_claim_page(page)\&quot;]\n    F -->|\&quot;SPT miss + stack growth 조건\&quot;| H[\&quot;vm_stack_growth() → ANON page 생성\&quot;]\n    H --> G\n    F -->|\&quot;SPT miss + 조건 불충족\&quot;| I[\&quot;kill(f) — Segfault\&quot;]\n    G --> J[\&quot;vm_get_frame() → palloc or eviction\&quot;]\n    J --> K[\&quot;frame↔page 양방향 연결\&quot;]\n    K --> L[\&quot;pml4_set_page(pml4, upage, kva, writable)\&quot;]\n    L --> M[\&quot;swap_in(page, kva) — type별 바이트 채움\&quot;]\n    M --> N[\&quot;handler return → 같은 명령어 재실행\&quot;]&quot;">flowchart TD
+    A[&quot;유저 명령어: mov [0x401234], rax&quot;] --> B[&quot;CPU/MMU: PML4 walk&quot;]
+    B -->|PTE present| C[&quot;정상 접근 — RAM 바이트 읽기/쓰기&quot;]
+    B -->|PTE absent| D[&quot;#PF exception → page_fault()&quot;]
+    D --> E[&quot;CR2=0x401234, error_code 해석&quot;]
+    E --> F{&quot;vm_try_handle_fault()&quot;}
+    F -->|&quot;SPT hit&quot;| G[&quot;vm_do_claim_page(page)&quot;]
+    F -->|&quot;SPT miss + stack growth 조건&quot;| H[&quot;vm_stack_growth() → ANON page 생성&quot;]
+    H --> G
+    F -->|&quot;SPT miss + 조건 불충족&quot;| I[&quot;kill(f) — Segfault&quot;]
+    G --> J[&quot;vm_get_frame() → palloc or eviction&quot;]
+    J --> K[&quot;frame↔page 양방향 연결&quot;]
+    K --> L[&quot;pml4_set_page(pml4, upage, kva, writable)&quot;]
+    L --> M[&quot;swap_in(page, kva) — type별 바이트 채움&quot;]
+    M --> N[&quot;handler return → 같은 명령어 재실행&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>여기서 중요한 문장은 “page fault는 항상 실패가 아니다”다.</p>
+<p>PintOS VM에서 page fault는 lazy loading, stack growth, swap-in을 실행하는 정상 경로일 수 있다.</p>
+<h2 id="반드시-구분해야-하는-네-개의-표">반드시 구분해야 하는 네 개의 표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#반드시-구분해야-하는-네-개의-표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM 구현 중 가장 많이 헷갈리는 부분은 모든 것이 “페이지 테이블”처럼 보인다는 점이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이름</th><th>누가 보는가</th><th>무엇을 저장하는가</th><th>없으면 어떤 일이 생기는가</th></tr></thead><tbody><tr><td>PML4/page table</td><td>CPU/MMU</td><td>VA page -> physical frame, PTE flags</td><td>CPU가 주소 번역을 못 해서 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a></td></tr><tr><td>SPT</td><td>PintOS 커널</td><td>합법적인 유저 page의 의미와 backing store</td><td>커널이 fault를 살릴 근거를 잃음</td></tr><tr><td>frame table</td><td>PintOS 커널</td><td>어떤 physical frame을 누가 쓰는가</td><td>eviction victim을 고를 수 없음</td></tr><tr><td>swap table</td><td>PintOS 커널</td><td>swap disk slot 사용 여부와 page 연결</td><td>swap-out page를 복구할 수 없음</td></tr></tbody></table></div>
+<p>이 말은 즉, PML4에 없는 주소라도 SPT에 있으면 “아직 안 올라왔지만 합법적인 주소”일 수 있다.</p>
+<p>관련 문서:</p>
+<ul>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델 — struct page, frame, operations가 나누는 책임</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table은 왜 필요한가</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">Guest Physical Memory</a></li>
+</ul>
+<h2 id="구현-순서">구현 순서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-순서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>권장 구현 순서는 다음이다.</p>
+<ol>
+<li>SPT를 만든다.</li>
+<li>lazy loading 등록을 만든다.</li>
+<li>page fault에서 SPT lookup과 claim을 연결한다.</li>
+<li>frame allocation과 <code>pml4_set_page()</code>를 안정화한다.</li>
+<li>stack growth를 넣는다.</li>
+<li>eviction과 swap을 넣는다.</li>
+<li>mmap/file-backed page를 넣는다.</li>
+<li>fork에서 SPT 복사를 완성한다.</li>
+</ol>
+<p>각 단계는 이전 단계가 관찰 가능해야 다음으로 넘어간다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    S1[\&quot;1. SPT 생성\&quot;] --> S2[\&quot;2. Lazy Loading 등록\&quot;]\n    S2 --> S3[\&quot;3. Page Fault → SPT lookup + claim\&quot;]\n    S3 --> S4[\&quot;4. Frame alloc + pml4_set_page 안정화\&quot;]\n    S4 --> S5[\&quot;5. Stack Growth\&quot;]\n    S5 --> S6[\&quot;6. Eviction + Swap\&quot;]\n    S6 --> S7[\&quot;7. mmap / file-backed\&quot;]\n    S7 --> S8[\&quot;8. fork SPT 복사\&quot;]&quot;">flowchart LR
+    S1[&quot;1. SPT 생성&quot;] --> S2[&quot;2. Lazy Loading 등록&quot;]
+    S2 --> S3[&quot;3. Page Fault → SPT lookup + claim&quot;]
+    S3 --> S4[&quot;4. Frame alloc + pml4_set_page 안정화&quot;]
+    S4 --> S5[&quot;5. Stack Growth&quot;]
+    S5 --> S6[&quot;6. Eviction + Swap&quot;]
+    S6 --> S7[&quot;7. mmap / file-backed&quot;]
+    S7 --> S8[&quot;8. fork SPT 복사&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>예를 들어 <code>vm_do_claim_page()</code>가 제대로 동작하지 않으면 stack growth, swap, mmap은 모두 같은 방식으로 무너진다. 그래서 claim은 VM 구현의 허리다(위 다이어그램에서 3~4단계가 강조된 이유).</p>
+<h2 id="1단계-spt는-무엇을-기억해야-하는가">1단계 SPT는 무엇을 기억해야 하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1단계-spt는-무엇을-기억해야-하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>SPT는 “PML4에 아직 없을 수도 있는 합법 page 목록”이다.</p>
+<p>최소 질문:</p>
+<ul>
+<li><code>va</code>를 어떤 단위로 저장해야 하는가?</li>
+<li>같은 page가 두 번 들어오면 어떻게 막는가?</li>
+<li>page를 찾을 때 <code>0x401234</code>로 찾는가, <code>0x401000</code>으로 찾는가?</li>
+<li>process exit 때 SPT 안의 모든 page는 누가 해제하는가?</li>
+</ul>
+<p>핵심 답:</p>
+<ul>
+<li>key는 page-aligned VA로 둔다.</li>
+<li><code>pg_round_down(va)</code>를 기준으로 찾는다.</li>
+<li>같은 upage가 이미 있으면 <code>vm_alloc_page_with_initializer()</code>는 실패해야 한다.</li>
+<li><code>supplemental_page_table_kill()</code>은 SPT의 모든 page를 destroy해야 한다.</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table은 왜 필요한가</a></li>
+<li>[PintOS VM 객체 모델](/wiki/os/pintos-vm-object-model-knowledge#PintOS VM 객체 모델 흐름)</li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork 때 SPT는 왜 같이 복사해야 하나</a></li>
+</ul>
+<h2 id="2단계-lazy-loading은-무엇을-미루는가">2단계 lazy loading은 무엇을 미루는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2단계-lazy-loading은-무엇을-미루는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>lazy loading은 page 객체 생성을 미루는 것이 아니다.</p>
+<p>미루는 것은 “실제 frame 확보와 file read”다.</p>
+<p><code>load_segment()</code> 시점:</p>
+<ul>
+<li>page마다 <code>upage</code>, <code>read_bytes</code>, <code>zero_bytes</code>, <code>writable</code>, <code>file offset</code>을 계산한다.</li>
+<li>이 정보를 <code>aux</code>에 담는다.</li>
+<li>SPT에 <code>UNINIT</code> page를 등록한다.</li>
+<li>아직 <code>frame->kva</code>에 ELF 바이트를 읽지 않는다.</li>
+</ul>
+<p>첫 접근 시점:</p>
+<ul>
+<li><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 발생</li>
+<li><code>vm_try_handle_fault()</code>가 SPT에서 page를 찾음</li>
+<li><code>vm_do_claim_page()</code>가 frame을 확보</li>
+<li><code>swap_in()</code> -> <code>uninit_initialize()</code> -> <code>lazy_load_segment()</code> 실행</li>
+<li>file bytes + zero bytes가 frame에 채워짐</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-segment-trace">Lazy Loading Segment 흐름</a></li>
+<li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">file 수명 Trace</a></li>
+<li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-lazy-uninit-aux-copy-question">fork에서 lazy UNINIT page의 aux는 어떻게 복사해야 하나</a></li>
+<li>[코드 로딩 과정 이미지](/wiki/hubs/pintos-vm-visual#lazy code loading)</li>
+<li><a href="../../wiki/os/elf-loader-knowledge" class="internal internal-link alias" data-slug="wiki/os/elf-loader-knowledge">ELF 로더는 파일을 어떻게 실행 중인 메모리로 바꾸는가</a></li>
+</ul>
+<h2 id="3단계-page-fault는-어떤-질문에-답해야-하는가">3단계 page fault는 어떤 질문에 답해야 하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3단계-page-fault는-어떤-질문에-답해야-하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>page_fault()</code>는 CPU가 던진 예외다. 하지만 OS는 그 예외를 정책 질문으로 바꿔야 한다.</p>
+<p>CPU가 주는 정보:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>정보</th><th>PintOS에서 얻는 곳</th><th>의미</th></tr></thead><tbody><tr><td>fault address</td><td><code>CR2</code>, <code>rcr2()</code></td><td>접근하려다 실패한 VA</td></tr><tr><td>present bit</td><td>error code <code>PF_P</code></td><td>not-present fault인지 protection fault인지</td></tr><tr><td>write bit</td><td>error code <code>PF_W</code></td><td>write 접근이었는지</td></tr><tr><td>user bit</td><td>error code <code>PF_U</code></td><td>유저 모드 접근이었는지</td></tr><tr><td>rsp/rip</td><td><code>struct intr_frame</code></td><td>stack growth 판단과 재시작 위치</td></tr></tbody></table></div>
+<p><code>vm_try_handle_fault()</code>가 답해야 할 질문:</p>
+<ul>
+<li>not-present fault인가?</li>
+<li>user address인가?</li>
+<li>write인데 read-only page인가?</li>
+<li>SPT에 page가 있는가?</li>
+<li>SPT에 없지만 stack growth로 인정할 수 있는가?</li>
+<li>인정한다면 어떤 page type으로 만들 것인가?</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">페이지 폴트 error code</a></li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">vm try handle fault 판단 흐름 Trace</a></li>
+<li>[주소 참조 과정 이미지](/wiki/hubs/pintos-vm-visual#주소 참조와 page fault)</li>
+</ul>
+<h2 id="4단계-claim은-실제-메모리를-어떻게-붙이는가">4단계 claim은 실제 메모리를 어떻게 붙이는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4단계-claim은-실제-메모리를-어떻게-붙이는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>claim은 “page가 실제 frame을 얻고, CPU가 번역할 수 있는 PTE를 얻는 과정”이다.</p>
+<p><code>vm_do_claim_page(page)</code>의 핵심 순서:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame = vm_get_frame()</span></span>
+<span data-line><span>frame->page = page</span></span>
+<span data-line><span>page->frame = frame</span></span>
+<span data-line><span>pml4_set_page(thread_current()->pml4, page->va, frame->kva, writable)</span></span>
+<span data-line><span>swap_in(page, frame->kva)</span></span></code></pre></figure>
+<p>여기서 <code>frame->kva</code>는 커널이 접근하는 주소다. PTE에는 이 kernel virtual address가 그대로 들어가는 것이 아니라, <code>pml4_set_page()</code> 내부에서 <code>vtop(kpage)</code>로 physical address가 들어간다.</p>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page는 fault를 실제 frame mapping으로 바꾼다</a></li>
+<li><a href="../../wiki/os/vm-claim-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/vm-claim-rollback-trace">pml4 set page 실패 뒤 claim 롤백 Trace</a></li>
+<li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">UNINIT swap in 실패 롤백 Trace</a></li>
+<li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page는 왜 커널 가상 주소를 돌려주나</a></li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">페이지 테이블 엔트리 비트 — CPU가 주소 변환 중에 읽고 쓰는 플래그들</a></li>
+<li>[ SPT API 이미지](/wiki/hubs/pintos-vm-visual#Frame과 SPT API)</li>
+</ul>
+<h2 id="5단계-stack-growth는-어디까지-허용하는가">5단계 stack growth는 어디까지 허용하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5단계-stack-growth는-어디까지-허용하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>stack growth는 SPT에 없는 모든 주소를 살려 주는 기능이 아니다.</p>
+<p>살릴 수 있는 주소는 “현재 유저 스택이 실제로 자라다가 닿은 근처”여야 한다.</p>
+<p>판단 질문:</p>
+<ul>
+<li>fault address가 user address인가?</li>
+<li><code>USER_STACK</code>보다 아래인가?</li>
+<li>최대 stack 크기 제한 안에 있는가?</li>
+<li><code>rsp</code> 근처 접근인가?</li>
+<li>write 또는 push 계열 접근으로 볼 수 있는가?</li>
+</ul>
+<p>정책을 너무 넓게 잡으면 잘못된 포인터가 조용히 새 stack page가 된다. 너무 좁게 잡으면 정상적인 <code>push</code>, 함수 호출, argument 저장이 죽는다.</p>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">스택 성장 페이지 폴트는 언제 살려야 하나</a></li>
+<li><a href="../../wiki/os/stack-growth-boundary-lab" class="internal internal-link alias" data-slug="wiki/os/stack-growth-boundary-lab">스택 성장 경계 Lab</a></li>
+<li>[stack growth 분기](/wiki/os/vm-try-handle-fault-decision-trace#3. stack growth 한계 계산)</li>
+</ul>
+<h2 id="6단계-frame-eviction은-언제-필요한가">6단계 frame eviction은 언제 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6단계-frame-eviction은-언제-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>palloc_get_page(PAL_USER)</code>가 실패하면 user pool에 빈 frame이 없다는 뜻이다.</p>
+<p>이때 VM은 둘 중 하나를 해야 한다.</p>
+<ul>
+<li>victim frame을 골라서 내보낸다.</li>
+<li>더 이상 메모리를 줄 수 없으므로 실패한다.</li>
+</ul>
+<p>eviction에서 묻는 질문:</p>
+<ul>
+<li>어떤 frame을 victim으로 고를 것인가?</li>
+<li>victim page가 dirty인가?</li>
+<li>anonymous page면 swap slot에 써야 하는가?</li>
+<li>file-backed page면 파일에 write-back해야 하는가?</li>
+<li>PML4의 present mapping은 어떻게 제거할 것인가?</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">프레임 교체 (Frame Eviction) Trace</a></li>
+<li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">Clock hand로 victim frame 고르기 Lab</a></li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty bit로 victim 판단</a></li>
+</ul>
+<h2 id="7단계-swap은-무엇을-저장하는가">7단계 swap은 무엇을 저장하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#7단계-swap은-무엇을-저장하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>swap은 “page 객체”를 저장하는 곳이 아니다.</p>
+<p>swap disk에는 frame의 4096바이트 내용이 저장된다. 커널은 별도로 “이 page가 어느 swap slot에 내려가 있는지”를 기억해야 한다.</p>
+<p>anonymous page의 상태 변화:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAM에 있음</span></span>
+<span data-line><span>  -> swap_out(page)</span></span>
+<span data-line><span>  -> frame bytes를 swap slot에 기록</span></span>
+<span data-line><span>  -> page metadata에 slot 번호 저장</span></span>
+<span data-line><span>  -> PTE 제거</span></span>
+<span data-line><span>  -> 나중에 fault</span></span>
+<span data-line><span>  -> swap_in(page, frame->kva)</span></span>
+<span data-line><span>  -> swap slot bytes를 frame으로 읽음</span></span></code></pre></figure>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">Anonymous Page와 Swap Slot</a></li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">Swap Slot QEMU Trace</a></li>
+<li><a href="../../wiki/os/disk-sector-qemu-block-backend-knowledge" class="internal internal-link alias" data-slug="wiki/os/disk-sector-qemu-block-backend-knowledge">Disk sector는 QEMU block backend에서 어떤 byte offset이 되나</a></li>
+</ul>
+<h2 id="8단계-mmap은-파일을-어떻게-메모리처럼-보이게-하는가">8단계 mmap은 파일을 어떻게 메모리처럼 보이게 하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#8단계-mmap은-파일을-어떻게-메모리처럼-보이게-하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>mmap()</code>은 파일 바이트를 유저 VA 범위에 붙인다.</p>
+<p>하지만 처음부터 파일 전체를 RAM에 읽는 것이 아니다. lazy loading과 비슷하게 “이 VA는 이 파일 offset에서 온다”는 metadata를 SPT에 넣고, page fault 때 필요한 page만 읽을 수 있다.</p>
+<p>구현 전 질문:</p>
+<ul>
+<li><code>addr</code>는 page-aligned인가?</li>
+<li><code>length</code>가 0이면 실패해야 하는가?</li>
+<li>file offset은 page-aligned인가?</li>
+<li>mapping range가 기존 SPT page와 겹치는가?</li>
+<li>read-only mapping에 write fault가 오면 어떻게 막는가?</li>
+<li>munmap 때 dirty page만 write-back하는가?</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li>
+<li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-backed-page-metadata-knowledge">file backed page metadata에는 무엇을 저장해야 하나</a></li>
+<li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-ownership-contract-knowledge">lazy page aux ownership 계약</a></li>
+<li><a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal internal-link alias" data-slug="wiki/os/mmap-file-page-aux-transition-question">mmap file page의 aux는 언제 struct file page로 옮겨야 하나</a></li>
+<li><a href="../../wiki/os/mmap-uninit-file-page-cleanup-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-uninit-file-page-cleanup-trace">fault가 한 번도 나지 않은 mmap page는 누가 정리하나</a></li>
+<li><a href="../../wiki/os/mmap-region-ownership-question" class="internal internal-link alias" data-slug="wiki/os/mmap-region-ownership-question">mmap region metadata는 누가 소유해야 하나</a></li>
+<li><a href="../../wiki/os/mmap-syscall-handler-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-syscall-handler-trace">mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace)</a></li>
+<li><a href="../../wiki/os/mmap-invalid-argument-matrix-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-invalid-argument-matrix-lab">mmap 실패 조건은 어떤 순서로 검사해야 하나</a></li>
+<li><a href="../../wiki/os/mmap-overlap-validation-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-overlap-validation-lab">mmap은 왜 이미 쓰는 주소 범위를 덮으면 안 되나</a></li>
+<li><a href="../../wiki/os/mmap-readonly-protection-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-readonly-protection-lab">mmap read only 쓰기 보호 Lab</a></li>
+<li><a href="../../wiki/os/mmap-multi-region-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-multi-region-isolation-lab">mmap 다중 region 격리는 무엇을 확인해야 하나</a></li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">mmap dirty write back은 어떻게 디스크 쓰기로 내려가나</a></li>
+</ul>
+<h2 id="9단계-fork는-주소-공간의-무엇을-복사하는가">9단계 fork는 주소 공간의 무엇을 복사하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#9단계-fork는-주소-공간의-무엇을-복사하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM 이후 <code>fork()</code>는 단순히 register만 복사해서는 안 된다.</p>
+<p>부모 주소 공간의 의미도 복사해야 한다.</p>
+<p>복사해야 할 질문:</p>
+<ul>
+<li>아직 load되지 않은 lazy page는 자식에서도 lazy 상태로 남길 것인가?</li>
+<li>lazy <code>UNINIT</code> page의 <code>aux</code>와 file reference는 부모/자식이 각각 소유하게 만들 것인가?</li>
+<li>이미 RAM에 있는 anonymous page는 새 frame으로 복사할 것인가?</li>
+<li>swapped-out page는 swap slot을 어떻게 다룰 것인가?</li>
+<li>swapped-out anonymous page의 slot 번호는 자식에게 그대로 복사해도 되는가?</li>
+<li>file-backed page는 파일 metadata를 어떻게 복제할 것인가?</li>
+<li>writable bit와 dirty/accessed bit는 어떻게 초기화할 것인가?</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork 때 SPT는 왜 같이 복사해야 하나</a></li>
+<li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-lazy-uninit-aux-copy-question">fork에서 lazy UNINIT page의 aux는 어떻게 복사해야 하나</a></li>
+<li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-swapped-anon-page-copy-question">fork에서 swapped out anonymous page는 어떻게 복사해야 하나</a></li>
+<li><a href="../../wiki/os/swapped-anon-fork-snapshot-trace" class="internal internal-link alias" data-slug="wiki/os/swapped-anon-fork-snapshot-trace">swapped anonymous page fork snapshot 흐름</a></li>
+<li><a href="../../wiki/os/cow-write-protect-fault-lab" class="internal internal-link alias" data-slug="wiki/os/cow-write-protect-fault-lab">COW write protect fault는 언제 page copy로 살아나나</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork하면 fd table은 어떻게 복제되는가</a></li>
+<li>[process fork 시각화](/wiki/hubs/pintos-process-visual#fork 생성과 초기화 동기화)</li>
+</ul>
+<h2 id="10단계-process-cleanup은-무엇을-회수해야-하는가">10단계 process cleanup은 무엇을 회수해야 하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#10단계-process-cleanup은-무엇을-회수해야-하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM을 구현한 뒤에는 <code>process_exit()</code>과 <code>process_exec()</code>가 단순히 page table만 버리면 안 된다.</p>
+<p>정리해야 할 질문:</p>
+<ul>
+<li>SPT 안의 모든 <code>struct page</code>를 순회하는가?</li>
+<li>resident page의 frame과 PTE는 어떻게 정리하는가?</li>
+<li>swapped-out anonymous page의 slot은 누가 free하는가?</li>
+<li>dirty file-backed page는 exit 경로에서도 write-back되는가?</li>
+<li>아직 첫 접근이 없던 <code>UNINIT</code> lazy page의 aux와 file reference는 해제되는가?</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li>
+<li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-munmap-range-trace">mmap munmap 범위 흐름 (Mmap Munmap Range Trace)</a></li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">Anonymous Page와 Swap Slot</a></li>
+</ul>
+<h2 id="linux-windows-pintos-qemu-차이">Linux Windows PintOS QEMU 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-windows-pintos-qemu-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>누가 VM 정책을 정하는가</td><td>실제 커널 VM subsystem</td><td>학생이 구현하는 <code>vm/*</code>, <code>userprog/process.c</code></td><td>정책을 모름</td></tr><tr><td>page fault는 어디서 시작되는가</td><td>CPU exception -> 커널 handler</td><td><code>page_fault()</code> -> <code>vm_try_handle_fault()</code></td><td>에뮬레이트된 CPU가 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 생성</td></tr><tr><td>파일-backed page는 어디와 연결되는가</td><td>page cache, VFS, mmap subsystem</td><td><code>struct file_page</code>, file read/write 구현</td><td>block device I/O를 흉내 냄</td></tr><tr><td>physical memory는 무엇인가</td><td>실제 RAM frame</td><td>PintOS가 보는 guest physical frame</td><td>host process의 memory buffer</td></tr><tr><td>CR3/PML4는 무엇인가</td><td>실제 CPU page table root</td><td>PintOS가 guest memory에 만든 page table</td><td>QEMU가 읽는 guest CPU state</td></tr></tbody></table></div>
+<p>핵심은 QEMU가 PintOS VM 정책을 대신 구현하지 않는다는 점이다. QEMU는 하드웨어처럼 행동할 뿐이고, “이 fault를 살릴지 죽일지”는 PintOS가 결정한다.</p>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal internal-link alias" data-slug="wiki/os/real-os-pintos-qemu-differences">실제 OS, PintOS, QEMU의 차이</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">Guest Physical Memory</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub은 어떤 상태를 보여주는가</a></li>
+</ul>
+<h2 id="pintos-vm-구현-값-추적">PintOS VM 구현 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-vm-구현-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>예시 주소:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr = 0x401234</span></span>
+<span data-line><span>PGSIZE     = 4096 = 0x1000</span></span></code></pre></figure>
+<p>계산:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>값</th><th>계산</th><th>결과</th></tr></thead><tbody><tr><td>page base</td><td><code>pg_round_down(0x401234)</code></td><td><code>0x401000</code></td></tr><tr><td>offset</td><td><code>0x401234 &amp; 0xfff</code></td><td><code>0x234</code></td></tr><tr><td>SPT key</td><td>page base</td><td><code>0x401000</code></td></tr><tr><td>frame base 예시</td><td>PTE에서 얻음</td><td><code>0x12345000</code></td></tr><tr><td>physical byte</td><td><code>frame base + offset</code></td><td><code>0x12345234</code></td></tr></tbody></table></div>
+<p>lazy segment 예시:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>read_bytes = 6000</span></span>
+<span data-line><span>PGSIZE     = 4096</span></span></code></pre></figure>
+<p>첫 page:</p>
+<ul>
+<li>file에서 4096바이트 읽음</li>
+<li>zero 0바이트</li>
+</ul>
+<p>둘째 page:</p>
+<ul>
+<li>file에서 1904바이트 읽음</li>
+<li>나머지 2192바이트를 0으로 채움</li>
+</ul>
+<p>관련 링크:</p>
+<ul>
+<li>[lazy loading 숫자 예시](/wiki/os/lazy-loading-segment-trace#Lazy Loading Segment 흐름 값 추적)</li>
+<li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page는 왜 커널 가상 주소를 돌려주나</a></li>
+<li>바이트 버퍼와 캐스팅 실험</li>
+</ul>
+<h2 id="gdb로-확인할-질문">GDB로 확인할 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-확인할-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구현이 맞는지 확인할 때는 “어디에 break를 걸지”보다 “무엇을 확인할지”를 먼저 정한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>확인 질문</th><th>breakpoint</th><th>볼 값</th></tr></thead><tbody><tr><td>SPT에 page가 등록되는가</td><td><code>vm_alloc_page_with_initializer</code></td><td><code>upage</code>, <code>type</code>, <code>aux</code></td></tr><tr><td>page fault 주소가 맞는가</td><td><code>page_fault</code></td><td><code>fault_addr</code>, <code>f->error_code</code>, <code>f->rsp</code></td></tr><tr><td>fault 주소와 명령어 주소가 분리되는가</td><td><code>page_fault</code></td><td><code>CR2</code>, <code>f->rip</code>, <code>pg_round_down(fault_addr)</code></td></tr><tr><td>SPT lookup이 맞는가</td><td><code>spt_find_page</code></td><td><code>pg_round_down(va)</code>, return page</td></tr><tr><td>frame이 연결되는가</td><td><code>vm_do_claim_page</code></td><td><code>page->frame</code>, <code>frame->page</code>, <code>frame->kva</code></td></tr><tr><td>PTE가 설치되는가</td><td><code>pml4_set_page</code></td><td><code>upage</code>, <code>kpage</code>, <code>rw</code></td></tr><tr><td>claim 실패가 되돌아가는가</td><td><code>vm_do_claim_page</code>, <code>pml4_set_page</code></td><td><a href="../../wiki/os/vm-claim-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/vm-claim-rollback-trace">PTE rollback</a></td></tr><tr><td>UNINIT 초기화 실패가 정리되는가</td><td><code>uninit_initialize</code>, <code>lazy_load_segment</code></td><td><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">aux와 type metadata 정리</a></td></tr><tr><td>lazy <code>aux</code> owner가 한 번만 정리되는가</td><td><code>load_segment</code>, <code>lazy_load_segment</code>, <code>load_mmap_page</code>, <code>uninit_destroy</code></td><td><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-cleanup-checklist-trace">free 단일 책임</a></td></tr><tr><td>실제 바이트가 채워지는가</td><td><code>lazy_load_segment</code></td><td><code>x/32xb frame->kva</code></td></tr><tr><td>user VA와 frame byte가 같은가</td><td><code>vm_do_claim_page</code> 이후</td><td><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">동일 offset byte 비교</a></td></tr><tr><td>같은 명령어가 재실행되는가</td><td><code>page_fault</code> return 이후</td><td><code>f->rip</code> 유지</td></tr></tbody></table></div>
+<p>기본 GDB 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b load_segment</span></span>
+<span data-line><span>b vm_alloc_page_with_initializer</span></span>
+<span data-line><span>b page_fault</span></span>
+<span data-line><span>b vm_try_handle_fault</span></span>
+<span data-line><span>b vm_do_claim_page</span></span>
+<span data-line><span>b pml4_set_page</span></span>
+<span data-line><span>b lazy_load_segment</span></span>
+<span data-line><span>run</span></span>
+<span data-line><span>p/x fault_addr</span></span>
+<span data-line><span>p/x f->error_code</span></span>
+<span data-line><span>p/x f->rsp</span></span>
+<span data-line><span>p *page</span></span>
+<span data-line><span>p *frame</span></span>
+<span data-line><span>x/32xb frame->kva</span></span></code></pre></figure>
+<p>관련 링크:</p>
+<ul>
+<li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-gdb-cr2-spt-lab">Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기</a></li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub은 어떤 상태를 보여주는가</a></li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">Page Fault 뒤 user VA와 frame offset 바이트 비교 Lab</a></li>
+</ul>
+<h2 id="구현-전-질문-은행">구현 전 질문 은행<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-전-질문-은행" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="주소-변환-질문">주소 변환 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#주소-변환-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">가상 주소와 물리 주소는 왜 다른가?</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">PML4 index, PDPE index, PDE index, PTE index는 어떻게 계산하는가?</a></li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">CR3가 바뀌면 왜 주소 공간이 바뀌는가?</a></li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">user bit는 각각 무엇을 막는가?</a></li>
+</ul>
+<h3 id="page-fault-질문">page fault 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">not present fault와 rights violation은 어떻게 구분하는가?</a></li>
+<li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-gdb-cr2-spt-lab">GDB에서 CR2, f >rip, SPT page key, frame metadata를 한 화면에 어떻게 맞춰 보는가?</a></li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">어떤 page fault를 살리고 어떤 fault를 죽여야 하는가?</a></li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">page fault handler가 끝나면 왜 같은 명령어를 다시 실행하는가?</a></li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">fault를 살린 뒤 user VA와 frame offset byte가 정말 같은지 어떻게 자동 검증하는가?</a></li>
+</ul>
+<h3 id="spt와-page-질문">SPT와 page 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt와-page-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT는 왜 PML4와 따로 필요한가?</a></li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">struct page와 struct frame은 왜 서로 포인터를 갖는가?</a></li>
+<li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-segment-trace">UNINIT page는 언제 ANON 또는 FILE page가 되는가?</a></li>
+<li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">lazy page의 aux와 reopened file은 첫 fault까지 어떻게 살아 있어야 하는가?</a></li>
+<li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-ownership-contract-knowledge">free 계약을 어떻게 공유하는가?</a></li>
+<li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-cleanup-checklist-trace">그 계약을 실제 helper, assert, 실패 분기표로 내리면 무엇을 확인해야 하는가?</a></li>
+<li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">UNINIT page 초기화 중 callback이 실패하면 aux와 page type metadata는 누가 정리하는가?</a></li>
+<li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-lazy-uninit-aux-copy-question">fork가 아직 fault 나지 않은 UNINIT page를 복제할 때 aux는 deep copy해야 하는가?</a></li>
+</ul>
+<h3 id="frame과-eviction-질문">frame과 eviction 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame과-eviction-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">claim은 frame allocation과 PTE 설치 중 무엇을 먼저 하는가?</a></li>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">빈 frame이 없으면 어떤 순서로 victim을 내보내는가?</a></li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">accessed bit와 dirty bit는 누가 세팅하고 누가 해석하는가?</a></li>
+<li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">clock algorithm은 왜 accessed bit를 한 번 지우고 다시 보는가?</a></li>
+</ul>
+<h3 id="stack-질문">stack 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#stack-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">SPT에 없는 주소인데도 stack growth로 살릴 수 있는 조건은 무엇인가?</a></li>
+<li><a href="../../wiki/os/stack-growth-boundary-lab" class="internal internal-link alias" data-slug="wiki/os/stack-growth-boundary-lab">정상 stack access와 잘못된 pointer access는 테스트에서 어떻게 갈리는가?</a></li>
+</ul>
+<h3 id="swap-질문">swap 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous page의 swap slot 번호는 어디에 저장해야 하는가?</a></li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">swap slot write는 PintOS sector에서 QEMU BlockBackend offset으로 어떻게 내려가는가?</a></li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">swap in 뒤 slot은 언제 다시 free가 되는가?</a></li>
+</ul>
+<h3 id="mmap-질문">mmap 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#mmap-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap page는 lazy loading page와 무엇이 같은가?</a></li>
+<li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-backed-page-metadata-knowledge">file backed page에는 왜 file, offset, read bytes, zero bytes가 필요한가?</a></li>
+<li><a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal internal-link alias" data-slug="wiki/os/mmap-file-page-aux-transition-question">mmap page의 aux는 첫 fault 뒤 어디로 옮겨야 하는가?</a></li>
+<li><a href="../../wiki/os/mmap-uninit-file-page-cleanup-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-uninit-file-page-cleanup-trace">fault가 한 번도 나지 않은 mmap page는 누가 aux와 file reference를 정리하는가?</a></li>
+<li><a href="../../wiki/os/mmap-region-ownership-question" class="internal internal-link alias" data-slug="wiki/os/mmap-region-ownership-question">mmap region, file page, aux 중 누가 범위와 reopened file을 소유해야 하는가?</a></li>
+<li><a href="../../wiki/os/mmap-invalid-argument-matrix-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-invalid-argument-matrix-lab">mmap 인자 검증은 어떤 순서로 해야 하는가?</a></li>
+<li><a href="../../wiki/os/mmap-overlap-validation-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-overlap-validation-lab">기존 page와 겹치는 mmap을 왜 막아야 하는가?</a></li>
+<li><a href="../../wiki/os/mmap-readonly-protection-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-readonly-protection-lab">read only mmap에 write하면 어느 단계에서 실패해야 하는가?</a></li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">dirty file backed page는 언제 파일로 write back되는가?</a></li>
+<li><a href="../../wiki/os/mmap-multi-region-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-multi-region-isolation-lab">같은 파일 다중 mapping과 큰 mapping에서 metadata가 섞이지 않는지 어떻게 확인하는가?</a></li>
+</ul>
+<h3 id="fork-질문">fork 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork 때 SPT를 복사한다는 말은 무엇을 복사한다는 뜻인가?</a></li>
+<li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-lazy-uninit-aux-copy-question">fork가 lazy UNINIT page를 만나면 aux와 file reference를 어떻게 복제해야 하는가?</a></li>
+<li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-swapped-anon-page-copy-question">fork가 swapped out anonymous page를 만나면 swap slot ownership은 어떻게 처리해야 하는가?</a></li>
+<li><a href="../../wiki/os/cow-write-protect-fault-lab" class="internal internal-link alias" data-slug="wiki/os/cow-write-protect-fault-lab">copy on write를 하면 write protect fault가 왜 정상 경로가 되는가?</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fd table 복사와 주소 공간 복사는 무엇이 다른가?</a></li>
+<li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/swap-fork-process-isolation-lab">exec로 만든 여러 child의 anonymous swap 상태는 왜 서로 섞이면 안 되는가?</a></li>
+</ul>
+<h3 id="teardown-질문">teardown 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#teardown-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process exit과 exec cleanup은 SPT page들을 어떤 순서로 destroy해야 하는가?</a></li>
+</ul>
+<h2 id="구현-체크리스트">구현 체크리스트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-체크리스트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구현 시작 전에는 아래 질문에 스스로 답할 수 있어야 한다.</p>
+<ul>
+<li>SPT key는 항상 page-aligned VA인가?</li>
+<li><code>vm_alloc_page_with_initializer()</code>는 이미 존재하는 upage를 거절하는가?</li>
+<li>lazy segment <code>aux</code>는 page마다 독립적인가?</li>
+<li>fault가 한 번도 나지 않은 <code>UNINIT</code> page의 <code>aux</code>와 reopened file은 destroy에서 회수되는가?</li>
+<li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-cleanup-checklist-trace">등록 실패, callback 실패, never faulted cleanup에서 같은 file reference가 정확히 한 번만 close되는가?</a></li>
+<li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal internal-link alias" data-slug="wiki/os/lazy-aux-failure-injection-lab">frame rollback이 기대값과 맞는가?</a></li>
+<li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">UNINIT 초기화 실패가 aux leak, partially initialized page, stale PTE를 남기지 않는가?</a></li>
+<li><code>UNINIT(FILE)</code> cleanup과 <code>FILE</code> cleanup이 같은 file reference를 중복 close하지 않는가?</li>
+<li>fork 뒤 부모와 자식의 <code>UNINIT</code> page가 같은 <code>aux</code> 포인터를 공유하지 않는가?</li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">resident, lazy, swapped, file backed page를 분기 복사하는 기준이 있는가?</a></li>
+<li><code>lazy_load_segment()</code>가 file bytes와 zero bytes를 정확히 채우는가?</li>
+<li><code>vm_try_handle_fault()</code>는 protection fault와 not-present fault를 구분하는가?</li>
+<li>stack growth는 너무 넓게 허용되지 않는가?</li>
+<li><code>vm_do_claim_page()</code>는 frame/page 양방향 포인터를 연결하는가?</li>
+<li><a href="../../wiki/os/vm-claim-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/vm-claim-rollback-trace">page 상태와 user frame을 되돌리는가?</a></li>
+<li>eviction 시 victim의 PTE를 제거하는가?</li>
+<li>dirty file-backed page만 write-back하는가?</li>
+<li>같은 파일을 두 번 mapping해도 SPT key, region metadata, page metadata가 VA별로 분리되는가?</li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process exit에서 SPT, frame, swap slot, mmap metadata를 정리하는가?</a></li>
+<li>fork 뒤 부모와 자식의 page 의미가 서로 꼬이지 않는가?</li>
+<li>fork 뒤 exec한 child의 옛 SPT와 새 anonymous swap metadata가 서로 섞이지 않는가?</li>
+</ul>
+<h2 id="swap_in-type별-분기">swap_in type별 분기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap_in-type별-분기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>vm_do_claim_page()</code> 이후 <code>swap_in(page, kva)</code>가 호출되면, page의 현재 type에 따라 전혀 다른 경로를 탄다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;swap_in(page, kva)\&quot;] --> B{\&quot;page->operations\&quot;}\n    B -->|\&quot;UNINIT\&quot;| C[\&quot;uninit_initialize()\&quot;]\n    C --> D{\&quot;page->init callback\&quot;}\n    D -->|\&quot;anon_initializer\&quot;| E[\&quot;memset(kva, 0, PGSIZE)\\npage type → VM_ANON\&quot;]\n    D -->|\&quot;file_backed_initializer\&quot;| F[\&quot;file_read_at()\\npage type → VM_FILE\&quot;]\n    C --> G[\&quot;lazy_load_segment(page, aux)\\nfile bytes + zero padding\&quot;]\n    B -->|\&quot;VM_ANON\&quot;| H[\&quot;anon_swap_in()\\nswap slot → frame memcpy\&quot;]\n    B -->|\&quot;VM_FILE\&quot;| I[\&quot;file_backed_swap_in()\\nfile_read_at(file, kva, ...)\&quot;]&quot;">flowchart TD
+    A[&quot;swap_in(page, kva)&quot;] --> B{&quot;page->operations&quot;}
+    B -->|&quot;UNINIT&quot;| C[&quot;uninit_initialize()&quot;]
+    C --> D{&quot;page->init callback&quot;}
+    D -->|&quot;anon_initializer&quot;| E[&quot;memset(kva, 0, PGSIZE)\npage type → VM_ANON&quot;]
+    D -->|&quot;file_backed_initializer&quot;| F[&quot;file_read_at()\npage type → VM_FILE&quot;]
+    C --> G[&quot;lazy_load_segment(page, aux)\nfile bytes + zero padding&quot;]
+    B -->|&quot;VM_ANON&quot;| H[&quot;anon_swap_in()\nswap slot → frame memcpy&quot;]
+    B -->|&quot;VM_FILE&quot;| I[&quot;file_backed_swap_in()\nfile_read_at(file, kva, ...)&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>type 상태</th><th>swap_in 함수</th><th>바이트 출처</th><th>비고</th></tr></thead><tbody><tr><td>UNINIT (exec segment)</td><td>uninit_initialize → lazy_load_segment</td><td>ELF 파일 + zero padding</td><td>최초 접근. aux 소비 후 free</td></tr><tr><td>UNINIT (mmap)</td><td>uninit_initialize → load_mmap_page</td><td>매핑된 파일 offset</td><td>최초 접근. aux → file_page 전환</td></tr><tr><td>UNINIT (stack growth)</td><td>uninit_initialize → anon_initializer</td><td>없음 (memset 0)</td><td>stack page는 backing 없음</td></tr><tr><td>VM_ANON (swapped)</td><td>anon_swap_in</td><td>swap disk slot</td><td>slot 번호 → disk_read</td></tr><tr><td>VM_FILE (evicted)</td><td>file_backed_swap_in</td><td>원본 파일 offset</td><td>dirty였으면 이미 write-back됨</td></tr></tbody></table></div>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>vm/vm.c:200</td><td>vm_alloc_page_with_initializer()</td><td>SPT에 UNINIT page 등록, 중복 upage 거절</td></tr><tr><td>vm/vm.c:248</td><td>spt_find_page()</td><td>pg_round_down(va)로 SPT hash 검색</td></tr><tr><td>vm/vm.c:339</td><td>vm_get_frame()</td><td>palloc_get_page(PAL_USER) 또는 eviction</td></tr><tr><td>vm/vm.c:456</td><td>vm_try_handle_fault()</td><td>fault 주소 판단: SPT hit / stack growth / kill</td></tr><tr><td>vm/vm.c:563</td><td>vm_do_claim_page()</td><td>frame↔page 연결 + pml4_set_page + swap_in</td></tr><tr><td>vm/vm.c:617</td><td>supplemental_page_table_copy()</td><td>fork 시 부모 SPT → 자식 SPT 복사 분기</td></tr><tr><td>vm/vm.c:632</td><td>supplemental_page_table_kill()</td><td>exit/exec cleanup: 모든 page destroy</td></tr><tr><td>vm/uninit.c:49</td><td>uninit_initialize()</td><td>UNINIT → ANON/FILE 전환, callback 실행</td></tr><tr><td>vm/uninit.c:66</td><td>uninit_destroy()</td><td>never-faulted page의 aux/file cleanup</td></tr><tr><td>vm/anon.c:101</td><td>anon_initializer()</td><td>ANON page 초기화 (memset 0, swap_slot 초기화)</td></tr><tr><td>vm/anon.c:116</td><td>anon_swap_in()</td><td>swap slot → frame 복원</td></tr><tr><td>vm/anon.c:134</td><td>anon_swap_out()</td><td>frame → swap slot 저장</td></tr><tr><td>vm/anon.c:176</td><td>anon_destroy()</td><td>swap slot free + frame cleanup</td></tr><tr><td>vm/file.c:34</td><td>file_backed_initializer()</td><td>FILE page 초기화, aux → file_page metadata 전환</td></tr><tr><td>vm/file.c:43</td><td>file_backed_swap_in()</td><td>파일에서 frame으로 다시 읽기</td></tr><tr><td>vm/file.c:54</td><td>file_backed_swap_out()</td><td>dirty이면 파일에 write-back</td></tr><tr><td>vm/file.c:96</td><td>file_backed_destroy()</td><td>dirty write-back + frame cleanup</td></tr><tr><td>userprog/process.c:1195</td><td>load_segment()</td><td>ELF segment → UNINIT lazy page 등록</td></tr><tr><td>userprog/process.c:1301</td><td>lazy_load_segment()</td><td>첫 fault 때 실제 file read + zero fill</td></tr><tr><td>userprog/process.c:1391</td><td>setup_stack()</td><td>초기 유저 스택 page 생성</td></tr><tr><td>userprog/exception.c:139</td><td>page_fault()</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> handler: CR2/error_code 추출 → vm_try_handle_fault</td></tr><tr><td>threads/mmu.c:231</td><td>pml4_get_page()</td><td>upage → kpage 매핑 조회</td></tr><tr><td>threads/mmu.c:251</td><td>pml4_set_page()</td><td>PTE 설치: vtop(kpage) + flags</td></tr><tr><td>threads/mmu.c:271</td><td>pml4_clear_page()</td><td>PTE present bit 제거 (eviction 시)</td></tr><tr><td>include/vm/vm.h</td><td>struct page</td><td>va, frame 포인터, operations, union(uninit/anon/file)</td></tr><tr><td>include/vm/vm.h</td><td>struct frame</td><td>kva, page 포인터</td></tr><tr><td>include/vm/uninit.h</td><td>struct uninit_page</td><td>init callback, type, aux, page_initializer</td></tr><tr><td>include/vm/anon.h</td><td>struct anon_page</td><td>swap_slot 번호</td></tr><tr><td>include/vm/file.h</td><td>struct file_page</td><td>file, offset, read_bytes, zero_bytes</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/pintos-vm-visual" class="internal internal-link alias" data-slug="wiki/hubs/pintos-vm-visual">PintOS 가상 메모리 흐름</a></li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델 — struct page, frame, operations가 나누는 책임</a></li>
+<li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-segment-trace">Lazy Loading Segment 흐름</a></li>
+<li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">file 수명 Trace</a></li>
+<li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-cleanup-checklist-trace">lazy page aux cleanup 구현 체크리스트 Trace</a></li>
+<li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal internal-link alias" data-slug="wiki/os/lazy-aux-failure-injection-lab">lazy aux 실패 주입 Lab</a></li>
+<li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">UNINIT swap in 실패 롤백 Trace</a></li>
+<li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-lazy-uninit-aux-copy-question">fork에서 lazy UNINIT page의 aux는 어떻게 복사해야 하나</a></li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">vm try handle fault 판단 흐름 Trace</a></li>
+<li><a href="../../wiki/os/vm-claim-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/vm-claim-rollback-trace">pml4 set page 실패 뒤 claim 롤백 Trace</a></li>
+<li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-gdb-cr2-spt-lab">Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기</a></li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">Page Fault 뒤 user VA와 frame offset 바이트 비교 Lab</a></li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page는 fault를 실제 frame mapping으로 바꾼다</a></li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">프레임 교체 (Frame Eviction) Trace</a></li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li>
+<li><a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal internal-link alias" data-slug="wiki/os/mmap-file-page-aux-transition-question">mmap file page의 aux는 언제 struct file page로 옮겨야 하나</a></li>
+<li><a href="../../wiki/os/mmap-uninit-file-page-cleanup-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-uninit-file-page-cleanup-trace">fault가 한 번도 나지 않은 mmap page는 누가 정리하나</a></li>
+<li><a href="../../wiki/os/mmap-region-ownership-question" class="internal internal-link alias" data-slug="wiki/os/mmap-region-ownership-question">mmap region metadata는 누가 소유해야 하나</a></li>
+<li><a href="../../wiki/os/mmap-multi-region-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-multi-region-isolation-lab">mmap 다중 region 격리는 무엇을 확인해야 하나</a></li>
+<li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal internal-link alias" data-slug="wiki/os/fork-swapped-anon-page-copy-question">fork에서 swapped out anonymous page는 어떻게 복사해야 하나</a></li>
+<li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal internal-link alias" data-slug="wiki/os/swap-fork-process-isolation-lab">exec 뒤 child별 swap 상태가 섞이지 않는가)</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li><li><a href="../../wiki/pintos/" class="internal">PintOS 운영체제 학습 프로젝트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-572" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pintos-vm-구현-준비" data-for="pintos-vm-구현-준비">PintOS VM 구현 준비</a></li><li class="depth-1"><a href="#pintos-vm-구현-키워드" data-for="pintos-vm-구현-키워드">PintOS VM 구현 키워드</a></li><li class="depth-1"><a href="#pintos-vm-구현-쟁점" data-for="pintos-vm-구현-쟁점">PintOS VM 구현 쟁점</a></li><li class="depth-1"><a href="#vm을-한-문장으로-말하면" data-for="vm을-한-문장으로-말하면">VM을 한 문장으로 말하면</a></li><li class="depth-1"><a href="#구현-전-전체-그림" data-for="구현-전-전체-그림">구현 전 전체 그림</a></li><li class="depth-1"><a href="#반드시-구분해야-하는-네-개의-표" data-for="반드시-구분해야-하는-네-개의-표">반드시 구분해야 하는 네 개의 표</a></li><li class="depth-1"><a href="#구현-순서" data-for="구현-순서">구현 순서</a></li><li class="depth-1"><a href="#1단계-spt는-무엇을-기억해야-하는가" data-for="1단계-spt는-무엇을-기억해야-하는가">1단계 SPT는 무엇을 기억해야 하는가</a></li><li class="depth-1"><a href="#2단계-lazy-loading은-무엇을-미루는가" data-for="2단계-lazy-loading은-무엇을-미루는가">2단계 lazy loading은 무엇을 미루는가</a></li><li class="depth-1"><a href="#3단계-page-fault는-어떤-질문에-답해야-하는가" data-for="3단계-page-fault는-어떤-질문에-답해야-하는가">3단계 page fault는 어떤 질문에 답해야 하는가</a></li><li class="depth-1"><a href="#4단계-claim은-실제-메모리를-어떻게-붙이는가" data-for="4단계-claim은-실제-메모리를-어떻게-붙이는가">4단계 claim은 실제 메모리를 어떻게 붙이는가</a></li><li class="depth-1"><a href="#5단계-stack-growth는-어디까지-허용하는가" data-for="5단계-stack-growth는-어디까지-허용하는가">5단계 stack growth는 어디까지 허용하는가</a></li><li class="depth-1"><a href="#6단계-frame-eviction은-언제-필요한가" data-for="6단계-frame-eviction은-언제-필요한가">6단계 frame eviction은 언제 필요한가</a></li><li class="depth-1"><a href="#7단계-swap은-무엇을-저장하는가" data-for="7단계-swap은-무엇을-저장하는가">7단계 swap은 무엇을 저장하는가</a></li><li class="depth-1"><a href="#8단계-mmap은-파일을-어떻게-메모리처럼-보이게-하는가" data-for="8단계-mmap은-파일을-어떻게-메모리처럼-보이게-하는가">8단계 mmap은 파일을 어떻게 메모리처럼 보이게 하는가</a></li><li class="depth-1"><a href="#9단계-fork는-주소-공간의-무엇을-복사하는가" data-for="9단계-fork는-주소-공간의-무엇을-복사하는가">9단계 fork는 주소 공간의 무엇을 복사하는가</a></li><li class="depth-1"><a href="#10단계-process-cleanup은-무엇을-회수해야-하는가" data-for="10단계-process-cleanup은-무엇을-회수해야-하는가">10단계 process cleanup은 무엇을 회수해야 하는가</a></li><li class="depth-1"><a href="#linux-windows-pintos-qemu-차이" data-for="linux-windows-pintos-qemu-차이">Linux Windows PintOS QEMU 차이</a></li><li class="depth-1"><a href="#pintos-vm-구현-값-추적" data-for="pintos-vm-구현-값-추적">PintOS VM 구현 값 추적</a></li><li class="depth-1"><a href="#gdb로-확인할-질문" data-for="gdb로-확인할-질문">GDB로 확인할 질문</a></li><li class="depth-1"><a href="#구현-전-질문-은행" data-for="구현-전-질문-은행">구현 전 질문 은행</a></li><li class="depth-2"><a href="#주소-변환-질문" data-for="주소-변환-질문">주소 변환 질문</a></li><li class="depth-2"><a href="#page-fault-질문" data-for="page-fault-질문">page fault 질문</a></li><li class="depth-2"><a href="#spt와-page-질문" data-for="spt와-page-질문">SPT와 page 질문</a></li><li class="depth-2"><a href="#frame과-eviction-질문" data-for="frame과-eviction-질문">frame과 eviction 질문</a></li><li class="depth-2"><a href="#stack-질문" data-for="stack-질문">stack 질문</a></li><li class="depth-2"><a href="#swap-질문" data-for="swap-질문">swap 질문</a></li><li class="depth-2"><a href="#mmap-질문" data-for="mmap-질문">mmap 질문</a></li><li class="depth-2"><a href="#fork-질문" data-for="fork-질문">fork 질문</a></li><li class="depth-2"><a href="#teardown-질문" data-for="teardown-질문">teardown 질문</a></li><li class="depth-1"><a href="#구현-체크리스트" data-for="구현-체크리스트">구현 체크리스트</a></li><li class="depth-1"><a href="#swap_in-type별-분기" data-for="swap_in-type별-분기">swap_in type별 분기</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

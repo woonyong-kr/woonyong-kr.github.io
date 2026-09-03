@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기 · 최우녕"/><meta name="twitter:description" content="GDB에서 pagefault()에 멈췄을 때 초보자가 가장 자주 헷갈리는 질문은 이것이다."/><meta property="og:description" content="GDB에서 pagefault()에 멈췄을 때 초보자가 가장 자주 헷갈리는 질문은 이것이다."/><meta property="og:image:alt" content="GDB에서 pagefault()에 멈췄을 때 초보자가 가장 자주 헷갈리는 질문은 이것이다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/page-fault-gdb-cr2-spt-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/page-fault-gdb-cr2-spt-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="GDB에서 pagefault()에 멈췄을 때 초보자가 가장 자주 헷갈리는 질문은 이것이다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/page-fault-gdb-cr2-spt-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-552" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-552" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="page-fault-gdb에서-cr2와-spt를-한-화면에-맞춰-보기">Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-spt를-한-화면에-맞춰-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 CR2, RIP, SPT, frame, PTE를 구분하고 연결해 관찰하는 일반 원리와 W09 PintOS skeleton 구현 중의 디버깅 기준을 설명하며, 제시된 값과 코드 좌표는 관계를 이해하기 위한 사례다. 특정 구현의 완성 여부나 실제 실행 결과·성능을 검증하려면 해당 코드 버전과 GDB 실행 기록 및 측정 결과를 별도로 확인해야 한다.</p>
+</blockquote>
+<h2 id="cr2와-spt-디버깅">CR2와 SPT 디버깅<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cr2와-spt-디버깅" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>GDB에서 <code>page_fault()</code>에 멈췄을 때 초보자가 가장 자주 헷갈리는 질문은 이것이다.</p>
+<blockquote>
+<p><code>info registers</code>의 <code>rip</code>, <code>cr2</code>, <code>f->rip</code>, <code>fault_addr</code>, <code>struct page *page</code>는 서로 같은 값을 말하는 걸까?</p>
+</blockquote>
+<p>같은 사건을 보고 있지만 같은 값은 아니다.</p>
+<ul>
+<li><code>cr2</code>와 <code>fault_addr</code>는 접근하려다 실패한 <strong>유저 가상 주소</strong>다.</li>
+<li><code>rip</code> 또는 <code>f->rip</code>는 fault를 일으킨 <strong>명령어 주소</strong>다.</li>
+<li><code>pg_round_down(fault_addr)</code>는 SPT lookup에 쓰는 <strong>page base</strong>다.</li>
+<li><code>struct page *page</code>는 PintOS가 “이 주소는 원래 합법이고, 나중에 어떻게 채울지” 기억하는 <strong>커널 metadata</strong>다.</li>
+<li><code>frame->kva</code>는 page를 실제 4096바이트 frame에 붙인 뒤 커널이 읽을 수 있는 <strong>커널 가상 주소</strong>다.</li>
+</ul>
+<p>이 Lab의 목표는 GDB에서 이 값들을 한 줄씩 대응시키는 감각을 만드는 것이다.</p>
+<h2 id="page-fault-gdb에서-cr2와-구분">Page Fault GDB에서 CR2와 구분<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-구분" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>page fault 디버깅은 값 이름이 비슷해서 쉽게 섞인다.</p>
+<p>예를 들어 lazy loading 버그를 고치는 중이라면, 다음 중 어느 것이 틀렸는지 구분해야 한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>관찰 값</th><th>이 값이 답하는 질문</th></tr></thead><tbody><tr><td><code>cr2</code></td><td>어떤 VA 접근이 실패했는가</td></tr><tr><td><code>f->error_code</code></td><td>not-present인가, write인가, user 접근인가</td></tr><tr><td><code>f->rip</code></td><td>어떤 명령어가 재실행되어야 하는가</td></tr><tr><td><code>pg_round_down(fault_addr)</code></td><td>SPT에서 찾을 page key는 무엇인가</td></tr><tr><td><code>page->va</code></td><td>SPT가 기억한 합법 page base가 맞는가</td></tr><tr><td><code>page_get_type(page)</code></td><td>lazy, anon, file-backed 중 무엇으로 채울 page인가</td></tr><tr><td><code>page->frame</code> / <code>frame->kva</code></td><td>실제 4096바이트 frame이 붙었는가</td></tr><tr><td><code>pml4_get_page(t->pml4, fault_addr)</code></td><td>CPU가 다시 번역할 수 있는 PTE가 설치되었는가</td></tr></tbody></table></div>
+<p>이 값들을 한 화면에서 맞추지 못하면, page fault가 왜 죽었는지와 왜 살아났는지를 구분하기 어렵다.</p>
+<h2 id="page-fault-gdb에서-cr2와-차이">Page Fault GDB에서 CR2와 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>page fault 관찰은 네 층을 분리해서 읽는다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>층</th><th>대표 값</th><th>의미</th></tr></thead><tbody><tr><td>CPU가 남긴 fault 정보</td><td><code>CR2</code>, <code>error_code</code>, <code>RIP</code></td><td>하드웨어가 실패 지점을 커널에 알려 준다</td></tr><tr><td>PintOS handler snapshot</td><td><code>struct intr_frame *f</code></td><td>예외 진입 시점의 register를 커널 stack에 저장한 값</td></tr><tr><td>PintOS VM metadata</td><td><code>struct page</code>, SPT, <code>struct frame</code></td><td>fault를 살릴 정책과 backing store를 기억한다</td></tr><tr><td>QEMU debug view</td><td><code>CPUX86State</code>, debug memory path</td><td>GDB가 보는 guest register와 guest memory를 제공한다</td></tr></tbody></table></div>
+<p>이 말은 즉, GDB 한 화면에 값이 여러 개 보이더라도 “한 구조체의 필드만 보는 것”이 아니다. CPU 예외 정보, PintOS가 저장한 snapshot, PintOS VM metadata, QEMU가 제공하는 debug 관찰 경로를 동시에 보는 것이다.</p>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="page-fault-관찰의-4층-구조">page fault 관찰의 4층 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-관찰의-4층-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    subgraph L1[\&quot;1층: CPU fault 정보\&quot;]\n        EX[\&quot;#PF exception\&quot;]\n        CR2[\&quot;CR2 = fault VA\&quot;]\n        EC[\&quot;error_code\\n(P/W/U bits)\&quot;]\n        RIP[\&quot;RIP = fault 명령 주소\&quot;]\n    end\n\n    subgraph L2[\&quot;2층: PintOS intr_frame snapshot\&quot;]\n        FRIP[\&quot;f->rip\&quot;]\n        FRSP[\&quot;f->rsp\&quot;]\n        FEC[\&quot;f->error_code\&quot;]\n    end\n\n    subgraph L3[\&quot;3층: PintOS VM metadata\&quot;]\n        SPT[\&quot;spt_find_page()\\npg_round_down(fault_addr)\&quot;]\n        PAGE[\&quot;struct page\\nva, operations, frame\&quot;]\n        FRAME[\&quot;struct frame\\nkva, page\&quot;]\n        PTE[\&quot;pml4_set_page()\\nPTE 설치\&quot;]\n    end\n\n    subgraph L4[\&quot;4층: QEMU debug view\&quot;]\n        ENV[\&quot;CPUX86State\\nenv->cr[2], env->eip\&quot;]\n        MEM[\&quot;cpu_memory_rw_debug()\\nguest VA → PA → bytes\&quot;]\n    end\n\n    EX --> CR2\n    EX --> RIP\n    RIP --> FRIP\n    EC --> FEC\n    L2 --> SPT\n    SPT --> PAGE\n    PAGE --> FRAME\n    FRAME --> PTE\n    ENV -.->|\&quot;GDB가 읽음\&quot;| CR2\n    MEM -.->|\&quot;x/16xb addr\&quot;| FRAME&quot;">flowchart TD
+    subgraph L1[&quot;1층: CPU fault 정보&quot;]
+        EX[&quot;#PF exception&quot;]
+        CR2[&quot;CR2 = fault VA&quot;]
+        EC[&quot;error_code\n(P/W/U bits)&quot;]
+        RIP[&quot;RIP = fault 명령 주소&quot;]
+    end
+
+    subgraph L2[&quot;2층: PintOS intr_frame snapshot&quot;]
+        FRIP[&quot;f->rip&quot;]
+        FRSP[&quot;f->rsp&quot;]
+        FEC[&quot;f->error_code&quot;]
+    end
+
+    subgraph L3[&quot;3층: PintOS VM metadata&quot;]
+        SPT[&quot;spt_find_page()\npg_round_down(fault_addr)&quot;]
+        PAGE[&quot;struct page\nva, operations, frame&quot;]
+        FRAME[&quot;struct frame\nkva, page&quot;]
+        PTE[&quot;pml4_set_page()\nPTE 설치&quot;]
+    end
+
+    subgraph L4[&quot;4층: QEMU debug view&quot;]
+        ENV[&quot;CPUX86State\nenv->cr[2], env->eip&quot;]
+        MEM[&quot;cpu_memory_rw_debug()\nguest VA → PA → bytes&quot;]
+    end
+
+    EX --> CR2
+    EX --> RIP
+    RIP --> FRIP
+    EC --> FEC
+    L2 --> SPT
+    SPT --> PAGE
+    PAGE --> FRAME
+    FRAME --> PTE
+    ENV -.->|&quot;GDB가 읽음&quot;| CR2
+    MEM -.->|&quot;x/16xb addr&quot;| FRAME
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="page-fault--claim--iretq-전체-흐름">page fault → claim → iretq 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault--claim--iretq-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as User Code\n    participant CPU as x86 CPU\n    participant PF as page_fault()\n    participant VM as vm_try_handle_fault()\n    participant SPT as spt_find_page()\n    participant CL as vm_do_claim_page()\n    participant MMU as pml4_set_page()\n\n    U->>CPU: mov (%rax), %rdx (VA 접근)\n    CPU->>CPU: PML4 walk → not present\n    CPU->>PF: #PF, CR2=VA, error_code, push RIP\n    PF->>PF: fault_addr = rcr2()\n    PF->>VM: vm_try_handle_fault(f, fault_addr, user, write, not_present)\n    VM->>SPT: spt_find_page(spt, pg_round_down(fault_addr))\n    SPT-->>VM: struct page *page\n    VM->>CL: vm_do_claim_page(page)\n    CL->>CL: palloc_get_page → frame\n    CL->>CL: swap_in(page, frame->kva)\n    CL->>MMU: pml4_set_page(pml4, page->va, frame->kva, writable)\n    MMU-->>CL: PTE 설치 완료\n    CL-->>VM: true\n    VM-->>PF: true\n    PF-->>CPU: return (iretq)\n    CPU->>U: 같은 명령 재실행 → 성공&quot;">sequenceDiagram
+    participant U as User Code
+    participant CPU as x86 CPU
+    participant PF as page_fault()
+    participant VM as vm_try_handle_fault()
+    participant SPT as spt_find_page()
+    participant CL as vm_do_claim_page()
+    participant MMU as pml4_set_page()
+
+    U->>CPU: mov (%rax), %rdx (VA 접근)
+    CPU->>CPU: PML4 walk → not present
+    CPU->>PF: #PF, CR2=VA, error_code, push RIP
+    PF->>PF: fault_addr = rcr2()
+    PF->>VM: vm_try_handle_fault(f, fault_addr, user, write, not_present)
+    VM->>SPT: spt_find_page(spt, pg_round_down(fault_addr))
+    SPT-->>VM: struct page *page
+    VM->>CL: vm_do_claim_page(page)
+    CL->>CL: palloc_get_page → frame
+    CL->>CL: swap_in(page, frame->kva)
+    CL->>MMU: pml4_set_page(pml4, page->va, frame->kva, writable)
+    MMU-->>CL: PTE 설치 완료
+    CL-->>VM: true
+    VM-->>PF: true
+    PF-->>CPU: return (iretq)
+    CPU->>U: 같은 명령 재실행 → 성공
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="page-fault-gdb에서-cr2와-사례">Page Fault GDB에서 CR2와 사례<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-사례" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>유저 프로그램이 아직 lazy load되지 않은 주소를 읽는다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>faulting instruction: mov (%rax), %rdx</span></span>
+<span data-line><span>RAX                 : 0x0000000000401234</span></span>
+<span data-line><span>CR2                 : 0x0000000000401234</span></span>
+<span data-line><span>RIP                 : 0x0000000000401050</span></span>
+<span data-line><span>PGSIZE              : 0x1000</span></span></code></pre></figure>
+<p>여기서 바로 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr = CR2 = 0x401234</span></span>
+<span data-line><span>page base  = 0x401000</span></span>
+<span data-line><span>offset     = 0x234</span></span></code></pre></figure>
+<p>SPT lookup은 <code>0x401234</code> 그대로가 아니라 page base인 <code>0x401000</code>을 기준으로 해야 한다. 반면 <code>RIP = 0x401050</code>은 “어떤 명령어로 돌아갈 것인가”를 말한다. <code>RIP</code>와 <code>CR2</code>가 같아야 하는 것은 아니다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows도 page fault가 나면 CPU가 남긴 fault 주소와 fault 종류를 커널이 해석한다.</p>
+<p>Linux는 VMA, page cache, swap, COW, signal 전달 같은 많은 정책을 거쳐 fault를 살리거나 <code>SIGSEGV</code>로 보낸다. Windows도 VAD, section object, page file, access violation 같은 더 복잡한 구조를 가진다.</p>
+<p>현실 OS 디버깅에서도 핵심은 같다.</p>
+<ul>
+<li>fault address와 instruction pointer를 구분한다.</li>
+<li>page table에 지금 present한지와 OS metadata상 합법인지 구분한다.</li>
+<li>debugger가 보여주는 값이 현재 register인지, trap frame인지, 커널 metadata인지 구분한다.</li>
+</ul>
+<p>PintOS는 이 구조를 훨씬 작게 줄여서 <code>page_fault()</code>와 <code>vm_try_handle_fault()</code> 주변에서 관찰하게 만든다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현재 자동화 기준 PintOS 코드는 W09 저장소다.</p>
+<ul>
+<li><code>pintos/userprog/exception.c</code></li>
+<li><code>pintos/vm/vm.c</code></li>
+<li><code>pintos/include/vm/vm.h</code></li>
+<li><code>pintos/threads/mmu.c</code></li>
+</ul>
+<p>이번 Lab에서 확인한 실제 코드 좌표는 다음과 같다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th style="text-align:right;">줄</th><th>함수/구조체</th><th>이 Lab에서 보는 역할</th></tr></thead><tbody><tr><td><code>userprog/exception.c</code></td><td style="text-align:right;">66</td><td><code>intr_register_int(14, ...)</code></td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> handler를 IDT에 등록</td></tr><tr><td><code>userprog/exception.c</code></td><td style="text-align:right;">138–159</td><td><code>page_fault()</code></td><td>CR2 읽기, error_code 해석, vm_try_handle_fault 호출</td></tr><tr><td><code>include/userprog/exception.h</code></td><td style="text-align:right;">10–18</td><td><code>PF_P</code>, <code>PF_W</code>, <code>PF_U</code></td><td>error code 비트 매크로</td></tr><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">63–70</td><td><code>spt_find_page()</code></td><td>SPT에서 page base로 struct page 검색</td></tr><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">132–141</td><td><code>vm_try_handle_fault()</code></td><td>not_present/write/user 분기 판단</td></tr><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">160–171</td><td><code>vm_do_claim_page()</code></td><td>frame 확보, swap_in, PTE 설치</td></tr><tr><td><code>include/vm/vm.h</code></td><td style="text-align:right;">44–67</td><td><code>struct page</code></td><td>va, operations, frame, union(uninit/anon/file)</td></tr><tr><td><code>include/vm/vm.h</code></td><td style="text-align:right;">85–103</td><td><code>struct frame</code></td><td>kva, page (양방향 포인터)</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">231–261</td><td><code>pml4_get_page()</code></td><td>user VA → kernel VA 변환 (present 매핑 확인)</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">—</td><td><code>pml4_set_page()</code></td><td>PTE에 frame PA + 권한 비트 설치</td></tr><tr><td>QEMU <code>target/i386/gdbstub.c</code></td><td style="text-align:right;">204–207</td><td>CR2/CR3 읽기</td><td>GDB가 guest control register 조회</td></tr><tr><td>QEMU <code>target/i386/tcg/system/excp_helper.c</code></td><td style="text-align:right;">651–653</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 전달</td><td>env->cr[2] 갱신 후 exception raise</td></tr><tr><td>QEMU <code>system/physmem.c</code></td><td style="text-align:right;">4030–4054</td><td><code>cpu_memory_rw_debug()</code></td><td>guest VA → debug translation → byte 읽기</td></tr></tbody></table></div>
+<p><code>page_fault()</code>는 먼저 <code>CR2</code>를 읽는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fault_addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">rcr2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_enable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">not_present </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_P) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">write </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">user </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_U) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>그 다음 VM이 켜져 있으면 fault를 살릴 기회를 준다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_try_handle_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f, fault_addr, user, write, not_present))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>W09의 <code>vm.c</code>는 아직 skeleton이다. 따라서 이 Lab은 “이미 구현되어 있는 동작”을 확인하는 문서가 아니라, 구현 중에 어떤 값을 연결해서 봐야 하는지 정리하는 디버깅 기준이다.</p>
+<p>구현이 채워져야 할 대표 자리는 다음이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>코드 위치</th><th>디버깅 질문</th></tr></thead><tbody><tr><td><code>spt_find_page(spt, va)</code></td><td><code>va</code>를 <code>pg_round_down()</code>해서 찾는가</td></tr><tr><td><code>vm_try_handle_fault(f, addr, user, write, not_present)</code></td><td>invalid fault, SPT hit, stack growth, write-protect를 나누는가</td></tr><tr><td><code>vm_do_claim_page(page)</code></td><td><code>frame->page</code>, <code>page->frame</code>, PTE 설치, <code>swap_in()</code> 순서가 맞는가</td></tr><tr><td><code>pml4_set_page(pml4, upage, kpage, rw)</code></td><td>PTE에 frame physical address와 권한 bit가 들어가는가</td></tr></tbody></table></div>
+<p><code>vm.h</code>의 기본 구조체도 같이 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page_operations </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">operations;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">va;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">frame;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    union</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page uninit;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page anon;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> file_page file;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    };</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>따라서 GDB에서 <code>page</code>를 얻었다면 최소한 다음 연결이 맞아야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pg_round_down(fault_addr) == page->va</span></span>
+<span data-line><span>page->frame == NULL       # 아직 claim 전일 수 있음</span></span>
+<span data-line><span>page->frame != NULL       # claim 뒤라면 frame이 붙어야 함</span></span>
+<span data-line><span>page->frame->page == page # 양방향 포인터가 맞아야 함</span></span></code></pre></figure>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 VM 정책을 모른다. 하지만 GDB가 보는 guest register와 memory를 제공한다.</p>
+<p>근거 파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/gdbstub.c" class="external external-link">target/i386/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/gdbstub/gdbstub.c" class="external external-link">gdbstub/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/gdbstub/system.c" class="external external-link">gdbstub/system.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/system/physmem.c" class="external external-link">system/physmem.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>이번 Lab에서 확인한 QEMU 쪽 좌표는 다음과 같다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th style="text-align:right;">위치</th><th>이 Lab에서 보는 값</th></tr></thead><tbody><tr><td><code>target/i386/gdbstub.c</code></td><td style="text-align:right;">204-207</td><td>GDB가 guest <code>CR2</code>, <code>CR3</code>를 <code>CPUX86State</code>에서 읽음</td></tr><tr><td><code>target/i386/tcg/system/excp_helper.c</code></td><td style="text-align:right;">651-653</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 전달 전 guest <code>CR2</code>를 갱신하고 exception을 올림</td></tr><tr><td><code>gdbstub/gdbstub.c</code></td><td style="text-align:right;">1308-1312</td><td>GDB memory read packet을 debug memory read로 넘김</td></tr><tr><td><code>gdbstub/system.c</code></td><td style="text-align:right;">452-468</td><td>physical mode가 아니면 <code>cpu_memory_rw_debug()</code>로 위임</td></tr><tr><td><code>system/physmem.c</code></td><td style="text-align:right;">4030-4054</td><td>guest VA를 debug translation해 physical address space byte로 읽음</td></tr></tbody></table></div>
+<p>x86 gdbstub은 control register를 guest CPU state에서 읽는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">case IDX_CTL_CR2_REG:</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> gdb_read_reg_cs64</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">hflags</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, mem_buf, env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">cr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">]);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">case IDX_CTL_CR3_REG:</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> gdb_read_reg_cs64</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">hflags</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, mem_buf, env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">cr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">]);</span></span></code></pre></figure>
+<p><code>#PF</code>가 전달될 때도 QEMU 내부 guest CPU state의 <code>CR2</code>가 갱신된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">cr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> err.cr2;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">raise_exception_err_ra</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(env, err.exception_index, err.error_code, retaddr);</span></span></code></pre></figure>
+<p>GDB memory dump는 host pointer를 바로 읽는 것이 아니다. QEMU 공통 gdbstub의 memory read packet은 system mode에서 <code>gdb_target_memory_rw_debug()</code>로 내려가고, 보통 <code>cpu_memory_rw_debug()</code>를 거쳐 guest 주소를 debug translation한 뒤 <code>address_space_rw()</code>로 byte를 읽는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">gdb_target_memory_rw_debug</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(gdbserver_state.g_cpu, addr, buf, len, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    gdb_put_packet</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;E14&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 말은 즉, PintOS GDB에서 <code>x/16xb 0x401234</code>를 입력하면 macOS/Linux host process의 주소 <code>0x401234</code>를 읽는 것이 아니라, QEMU가 에뮬레이션하는 guest machine의 주소를 읽으려 한다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>fault를 살릴 정책은 누가 정하는가</td><td>실제 커널 VM subsystem</td><td><code>vm_try_handle_fault()</code> 구현</td><td>정책을 모름</td></tr><tr><td>fault 주소는 어디서 오는가</td><td>CPU가 남기는 fault address</td><td><code>rcr2()</code>로 읽은 <code>CR2</code></td><td>guest CPU state <code>env->cr[2]</code></td></tr><tr><td>명령어 주소는 어디서 보는가</td><td>trap frame, context record</td><td><code>f->rip</code></td><td>x86 gdbstub의 <code>env->eip</code></td></tr><tr><td>page 의미는 어디에 있는가</td><td>VMA, PTE, page cache, PFN database 등</td><td>SPT와 <code>struct page</code></td><td>의미를 모름</td></tr><tr><td>memory dump는 무엇을 읽는가</td><td>debugger 대상의 주소 공간</td><td>QEMU gdbstub이 제공한 guest memory</td><td>debug translation 뒤 address space bytes</td></tr></tbody></table></div>
+<h2 id="cr2와-spt-디버깅-값-추적">CR2와 SPT 디버깅 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cr2와-spt-디버깅-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 값을 한 번에 계산해 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>CR2 / fault_addr = 0x0000000000401234</span></span>
+<span data-line><span>f->rip           = 0x0000000000401050</span></span>
+<span data-line><span>PGSIZE           = 0x1000</span></span>
+<span data-line><span>PTE after claim  = 0x0000000012345007</span></span>
+<span data-line><span>KERN_BASE        = 0x0000008004000000</span></span></code></pre></figure>
+<p>page 단위 값:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이름</th><th>계산</th><th>결과</th></tr></thead><tbody><tr><td>page base</td><td><code>0x401234 &amp; ~0xfff</code></td><td><code>0x401000</code></td></tr><tr><td>offset</td><td><code>0x401234 &amp; 0xfff</code></td><td><code>0x234</code></td></tr><tr><td>PTE frame base</td><td><code>0x12345007 &amp; ~0xfff</code></td><td><code>0x12345000</code></td></tr><tr><td>guest physical byte</td><td><code>0x12345000 + 0x234</code></td><td><code>0x12345234</code></td></tr><tr><td>kernel VA byte</td><td><code>KERN_BASE + 0x12345000 + 0x234</code></td><td><code>0x8016345234</code></td></tr></tbody></table></div>
+<p>따라서 같은 byte를 여러 이름으로 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>user VA      : 0x401234</span></span>
+<span data-line><span>page key     : 0x401000</span></span>
+<span data-line><span>guest PA     : 0x12345234</span></span>
+<span data-line><span>kernel VA    : 0x8016345234</span></span>
+<span data-line><span>instruction  : 0x401050 위치의 명령어가 이 주소를 접근함</span></span></code></pre></figure>
+<p>여기서 <code>0x401050</code>과 <code>0x401234</code>는 서로 다른 역할이다. 하나는 실행 위치이고, 다른 하나는 접근 대상이다.</p>
+<h2 id="page-fault-gdb에서-cr2와-gdb">Page Fault GDB에서 CR2와 GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="0-어떤-상황에서-멈출지-고르기">0. 어떤 상황에서 멈출지 고르기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#0-어떤-상황에서-멈출지-고르기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>먼저 “page fault가 나기만 하면 된다”가 아니라, 어떤 VM 정책을 확인할지 정한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>확인하려는 정책</th><th>좋은 멈춤 지점</th><th>기대하는 관찰</th></tr></thead><tbody><tr><td>lazy executable page</td><td>첫 instruction/data 접근 뒤 <code>page_fault()</code></td><td>SPT에 <code>UNINIT</code> page가 있고 claim 뒤 file bytes가 채워진다</td></tr><tr><td>stack growth</td><td><code>rsp</code> 근처의 낮은 주소 접근</td><td>SPT miss지만 stack 조건을 만족해 새 page가 만들어진다</td></tr><tr><td>swapped anonymous page</td><td>eviction 뒤 같은 VA 재접근</td><td>SPT page는 남아 있고 anon metadata가 slot을 가리킨다</td></tr><tr><td>file-backed mmap</td><td>mmap range 첫 접근 또는 dirty write-back</td><td>page별 file offset과 writable metadata가 fault 처리에 쓰인다</td></tr></tbody></table></div>
+<p>현재 W09 VM 코드는 skeleton이므로, 처음에는 테스트 통과보다 breakpoint에서 값 관계를 채우는 데 초점을 둔다. 구현이 진행될수록 같은 관찰표를 <code>pt-grow-*</code>, <code>mmap-*</code>, <code>swap-*</code> 계열 테스트에 적용하면 된다.</p>
+<h3 id="1-breakpoints-잡기">1. breakpoints 잡기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-breakpoints-잡기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>VM 구현 중에는 아래 지점을 한 번에 잡아 둔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b page_fault</span></span>
+<span data-line><span>b vm_try_handle_fault</span></span>
+<span data-line><span>b spt_find_page</span></span>
+<span data-line><span>b vm_do_claim_page</span></span>
+<span data-line><span>b pml4_set_page</span></span></code></pre></figure>
+<p>lazy loading까지 확인한다면 다음도 추가한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b uninit_initialize</span></span>
+<span data-line><span>b lazy_load_segment</span></span></code></pre></figure>
+<h3 id="2-page_fault에서-cpu-힌트와-pintos">2. page_fault에서 CPU 힌트와 PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-page_fault에서-cpu-힌트와-pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x fault_addr</span></span>
+<span data-line><span>p/x f->rip</span></span>
+<span data-line><span>p/x f->rsp</span></span>
+<span data-line><span>p/x f->error_code</span></span>
+<span data-line><span>info registers rip cr2 rsp</span></span></code></pre></figure>
+<p>확인할 것:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>확인</th><th>기대</th></tr></thead><tbody><tr><td><code>fault_addr</code>와 <code>cr2</code></td><td>같은 faulting VA</td></tr><tr><td><code>f->rip</code></td><td>fault를 낸 명령어 주소</td></tr><tr><td><code>f->error_code &amp; PF_P</code></td><td>not-present와 protection fault 구분</td></tr><tr><td><code>f->error_code &amp; PF_W</code></td><td>read fault와 write fault 구분</td></tr><tr><td><code>f->error_code &amp; PF_U</code></td><td>user 접근인지 kernel 접근인지 구분</td></tr></tbody></table></div>
+<p>주의할 점이 있다. <code>info registers rip</code>은 지금 GDB가 멈춘 현재 실행 위치를 보여줄 수 있다. handler 안에서 멈췄다면 현재 <code>rip</code>는 커널 handler 쪽일 수 있다. fault 당시 유저로 돌아갈 지점은 <code>f->rip</code>를 같이 봐야 한다.</p>
+<h3 id="3-spt-lookup-값-맞추기">3. SPT lookup 값 맞추기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-spt-lookup-값-맞추기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>spt_find_page()</code>에 들어가면 page-aligned key를 직접 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x va</span></span>
+<span data-line><span>p/x (uint64_t) va &amp; ~0xfff</span></span>
+<span data-line><span>finish</span></span>
+<span data-line><span>p page</span></span></code></pre></figure>
+<p>구현에 따라 지역 변수 이름은 달라질 수 있다. 핵심은 <code>fault_addr</code> 그대로와 page base를 구분하는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr = 0x401234</span></span>
+<span data-line><span>SPT key    = 0x401000</span></span>
+<span data-line><span>page->va   = 0x401000</span></span></code></pre></figure>
+<h3 id="4-claim-뒤-frame과-pte-확인하기">4. claim 뒤 frame과 PTE 확인하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-claim-뒤-frame과-pte-확인하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>vm_do_claim_page()</code>에서 frame을 얻은 뒤에는 양방향 링크와 PTE 설치를 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p page</span></span>
+<span data-line><span>p/x page->va</span></span>
+<span data-line><span>p page->frame</span></span>
+<span data-line><span>p page->frame->page</span></span>
+<span data-line><span>p/x page->frame->kva</span></span>
+<span data-line><span>p/x pml4_get_page(thread_current()->pml4, page->va)</span></span></code></pre></figure>
+<p>기대하는 관계:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->frame->page == page</span></span>
+<span data-line><span>pml4_get_page(t->pml4, page->va) == page->frame->kva</span></span></code></pre></figure>
+<p>단, <code>pml4_get_page()</code>는 page base에 대해 확인하는 것이 안전하다. fault 주소가 page 중간이면 <code>pml4_get_page(t->pml4, fault_addr)</code>는 같은 frame의 offset이 더해진 주소를 돌려준다.</p>
+<h3 id="5-byte가-실제로-채워졌는지-보기">5. byte가 실제로 채워졌는지 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-byte가-실제로-채워졌는지-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>lazy load가 성공했다면 frame의 앞부분과 fault offset 근처를 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>x/32xb page->frame->kva</span></span>
+<span data-line><span>p/x ((uint64_t) fault_addr) &amp; 0xfff</span></span>
+<span data-line><span>x/16xb (char *) page->frame->kva + (((uint64_t) fault_addr) &amp; 0xfff)</span></span></code></pre></figure>
+<p>유저 VA로도 같은 byte가 보이는지 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>x/16xb fault_addr</span></span></code></pre></figure>
+<p>이때 <code>x/16xb fault_addr</code>는 QEMU GDB stub의 guest memory read 경로를 탄다. host process 주소를 직접 읽는 것이 아니다.</p>
+<h2 id="관찰표">관찰표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>디버깅 중에는 아래 표를 그대로 채우면 좋다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>test name</td><td></td></tr><tr><td><code>fault_addr</code> / <code>CR2</code></td><td></td></tr><tr><td><code>f->rip</code></td><td></td></tr><tr><td><code>f->error_code</code></td><td></td></tr><tr><td><code>not_present/write/user</code></td><td></td></tr><tr><td><code>pg_round_down(fault_addr)</code></td><td></td></tr><tr><td><code>spt_find_page()</code> result</td><td></td></tr><tr><td><code>page->va</code></td><td></td></tr><tr><td><code>page_get_type(page)</code></td><td></td></tr><tr><td><code>page->frame</code> before claim</td><td></td></tr><tr><td><code>frame->kva</code> after claim</td><td></td></tr><tr><td><code>pml4_get_page(pml4, page->va)</code></td><td></td></tr><tr><td><code>x/16xb fault_addr</code> result</td><td></td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><code>CR2</code>는 fault가 난 주소이고, <code>RIP</code>는 fault를 낸 명령어 주소다.</li>
+<li>PintOS의 <code>f->rip</code>는 handler가 끝난 뒤 다시 실행할 guest instruction 위치를 이해하는 데 중요하다.</li>
+<li>SPT는 <code>fault_addr</code>의 page base로 page metadata를 찾는다.</li>
+<li>claim 뒤에는 <code>struct page</code>, <code>struct frame</code>, PTE가 같은 4096바이트 frame을 가리켜야 한다.</li>
+<li>QEMU GDB stub은 guest register와 guest memory를 보여준다. host QEMU process의 C 포인터와 섞으면 안 된다.</li>
+</ul>
+<h2 id="page-fault-gdb에서-cr2와-관련-문서">Page Fault GDB에서 CR2와 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-gdb에서-cr2와-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">Page Fault Trace</a>
+<ul>
+<li><a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> <code>page_fault()</code>와 <code>vm_try_handle_fault()</code>로 들어오는 전체 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">Page Fault Error Code</a>
+<ul>
+<li><code>PF_P</code>, <code>PF_W</code>, <code>PF_U</code>를 판단표로 바꾸는 법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">instruction retry</a>
+<ul>
+<li>handler가 끝난 뒤 같은 명령어를 다시 실행하는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">vm try handle fault()</a>
+<ul>
+<li>SPT hit, stack growth, protection fault 분기</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page()</a>
+<ul>
+<li>frame 확보와 PTE 설치 순서</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">PintOS byte 비교</a>
+<ul>
+<li>fault를 살린 뒤 user VA dump와 <code>frame->kva + offset</code> dump를 자동 비교하는 법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page() Lab</a>
+<ul>
+<li>user VA와 kernel VA가 같은 frame을 가리키는 계산</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a>
+<ul>
+<li>GDB에서 보이는 register와 memory가 guest 상태인 이유</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/qemu-hardware-byte-debugging" class="internal">QEMU와 Byte 디버깅</a></li><li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal">Page Fault 뒤 user VA와 frame offset 바이트 비교 Lab</a></li><li><a href="../../wiki/os/page-fault-trace" class="internal">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal">QEMU GDB Stub은 어떤 상태를 보여주는가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-550" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#page-fault-gdb에서-cr2와-spt를-한-화면에-맞춰-보기" data-for="page-fault-gdb에서-cr2와-spt를-한-화면에-맞춰-보기">Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기</a></li><li class="depth-1"><a href="#cr2와-spt-디버깅" data-for="cr2와-spt-디버깅">CR2와 SPT 디버깅</a></li><li class="depth-1"><a href="#page-fault-gdb에서-cr2와-구분" data-for="page-fault-gdb에서-cr2와-구분">Page Fault GDB에서 CR2와 구분</a></li><li class="depth-1"><a href="#page-fault-gdb에서-cr2와-차이" data-for="page-fault-gdb에서-cr2와-차이">Page Fault GDB에서 CR2와 차이</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-2"><a href="#page-fault-관찰의-4층-구조" data-for="page-fault-관찰의-4층-구조">page fault 관찰의 4층 구조</a></li><li class="depth-2"><a href="#page-fault--claim--iretq-전체-흐름" data-for="page-fault--claim--iretq-전체-흐름">page fault → claim → iretq 전체 흐름</a></li><li class="depth-1"><a href="#page-fault-gdb에서-cr2와-사례" data-for="page-fault-gdb에서-cr2와-사례">Page Fault GDB에서 CR2와 사례</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#cr2와-spt-디버깅-값-추적" data-for="cr2와-spt-디버깅-값-추적">CR2와 SPT 디버깅 값 추적</a></li><li class="depth-1"><a href="#page-fault-gdb에서-cr2와-gdb" data-for="page-fault-gdb에서-cr2와-gdb">Page Fault GDB에서 CR2와 GDB</a></li><li class="depth-2"><a href="#0-어떤-상황에서-멈출지-고르기" data-for="0-어떤-상황에서-멈출지-고르기">0. 어떤 상황에서 멈출지 고르기</a></li><li class="depth-2"><a href="#1-breakpoints-잡기" data-for="1-breakpoints-잡기">1. breakpoints 잡기</a></li><li class="depth-2"><a href="#2-page_fault에서-cpu-힌트와-pintos" data-for="2-page_fault에서-cpu-힌트와-pintos">2. page_fault에서 CPU 힌트와 PintOS</a></li><li class="depth-2"><a href="#3-spt-lookup-값-맞추기" data-for="3-spt-lookup-값-맞추기">3. SPT lookup 값 맞추기</a></li><li class="depth-2"><a href="#4-claim-뒤-frame과-pte-확인하기" data-for="4-claim-뒤-frame과-pte-확인하기">4. claim 뒤 frame과 PTE 확인하기</a></li><li class="depth-2"><a href="#5-byte가-실제로-채워졌는지-보기" data-for="5-byte가-실제로-채워졌는지-보기">5. byte가 실제로 채워졌는지 보기</a></li><li class="depth-1"><a href="#관찰표" data-for="관찰표">관찰표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#page-fault-gdb에서-cr2와-관련-문서" data-for="page-fault-gdb에서-cr2와-관련-문서">Page Fault GDB에서 CR2와 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

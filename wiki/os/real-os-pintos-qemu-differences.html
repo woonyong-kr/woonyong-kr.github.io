@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>실제 OS, PintOS, QEMU의 차이 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="실제 OS, PintOS, QEMU의 차이 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="실제 OS, PintOS, QEMU의 차이 · 최우녕"/><meta name="twitter:description" content="같은 write(1,&quot;hi&quot;,2) 한 줄도 실제 OS·PintOS·QEMU에서 거치는 경로가 다르며, 이 문서는 어디까지가 유저 코드·커널·에뮬레이터의 몫인지 그 경계를 갈라 설명한다."/><meta property="og:description" content="같은 write(1,&quot;hi&quot;,2) 한 줄도 실제 OS·PintOS·QEMU에서 거치는 경로가 다르며, 이 문서는 어디까지가 유저 코드·커널·에뮬레이터의 몫인지 그 경계를 갈라 설명한다."/><meta property="og:image:alt" content="같은 write(1,&quot;hi&quot;,2) 한 줄도 실제 OS·PintOS·QEMU에서 거치는 경로가 다르며, 이 문서는 어디까지가 유저 코드·커널·에뮬레이터의 몫인지 그 경계를 갈라 설명한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/real-os-pintos-qemu-differences"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/real-os-pintos-qemu-differences"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="같은 write(1,&quot;hi&quot;,2) 한 줄도 실제 OS·PintOS·QEMU에서 거치는 경로가 다르며, 이 문서는 어디까지가 유저 코드·커널·에뮬레이터의 몫인지 그 경계를 갈라 설명한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/real-os-pintos-qemu-differences" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-624" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-624" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>실제 OS, PintOS, QEMU의 차이</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="실제-os-pintos-qemu의-차이">실제 OS, PintOS, QEMU의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 실제 OS·PintOS·QEMU가 syscall, page fault, interrupt, disk I/O에서 맡는 역할과 이를 구분하는 일반 기준을 설명한다. 제시된 함수·파일 경로와 값 흐름은 특정 PintOS·QEMU 구현을 전제로 한 코드 좌표와 확인 방법이며, 실제 동작 여부나 버전별 차이·성능은 해당 소스와 실행 기록을 별도로 검증해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: 같은 write(1,“hi”,2) 한 줄도 실제 OS·PintOS·QEMU에서 거치는 경로가 다르며, 이 문서는 어디까지가 유저 코드·커널·에뮬레이터의 몫인지 그 경계를 갈라 설명한다.</p>
+</blockquote>
+<h2 id="실제-os-pintos-qemu의-차이-시작">실제 OS, PintOS, QEMU의 차이 시작<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-시작" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 유저 프로그램이 다음 코드를 실행한다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">write</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;hi&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>초보자가 가장 많이 헷갈리는 질문은 이것이다.</p>
+<blockquote>
+<p>이 <code>write</code>를 Linux가 처리할까, PintOS가 처리할까, QEMU가 처리할까?</p>
+</blockquote>
+<p>정답은 실행 환경에 따라 다르다.</p>
+<ul>
+<li>Linux 위에서 일반 프로그램으로 실행하면 Linux 커널이 처리한다.</li>
+<li>Windows 위에서 Win32 API를 호출하면 Windows 커널 계층이 처리한다.</li>
+<li>PintOS 유저 프로그램으로 실행하면 **PintOS 커널의 <code>syscall_handler()</code>**가 처리한다.</li>
+<li>QEMU는 <code>write</code>의 뜻을 처리하지 않는다. QEMU는 PintOS가 실행될 CPU, 메모리, 인터럽트, 디스크처럼 보이는 환경을 제공한다.</li>
+</ul>
+<p>이 문서의 목표는 세 층을 분리해서 보는 기준을 만드는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>Host OS  = QEMU process를 실행하는 실제 macOS/Linux/Windows</span></span>
+<span data-line><span>QEMU     = guest machine을 흉내 내는 host process</span></span>
+<span data-line><span>PintOS   = QEMU 위에서 도는 guest OS</span></span>
+<span data-line><span>User app = PintOS가 실행시키는 guest user program</span></span></code></pre></figure>
+<h2 id="실제-os-pintos-qemu의-차이-필요성">실제 OS, PintOS, QEMU의 차이 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>OS 공부에서 가장 위험한 오류는 <strong>역할을 섞는 것</strong>이다.</p>
+<p>예를 들어 “QEMU가 syscall을 처리한다”고 생각하면, <code>syscall_handler()</code>를 고쳐야 할 문제를 QEMU 소스에서 찾게 된다. 반대로 “PintOS가 디스크 하드웨어를 직접 가진다”고 생각하면, <code>disk_write()</code> 뒤에 왜 QEMU IDE 모델과 block backend가 나오는지 이해하기 어렵다.</p>
+<p>역할을 분리하면 디버깅 방향도 분명해진다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>현상</th><th>먼저 볼 층</th><th>이유</th></tr></thead><tbody><tr><td><code>SYS_WRITE</code>가 잘못 처리됨</td><td>PintOS syscall 코드</td><td>syscall 번호와 fd 정책은 guest OS가 해석</td></tr><tr><td>page fault가 죽어야 하는지 살아야 하는지 애매함</td><td>PintOS VM 코드</td><td>SPT, stack growth, permission 정책은 guest OS 판단</td></tr><tr><td>GDB <code>info registers</code>가 기대와 다름</td><td>QEMU GDB stub + PintOS snapshot</td><td>현재 guest register와 저장된 <code>struct intr_frame</code>을 구분해야 함</td></tr><tr><td>disk sector write 위치가 궁금함</td><td>PintOS disk 코드 + QEMU IDE/block 코드</td><td>sector 의미는 PintOS에서 나오고 host 파일 offset 변환은 QEMU가 수행</td></tr></tbody></table></div>
+<h2 id="실제-os-pintos-qemu의-차이-흐름">실제 OS, PintOS, QEMU의 차이 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>처음에는 다음 한 줄씩만 잡으면 된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>층</th><th>핵심 역할</th></tr></thead><tbody><tr><td>Linux / Windows</td><td>실제 프로그램과 장치를 관리하는 운영체제</td></tr><tr><td>PintOS</td><td>운영체제 개념을 배우기 위한 작은 guest OS</td></tr><tr><td>QEMU</td><td>guest가 하드웨어라고 믿는 CPU/메모리/장치를 제공하는 에뮬레이터</td></tr></tbody></table></div>
+<p>조금 더 실행 흐름으로 쓰면 이렇게 된다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as PintOS User Program\n    participant Q as QEMU (HW 재현)\n    participant P as PintOS Kernel\n\n    U->>Q: syscall instruction 실행\n    Note over Q: CPU 효과 재현&lt;br/>RCX←RIP, R11←RFLAGS&lt;br/>RIP←LSTAR\n    Q->>P: guest RIP → syscall_entry\n    P->>P: syscall_handler()&lt;br/>RAX에서 번호 읽기&lt;br/>RDI/RSI/RDX에서 인자 읽기\n    P->>Q: disk_write() 등 장치 접근\n    Note over Q: IDE model → block backend&lt;br/>guest memory access 재현\n    P->>U: iretq로 user mode 복귀&quot;">sequenceDiagram
+    participant U as PintOS User Program
+    participant Q as QEMU (HW 재현)
+    participant P as PintOS Kernel
+
+    U->>Q: syscall instruction 실행
+    Note over Q: CPU 효과 재현&lt;br/>RCX←RIP, R11←RFLAGS&lt;br/>RIP←LSTAR
+    Q->>P: guest RIP → syscall_entry
+    P->>P: syscall_handler()&lt;br/>RAX에서 번호 읽기&lt;br/>RDI/RSI/RDX에서 인자 읽기
+    P->>Q: disk_write() 등 장치 접근
+    Note over Q: IDE model → block backend&lt;br/>guest memory access 재현
+    P->>U: iretq로 user mode 복귀
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>이 말은 즉, <strong>QEMU는 하드웨어 쪽 의미를 재현하고 PintOS는 운영체제 정책을 결정한다.</strong></p>
+<h2 id="pintos-유저-프로그램이-다음-syscall을-호출한다고-하자">PintOS 유저 프로그램이 다음 syscall을 호출한다고 하자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-유저-프로그램이-다음-syscall을-호출한다고-하자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS 유저 프로그램이 다음 syscall을 호출한다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">write</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">8048123</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">5</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>PintOS x86-64 syscall wrapper 관점의 register는 이렇게 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAX = SYS_WRITE</span></span>
+<span data-line><span>RDI = 1</span></span>
+<span data-line><span>RSI = 0x8048123</span></span>
+<span data-line><span>RDX = 5</span></span></code></pre></figure>
+<p>여기서 숫자의 의미는 층마다 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>값</th><th>PintOS 관점</th><th>QEMU 관점</th></tr></thead><tbody><tr><td><code>SYS_WRITE</code></td><td>syscall table에서 <code>write</code> 분기를 고르는 번호</td><td>그냥 guest <code>RAX</code>에 들어 있는 정수</td></tr><tr><td><code>1</code></td><td>현재 PintOS 프로세스의 fd table index, stdout</td><td>그냥 guest <code>RDI</code> 값</td></tr><tr><td><code>0x8048123</code></td><td>PintOS user virtual address</td><td>guest CPU가 접근할 guest virtual address</td></tr><tr><td><code>5</code></td><td>복사하거나 출력할 byte 수</td><td>그냥 guest <code>RDX</code> 값</td></tr></tbody></table></div>
+<p>QEMU가 모르는 것은 “fd 1은 stdout이다” 같은 운영체제 정책이다. QEMU가 아는 것은 “guest CPU가 지금 어떤 register와 memory access를 가진다”는 하드웨어 상태다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows는 실제 운영체제다.</p>
+<p>Linux에서는 유저 프로그램이 libc wrapper나 직접 syscall ABI를 통해 커널에 들어가고, Linux 커널이 fd table, VFS, page table, scheduler, driver를 연결한다. <code>write(1, buf, 5)</code>에서 fd 1이 어떤 열린 파일 객체를 가리키는지 판단하는 주체는 Linux 커널이다.</p>
+<p>Windows는 POSIX fd보다 handle과 Win32 API가 더 앞에 보인다. 예를 들어 파일이나 콘솔은 handle로 다루고, 내부적으로 object manager, I/O manager, memory manager 같은 더 큰 구조가 관여한다.</p>
+<p>실제 OS가 PintOS보다 복잡한 이유는 단순히 코드가 많아서가 아니다.</p>
+<ul>
+<li>여러 CPU와 동시 실행을 다룬다.</li>
+<li>권한, 보안, 격리, 감사 정책을 다룬다.</li>
+<li>다양한 장치와 드라이버를 지원한다.</li>
+<li>page cache, copy-on-write, NUMA, huge page, lazy allocation 같은 최적화를 다룬다.</li>
+<li>수십 년 동안 쌓인 ABI와 호환성을 유지한다.</li>
+</ul>
+<p>PintOS는 이런 현실 OS를 그대로 복제하지 않는다. 대신 학습에 필요한 핵심 질문을 작게 만든다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS는 guest OS다. QEMU 위에서 실행되지만, PintOS 입장에서는 자신이 하드웨어 위에서 직접 실행된다고 믿는다.</p>
+<p>PintOS가 직접 결정하는 대표 정책은 다음과 같다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>PintOS가 보는 코드</th></tr></thead><tbody><tr><td>syscall 번호를 어떻게 처리할까?</td><td><code>pintos/userprog/syscall.c</code>의 <code>syscall_handler()</code></td></tr><tr><td>syscall 진입 때 user register를 어디에 저장할까?</td><td><code>pintos/userprog/syscall-entry.S</code>의 <code>struct intr_frame</code> 구성</td></tr><tr><td>page fault를 살릴까 죽일까?</td><td><code>pintos/userprog/exception.c</code>의 <code>page_fault()</code>와 <code>vm_try_handle_fault()</code></td></tr><tr><td>timer interrupt 뒤 어떤 thread를 실행할까?</td><td><code>pintos/devices/timer.c</code>, <code>pintos/threads/thread.c</code></td></tr><tr><td>user VA와 frame을 어떻게 연결할까?</td><td><code>pintos/threads/mmu.c</code>의 <code>pml4_set_page()</code></td></tr></tbody></table></div>
+<p>중요한 점은 PintOS가 교육용으로 단순화되어 있다는 것이다.</p>
+<ul>
+<li>실제 Linux/Windows scheduler처럼 CPU별 run queue와 복잡한 fairness 정책을 모두 구현하지 않는다.</li>
+<li>실제 VM처럼 모든 mmap flag, COW, page cache 정책을 다루지 않는다.</li>
+<li>실제 파일 시스템처럼 journaling, 권한, crash recovery를 모두 다루지 않는다.</li>
+</ul>
+<p>그래도 PintOS는 “OS가 무엇을 결정해야 하는가”를 보기 좋게 보여준다. syscall, page fault, scheduling, file descriptor 같은 핵심 판단이 작은 함수 안에 드러나기 때문이다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 host OS 위에서 실행되는 process이고, 그 안에서 PintOS guest machine을 돌린다. 하지만 PintOS 안에서는 QEMU가 보이지 않는다. PintOS는 CPU, RAM, interrupt controller, timer, disk가 있다고 믿고 실행된다.</p>
+<p>QEMU가 하는 일은 다음에 가깝다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>QEMU가 제공하는 것</th><th>PintOS가 믿는 것</th></tr></thead><tbody><tr><td><code>CPUX86State</code> 같은 guest CPU state</td><td>실제 x86 CPU register</td></tr><tr><td>QEMU process 안의 RAMBlock/memory region</td><td>물리 메모리</td></tr><tr><td>PIT/PIC/APIC 같은 device model</td><td>타이머와 interrupt controller</td></tr><tr><td>IDE/block backend</td><td>디스크</td></tr><tr><td>GDB stub</td><td>하드웨어 디버깅 포트처럼 보이는 remote debug 대상</td></tr></tbody></table></div>
+<p>QEMU가 하지 않는 일도 분명히 잡아야 한다.</p>
+<ul>
+<li><code>SYS_WRITE</code>가 stdout인지 판단하지 않는다.</li>
+<li>fd table을 관리하지 않는다.</li>
+<li>PintOS thread priority를 해석하지 않는다.</li>
+<li>supplemental page table이 합법인지 판단하지 않는다.</li>
+<li>PintOS 테스트의 성공/실패 의미를 모른다.</li>
+</ul>
+<p>QEMU는 guest instruction과 guest device interaction을 재현한다. 그 위에서 어떤 OS 정책을 구현할지는 PintOS 코드의 일이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>정체</td><td>실제 운영체제</td><td>교육용 guest OS</td><td>guest machine 에뮬레이터</td></tr><tr><td>실행 위치</td><td>실제 하드웨어 또는 VM 위</td><td>QEMU가 제공한 guest machine 위</td><td>host OS의 user process</td></tr><tr><td>syscall 처리</td><td>실제 커널 syscall/Native API 경로</td><td><code>syscall_handler()</code></td><td>syscall instruction의 CPU 효과만 재현</td></tr><tr><td>fd/handle 의미</td><td>커널 객체 참조</td><td><code>fd_table</code> index</td><td>모름</td></tr><tr><td>page fault 정책</td><td>memory manager가 판단</td><td><code>page_fault()</code>와 VM 과제 코드가 판단</td><td>CPU 예외/주소 변환 효과를 재현</td></tr><tr><td>timer interrupt</td><td>실제/가상 타이머와 interrupt controller</td><td><code>timer_interrupt()</code> handler</td><td>PIT/PIC/APIC 장치 모델</td></tr><tr><td>disk write</td><td>드라이버와 block layer</td><td><code>disk_write()</code> 호출</td><td>IDE/block backend offset write</td></tr><tr><td>GDB register</td><td>실제 process/thread context</td><td><code>struct intr_frame</code> snapshot과 guest 실행 상태</td><td>guest CPU state를 remote protocol로 노출</td></tr></tbody></table></div>
+<h2 id="실제-os-pintos-qemu의-차이-코드">실제 OS, PintOS, QEMU의 차이 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos는-syscall-진입-주소를-cpu-msr에-등록한다">1. PintOS는 syscall 진입 주소를 CPU MSR에 등록한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos는-syscall-진입-주소를-cpu-msr에-등록한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall-entry.S</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>syscall_init()</span></span>
+<span data-line><span>  -> write_msr(MSR_LSTAR, syscall_entry)</span></span>
+<span data-line> </span>
+<span data-line><span>syscall_entry</span></span>
+<span data-line><span>  -> user RSP를 저장</span></span>
+<span data-line><span>  -> TSS에서 kernel RSP를 읽음</span></span>
+<span data-line><span>  -> register들을 kernel stack에 push</span></span>
+<span data-line><span>  -> syscall_handler(struct intr_frame *f) 호출</span></span></code></pre></figure>
+<p>여기서 PintOS는 <code>MSR_LSTAR</code>에 <code>syscall_entry</code> 주소를 써 둔다. QEMU가 x86 <code>syscall</code> instruction을 재현하면 guest RIP는 이 주소로 이동하고, 그 다음부터는 PintOS 코드가 실행된다.</p>
+<h3 id="2-pintos-syscall_handler가-syscall-번호를-해석한다">2. PintOS syscall_handler가 syscall 번호를 해석한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pintos-syscall_handler가-syscall-번호를-해석한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/include/lib/syscall-nr.h</code></li>
+</ul>
+<p>핵심 코드 모양:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">switch</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f->R.rax) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">case</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> SYS_WRITE:</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">  f->R.rax </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> write</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">R.rdi, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">R.rsi, f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">R.rdx);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  break</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>f->R.rax</code>는 handler 진입 직후에는 syscall 번호이고, handler 반환 직전에는 user program에 돌려줄 반환값이 된다. 이 의미 전환은 PintOS 정책이다. QEMU는 이 값을 <code>SYS_WRITE</code>라고 해석하지 않는다.</p>
+<h3 id="3-qemu는-syscall-instruction의-cpu-효과를-재현한다">3. QEMU는 syscall instruction의 CPU 효과를 재현한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-qemu는-syscall-instruction의-cpu-효과를-재현한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/emit.c.inc" class="external external-link">target/i386/tcg/emit.c.inc<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/seg_helper.c" class="external external-link">target/i386/tcg/system/seg_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>gen_SYSCALL()</span></span>
+<span data-line><span>  -> gen_helper_syscall(...)</span></span>
+<span data-line> </span>
+<span data-line><span>helper_syscall()</span></span>
+<span data-line><span>  -> RCX에 다음 RIP 저장</span></span>
+<span data-line><span>  -> R11에 RFLAGS 저장</span></span>
+<span data-line><span>  -> CS/SS 변경</span></span>
+<span data-line><span>  -> RIP = LSTAR</span></span></code></pre></figure>
+<p>이것이 QEMU의 역할이다. <code>RIP = LSTAR</code>가 된 뒤 <code>LSTAR</code>에 들어 있던 주소가 PintOS <code>syscall_entry</code>라면, 그 다음 의미 해석은 PintOS가 한다.</p>
+<h3 id="4-page-fault는-pintos가-fault-address와-error-code를-읽어-판단한다">4. Page fault는 PintOS가 fault address와 error code를 읽어 판단한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-page-fault는-pintos가-fault-address와-error-code를-읽어-판단한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/exception.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page_fault(struct intr_frame *f)</span></span>
+<span data-line><span>  -> fault_addr = rcr2()</span></span>
+<span data-line><span>  -> not_present = (error_code &amp; PF_P) == 0</span></span>
+<span data-line><span>  -> write       = (error_code &amp; PF_W) != 0</span></span>
+<span data-line><span>  -> user        = (error_code &amp; PF_U) != 0</span></span>
+<span data-line><span>  -> vm_try_handle_fault(...)</span></span></code></pre></figure>
+<p>QEMU는 CPU 예외가 발생하는 조건과 guest state 변화를 재현할 수 있다. 하지만 “이 fault를 stack growth로 살릴지, invalid access로 죽일지”는 PintOS VM 정책이다.</p>
+<h3 id="5-timer-interrupt는-qemu-장치-모델과-pintos-handler가-만나는-지점이다">5. Timer interrupt는 QEMU 장치 모델과 PintOS handler가 만나는 지점이다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-timer-interrupt는-qemu-장치-모델과-pintos-handler가-만나는-지점이다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/devices/timer.c</code></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/timer/i8254.c" class="external external-link">hw/timer/i8254.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS timer_init()</span></span>
+<span data-line><span>  -> intr_register_ext(0x20, timer_interrupt, &quot;8254 Timer&quot;)</span></span>
+<span data-line> </span>
+<span data-line><span>QEMU i8254 model</span></span>
+<span data-line><span>  -> pit_irq_timer_update()</span></span>
+<span data-line><span>  -> qemu_set_irq(...)</span></span>
+<span data-line> </span>
+<span data-line><span>PintOS timer_interrupt()</span></span>
+<span data-line><span>  -> ticks++</span></span>
+<span data-line><span>  -> thread_tick()</span></span>
+<span data-line><span>  -> thread_awake(ticks)</span></span></code></pre></figure>
+<p>QEMU가 virtual timer output을 만든다. PintOS는 그 interrupt를 받아 OS 정책으로 바꾼다.</p>
+<h3 id="6-disk-sector-write는-pintos-의미에서-qemu-byte-offset으로-내려간다">6. Disk sector write는 PintOS 의미에서 QEMU byte offset으로 내려간다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-disk-sector-write는-pintos-의미에서-qemu-byte-offset으로-내려간다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>근거 파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/ide/core.c" class="external external-link">hw/ide/core.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/block/block-backend.c" class="external external-link">block/block-backend.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/include/block/block-common.h" class="external external-link">include/block/block-common.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>ide_sector_write()</span></span>
+<span data-line><span>  -> sector_num = ide_get_sector(s)</span></span>
+<span data-line><span>  -> blk_aio_pwritev(..., sector_num &lt;&lt; BDRV_SECTOR_BITS, ...)</span></span></code></pre></figure>
+<p>PintOS 입장에서는 sector 번호를 쓰지만, QEMU block backend로 내려가면 <code>sector_num &lt;&lt; 9</code>가 byte offset이 된다. <code>BDRV_SECTOR_BITS = 9</code>이면 한 sector는 <code>2^9 = 512</code> bytes다.</p>
+<h2 id="실제-os-pintos-qemu의-차이-값-추적">실제 OS, PintOS, QEMU의 차이 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="예제-1-write1-0x8048123-5">예제 1. <code>write(1, 0x8048123, 5)</code><a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-1-write1-0x8048123-5" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAX = SYS_WRITE</span></span>
+<span data-line><span>RDI = 1</span></span>
+<span data-line><span>RSI = 0x8048123</span></span>
+<span data-line><span>RDX = 5</span></span></code></pre></figure>
+<p>역할 분리:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>숫자</th><th>어느 층의 의미인가</th></tr></thead><tbody><tr><td><code>SYS_WRITE</code></td><td>PintOS syscall 번호</td></tr><tr><td><code>1</code></td><td>PintOS fd table index</td></tr><tr><td><code>0x8048123</code></td><td>PintOS user virtual address</td></tr><tr><td><code>5</code></td><td>PintOS가 복사/출력할 byte 수</td></tr><tr><td>guest register storage</td><td>QEMU <code>CPUX86State</code> 같은 guest CPU state</td></tr></tbody></table></div>
+<h3 id="예제-2-0x8048123-주소-분해">예제 2. <code>0x8048123</code> 주소 분해<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-2-0x8048123-주소-분해" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>virtual address = 0x8048123</span></span>
+<span data-line><span>page size       = 4096 = 0x1000</span></span>
+<span data-line><span>page base       = 0x8048000</span></span>
+<span data-line><span>offset          = 0x123</span></span></code></pre></figure>
+<p>PintOS VM은 보통 page base 단위로 page table/SPT를 본다. QEMU는 이 guest virtual access가 실제로 실행될 때 guest CPU의 주소 변환과 guest memory access를 재현한다.</p>
+<h3 id="예제-3-disk-sector-24">예제 3. disk sector 24<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#예제-3-disk-sector-24" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sector_num       = 24</span></span>
+<span data-line><span>BDRV_SECTOR_BITS = 9</span></span>
+<span data-line><span>sector size      = 1 &lt;&lt; 9 = 512</span></span>
+<span data-line><span>block offset     = 24 &lt;&lt; 9 = 12288 = 0x3000</span></span></code></pre></figure>
+<p>PintOS가 “sector 24에 쓴다”고 말하면, QEMU block backend 쪽에서는 host 파일 또는 block backend의 byte offset <code>0x3000</code> 근처로 내려간다. 단, PintOS가 host filesystem을 직접 호출하는 것은 아니다.</p>
+<h2 id="실제-os-pintos-qemu의-차이-gdb">실제 OS, PintOS, QEMU의 차이 GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-pintos-qemu의-차이-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-syscall-층-확인">1. syscall 층 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-syscall-층-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS GDB에서 <code>syscall_handler</code>에 멈춘다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b syscall_handler</span></span>
+<span data-line><span>continue</span></span>
+<span data-line><span>p/x f->R.rax</span></span>
+<span data-line><span>p/x f->R.rdi</span></span>
+<span data-line><span>p/x f->R.rsi</span></span>
+<span data-line><span>p/x f->R.rdx</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<ul>
+<li><code>f->R.rax</code>가 <code>SYS_WRITE</code> 같은 syscall 번호인지</li>
+<li><code>f->R.rdi/rsi/rdx</code>가 유저 wrapper가 넣은 인자인지</li>
+<li><code>info registers</code>의 현재 register와 <code>f->R.*</code> snapshot을 섞고 있지 않은지</li>
+</ul>
+<h3 id="2-page-fault-층-확인">2. page fault 층 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-page-fault-층-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b page_fault</span></span>
+<span data-line><span>continue</span></span>
+<span data-line><span>p/x fault_addr</span></span>
+<span data-line><span>p/x f->error_code</span></span>
+<span data-line><span>p not_present</span></span>
+<span data-line><span>p write</span></span>
+<span data-line><span>p user</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<ul>
+<li>fault address는 <code>CR2</code>에서 온다.</li>
+<li>fault를 살릴지 죽일지는 PintOS <code>vm_try_handle_fault()</code> 판단이다.</li>
+<li>QEMU가 “이 주소는 stack growth다”라고 판단하는 것이 아니다.</li>
+</ul>
+<h3 id="3-qemu-gdb-stub-층-확인">3. QEMU GDB stub 층 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-qemu-gdb-stub-층-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>target remote localhost:1234</span></span>
+<span data-line><span>info registers</span></span>
+<span data-line><span>x/16xb 0x8048123</span></span></code></pre></figure>
+<p>확인할 것:</p>
+<ul>
+<li>이 register는 host CPU register가 아니라 guest CPU state다.</li>
+<li><code>x/16xb</code>는 PintOS symbol/debug info와 QEMU guest memory read가 합쳐져 보이는 결과다.</li>
+<li>host QEMU process 자체를 보려면 별도의 host debugger로 QEMU process에 붙어야 한다.</li>
+</ul>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>세 층의 역할 경계를 한눈에 보는 다이어그램이다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TB\n    subgraph HOST[\&quot;Host OS (macOS/Linux/Windows)\&quot;]\n        QP[\&quot;QEMU process\&quot;]\n    end\n\n    subgraph QEMU[\&quot;QEMU 재현 영역\&quot;]\n        CPU[\&quot;가상 CPU&lt;br/>CPUX86State\&quot;]\n        MEM[\&quot;가상 RAM&lt;br/>RAMBlock\&quot;]\n        PIT[\&quot;가상 PIT&lt;br/>i8254\&quot;]\n        PIC[\&quot;가상 PIC&lt;br/>i8259\&quot;]\n        IDE[\&quot;가상 Disk&lt;br/>IDE model\&quot;]\n        GDB[\&quot;GDB stub\&quot;]\n    end\n\n    subgraph PINTOS[\&quot;PintOS 정책 영역\&quot;]\n        SH[\&quot;syscall_handler()&lt;br/>번호 해석, fd 정책\&quot;]\n        PF[\&quot;page_fault()&lt;br/>SPT 조회, stack growth\&quot;]\n        TI[\&quot;timer_interrupt()&lt;br/>tick 계수, 선점 결정\&quot;]\n        FS[\&quot;filesys&lt;br/>inode, directory\&quot;]\n    end\n\n    subgraph USER[\&quot;PintOS User Program\&quot;]\n        WR[\&quot;write(1, buf, 5)\&quot;]\n    end\n\n    WR -->|\&quot;syscall instruction\&quot;| CPU\n    CPU -->|\&quot;RIP=LSTAR\&quot;| SH\n    SH -->|\&quot;disk_write()\&quot;| IDE\n    PIT -->|\&quot;IRQ0\&quot;| PIC\n    PIC -->|\&quot;vector 0x20\&quot;| TI\n    CPU -->|\&quot;#PF exception\&quot;| PF\n    GDB -.->|\&quot;remote protocol\&quot;| CPU\n&quot;">flowchart TB
+    subgraph HOST[&quot;Host OS (macOS/Linux/Windows)&quot;]
+        QP[&quot;QEMU process&quot;]
+    end
+
+    subgraph QEMU[&quot;QEMU 재현 영역&quot;]
+        CPU[&quot;가상 CPU&lt;br/>CPUX86State&quot;]
+        MEM[&quot;가상 RAM&lt;br/>RAMBlock&quot;]
+        PIT[&quot;가상 PIT&lt;br/>i8254&quot;]
+        PIC[&quot;가상 PIC&lt;br/>i8259&quot;]
+        IDE[&quot;가상 Disk&lt;br/>IDE model&quot;]
+        GDB[&quot;GDB stub&quot;]
+    end
+
+    subgraph PINTOS[&quot;PintOS 정책 영역&quot;]
+        SH[&quot;syscall_handler()&lt;br/>번호 해석, fd 정책&quot;]
+        PF[&quot;page_fault()&lt;br/>SPT 조회, stack growth&quot;]
+        TI[&quot;timer_interrupt()&lt;br/>tick 계수, 선점 결정&quot;]
+        FS[&quot;filesys&lt;br/>inode, directory&quot;]
+    end
+
+    subgraph USER[&quot;PintOS User Program&quot;]
+        WR[&quot;write(1, buf, 5)&quot;]
+    end
+
+    WR -->|&quot;syscall instruction&quot;| CPU
+    CPU -->|&quot;RIP=LSTAR&quot;| SH
+    SH -->|&quot;disk_write()&quot;| IDE
+    PIT -->|&quot;IRQ0&quot;| PIC
+    PIC -->|&quot;vector 0x20&quot;| TI
+    CPU -->|&quot;#PF exception&quot;| PF
+    GDB -.->|&quot;remote protocol&quot;| CPU
+
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>userprog/syscall.c</code></td><td><code>syscall_init()</code></td><td>MSR_LSTAR에 syscall_entry 등록</td></tr><tr><td><code>userprog/syscall.c</code></td><td><code>syscall_handler()</code></td><td>RAX 번호로 분기, 인자 해석</td></tr><tr><td><code>userprog/syscall-entry.S</code></td><td><code>syscall_entry</code></td><td>user RSP 저장, kernel RSP 전환, intr_frame 구성</td></tr><tr><td><code>userprog/exception.c</code></td><td><code>page_fault()</code></td><td>CR2 읽기, error code 해석, vm_try_handle_fault 호출</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_init()</code></td><td>PIT 100Hz 설정, vector 0x20 등록</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_interrupt()</code></td><td>ticks++, thread_tick() 호출</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_set_page()</code></td><td>user VA ↔ frame 매핑</td></tr><tr><td><code>include/lib/syscall-nr.h</code></td><td><code>SYS_WRITE</code> 등</td><td>syscall 번호 정의</td></tr><tr><td>QEMU <code>target/i386/tcg/system/seg_helper.c</code></td><td><code>helper_syscall()</code></td><td>RCX←RIP, R11←RFLAGS, RIP←LSTAR</td></tr><tr><td>QEMU <code>hw/timer/i8254.c</code></td><td><code>pit_load_count()</code></td><td>guest port write → count 갱신</td></tr><tr><td>QEMU <code>hw/intc/i8259.c</code></td><td><code>pic_set_irq()</code></td><td>IRR pending bit 설정</td></tr><tr><td>QEMU <code>hw/ide/core.c</code></td><td><code>ide_sector_write()</code></td><td>sector_num &lt;&lt; 9 → byte offset</td></tr><tr><td>QEMU <code>block/block-backend.c</code></td><td><code>blk_aio_pwritev()</code></td><td>host 파일에 실제 I/O</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Linux / Windows는 실제 운영체제다. syscall, VM, scheduler, driver를 실제 사용자와 장치 요구에 맞게 처리한다.</li>
+<li>PintOS는 교육용 guest OS다. 실제 OS의 핵심 질문을 작은 코드와 자료구조로 보여준다.</li>
+<li>QEMU는 OS가 아니다. PintOS가 하드웨어라고 믿는 CPU, 메모리, interrupt, disk, GDB stub을 제공한다.</li>
+<li>syscall 번호, fd table, page fault 정책, scheduler 선택은 PintOS가 해석한다.</li>
+<li>guest register, guest memory, virtual timer, IDE sector write 같은 하드웨어 효과는 QEMU가 재현한다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/concept-to-code" class="internal internal-link alias" data-slug="wiki/hubs/concept-to-code">OS</a>
+<ul>
+<li>OS 관점의 상위 연결.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li>유저 <code>write()</code>가 PintOS <code>syscall_handler()</code>까지 가는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a>
+<ul>
+<li>GDB가 보여주는 register와 memory의 층 구분.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a>
+<ul>
+<li>QEMU timer interrupt와 PintOS scheduler 기회.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a>
+<ul>
+<li>guest virtual address가 page/frame/offset으로 분해되는 방식.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">guest physical memory</a>
+<ul>
+<li>guest physical memory와 host process memory를 구분하는 법.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/disk-sector-qemu-block-backend-knowledge" class="internal internal-link alias" data-slug="wiki/os/disk-sector-qemu-block-backend-knowledge">QEMU BlockBackend</a>
+<ul>
+<li>PintOS sector 번호가 QEMU block backend offset으로 내려가는 방식.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-does" class="internal internal-link alias" data-slug="wiki/os/qemu-does">QEMU가 하는 일</a>
+<ul>
+<li>QEMU가 하는 일 목록.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-does-not" class="internal internal-link alias" data-slug="wiki/os/qemu-does-not">QEMU가 하지 않는 일</a>
+<ul>
+<li>QEMU가 하지 않는 일 목록.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-is-not-os" class="internal internal-link alias" data-slug="wiki/os/qemu-is-not-os">QEMU는 OS가 아니다</a>
+<ul>
+<li>QEMU ≠ OS 총론.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-educational-os" class="internal internal-link alias" data-slug="wiki/os/pintos-educational-os">PintOS 교육용 OS</a>
+<ul>
+<li>PintOS가 무엇을 단순화하는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/linux-windows-real-os" class="internal internal-link alias" data-slug="wiki/os/linux-windows-real-os">Linux와 Windows</a>
+<ul>
+<li>실제 OS 비교.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/qemu-hardware-byte-debugging" class="internal">QEMU와 Byte 디버깅</a></li><li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal">Guest Physical Memory</a></li><li><a href="../../wiki/os/hardware-abstraction" class="internal">추상화</a></li><li><a href="../../wiki/os/linux-windows-real-os" class="internal">Linux/Windows 실제 운영체제</a></li><li><a href="../../wiki/os/os-abstraction-protection-storage-responsibility" class="internal">OS 추상화, 보호, 저장 책임</a></li><li><a href="../../wiki/os/os-kernel-architecture" class="internal">OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel</a></li><li><a href="../../wiki/os/pintos-directory-structure" class="internal">PintOS 디렉터리 구조</a></li><li><a href="../../wiki/os/pintos-educational-os" class="internal">PintOS 교육용 OS</a></li><li><a href="../../wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge" class="internal">PintOS 초기 main thread와 커널 주소 공간</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/qemu-hardware-emulator" class="internal">QEMU 하드웨어 에뮬레이터</a></li><li><a href="../../wiki/os/qemu-is-not-os" class="internal">QEMU는 OS가 아니다</a></li><li><a href="../../wiki/pintos/" class="internal">PintOS 운영체제 학습 프로젝트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-622" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#실제-os-pintos-qemu의-차이" data-for="실제-os-pintos-qemu의-차이">실제 OS, PintOS, QEMU의 차이</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-시작" data-for="실제-os-pintos-qemu의-차이-시작">실제 OS, PintOS, QEMU의 차이 시작</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-필요성" data-for="실제-os-pintos-qemu의-차이-필요성">실제 OS, PintOS, QEMU의 차이 필요성</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-흐름" data-for="실제-os-pintos-qemu의-차이-흐름">실제 OS, PintOS, QEMU의 차이 흐름</a></li><li class="depth-1"><a href="#pintos-유저-프로그램이-다음-syscall을-호출한다고-하자" data-for="pintos-유저-프로그램이-다음-syscall을-호출한다고-하자">PintOS 유저 프로그램이 다음 syscall을 호출한다고 하자</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-코드" data-for="실제-os-pintos-qemu의-차이-코드">실제 OS, PintOS, QEMU의 차이 코드</a></li><li class="depth-2"><a href="#1-pintos는-syscall-진입-주소를-cpu-msr에-등록한다" data-for="1-pintos는-syscall-진입-주소를-cpu-msr에-등록한다">1. PintOS는 syscall 진입 주소를 CPU MSR에 등록한다</a></li><li class="depth-2"><a href="#2-pintos-syscall_handler가-syscall-번호를-해석한다" data-for="2-pintos-syscall_handler가-syscall-번호를-해석한다">2. PintOS syscall_handler가 syscall 번호를 해석한다</a></li><li class="depth-2"><a href="#3-qemu는-syscall-instruction의-cpu-효과를-재현한다" data-for="3-qemu는-syscall-instruction의-cpu-효과를-재현한다">3. QEMU는 syscall instruction의 CPU 효과를 재현한다</a></li><li class="depth-2"><a href="#4-page-fault는-pintos가-fault-address와-error-code를-읽어-판단한다" data-for="4-page-fault는-pintos가-fault-address와-error-code를-읽어-판단한다">4. Page fault는 PintOS가 fault address와 error code를 읽어 판단한다</a></li><li class="depth-2"><a href="#5-timer-interrupt는-qemu-장치-모델과-pintos-handler가-만나는-지점이다" data-for="5-timer-interrupt는-qemu-장치-모델과-pintos-handler가-만나는-지점이다">5. Timer interrupt는 QEMU 장치 모델과 PintOS handler가 만나는 지점이다</a></li><li class="depth-2"><a href="#6-disk-sector-write는-pintos-의미에서-qemu-byte-offset으로-내려간다" data-for="6-disk-sector-write는-pintos-의미에서-qemu-byte-offset으로-내려간다">6. Disk sector write는 PintOS 의미에서 QEMU byte offset으로 내려간다</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-값-추적" data-for="실제-os-pintos-qemu의-차이-값-추적">실제 OS, PintOS, QEMU의 차이 값 추적</a></li><li class="depth-2"><a href="#예제-1-write1-0x8048123-5" data-for="예제-1-write1-0x8048123-5">예제 1. write(1, 0x8048123, 5)</a></li><li class="depth-2"><a href="#예제-2-0x8048123-주소-분해" data-for="예제-2-0x8048123-주소-분해">예제 2. 0x8048123 주소 분해</a></li><li class="depth-2"><a href="#예제-3-disk-sector-24" data-for="예제-3-disk-sector-24">예제 3. disk sector 24</a></li><li class="depth-1"><a href="#실제-os-pintos-qemu의-차이-gdb" data-for="실제-os-pintos-qemu의-차이-gdb">실제 OS, PintOS, QEMU의 차이 GDB</a></li><li class="depth-2"><a href="#1-syscall-층-확인" data-for="1-syscall-층-확인">1. syscall 층 확인</a></li><li class="depth-2"><a href="#2-page-fault-층-확인" data-for="2-page-fault-층-확인">2. page fault 층 확인</a></li><li class="depth-2"><a href="#3-qemu-gdb-stub-층-확인" data-for="3-qemu-gdb-stub-층-확인">3. QEMU GDB stub 층 확인</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

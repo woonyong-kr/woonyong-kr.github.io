@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>PTE 쓰기허용 Bit (PTE Writable Bit) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="PTE 쓰기허용 Bit (PTE Writable Bit) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="PTE 쓰기허용 Bit (PTE Writable Bit) · 최우녕"/><meta name="twitter:description" content="PTE bit 1(Writable)은 페이지 쓰기 허용 여부를 정하며, W=0 페이지에 쓰면 write protection fault(#PF)가 발생해 코드 보호·COW·read-only mmap의 하드웨어 기반이 된다."/><meta property="og:description" content="PTE bit 1(Writable)은 페이지 쓰기 허용 여부를 정하며, W=0 페이지에 쓰면 write protection fault(#PF)가 발생해 코드 보호·COW·read-only mmap의 하드웨어 기반이 된다."/><meta property="og:image:alt" content="PTE bit 1(Writable)은 페이지 쓰기 허용 여부를 정하며, W=0 페이지에 쓰면 write protection fault(#PF)가 발생해 코드 보호·COW·read-only mmap의 하드웨어 기반이 된다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/pte-writable-bit"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/pte-writable-bit"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PTE bit 1(Writable)은 페이지 쓰기 허용 여부를 정하며, W=0 페이지에 쓰면 write protection fault(#PF)가 발생해 코드 보호·COW·read-only mmap의 하드웨어 기반이 된다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/pte-writable-bit" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-607" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-607" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>PTE 쓰기허용 Bit (PTE Writable Bit)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pte-쓰기허용-bit-pte-writable-bit">PTE 쓰기허용 Bit (PTE Writable Bit)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-쓰기허용-bit-pte-writable-bit" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: PTE bit 1(Writable)은 페이지 쓰기 허용 여부를 정하며, W=0 페이지에 쓰면 write protection fault(#PF)가 발생해 코드 보호·COW·read-only mmap의 하드웨어 기반이 된다.</p>
+</blockquote>
+<h2 id="pte-쓰기허용-bit-상태">PTE 쓰기허용 Bit 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-쓰기허용-bit-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PTE의 bit 1(Writable bit, W 또는 R/W)은 <strong>해당 페이지에 쓰기가 허용되는지</strong>를 MMU에 알려주는 1비트 플래그다. W=1이면 읽기와 쓰기 모두 가능하고, W=0이면 읽기만 허용된다. W=0인 페이지에 쓰기를 시도하면 MMU가 <strong>write protection fault</strong>(#PF, error code에 PF_W=1, PF_P=1)를 발생시킨다. 이 비트는 코드 영역 보호, Copy-on-Write, read-only mmap 등 OS의 메모리 보호 메커니즘의 하드웨어 기반이다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64 PTE에서 writable bit의 위치:</p>
+<pre><code>bit 0: Present (P)   — 매핑 유효 여부
+bit 1: Writable (W)  — 쓰기 허용 여부  ← 이 문서의 주제
+bit 2: User (U)      — 유저 모드 접근 허용
+</code></pre>
+<p><strong>유저 모드에서의 동작:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>P</th><th>W</th><th>읽기</th><th>쓰기</th></tr></thead><tbody><tr><td>0</td><td>x</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> (not present)</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> (not present)</td></tr><tr><td>1</td><td>0</td><td>허용</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> (write protection)</td></tr><tr><td>1</td><td>1</td><td>허용</td><td>허용</td></tr></tbody></table></div>
+<p><strong>커널 모드에서의 동작:</strong></p>
+<p>전통적 x86에서 커널 모드(CPL 0)는 W=0인 페이지에도 쓸 수 있었다. 하지만 x86-64의 CR0.WP(Write Protect) 비트가 1로 설정되면 <strong>커널 모드에서도 W=0 페이지에 쓰기 시 <a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> 발생</strong>한다. PintOS는 CR0.WP=1로 설정하여 커널도 read-only 보호를 받는다.</p>
+<p><strong>4단계 walk에서의 W bit:</strong></p>
+<p>W bit는 page table의 모든 단계에서 적용된다. 최종 접근 권한은 walk 경로에 있는 모든 엔트리의 W bit의 AND다:</p>
+<pre><code>PML4E.W=1 → PDPTE.W=1 → PDE.W=1 → PTE.W=0 → 최종: 읽기 전용
+</code></pre>
+<p>어느 한 단계라도 W=0이면 해당 페이지는 읽기 전용이 된다.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서 <code>_PAGE_RW</code> (bit 1)는 다음 용도로 사용된다:</p>
+<ul>
+<li><strong>코드 영역 보호</strong>: ELF text 세그먼트는 W=0으로 매핑되어 실행 중 코드 변조를 방지한다.</li>
+<li><strong>COW (Copy-on-Write)</strong>: fork 시 부모와 자식 양쪽의 PTE에서 W=0으로 설정. 쓰기 시 write fault가 발생하면 커널이 프레임을 복사하고 새 PTE에 W=1을 설정한다.</li>
+<li><strong>mmap MAP_PRIVATE</strong>: 파일을 MAP_PRIVATE로 mmap하면 처음에는 W=0. 쓰기 시 COW 발생.</li>
+</ul>
+<p>Windows의 page protection도 유사하며 <code>PAGE_READONLY</code>, <code>PAGE_READWRITE</code>, <code>PAGE_EXECUTE_READ</code> 등의 속성이 PTE W bit에 매핑된다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 writable bit의 정의:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* include/threads/pte.h */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTE_W</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">2</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* 1=read/write, 0=read-only */</span></span></code></pre></figure>
+<p><strong>pml4_set_page()에서 W bit 설정:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p><code>rw</code> 파라미터가 <code>true</code>이면 PTE_W가 OR되어 쓰기 가능, <code>false</code>이면 읽기 전용으로 설정된다.</p>
+<p><strong>W bit가 사용되는 주요 장면:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>장면</th><th>rw 값</th><th>이유</th></tr></thead><tbody><tr><td>text 세그먼트 적재</td><td>false</td><td>코드 영역은 읽기 전용</td></tr><tr><td>data 세그먼트 적재</td><td>true</td><td>전역 변수는 쓰기 가능</td></tr><tr><td>스택 페이지</td><td>true</td><td>스택은 읽기/쓰기 필요</td></tr><tr><td>COW fork 시</td><td>false</td><td>양쪽 모두 read-only로 전환</td></tr><tr><td>COW fault 처리 후</td><td>true</td><td>새 프레임은 독점 소유이므로 쓰기 허용</td></tr><tr><td>mmap read-only</td><td>false</td><td>파일 원본 보호</td></tr></tbody></table></div>
+<p><strong>is_writable() 매크로:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* include/threads/pte.h */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> is_writable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pte</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pte)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_W)</span></span></code></pre></figure>
+<p>page fault handler가 COW fault인지 판단할 때 사용한다: PTE가 present이지만 writable이 아니고, SPT에서 해당 page가 원래 writable이라고 기록했다면 COW fault로 처리한다.</p>
+<p><strong>SPT의 writable 필드와의 관계:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* include/vm/vm.h */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page {</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // ...</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> writable;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 이 page의 원래 쓰기 권한</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>PTE의 W bit는 <strong>현재 하드웨어 상태</strong>를 나타내고, <code>page->writable</code>은 <strong>논리적 권한</strong>을 나타낸다. COW 때문에 PTE.W=0이더라도 page->writable=true일 수 있다. 이 차이가 write protection fault를 COW로 처리할지, segfault로 처리할지 결정한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU SoftMMU는 <code>target/i386/tcg/excp_helper.c</code>에서 write 접근 시 PTE의 W bit를 검사한다. W=0이고 쓰기 접근이면 error code에 PF_W(bit 1)=1을 설정하고 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 주입한다.</p>
+<h2 id="pte-쓰기허용-bit-값-추적">PTE 쓰기허용 Bit 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-쓰기허용-bit-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><strong>Write protection fault error code 구성:</strong></p>
+<pre><code>error code = PF_P | PF_W | PF_U
+           = 0x1  | 0x2  | 0x4
+           = 0x7
+
+의미: present page(P=1)에 대한 write(W=1) 접근을 user mode(U=1)에서 시도
+</code></pre>
+<p><strong>not-present fault와의 구분:</strong></p>
+<pre><code>not-present read:  error_code = 0x4 (PF_U만)
+not-present write: error_code = 0x6 (PF_W | PF_U)
+write protection:  error_code = 0x7 (PF_P | PF_W | PF_U)
+</code></pre>
+<p>PintOS page_fault handler에서 이 구분이 핵심이다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> not_present </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_P);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // P=0이면 not present</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> write </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">         // 쓰기 시도였는가</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> user </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_U);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">          // 유저 모드였는가</span></span></code></pre></figure>
+<p><strong>PTE 값 예시:</strong></p>
+<pre><code>읽기/쓰기 가능 page:
+  PTE = PA | PTE_P | PTE_W | PTE_U = PA | 0x7
+
+읽기 전용 page:
+  PTE = PA | PTE_P | PTE_U = PA | 0x5
+
+COW로 전환 후:
+  PTE = PA | PTE_P | PTE_U = PA | 0x5  (W bit 제거)
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;유저 코드: MOV addr, val\&quot;] --> B{\&quot;PTE present?\&quot;}\n    B -->|P=0| C[\&quot;#PF: not_present=true, write=true\&quot;]\n    B -->|P=1| D{PTE.W=1?}\n    D -->|W=1| E[\&quot;쓰기 성공, dirty bit 설정\&quot;]\n    D -->|W=0| F[\&quot;#PF: not_present=false, write=true\&quot;]\n    C --> G[\&quot;page fault handler\&quot;]\n    F --> G\n    G --> H{\&quot;SPT에서 page 조회\&quot;}\n    H -->|page writable true| I[\&quot;COW: 프레임 복사, W=1 설정\&quot;]\n    H -->|page writable false| J[\&quot;정당한 read-only 위반 → kill\&quot;]\n    H -->|SPT에 없음| K[\&quot;segfault → kill\&quot;]\n    I --> A&quot;">flowchart TD
+    A[&quot;유저 코드: MOV addr, val&quot;] --> B{&quot;PTE present?&quot;}
+    B -->|P=0| C[&quot;#PF: not_present=true, write=true&quot;]
+    B -->|P=1| D{PTE.W=1?}
+    D -->|W=1| E[&quot;쓰기 성공, dirty bit 설정&quot;]
+    D -->|W=0| F[&quot;#PF: not_present=false, write=true&quot;]
+    C --> G[&quot;page fault handler&quot;]
+    F --> G
+    G --> H{&quot;SPT에서 page 조회&quot;}
+    H -->|page writable true| I[&quot;COW: 프레임 복사, W=1 설정&quot;]
+    H -->|page writable false| J[&quot;정당한 read-only 위반 → kill&quot;]
+    H -->|SPT에 없음| K[&quot;segfault → kill&quot;]
+    I --> A
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/매크로</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/pte.h</td><td><code>PTE_W</code> (0x2)</td><td>writable bit 상수</td></tr><tr><td>include/threads/pte.h</td><td><code>is_writable(pte)</code></td><td>PTE의 W bit 검사 매크로</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_set_page()</code></td><td>rw 파라미터에 따라 W bit 설정</td></tr><tr><td>include/vm/vm.h</td><td><code>struct page::writable</code></td><td>논리적 쓰기 권한 (SPT)</td></tr><tr><td>userprog/exception.c</td><td><code>page_fault()</code></td><td>error_code에서 PF_W 추출</td></tr><tr><td>vm/vm.c</td><td><code>vm_try_handle_fault()</code></td><td>write + not_present 조합으로 분기</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE 전체 비트 개관</a></li>
+<li><a href="../../wiki/os/pte-present-bit" class="internal internal-link alias" data-slug="wiki/os/pte-present-bit">present bit (bit 0), W보다 먼저 검사됨</a></li>
+<li><a href="../../wiki/os/cow-pte-writable-off" class="internal internal-link alias" data-slug="wiki/os/cow-pte-writable-off">COW에서 W=0 설정하는 구체적 과정</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">COW 전체 메커니즘</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">write protection fault 처리 흐름</a></li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">PF P, PF W, PF U error code 상세</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/address-translation-memory" class="internal">주소 변환과 메모리</a></li><li><a href="../../wiki/os/copy-on-write-mechanism" class="internal">Copy-on-Write — 쓰기 전까지 복사를 미루는 메모리 최적화</a></li><li><a href="../../wiki/os/install-page-mapping" class="internal">install_page — 유저 가상 주소 매핑 설치</a></li><li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal">페이지 폴트 error code</a></li><li><a href="../../wiki/os/pml4-index" class="internal">PML4 Index</a></li><li><a href="../../wiki/os/pt-index" class="internal">PT Index — 4단계 Page Table Walk의 네 번째(마지막) 단계</a></li><li><a href="../../wiki/os/pte-present-bit" class="internal">PTE present 비트</a></li><li><a href="../../wiki/os/pte-user-bit" class="internal">PTE 사용자 Bit (PTE User Bit)</a></li><li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal">x86-64 페이지 테이블 워크</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-605" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pte-쓰기허용-bit-pte-writable-bit" data-for="pte-쓰기허용-bit-pte-writable-bit">PTE 쓰기허용 Bit (PTE Writable Bit)</a></li><li class="depth-1"><a href="#pte-쓰기허용-bit-상태" data-for="pte-쓰기허용-bit-상태">PTE 쓰기허용 Bit 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#pte-쓰기허용-bit-값-추적" data-for="pte-쓰기허용-bit-값-추적">PTE 쓰기허용 Bit 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>표준 입출력 fd · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="표준 입출력 fd · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="표준 입출력 fd · 최우녕"/><meta name="twitter:description" content="fd 0·1은 stdin·stdout에 쓰이는 관례적 번호지만, Linux와 이 문서의 PintOS 구현은 두 번호를 서로 다르게 처리한다."/><meta property="og:description" content="fd 0·1은 stdin·stdout에 쓰이는 관례적 번호지만, Linux와 이 문서의 PintOS 구현은 두 번호를 서로 다르게 처리한다."/><meta property="og:image:alt" content="fd 0·1은 stdin·stdout에 쓰이는 관례적 번호지만, Linux와 이 문서의 PintOS 구현은 두 번호를 서로 다르게 처리한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/stdin-stdout-fd"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/stdin-stdout-fd"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fd 0·1은 stdin·stdout에 쓰이는 관례적 번호지만, Linux와 이 문서의 PintOS 구현은 두 번호를 서로 다르게 처리한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/stdin-stdout-fd" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-649" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-649" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>표준 입출력 fd</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="표준-입출력-fd">표준 입출력 fd<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#표준-입출력-fd" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: fd 0·1은 stdin·stdout에 쓰이는 관례적 번호지만, Linux와 이 문서의 PintOS 구현은 두 번호를 서로 다르게 처리한다.</p>
+</blockquote>
+<h2 id="같은-fd-번호가-다른-구조를-가리키는-이유">같은 fd 번호가 다른 구조를 가리키는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#같은-fd-번호가-다른-구조를-가리키는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>프로그램은 보통 fd 0에서 입력을 읽고 fd 1로 결과를 쓴다. UNIX 전통에서 fd 0, 1, 2는 각각 stdin, stdout, stderr에 대응한다. 이 번호 자체에 특별한 기능이 내장된 것은 아니다. 운영체제와 프로그램이 같은 번호를 같은 용도로 사용하기로 한 관례다.</p>
+<p>이 관례를 구현하는 방법은 운영체제마다 다르다. Linux에서는 fd 0과 fd 1도 일반 파일 디스크립터와 마찬가지로 실제 <code>struct file</code> 객체를 가리킨다. 반면 여기서 다루는 PintOS 구현은 <code>fd_table[0]</code>과 <code>fd_table[1]</code>을 비워 두고, <code>read()</code>와 <code>write()</code>가 fd 번호를 검사해 입력과 출력을 직접 처리한다. 따라서 “표준 입출력 fd는 일반 파일 fd와 다르다”는 설명은 UNIX나 Linux 전체가 아니라 이 PintOS 구현에 한정된다.</p>
+<h2 id="unix-관례와-linux의-표준-입출력">UNIX 관례와 Linux의 표준 입출력<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#unix-관례와-linux의-표준-입출력" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>POSIX 환경에서는 프로세스가 시작할 때 fd 0, 1, 2를 각각 stdin, stdout, stderr로 사용하는 것을 전제로 한다. 세 fd는 터미널뿐 아니라 파이프, 소켓 등 여러 I/O 대상에 연결될 수 있다. 셸 리다이렉션(<code>></code>, <code>&lt;</code>, <code>2></code>)도 같은 fd 번호를 다른 파일에 다시 연결하는 방식이다.</p>
+<p>Linux에서 열려 있는 fd 0, 1, 2는 <code>task_struct→files→fdt→fd[]</code> 배열의 인덱스 0, 1, 2에 대응한다. 각 항목은 실제 <code>struct file</code> 객체를 가리키며 일반 파일과 같은 VFS 경로를 사용한다. 터미널에서 실행한 프로세스라면 <code>/dev/pts/N</code> 같은 tty 장치 파일에 연결될 수 있지만, 리다이렉션 여부에 따라 대상은 달라진다. <code>dup2()</code>, <code>close()</code>, <code>pipe()</code>로 연결을 바꿀 수도 있다.</p>
+<p>Linux에서 fd 0/1이 거치는 경로를 tty 연결 상황으로 나타내면 다음과 같다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Linux에서 write(1)이 VFS와 TTY 계층을 지나 UART로 내려가는 흐름\nflowchart TD\n  write[\&quot;write(1, buf, n)\&quot;]\n  ksys[\&quot;ksys_write()\&quot;]\n  vfs[\&quot;vfs_write()\&quot;]\n  tty_fops[\&quot;tty_fops.write&lt;br/>= tty_write()\&quot;]\n  n_tty[\&quot;n_tty_write()&lt;br/>line discipline\&quot;]\n  uart[\&quot;uart_write()&lt;br/>serial driver\&quot;]\n  fifo[\&quot;UART TX FIFO&lt;br/>하드웨어\&quot;]\n  driver[\&quot;driver\&quot;]\n  write --> ksys\n  ksys --> vfs\n  vfs --> tty_fops\n  tty_fops --> n_tty\n  n_tty --> driver\n  driver --> uart\n  uart --> fifo&quot;">%% Linux에서 write(1)이 VFS와 TTY 계층을 지나 UART로 내려가는 흐름
+flowchart TD
+  write[&quot;write(1, buf, n)&quot;]
+  ksys[&quot;ksys_write()&quot;]
+  vfs[&quot;vfs_write()&quot;]
+  tty_fops[&quot;tty_fops.write&lt;br/>= tty_write()&quot;]
+  n_tty[&quot;n_tty_write()&lt;br/>line discipline&quot;]
+  uart[&quot;uart_write()&lt;br/>serial driver&quot;]
+  fifo[&quot;UART TX FIFO&lt;br/>하드웨어&quot;]
+  driver[&quot;driver&quot;]
+  write --> ksys
+  ksys --> vfs
+  vfs --> tty_fops
+  tty_fops --> n_tty
+  n_tty --> driver
+  driver --> uart
+  uart --> fifo
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="pintos의-fd-0과-fd-1-처리">PintOS의 fd 0과 fd 1 처리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-fd-0과-fd-1-처리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 문서의 PintOS 구현은 표준 입출력을 파일 객체로 표현하지 않는다. <code>thread_init_struct()</code>에서 <code>t->next_fd = 2</code>로 설정해 fd 0과 fd 1을 일반 파일 할당 대상에서 제외한다. <code>fd_table[0]</code>과 <code>fd_table[1]</code>에는 <code>struct file</code> 포인터를 저장하지 않아 두 항목은 NULL 상태로 남는다.</p>
+<p>이 구조에서는 syscall이 fd 번호를 직접 확인해야 한다. <code>read()</code>는 fd 0이면 <code>input_getc()</code>로 키보드 입력을 한 바이트씩 읽는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) bytes_read </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> chunk)</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">        kpage</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[bytes_read</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> input_getc</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 경로는 VFS나 <code>struct file</code>을 거치지 않는다. 반대로 <code>write()</code>는 fd 1이면 <code>putbuf()</code>로 콘솔에 출력한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    putbuf</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> char</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) kpage, chunk);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    bytes_written </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> chunk;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>방향이 맞지 않는 요청은 오류로 처리한다. <code>write(fd=0, ...)</code>는 즉시 <code>-1</code>을 반환하고, <code>read(fd=1, ...)</code>도 즉시 <code>-1</code>을 반환한다. fd 2 이상은 일반 파일 경로로 보내 <code>file_read()</code> 또는 <code>file_write()</code>를 호출한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>fd 번호</th><th>용도</th><th>read() 동작</th><th>write() 동작</th></tr></thead><tbody><tr><td>0</td><td>stdin</td><td><code>input_getc()</code> 호출</td><td><code>-1</code> 반환</td></tr><tr><td>1</td><td>stdout</td><td><code>-1</code> 반환</td><td><code>putbuf()</code> 호출</td></tr><tr><td>2 이상</td><td>일반 파일</td><td><code>file_read()</code></td><td><code>file_write()</code></td></tr></tbody></table></div>
+<p>매크로 정의 (<code>include/lib/stdio.h</code>):</p>
+<ul>
+<li><code>STDIN_FILENO</code> = 0</li>
+<li><code>STDOUT_FILENO</code> = 1</li>
+</ul>
+<p><code>write()</code>의 분기는 다음 순서로 읽을 수 있다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS write syscall이 fd 번호에 따라 stdin 오류, stdout, 일반 파일 경로로 갈라지는 흐름\nflowchart TD\n  write[\&quot;write(fd, buffer, size)\&quot;]\n  fd0[\&quot;fd == 0?\&quot;]\n  stdin_err[\&quot;return -1&lt;br/>stdin에 쓸 수 없음\&quot;]\n  fd1[\&quot;fd == 1?\&quot;]\n  get_file[\&quot;process_get_file(fd)\&quot;]\n  null_check[\&quot;NULL?\&quot;]\n  bad_fd[\&quot;return -1\&quot;]\n  file_write[\&quot;file_write(file,&lt;br/>kpage, chunk)\&quot;]\n  stdout[\&quot;stdout\&quot;]\n  write --> fd0\n  fd0 -->|Yes| stdin_err\n  fd0 -->|No| fd1\n  fd1 -->|Yes| stdout\n  fd1 -->|No| get_file\n  get_file --> null_check\n  null_check -->|Yes| bad_fd\n  null_check -->|No| file_write&quot;">%% PintOS write syscall이 fd 번호에 따라 stdin 오류, stdout, 일반 파일 경로로 갈라지는 흐름
+flowchart TD
+  write[&quot;write(fd, buffer, size)&quot;]
+  fd0[&quot;fd == 0?&quot;]
+  stdin_err[&quot;return -1&lt;br/>stdin에 쓸 수 없음&quot;]
+  fd1[&quot;fd == 1?&quot;]
+  get_file[&quot;process_get_file(fd)&quot;]
+  null_check[&quot;NULL?&quot;]
+  bad_fd[&quot;return -1&quot;]
+  file_write[&quot;file_write(file,&lt;br/>kpage, chunk)&quot;]
+  stdout[&quot;stdout&quot;]
+  write --> fd0
+  fd0 -->|Yes| stdin_err
+  fd0 -->|No| fd1
+  fd1 -->|Yes| stdout
+  fd1 -->|No| get_file
+  get_file --> null_check
+  null_check -->|Yes| bad_fd
+  null_check -->|No| file_write
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><code>read()</code>도 먼저 stdout에 대한 잘못된 읽기를 거부한 뒤, stdin과 일반 파일 경로를 구분한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS read syscall이 fd 번호에 따라 stdout 오류, stdin, 일반 파일 경로로 갈라지는 흐름\nflowchart TD\n  read[\&quot;read(fd, buffer, size)\&quot;]\n  fd1[\&quot;fd == 1?\&quot;]\n  stdout_err[\&quot;return -1&lt;br/>stdout에서 읽을 수 없음\&quot;]\n  fd0[\&quot;fd == 0?\&quot;]\n  get_file[\&quot;process_get_file(fd)\&quot;]\n  null_check[\&quot;NULL?\&quot;]\n  bad_fd[\&quot;return -1\&quot;]\n  file_read[\&quot;file_read(file,&lt;br/>kpage, chunk)\&quot;]\n  stdin[\&quot;stdin\&quot;]\n  read --> fd1\n  fd1 -->|Yes| stdout_err\n  fd1 -->|No| fd0\n  fd0 -->|Yes| stdin\n  fd0 -->|No| get_file\n  get_file --> null_check\n  null_check -->|Yes| bad_fd\n  null_check -->|No| file_read&quot;">%% PintOS read syscall이 fd 번호에 따라 stdout 오류, stdin, 일반 파일 경로로 갈라지는 흐름
+flowchart TD
+  read[&quot;read(fd, buffer, size)&quot;]
+  fd1[&quot;fd == 1?&quot;]
+  stdout_err[&quot;return -1&lt;br/>stdout에서 읽을 수 없음&quot;]
+  fd0[&quot;fd == 0?&quot;]
+  get_file[&quot;process_get_file(fd)&quot;]
+  null_check[&quot;NULL?&quot;]
+  bad_fd[&quot;return -1&quot;]
+  file_read[&quot;file_read(file,&lt;br/>kpage, chunk)&quot;]
+  stdin[&quot;stdin&quot;]
+  read --> fd1
+  fd1 -->|Yes| stdout_err
+  fd1 -->|No| fd0
+  fd0 -->|Yes| stdin
+  fd0 -->|No| get_file
+  get_file --> null_check
+  null_check -->|Yes| bad_fd
+  null_check -->|No| file_read
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="fork-close-stderr의-차이">fork, close, stderr의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-close-stderr의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>__do_fork()</code>의 fd 복제 루프는 <code>fd = 2</code>부터 시작한다. fd 0과 fd 1은 파일 객체가 아니므로 복제 대상에서 빠진다. 자식도 <code>next_fd = 2</code>로 초기화되어 같은 관례를 따른다.</p>
+<p><code>close(0)</code>이나 <code>close(1)</code>을 호출하면 <code>process_get_file(fd)</code>가 NULL을 반환한다. 이 PintOS 구현에서는 두 호출이 아무 일도 하지 않은 채 실패한다. Linux에서는 상황이 다르다. <code>close(0)</code> 뒤에 실행한 다음 <code>open()</code>이 비어 있는 fd 0을 재사용할 수 있으므로, 원래 stdin이던 번호가 파일을 가리킬 수 있다.</p>
+<p>POSIX 관례에서 fd 2는 stderr지만 이 PintOS 구현은 stderr를 별도로 처리하지 않는다. <code>next_fd = 2</code>에서 일반 파일 번호 할당을 시작하므로 fd 2도 일반 파일에 배정될 수 있다. PintOS의 에러 메시지는 <code>printf()</code>로 출력되어 fd 1인 stdout 경로를 사용한다.</p>
+<h2 id="qemu가-관여하는-지점">QEMU가 관여하는 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-관여하는-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS syscall 내부의 fd 번호 분기나 <code>input_getc()</code>, <code>putbuf()</code> 호출을 결정하지 않는다. 이 로직은 guest CPU에서 실행되며, QEMU는 TCG로 번역하거나 KVM으로 직접 실행할 뿐이다. QEMU가 연결에 관여하는 시점은 PintOS가 I/O 장치에 접근할 때다.</p>
+<p>stdout에서는 <code>write(1, ...)</code>이 PintOS의 <code>putbuf()</code>와 직렬 포트 출력을 거친 뒤 QEMU의 CharDevice를 통해 호스트 터미널에 도달한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% stdout이 QEMU 직렬 장치를 거쳐 호스트 터미널로 나가는 흐름\nflowchart TD\n  write[\&quot;write(1, buf, n)&lt;br/>user syscall\&quot;]\n  putbuf[\&quot;putbuf(kpage, chunk)&lt;br/>커널 fd == 1 분기\&quot;]\n  console[\&quot;putchar_have_lock(c)&lt;br/>console.c\&quot;]\n  serial[\&quot;serial_putc(c)&lt;br/>serial.c\&quot;]\n  outb[\&quot;outb(0x3F8, c)&lt;br/>PIO 명령어\&quot;]\n  serial_io[\&quot;serial_ioport_write()&lt;br/>hw/char/serial.c\&quot;]\n  chr_fe[\&quot;qemu_chr_fe_write()&lt;br/>CharDevice frontend\&quot;]\n  fd_chr[\&quot;fd_chr_write()&lt;br/>chardev/char-fd.c\&quot;]\n  host_write[\&quot;write(host_fd, &amp;amp;c, 1)&lt;br/>호스트 syscall\&quot;]\n  terminal[\&quot;호스트 터미널에&lt;br/>문자 표시\&quot;]\n  write --> putbuf\n  putbuf --> console\n  console --> serial\n  serial --> outb\n  outb --> serial_io\n  serial_io --> chr_fe\n  chr_fe --> fd_chr\n  fd_chr --> host_write\n  host_write --> terminal&quot;">%% stdout이 QEMU 직렬 장치를 거쳐 호스트 터미널로 나가는 흐름
+flowchart TD
+  write[&quot;write(1, buf, n)&lt;br/>user syscall&quot;]
+  putbuf[&quot;putbuf(kpage, chunk)&lt;br/>커널 fd == 1 분기&quot;]
+  console[&quot;putchar_have_lock(c)&lt;br/>console.c&quot;]
+  serial[&quot;serial_putc(c)&lt;br/>serial.c&quot;]
+  outb[&quot;outb(0x3F8, c)&lt;br/>PIO 명령어&quot;]
+  serial_io[&quot;serial_ioport_write()&lt;br/>hw/char/serial.c&quot;]
+  chr_fe[&quot;qemu_chr_fe_write()&lt;br/>CharDevice frontend&quot;]
+  fd_chr[&quot;fd_chr_write()&lt;br/>chardev/char-fd.c&quot;]
+  host_write[&quot;write(host_fd, &amp;amp;c, 1)&lt;br/>호스트 syscall&quot;]
+  terminal[&quot;호스트 터미널에&lt;br/>문자 표시&quot;]
+  write --> putbuf
+  putbuf --> console
+  console --> serial
+  serial --> outb
+  outb --> serial_io
+  serial_io --> chr_fe
+  chr_fe --> fd_chr
+  fd_chr --> host_write
+  host_write --> terminal
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>stdin에서는 호스트의 키 입력이 QEMU의 키보드 장치와 PintOS 인터럽트 처리기를 거쳐 입력 버퍼에 들어간다. 이후 사용자의 <code>read(0, ...)</code>이 <code>input_getc()</code>로 그 바이트를 꺼낸다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 호스트 키 입력이 QEMU와 PintOS 입력 버퍼를 거쳐 read(0)으로 읽히는 흐름\nflowchart TD\n  host_key[\&quot;호스트 키 입력\&quot;]\n  event_loop[\&quot;SDL/GTK 이벤트 루프\&quot;]\n  ps2[\&quot;ps2_keyboard_event()&lt;br/>hw/input/ps2.c\&quot;]\n  scancode[\&quot;kbd_put_scancode()\&quot;]\n  i8042[\&quot;i8042_data_write()&lt;br/>hw/input/pckbd.c\&quot;]\n  irq[\&quot;qemu_irq_raise()&lt;br/>IRQ1 발생\&quot;]\n  isr[\&quot;keyboard_interrupt()&lt;br/>PintOS ISR, devices/kbd.c\&quot;]\n  read[\&quot;read(0, buf, n)&lt;br/>user syscall\&quot;]\n  input_getc[\&quot;input_getc()&lt;br/>커널 fd == 0 분기\&quot;]\n  intq_get[\&quot;intq_getc(&amp;amp;buffer)&lt;br/>blocking byte read\&quot;]\n  intq_put[\&quot;intq_put\&quot;]\n  host_key --> event_loop\n  event_loop --> ps2\n  ps2 --> scancode\n  scancode --> i8042\n  i8042 --> irq\n  irq --> isr\n  isr --> intq_put\n  intq_put -. 나중에 user read .-> read\n  read --> input_getc\n  input_getc --> intq_get&quot;">%% 호스트 키 입력이 QEMU와 PintOS 입력 버퍼를 거쳐 read(0)으로 읽히는 흐름
+flowchart TD
+  host_key[&quot;호스트 키 입력&quot;]
+  event_loop[&quot;SDL/GTK 이벤트 루프&quot;]
+  ps2[&quot;ps2_keyboard_event()&lt;br/>hw/input/ps2.c&quot;]
+  scancode[&quot;kbd_put_scancode()&quot;]
+  i8042[&quot;i8042_data_write()&lt;br/>hw/input/pckbd.c&quot;]
+  irq[&quot;qemu_irq_raise()&lt;br/>IRQ1 발생&quot;]
+  isr[&quot;keyboard_interrupt()&lt;br/>PintOS ISR, devices/kbd.c&quot;]
+  read[&quot;read(0, buf, n)&lt;br/>user syscall&quot;]
+  input_getc[&quot;input_getc()&lt;br/>커널 fd == 0 분기&quot;]
+  intq_get[&quot;intq_getc(&amp;amp;buffer)&lt;br/>blocking byte read&quot;]
+  intq_put[&quot;intq_put&quot;]
+  host_key --> event_loop
+  event_loop --> ps2
+  ps2 --> scancode
+  scancode --> i8042
+  i8042 --> irq
+  irq --> isr
+  isr --> intq_put
+  intq_put -. 나중에 user read .-> read
+  read --> input_getc
+  input_getc --> intq_get
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>QEMU의 CharDevice(Character Device)는 guest 직렬 포트와 호스트 I/O를 잇는 추상 계층이다. backend에 따라 stdio, pty, 네트워크 소켓, 파일 또는 null에 연결할 수 있다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% QEMU CharDevice backend가 guest serial port를 여러 호스트 I/O 대상으로 연결하는 구조\nflowchart TD\n  serial[\&quot;Guest Serial&lt;br/>0x3F8\&quot;]\n  pio[\&quot;PIO trap\&quot;]\n  backend[\&quot;CharDevice Backend\&quot;]\n  stdio[\&quot;stdio&lt;br/>-serial stdio&lt;br/>호스트 stdin/stdout\&quot;]\n  pty[\&quot;pty&lt;br/>/dev/pts/N\&quot;]\n  tcp[\&quot;tcp:host:port&lt;br/>네트워크 소켓\&quot;]\n  file[\&quot;file:path&lt;br/>파일 출력\&quot;]\n  null[\&quot;null&lt;br/>/dev/null\&quot;]\n  serial --> pio\n  pio --> backend\n  backend --> stdio\n  backend --> pty\n  backend --> tcp\n  backend --> file\n  backend --> null&quot;">%% QEMU CharDevice backend가 guest serial port를 여러 호스트 I/O 대상으로 연결하는 구조
+flowchart TD
+  serial[&quot;Guest Serial&lt;br/>0x3F8&quot;]
+  pio[&quot;PIO trap&quot;]
+  backend[&quot;CharDevice Backend&quot;]
+  stdio[&quot;stdio&lt;br/>-serial stdio&lt;br/>호스트 stdin/stdout&quot;]
+  pty[&quot;pty&lt;br/>/dev/pts/N&quot;]
+  tcp[&quot;tcp:host:port&lt;br/>네트워크 소켓&quot;]
+  file[&quot;file:path&lt;br/>파일 출력&quot;]
+  null[&quot;null&lt;br/>/dev/null&quot;]
+  serial --> pio
+  pio --> backend
+  backend --> stdio
+  backend --> pty
+  backend --> tcp
+  backend --> file
+  backend --> null
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>PintOS를 QEMU에서 실행할 때 기본 옵션 <code>-serial stdio</code>는 guest serial port를 호스트의 stdin/stdout에 매핑한다. 이 설정은 장치 사이의 연결만 제공한다. fd 0을 stdin으로 해석하는 일은 PintOS의 관례와 syscall 구현에 속한다.</p>
+<h2 id="linux-tty와-pintos-콘솔-비교">Linux TTY와 PintOS 콘솔 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-tty와-pintos-콘솔-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서 fd 0과 fd 1이 tty에 연결된 경우에는 VFS와 TTY 서브시스템을 거친다. 이 PintOS 구현은 그 계층을 두지 않고 <code>putbuf()</code>와 <code>input_getc()</code>를 직접 호출한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>fd 0/1 실체</td><td><code>/dev/pts/N</code> (pseudo-terminal) → <code>struct file</code> → tty_fops</td><td>fd_table[0/1] = NULL, 코드 분기</td></tr><tr><td>TTY 드라이버 계층</td><td>tty_struct → tty_ldisc (line discipline) → tty_driver → UART</td><td>없음 (putbuf → serial_putc 직접 호출)</td></tr><tr><td>line discipline</td><td>N_TTY: echo, line editing, canonical/raw 모드</td><td>없음 (raw 입출력만)</td></tr><tr><td>echo 처리</td><td>TTY layer에서 자동 echo</td><td>없음</td></tr><tr><td>터미널 크기</td><td><code>TIOCGWINSZ</code> ioctl로 rows/cols 조회</td><td>미지원</td></tr><tr><td>시그널 생성</td><td>Ctrl+C → SIGINT, Ctrl+Z → SIGTSTP</td><td>미지원 (시그널 없음)</td></tr><tr><td>리다이렉션</td><td><code>dup2(fd, 0)</code> → fd 0을 새 파일로 교체</td><td>미지원</td></tr><tr><td>백그라운드 I/O</td><td>SIGTTIN/SIGTTOU 시그널</td><td>미지원</td></tr><tr><td>다중 터미널</td><td>각 세션별 controlling terminal</td><td>단일 콘솔만</td></tr><tr><td><code>struct file</code> 경로</td><td>fd → struct file → tty_fops → tty_write() → driver</td><td>fd → 번호 분기 → putbuf()/input_getc()</td></tr></tbody></table></div>
+<p>표준 입출력 번호의 저장과 재연결 가능성만 좁혀 비교하면 다음과 같다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>fd 0/1 저장 위치</td><td>fd_table[0/1]에 struct file (tty 장치)</td><td>fd_table[0/1] = NULL, 코드 분기로 처리</td></tr><tr><td>fd 2 (stderr)</td><td>별도 struct file</td><td>미구현, fd 2부터 일반 파일</td></tr><tr><td>close(0) 후 open()</td><td>새 파일이 fd 0을 재사용</td><td>close(0) 무해 실패, next_fd=2 유지</td></tr><tr><td>리다이렉션</td><td>dup2()로 fd 재매핑</td><td>미지원</td></tr><tr><td>pipe 연결</td><td>pipe()로 fd 0/1 교체</td><td>미지원</td></tr><tr><td>장치 추상화</td><td>VFS → tty driver → UART</td><td>putbuf() → serial_putc() → outb()</td></tr></tbody></table></div>
+<h2 id="gdb로-확인할-지점">GDB로 확인할 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-확인할-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 스크립트는 각 경로를 관찰하기 위한 중단점과 출력 명령이다. 문서에는 이 스크립트의 실제 실행 결과가 포함되어 있지 않으므로, 줄 번호와 변수 이름은 대상 소스와 맞는지 확인한 뒤 사용해야 한다.</p>
+<p>fd 분기 관찰 (write syscall):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># write() 진입 시 fd 값과 분기 결과 추적</span></span>
+<span data-line><span>break syscall.c:205</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;write(fd=%d, size=%u) by %s\n&quot;, fd, size, thread_current()->name</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>stdin 읽기 추적:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># fd==0일 때 input_getc() 호출 관찰</span></span>
+<span data-line><span>break syscall.c:326</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;read(fd=0): entering input_getc loop, chunk=%u\n&quot;, chunk</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>stdout 쓰기 추적:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># fd==1일 때 putbuf() 호출 관찰</span></span>
+<span data-line><span>break syscall.c:232</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;write(fd=1): putbuf(%u bytes)\n&quot;, chunk</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>fd_table 상태 덤프:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 현재 프로세스의 fd_table 내용 확인</span></span>
+<span data-line><span>define dump_fd_table</span></span>
+<span data-line><span>  set $t = thread_current()</span></span>
+<span data-line><span>  set $i = 0</span></span>
+<span data-line><span>  printf &quot;fd_table for '%s' (next_fd=%d):\n&quot;, $t->name, $t->next_fd</span></span>
+<span data-line><span>  while $i &lt; $t->next_fd</span></span>
+<span data-line><span>    if $t->fd_table[$i] != 0</span></span>
+<span data-line><span>      printf &quot;  fd[%d] = %p\n&quot;, $i, $t->fd_table[$i]</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    set $i = $i + 1</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>fork 후 fd 복제 확인:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># duplicate_fd_table에서 복제 루프 관찰</span></span>
+<span data-line><span>break process.c:288</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;duplicate_fd: copying fd=%d, parent->fd_table[fd]=%p\n&quot;, \</span></span>
+<span data-line><span>         fd, parent->fd_table[fd]</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현을-다시-찾기-위한-코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>include/lib/stdio.h</td><td><code>STDIN_FILENO</code></td><td>14</td><td>매크로 상수 0</td></tr><tr><td>include/lib/stdio.h</td><td><code>STDOUT_FILENO</code></td><td>15</td><td>매크로 상수 1</td></tr><tr><td>threads/thread.c</td><td><code>init_thread()</code> → <code>next_fd = 2</code></td><td>548</td><td>fd 0, 1을 건너뛰어 예약</td></tr><tr><td>userprog/syscall.c</td><td><code>write()</code></td><td>205</td><td>write syscall 진입</td></tr><tr><td>userprog/syscall.c</td><td><code>if (fd == 0) return -1</code></td><td>212</td><td>stdin에 쓰기 차단</td></tr><tr><td>userprog/syscall.c</td><td><code>if (fd == 1) putbuf(...)</code></td><td>231-233</td><td>stdout 출력 처리</td></tr><tr><td>userprog/syscall.c</td><td><code>read()</code></td><td>303</td><td>read syscall 진입</td></tr><tr><td>userprog/syscall.c</td><td><code>if (fd == 1) return -1</code></td><td>310-311</td><td>stdout에서 읽기 차단</td></tr><tr><td>userprog/syscall.c</td><td><code>if (fd == 0) input_getc()</code></td><td>326-328</td><td>stdin 입력 처리</td></tr><tr><td>lib/user/console.c</td><td><code>vprintf()</code> → <code>STDOUT_FILENO</code></td><td>9-10</td><td>유저 printf → write(1, …)</td></tr><tr><td>lib/user/console.c</td><td><code>puts()</code></td><td>30</td><td><code>write(STDOUT_FILENO, s, strlen(s))</code></td></tr><tr><td>lib/user/console.c</td><td><code>putchar()</code></td><td>40</td><td><code>write(STDOUT_FILENO, &amp;c2, 1)</code></td></tr><tr><td>userprog/process.c</td><td><code>duplicate_fd_table()</code></td><td>272</td><td>fd 복제 함수</td></tr><tr><td>userprog/process.c</td><td><code>for (fd = 2; ...)</code></td><td>288</td><td>stdin/stdout 복제 건너뜀</td></tr><tr><td>devices/input.c</td><td><code>input_getc()</code></td><td>29</td><td>intq에서 한 바이트 추출 (blocking)</td></tr><tr><td>lib/kernel/console.c</td><td><code>putbuf()</code></td><td>143</td><td><code>acquire_console</code> → <code>putchar_have_lock</code> × n</td></tr><tr><td>tests/userprog/read-stdout.c</td><td><code>test_main()</code></td><td>13</td><td><code>read(STDOUT_FILENO, &amp;buf, 1)</code> 실패 테스트</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/fd-number-meaning" class="internal internal-link alias" data-slug="wiki/os/fd-number-meaning">fd 번호</a></li>
+<li><a href="../../wiki/os/fd-table-per-process" class="internal internal-link alias" data-slug="wiki/os/fd-table-per-process">fd table</a></li>
+<li><a href="../../wiki/os/syscall-handler-dispatch" class="internal internal-link alias" data-slug="wiki/os/syscall-handler-dispatch">syscall handler() 분기</a></li>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork fd table 복제</a></li>
+<li><a href="../../wiki/os/shared-file-offset" class="internal internal-link alias" data-slug="wiki/os/shared-file-offset">shared file offset</a></li>
+<li><a href="../../wiki/os/fd-close-reuse-lab" class="internal internal-link alias" data-slug="wiki/os/fd-close-reuse-lab">reuse</a></li>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a></li>
+<li><a href="../../wiki/os/struct-file-inode" class="internal internal-link alias" data-slug="wiki/os/struct-file-inode">inode</a></li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a></li>
+<li><a href="../../wiki/os/port-io-mmio" class="internal internal-link alias" data-slug="wiki/os/port-io-mmio">PIO와 MMIO</a></li>
+<li><a href="../../wiki/os/i8254-pit-model" class="internal internal-link alias" data-slug="wiki/os/i8254-pit-model">i8254 PIT</a></li>
+<li><a href="../../wiki/os/qemu-is-not-os" class="internal internal-link alias" data-slug="wiki/os/qemu-is-not-os">QEMU는 OS가 아니다</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/file-system-storage" class="internal">파일시스템과 저장소</a></li><li><a href="../../wiki/os/fd-number-meaning" class="internal">fd 숫자의 의미</a></li><li><a href="../../wiki/os/fd-table-per-process" class="internal">프로세스별 fd_table 배열</a></li><li><a href="../../wiki/os/file-descriptor-knowledge" class="internal">파일 디스크립터</a></li><li><a href="../../wiki/os/i8254-pit-model" class="internal">i8254 PIT 가상 타이머</a></li><li><a href="../../wiki/os/ipc-message-passing" class="internal">IPC Message Passing — 커널을 경유하는 프로세스 간 통신</a></li><li><a href="../../wiki/os/qemu-is-not-os" class="internal">QEMU는 OS가 아니다</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-647" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#표준-입출력-fd" data-for="표준-입출력-fd">표준 입출력 fd</a></li><li class="depth-1"><a href="#같은-fd-번호가-다른-구조를-가리키는-이유" data-for="같은-fd-번호가-다른-구조를-가리키는-이유">같은 fd 번호가 다른 구조를 가리키는 이유</a></li><li class="depth-1"><a href="#unix-관례와-linux의-표준-입출력" data-for="unix-관례와-linux의-표준-입출력">UNIX 관례와 Linux의 표준 입출력</a></li><li class="depth-1"><a href="#pintos의-fd-0과-fd-1-처리" data-for="pintos의-fd-0과-fd-1-처리">PintOS의 fd 0과 fd 1 처리</a></li><li class="depth-2"><a href="#fork-close-stderr의-차이" data-for="fork-close-stderr의-차이">fork, close, stderr의 차이</a></li><li class="depth-1"><a href="#qemu가-관여하는-지점" data-for="qemu가-관여하는-지점">QEMU가 관여하는 지점</a></li><li class="depth-1"><a href="#linux-tty와-pintos-콘솔-비교" data-for="linux-tty와-pintos-콘솔-비교">Linux TTY와 PintOS 콘솔 비교</a></li><li class="depth-1"><a href="#gdb로-확인할-지점" data-for="gdb로-확인할-지점">GDB로 확인할 지점</a></li><li class="depth-1"><a href="#구현을-다시-찾기-위한-코드-좌표" data-for="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

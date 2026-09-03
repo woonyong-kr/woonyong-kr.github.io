@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Byte-level 디버깅 — 같은 바이트, 다른 해석 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Byte-level 디버깅 — 같은 바이트, 다른 해석 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Byte-level 디버깅 — 같은 바이트, 다른 해석 · 최우녕"/><meta name="twitter:description" content="메모리의 바이트는 해석 방식에 따라 정수·포인터·명령어·구조체가 된다"/><meta property="og:description" content="메모리의 바이트는 해석 방식에 따라 정수·포인터·명령어·구조체가 된다"/><meta property="og:image:alt" content="메모리의 바이트는 해석 방식에 따라 정수·포인터·명령어·구조체가 된다"/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/byte-level-debugging"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/byte-level-debugging"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="메모리의 바이트는 해석 방식에 따라 정수·포인터·명령어·구조체가 된다"/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/byte-level-debugging" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-425" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-425" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Byte-level 디버깅 — 같은 바이트, 다른 해석</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="byte-level-디버깅--같은-바이트-다른-해석">Byte-level 디버깅 — 같은 바이트, 다른 해석<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#byte-level-디버깅--같은-바이트-다른-해석" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 같은 바이트가 해석 방식에 따라 다른 의미를 갖는 일반 원리와 GDB·PintOS·QEMU에서의 적용 기준을 설명한다. 제시된 구조체 offset, 코드 좌표, 명령 결과, swap I/O 일치 여부 등 구현·버전·실행 환경에 의존하는 내용은 특정 코드나 실행 기록으로 검증된 결과가 아니라 실제 대상 환경에서 별도로 확인해야 할 예시다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: 메모리의 바이트는 해석 방식에 따라 정수·포인터·명령어·구조체가 된다 — GDB x/x·x/d·x/i·x/s로 같은 바이트를 다르게 읽는 감각.</p>
+</blockquote>
+<h2 id="byte-level-디버깅-구조">Byte-level 디버깅 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#byte-level-디버깅-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>OS 디버깅에서 가장 중요한 감각은 “메모리에 있는 바이트는 그 자체로는 의미가 없고, 해석 방식에 따라 정수, 포인터, 명령어, 구조체 필드가 된다”는 인식이다. GDB에서 <code>x/x</code>, <code>x/d</code>, <code>x/i</code>, <code>x/s</code> 같은 포맷을 바꾸면 같은 바이트가 전혀 다르게 보인다. 이 감각이 없으면 page fault의 CR2, swap slot의 sector 번호, intr_frame의 필드를 디버깅할 때 “이 숫자가 무엇인가?”에서 막힌다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-바이트-해석-규칙">추상 개념 (바이트 해석 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-바이트-해석-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>메모리의 모든 데이터는 바이트 시퀀스다. 의미는 해석자가 부여한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>바이트</th><th>정수 해석</th><th>포인터 해석</th><th>명령어 해석</th><th>문자 해석</th></tr></thead><tbody><tr><td><code>48 c7 c7 01 00 00 00</code></td><td><code>0x000001c7c748</code></td><td>유효하지 않은 주소</td><td><code>mov $1, %rdi</code></td><td>의미 없음</td></tr><tr><td><code>68 65 6c 6c 6f</code></td><td><code>0x6f6c6c6568</code></td><td>유효하지 않은 주소</td><td><code>push $0x6c6c6568</code>…</td><td><code>hello</code></td></tr><tr><td><code>00 10 00 00 00 00 00 00</code></td><td><code>4096</code></td><td><code>0x1000</code> (1페이지)</td><td><code>add %dl,(%rax)</code> …</td><td><code>\0\x10...</code></td></tr></tbody></table></div>
+<p>x86-64는 little-endian이다. 주소 <code>0x1000</code>에 8바이트 정수 <code>0x0000000000001000</code>이 저장되면:</p>
+<pre><code>addr:  0x1000  0x1001  0x1002  ...  0x1007
+byte:    00      10      00    ...    00
+</code></pre>
+<p>GDB에서 <code>x/1gx 0x1000</code>은 <code>0x0000000000001000</code>을 보여주지만, <code>x/8bx 0x1000</code>은 <code>00 10 00 00 00 00 00 00</code>을 보여준다. 같은 바이트, 다른 표현.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>실제 OS 디버깅에서도 byte-level 감각은 동일하게 중요하다.</p>
+<p>Linux 커널 디버깅에서의 예:</p>
+<ul>
+<li><code>crash</code> 도구로 커널 메모리를 직접 읽을 때, <code>struct task_struct</code>의 offset을 계산하여 특정 필드를 바이트로 확인</li>
+<li><code>dmesg</code>에 <code>BUG: unable to handle page fault at 0xdead000000000108</code> 같은 메시지가 나오면, <code>0xdead</code>는 KASAN poison 패턴일 수 있고, 이것을 아는지 모르는지가 디버깅 속도를 결정</li>
+</ul>
+<p>커널이 사용하는 디버깅 패턴 바이트:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>패턴</th><th>용도</th><th>의미</th></tr></thead><tbody><tr><td><code>0xdeadbeef</code></td><td>freed memory</td><td>해제된 메모리를 읽으면 바로 눈에 띔</td></tr><tr><td><code>0xcccccccc</code></td><td>MSVC uninitialized stack</td><td>초기화되지 않은 지역 변수</td></tr><tr><td><code>0x5a5a5a5a</code></td><td>Linux SLUB freed object</td><td>slab allocator가 해제 표시</td></tr><tr><td><code>0xa5a5a5a5</code></td><td>Linux SLUB poison</td><td>유효하지 않은 데이터 표시</td></tr><tr><td><code>0x6b6b6b6b</code></td><td>Linux SLUB freed</td><td><code>k</code>의 반복</td></tr></tbody></table></div>
+<h3 id="pintos--qemu-디버깅-실전">PintOS + QEMU 디버깅 실전<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos--qemu-디버깅-실전" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 디버깅에서 byte-level 관점이 필요한 대표 상황:</p>
+<p><strong>1. page fault 디버깅 — CR2 해석</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># page_fault()에 멈춘 상태에서</span></span>
+<span data-line><span>p/x rcr2()                     # fault 주소</span></span>
+<span data-line><span># 예: 0x00000000004004a8</span></span>
+<span data-line> </span>
+<span data-line><span># 이 주소의 의미 판단</span></span>
+<span data-line><span># page 시작:   0x0000000000400000 (pg_round_down)</span></span>
+<span data-line><span># offset:      0x4a8</span></span>
+<span data-line><span># 이것이 code segment인지, stack인지, heap인지?</span></span>
+<span data-line><span># → SPT에서 해당 page를 찾아 type 확인</span></span>
+<span data-line><span>p *(struct page *)spt_find_page(&amp;thread_current()->spt, 0x400000)</span></span></code></pre></figure>
+<p><strong>2. intr_frame 바이트 직접 읽기</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># syscall_handler(struct intr_frame *f)에서</span></span>
+<span data-line><span># struct로 읽기:</span></span>
+<span data-line><span>p/x f->R.rax          # syscall 번호</span></span>
+<span data-line><span>p/x f->R.rdi          # 첫 번째 인자</span></span>
+<span data-line> </span>
+<span data-line><span># raw 바이트로 읽기 (struct 정의 없이도 디버깅 가능):</span></span>
+<span data-line><span>x/1gx (char*)f + 112  # f->R.rax (offset 112)</span></span>
+<span data-line><span>x/1gx (char*)f + 72   # f->R.rdi (offset 72)</span></span>
+<span data-line><span>x/1gx (char*)f + 152  # f->rip   (offset 152)</span></span></code></pre></figure>
+<p><strong>3. swap slot 검증 — 디스크의 바이트와 메모리의 바이트 비교</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># page가 swap out된 후, swap disk의 해당 sector를 읽어</span></span>
+<span data-line><span># 나중에 swap in된 frame의 바이트와 동일한지 확인</span></span>
+<span data-line> </span>
+<span data-line><span># swap slot 3의 시작 sector = 3 × 8 = 24</span></span>
+<span data-line><span># QEMU host에서: xxd -s $((24*512)) -l 4096 swap.img | head</span></span>
+<span data-line><span># PintOS GDB에서: x/16bx frame_kva</span></span>
+<span data-line><span># 두 결과가 일치하면 swap I/O가 정확한 것</span></span></code></pre></figure>
+<p><strong>4. PTE 바이트 직접 읽기</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># pml4에서 특정 VA의 PTE를 직접 추적</span></span>
+<span data-line><span>set $va = 0x400000</span></span>
+<span data-line><span>set $pml4_base = thread_current()->pml4</span></span>
+<span data-line> </span>
+<span data-line><span># PML4 index = (VA >> 39) &amp; 0x1FF</span></span>
+<span data-line><span>set $pml4_idx = ($va >> 39) &amp; 0x1FF</span></span>
+<span data-line><span>x/1gx (uint64_t*)$pml4_base + $pml4_idx</span></span>
+<span data-line> </span>
+<span data-line><span># 결과에서 하위 12비트 제거하면 다음 테이블의 물리 주소</span></span>
+<span data-line><span># ... 이것을 4단계 반복하면 최종 PTE에 도달</span></span></code></pre></figure>
+<h3 id="qemu-관찰-계층">QEMU 관찰 계층<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-관찰-계층" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU GDB stub을 통해 보는 값은 모두 guest 관점이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>GDB 명령</th><th>보이는 것</th><th>실제 위치</th></tr></thead><tbody><tr><td><code>info registers</code></td><td>guest CPU 레지스터</td><td>QEMU <code>CPUX86State.regs[]</code></td></tr><tr><td><code>x/Nx addr</code></td><td>guest 가상 메모리</td><td>QEMU softmmu가 guest PT를 walk하여 host memory에서 읽음</td></tr><tr><td><code>x/Ni addr</code></td><td>guest 명령어</td><td>위와 같은 바이트를 x86 명령어로 디코드</td></tr><tr><td><code>monitor info mem</code></td><td>guest 페이지 테이블 매핑</td><td>QEMU가 guest CR3 기반으로 요약</td></tr><tr><td><code>monitor xp/Nx paddr</code></td><td>guest <strong>물리</strong> 메모리</td><td>QEMU RAMBlock에서 직접 읽음</td></tr></tbody></table></div>
+<p><code>x/Nx</code>는 guest 가상 주소, <code>monitor xp/Nx</code>는 guest 물리 주소다. 둘의 차이를 이해하지 못하면 커널 VA와 유저 VA가 겹치는 상황에서 혼란이 생긴다.</p>
+<h2 id="byte-level-디버깅-값-추적">Byte-level 디버깅 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#byte-level-디버깅-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>GDB 포맷 문자 정리:</p>
+<pre><code>x/[개수][포맷][크기] [주소]
+
+포맷:
+  x = hex         d = decimal      u = unsigned
+  o = octal       t = binary       i = instruction
+  c = char        s = string       a = address
+
+크기:
+  b = 1 byte      h = 2 bytes (halfword)
+  w = 4 bytes     g = 8 bytes (giant)
+</code></pre>
+<p>PintOS의 주요 구조체 크기와 offset:</p>
+<pre><code>struct thread:
+  sizeof = 약 168 bytes (구현에 따라 다름)
+  status offset: 일반적으로 +16 (tid 뒤)
+
+struct intr_frame:
+  sizeof = 약 184 bytes
+  R.rax offset:    112
+  R.rdi offset:     72
+  rip offset:      152
+  rsp offset:      176
+  error_code offset: 144
+
+struct page:
+  va offset:       구현에 따라 다름
+  frame offset:    va 뒤
+  type offset:     union 앞
+</code></pre>
+<p>page table walk에서의 주소 비트 분할:</p>
+<pre><code>64-bit VA (48 usable bits):
+  [63:48]  sign extension (canonical)
+  [47:39]  PML4 index    (9 bits, 512 entries)
+  [38:30]  PDPT index    (9 bits)
+  [29:21]  PD index      (9 bits)
+  [20:12]  PT index      (9 bits)
+  [11:0]   page offset   (12 bits, 4096 bytes)
+
+각 테이블: 512 entries × 8 bytes = 4096 bytes = 1 page
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: gdb-byte-interpretation.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;gdb byte interpretation&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>threads/interrupt.h</code></td><td><code>struct intr_frame</code></td><td>register snapshot — raw byte로 읽어 검증 가능</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_get_page()</code></td><td>VA → kernel VA 변환, 내부적으로 PT walk</td></tr><tr><td><code>include/threads/vaddr.h</code></td><td><code>pg_round_down()</code></td><td>VA에서 page offset 제거</td></tr><tr><td><code>include/threads/vaddr.h</code></td><td><code>ptov()</code>, <code>vtop()</code></td><td>kernel VA ↔ physical address 변환</td></tr><tr><td><code>vm/vm.c</code></td><td><code>spt_find_page()</code></td><td>VA로 SPT에서 page 구조체 검색</td></tr></tbody></table></div>
+<p>QEMU 측:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>target/i386/gdbstub.c</code></td><td><code>x86_cpu_gdb_read_register()</code></td><td>GDB ‘info registers’ 응답</td></tr><tr><td><code>softmmu/physmem.c</code></td><td><code>address_space_rw()</code></td><td>guest 물리 주소 읽기/쓰기</td></tr><tr><td><code>target/i386/helper.c</code></td><td><code>x86_cpu_get_phys_page_debug()</code></td><td>guest VA → PA (monitor xp 용)</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>같은 byte의 다양한 해석 실험 Lab</li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">fault VA와 frame byte 일치 확인 Lab</a></li>
+<li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page는 왜 커널 가상 주소를 돌려주나</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">GDB가 보여주는 것이 guest state인 이유</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">QEMU의 guest 물리 메모리 구조</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">레지스터의 바이트 해석</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">CR2 해석이 필요한 대표 상황</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/qemu-hardware-byte-debugging" class="internal">QEMU와 Byte 디버깅</a></li><li><a href="../../wiki/os/address-space-rw-function" class="internal">QEMU 메모리 접근 함수 address_space_rw()</a></li><li><a href="../../wiki/os/byte-as-instruction" class="internal">바이트와 명령어 해석</a></li><li><a href="../../wiki/os/byte-as-integer" class="internal">바이트 정수 해석</a></li><li><a href="../../wiki/os/byte-as-pointer" class="internal">바이트를 Pointer로 해석하기</a></li><li><a href="../../wiki/os/byte-as-struct-field" class="internal">바이트를 Struct Field로 해석하기</a></li><li><a href="../../wiki/os/cpux86state-structure" class="internal">CPUX86State 구조체 — QEMU의 가상 CPU</a></li><li><a href="../../wiki/os/fetch-decode-execute" class="internal">fetch → decode → execute</a></li><li><a href="../../wiki/os/gdb-memory-dump" class="internal">GDB 메모리 덤프</a></li><li><a href="../../wiki/os/gdb-stub-register-read" class="internal">GDB 스텁 레지스터 읽기</a></li><li><a href="../../wiki/os/user-va-frame-kva-match" class="internal">user VA와 frame kva + offset 일치</a></li><li><a href="../../wiki/os/variable-length-instruction" class="internal">가변 길이 명령어 (1~15 bytes)</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-423" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#byte-level-디버깅--같은-바이트-다른-해석" data-for="byte-level-디버깅--같은-바이트-다른-해석">Byte-level 디버깅 — 같은 바이트, 다른 해석</a></li><li class="depth-1"><a href="#byte-level-디버깅-구조" data-for="byte-level-디버깅-구조">Byte-level 디버깅 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-바이트-해석-규칙" data-for="추상-개념-바이트-해석-규칙">추상 개념 (바이트 해석 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos--qemu-디버깅-실전" data-for="pintos--qemu-디버깅-실전">PintOS + QEMU 디버깅 실전</a></li><li class="depth-2"><a href="#qemu-관찰-계층" data-for="qemu-관찰-계층">QEMU 관찰 계층</a></li><li class="depth-1"><a href="#byte-level-디버깅-값-추적" data-for="byte-level-디버깅-값-추적">Byte-level 디버깅 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace) · 최우녕"/><meta name="twitter:description" content="유저의 mmap() 호출이 커널 dommap()에 닿으려면 syscall handler의 SYSMMAP case를 거쳐야 하며, 이 trace는 유저 레지스터의 다섯 인자가 검증되어 dommap()으로 연결되는 전체 경로를 따라간다."/><meta property="og:description" content="유저의 mmap() 호출이 커널 dommap()에 닿으려면 syscall handler의 SYSMMAP case를 거쳐야 하며, 이 trace는 유저 레지스터의 다섯 인자가 검증되어 dommap()으로 연결되는 전체 경로를 따라간다."/><meta property="og:image:alt" content="유저의 mmap() 호출이 커널 dommap()에 닿으려면 syscall handler의 SYSMMAP case를 거쳐야 하며, 이 trace는 유저 레지스터의 다섯 인자가 검증되어 dommap()으로 연결되는 전체 경로를 따라간다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/mmap-syscall-handler-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/mmap-syscall-handler-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="유저의 mmap() 호출이 커널 dommap()에 닿으려면 syscall handler의 SYSMMAP case를 거쳐야 하며, 이 trace는 유저 레지스터의 다섯 인자가 검증되어 dommap()으로 연결되는 전체 경로를 따라간다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/mmap-syscall-handler-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-538" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-538" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="mmap-시스템콜-핸들러-흐름-mmap-syscall-handler-trace">mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#mmap-시스템콜-핸들러-흐름-mmap-syscall-handler-trace" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: 유저의 mmap() 호출이 커널 do_mmap()에 닿으려면 syscall handler의 SYS_MMAP case를 거쳐야 하며, 이 trace는 유저 레지스터의 다섯 인자가 검증되어 do_mmap()으로 연결되는 전체 경로를 따라간다.</p>
+</blockquote>
+<blockquote>
+<p>확인 범위: PintOS 구현 경로는 <a href="https://github.com/woonyong-kr/pintos/tree/5594d4655689f5f06bb04c0bef064f6058211d23" class="external external-link">woonyong-kr/pintos <code>5594d46</code><svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>의 <code>lib/user/syscall.c</code>, <code>userprog/syscall.c</code>, <code>vm/file.c</code>를 기준으로 확인했다. Linux·Windows 비교 표는 개념적 경로 비교이며, 특정 버전의 runtime 검증 결과가 아니다.</p>
+</blockquote>
+<h2 id="mmap-시스템콜-핸들러-흐름">mmap 시스템콜 핸들러 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#mmap-시스템콜-핸들러-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><a href="https://github.com/woonyong-kr/pintos/blob/5594d4655689f5f06bb04c0bef064f6058211d23/pintos/userprog/syscall.c" class="external external-link"><code>userprog/syscall.c</code>의 <code>SYS_MMAP</code> case<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>는 다섯 register 인자를 <code>mmap()</code>으로 넘기고, 같은 파일의 <code>mmap()</code>은 검증을 마친 뒤 <a href="https://github.com/woonyong-kr/pintos/blob/5594d4655689f5f06bb04c0bef064f6058211d23/pintos/vm/file.c" class="external external-link"><code>vm/file.c</code>의 <code>do_mmap()</code><svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>을 호출한다. 아래 흐름은 이 두 source file의 <code>5594d46</code> snapshot에서 직접 확인한 경로만 설명하며, 다른 commit의 동작은 범위에 포함하지 않는다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>CPU는 <code>mmap</code>의 의미를 모른다. CPU가 아는 것은 <code>syscall</code> 명령어가 실행되면 <code>MSR_LSTAR</code>에 저장된 커널 진입점 주소로 <code>RIP</code>를 바꾸고, CPL을 3→0으로 전환하며, 유저 <code>RIP</code>를 <code>RCX</code>에 백업한다는 것뿐이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>하드웨어 동작</th><th>무엇을 함</th><th>무엇을 모름</th></tr></thead><tbody><tr><td><code>syscall</code> 명령어</td><td>CPL 3→0, RIP←LSTAR, RCX←유저RIP, R11←RFLAGS</td><td>RAX=14가 mmap이라는 것</td></tr><tr><td>register 전달</td><td>RAX/RDI/RSI/RDX/R10/R8에 값을 넣음</td><td>각 값이 주소, 길이, fd 등이라는 것</td></tr><tr><td>반환</td><td><code>sysretq</code>로 CPL 0→3, RIP←RCX</td><td>RAX에 든 값이 성공 주소인지 MAP_FAILED인지</td></tr></tbody></table></div>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>유저 API</td><td><code>mmap(addr, len, prot, flags, fd, off)</code> 6인자</td><td><code>CreateFileMapping</code> + <code>MapViewOfFile</code></td><td><code>mmap(addr, len, writable, fd, off)</code> 5인자</td></tr><tr><td>syscall 진입</td><td><code>SYSCALL</code>→syscall table[__NR_mmap]</td><td><code>SYSCALL</code>→KiSystemServiceRepeat</td><td><code>syscall</code>→syscall_entry.S→syscall_handler()</td></tr><tr><td>fd→file 변환</td><td><code>fdget(fd)</code>→<code>struct file *</code></td><td>handle→ObReferenceObjectByHandle</td><td><code>process_get_file(fd)</code></td></tr><tr><td>실패 반환값</td><td><code>MAP_FAILED == (void *) -1</code></td><td><code>NULL</code></td><td><code>MAP_FAILED == (void *) NULL</code></td></tr><tr><td>prot/flags</td><td><code>PROT_READ|PROT_WRITE</code>, <code>MAP_SHARED|MAP_PRIVATE</code> 등</td><td>PAGE_READWRITE, SEC_COMMIT 등</td><td><code>writable</code> 하나 (0 또는 1)</td></tr><tr><td>검증 항목</td><td>alignment, permission, VMA overlap, rlimit 등</td><td>alignment, commit charge 등</td><td>page alignment, fd 범위, overlap, offset alignment</td></tr></tbody></table></div>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<blockquote>
+<p>저장소 확인: <a href="https://github.com/woonyong-kr/pintos/tree/5594d4655689f5f06bb04c0bef064f6058211d23" class="external external-link">woonyong-kr/pintos <code>5594d46</code><svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>에서 유저 wrapper, syscall dispatch, 인자 검증, <code>do_mmap()</code>·<code>do_munmap()</code> 구현을 확인했다. 아래 설명은 이 commit을 기준으로 한다.</p>
+</blockquote>
+<p><strong>유저 wrapper</strong> (<code>lib/user/syscall.c</code>):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">mmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">addr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">size_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> length</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> writable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> fd</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">off_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> offset</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">syscall5</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (SYS_MMAP, addr, length, writable, fd, offset);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">munmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">addr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    syscall1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (SYS_MUNMAP, addr);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong>syscall 번호</strong> (<code>include/lib/syscall-nr.h</code>):</p>
+<ul>
+<li><code>SYS_MMAP = 14</code> (0xe)</li>
+<li><code>SYS_MUNMAP = 15</code> (0xf)</li>
+</ul>
+<p><strong>실패값</strong> (<code>include/lib/user/syscall.h</code>):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> MAP_FAILED</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p><strong>커널 handler</strong> (<a href="https://github.com/woonyong-kr/pintos/blob/5594d4655689f5f06bb04c0bef064f6058211d23/pintos/userprog/syscall.c" class="external external-link"><code>userprog/syscall.c</code><svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>): <code>SYS_MMAP</code>과 <code>SYS_MUNMAP</code> case가 각각 <code>mmap()</code>, <code>munmap()</code>으로 dispatch된다. <code>mmap()</code>은 주소·길이·정렬·fd·파일 길이를 검증한 뒤 <code>do_mmap()</code>을 호출한다.</p>
+<p><strong>VM 입구</strong> (<a href="https://github.com/woonyong-kr/pintos/blob/5594d4655689f5f06bb04c0bef064f6058211d23/pintos/vm/file.c" class="external external-link"><code>vm/file.c</code><svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>): <code>do_mmap()</code>은 범위 충돌을 먼저 확인하고 페이지마다 file-backed lazy metadata를 등록한다. 실패하면 생성한 mapping을 <code>do_munmap()</code>으로 되돌린다. <code>do_munmap()</code>은 같은 <code>map_start</code>에 속한 페이지를 순서대로 SPT에서 제거한다.</p>
+<p>현재 흐름은 두 관문으로 나뉜다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>관문 1 (syscall layer):</span></span>
+<span data-line><span>  유저 register → 검증된 커널 인자</span></span>
+<span data-line> </span>
+<span data-line><span>관문 2 (VM layer):</span></span>
+<span data-line><span>  검증된 커널 인자 → SPT의 file-backed lazy page metadata</span></span></code></pre></figure>
+<p><code>SYS_MMAP</code> case의 핵심 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>case SYS_MMAP:</span></span>
+<span data-line><span>  addr     = (void *) f->R.rdi</span></span>
+<span data-line><span>  length   = (size_t) f->R.rsi</span></span>
+<span data-line><span>  writable = (int) f->R.rdx</span></span>
+<span data-line><span>  fd       = (int) f->R.r10        ← 4번째 인자는 R10</span></span>
+<span data-line><span>  offset   = (off_t) f->R.r8       ← 5번째 인자는 R8</span></span>
+<span data-line><span>  file     = process_get_file(fd)</span></span>
+<span data-line><span>  실패 조건 검사 (fd=0/1, NULL file, addr/offset alignment 등)</span></span>
+<span data-line><span>  실패 → f->R.rax = NULL</span></span>
+<span data-line><span>  성공 → f->R.rax = do_mmap(addr, length, writable, file, offset)</span></span></code></pre></figure>
+<p><code>f->R.rax</code>는 진입 시 syscall 번호, 반환 시 결과값으로 역할이 바뀐다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>시점</th><th><code>f->R.rax</code> 의미</th></tr></thead><tbody><tr><td>handler 진입 직후</td><td>syscall 번호 (0xe)</td></tr><tr><td>handler 반환 직전</td><td>mapping 시작 주소 또는 MAP_FAILED (NULL)</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 <code>SYS_MMAP = 14</code>라는 번호를 해석하지 않는다. QEMU가 하는 일:</p>
+<ol>
+<li><code>gen_SYSCALL()</code> (emit.c.inc): TCG 코드로 <code>helper_syscall</code> 호출 생성</li>
+<li><code>helper_syscall()</code> (seg_helper.c): guest MSR(STAR, LSTAR, FMASK) 값을 이용해 guest RIP/CS/SS/RFLAGS를 변경</li>
+<li>MSR 저장 (misc_helper.c): <code>syscall_init()</code>에서 쓴 <code>MSR_LSTAR</code>→<code>syscall_entry</code> 주소를 보관</li>
+</ol>
+<p>PintOS가 <code>syscall_init()</code>에서 <code>MSR_LSTAR</code>에 <code>syscall_entry</code> 주소를 써 두었으므로, QEMU CPU 에뮬레이션은 <code>syscall</code> 명령 후 guest RIP를 그 주소로 이동시킨다. 그 뒤 <code>RAX = 14</code>를 보고 <code>do_mmap()</code>을 호출할지는 PintOS 코드의 일이다.</p>
+<h2 id="mmap-시스템콜-핸들러-흐름-값-추적">mmap 시스템콜 핸들러 흐름 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#mmap-시스템콜-핸들러-흐름-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="5인자-register-배치-예제">5인자 register 배치 예제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5인자-register-배치-예제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>유저 호출:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">p </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> mmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">10000000</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">4096</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, fd</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>handler 진입 시점:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>f->R.rax = 0x0e           ← SYS_MMAP</span></span>
+<span data-line><span>f->R.rdi = 0x10000000     ← addr (page-aligned)</span></span>
+<span data-line><span>f->R.rsi = 0x1000         ← length = 4096</span></span>
+<span data-line><span>f->R.rdx = 0x0            ← writable = 0</span></span>
+<span data-line><span>f->R.r10 = 0x3            ← fd = 3</span></span>
+<span data-line><span>f->R.r8  = 0x0            ← offset = 0</span></span></code></pre></figure>
+<p>성공 반환: <code>f->R.rax = 0x10000000</code>
+실패 반환: <code>f->R.rax = 0x0</code> (MAP_FAILED == NULL)</p>
+<h3 id="실패-조건별-테스트-매핑">실패 조건별 테스트 매핑<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실패-조건별-테스트-매핑" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>테스트</th><th>실패 조건</th><th>검증 값</th></tr></thead><tbody><tr><td><code>mmap-null</code></td><td>addr == NULL</td><td><code>f->R.rdi == 0x0</code></td></tr><tr><td><code>mmap-misalign</code></td><td>addr not page-aligned</td><td><code>0x10001234 % 0x1000 = 0x234 ≠ 0</code></td></tr><tr><td><code>mmap-bad-off</code></td><td>offset not page-aligned</td><td><code>0x1234 % 0x1000 = 0x234 ≠ 0</code></td></tr><tr><td><code>mmap-bad-fd</code></td><td>fd = 0x20202020 (범위 초과)</td><td><code>process_get_file(fd) == NULL</code></td></tr><tr><td><code>mmap-bad-fd2</code></td><td>fd = 0 (stdin)</td><td>콘솔 fd는 mapping 불가</td></tr><tr><td><code>mmap-bad-fd3</code></td><td>fd = 1 (stdout)</td><td>콘솔 fd는 mapping 불가</td></tr><tr><td><code>mmap-overlap</code></td><td>이미 SPT에 page가 있는 주소</td><td><code>spt_find_page(spt, addr) != NULL</code></td></tr></tbody></table></div>
+<h3 id="r10-주의점">R10 주의점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#r10-주의점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>3인자 이하 syscall(<code>write</code>, <code>read</code> 등)은 RDI/RSI/RDX만 쓴다. <code>mmap</code>은 5인자이므로 4번째가 <code>R10</code>, 5번째가 <code>R8</code>에 들어간다. <code>R10</code>을 놓치면 fd 해석이 깨진다.</p>
+<p>PintOS syscall inline assembly의 register 매핑:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>num → rax    a1 → rdi    a2 → rsi    a3 → rdx</span></span>
+<span data-line><span>a4 → r10     a5 → r8     a6 → r9</span></span></code></pre></figure>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as User Program\n    participant L as lib/user/syscall.c\n    participant C as CPU (syscall 명령)\n    participant E as syscall_entry.S\n    participant H as syscall_handler()\n    participant F as process_get_file()\n    participant M as do_mmap()\n\n    U->>L: mmap(0x10000000, 4096, 0, 3, 0)\n    L->>L: RAX=14, RDI=addr, RSI=len, RDX=wr, R10=fd, R8=ofs\n    L->>C: syscall 명령어\n    Note over C: CPL 3→0, RIP←LSTAR, RCX←유저RIP\n    C->>E: syscall_entry (intr_frame 구성)\n    E->>H: syscall_handler(f)\n    H->>H: switch(f->R.rax) → case SYS_MMAP (0xe)\n    H->>H: addr=f->R.rdi, fd=f->R.r10 등 추출\n    H->>F: process_get_file(3)\n    F-->>H: struct file * (또는 NULL)\n    alt file == NULL 또는 검증 실패\n        H->>H: f->R.rax = NULL (MAP_FAILED)\n    else 검증 통과\n        H->>M: do_mmap(addr, length, writable, file, offset)\n        M-->>H: mapping 시작 주소\n        H->>H: f->R.rax = 시작 주소\n    end\n    H->>E: return\n    E->>C: sysretq (CPL 0→3)\n    C->>U: RAX = 결과값&quot;">sequenceDiagram
+    participant U as User Program
+    participant L as lib/user/syscall.c
+    participant C as CPU (syscall 명령)
+    participant E as syscall_entry.S
+    participant H as syscall_handler()
+    participant F as process_get_file()
+    participant M as do_mmap()
+
+    U->>L: mmap(0x10000000, 4096, 0, 3, 0)
+    L->>L: RAX=14, RDI=addr, RSI=len, RDX=wr, R10=fd, R8=ofs
+    L->>C: syscall 명령어
+    Note over C: CPL 3→0, RIP←LSTAR, RCX←유저RIP
+    C->>E: syscall_entry (intr_frame 구성)
+    E->>H: syscall_handler(f)
+    H->>H: switch(f->R.rax) → case SYS_MMAP (0xe)
+    H->>H: addr=f->R.rdi, fd=f->R.r10 등 추출
+    H->>F: process_get_file(3)
+    F-->>H: struct file * (또는 NULL)
+    alt file == NULL 또는 검증 실패
+        H->>H: f->R.rax = NULL (MAP_FAILED)
+    else 검증 통과
+        H->>M: do_mmap(addr, length, writable, file, offset)
+        M-->>H: mapping 시작 주소
+        H->>H: f->R.rax = 시작 주소
+    end
+    H->>E: return
+    E->>C: sysretq (CPL 0→3)
+    C->>U: RAX = 결과값
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;RAX = SYS_MMAP (0xe)\&quot;] --> B{addr == NULL?}\n    B -->|Yes| FAIL[\&quot;f->R.rax = NULL&lt;br/>MAP_FAILED\&quot;]\n    B -->|No| C{addr % PGSIZE != 0?}\n    C -->|Yes| FAIL\n    C -->|No| D{offset % PGSIZE != 0?}\n    D -->|Yes| FAIL\n    D -->|No| E{length == 0?}\n    E -->|Yes| FAIL\n    E -->|No| F{fd == 0 or fd == 1?}\n    F -->|Yes| FAIL\n    F -->|No| G[\&quot;file = process_get_file(fd)\&quot;]\n    G --> H{file == NULL?}\n    H -->|Yes| FAIL\n    H -->|No| I{SPT에 addr 범위 page 존재?}\n    I -->|Yes| FAIL\n    I -->|No| J[\&quot;f->R.rax = do_mmap(addr, length, writable, file, offset)\&quot;]&quot;">flowchart TD
+    A[&quot;RAX = SYS_MMAP (0xe)&quot;] --> B{addr == NULL?}
+    B -->|Yes| FAIL[&quot;f->R.rax = NULL&lt;br/>MAP_FAILED&quot;]
+    B -->|No| C{addr % PGSIZE != 0?}
+    C -->|Yes| FAIL
+    C -->|No| D{offset % PGSIZE != 0?}
+    D -->|Yes| FAIL
+    D -->|No| E{length == 0?}
+    E -->|Yes| FAIL
+    E -->|No| F{fd == 0 or fd == 1?}
+    F -->|Yes| FAIL
+    F -->|No| G[&quot;file = process_get_file(fd)&quot;]
+    G --> H{file == NULL?}
+    H -->|Yes| FAIL
+    H -->|No| I{SPT에 addr 범위 page 존재?}
+    I -->|Yes| FAIL
+    I -->|No| J[&quot;f->R.rax = do_mmap(addr, length, writable, file, offset)&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>lib/user/syscall.c</code></td><td><code>mmap()</code></td><td><code>syscall5(SYS_MMAP, ...)</code> wrapper</td></tr><tr><td><code>lib/user/syscall.c</code></td><td><code>munmap()</code></td><td><code>syscall1(SYS_MUNMAP, ...)</code> wrapper</td></tr><tr><td><code>include/lib/syscall-nr.h</code></td><td><code>SYS_MMAP=14, SYS_MUNMAP=15</code></td><td>syscall 번호 enum</td></tr><tr><td><code>include/lib/user/syscall.h</code></td><td><code>MAP_FAILED</code></td><td><code>((void *) NULL)</code> — Linux의 <code>(void *)-1</code>과 다름</td></tr><tr><td><code>userprog/syscall.c:111</code></td><td><code>syscall_handler()</code> switch</td><td>현재 <code>SYS_HALT</code>~<code>SYS_TELL</code>만 처리</td></tr><tr><td><code>userprog/process.c</code></td><td><code>process_get_file(fd)</code></td><td>fd→<code>struct file *</code> 조회</td></tr><tr><td><code>vm/file.c:51</code></td><td><code>do_mmap()</code></td><td>빈 skeleton — VM layer 진입점</td></tr><tr><td><code>vm/file.c:57</code></td><td><code>do_munmap()</code></td><td>빈 skeleton</td></tr><tr><td><code>include/vm/file.h</code></td><td><code>struct file_page</code></td><td>빈 구조체 — 구현 시 metadata 추가</td></tr><tr><td>QEMU <code>emit.c.inc</code></td><td><code>gen_SYSCALL()</code></td><td><code>helper_syscall</code> TCG 코드 생성</td></tr><tr><td>QEMU <code>seg_helper.c</code></td><td><code>helper_syscall()</code></td><td>LSTAR/STAR/FMASK로 guest CPU 상태 변경</td></tr><tr><td>QEMU <code>misc_helper.c</code></td><td>MSR read/write</td><td>MSR_LSTAR 값 guest CPU state에 보관</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li>handler를 지난 뒤 file-backed lazy page가 되는 전체 모델.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-invalid-argument-matrix-lab" class="internal internal-link alias" data-slug="wiki/os/mmap-invalid-argument-matrix-lab">mmap invalid argument</a>
+<ul>
+<li><code>SYS_MMAP</code> case에서 뽑은 인자를 어떤 실패 조건으로 걸러야 하는지.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-munmap-range-trace">munmap 범위</a>
+<ul>
+<li><code>SYS_MUNMAP</code>이 <code>do_munmap()</code>으로 들어오는 입구와 범위 정리.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-backed-page-metadata-knowledge">file backed metadata</a>
+<ul>
+<li><code>do_mmap()</code>이 page별로 저장해야 하는 file, offset, read/zero bytes.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">mmap dirty write back</a>
+<ul>
+<li>writable mapping이 dirty page write-back으로 이어지는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal internal-link alias" data-slug="wiki/os/syscall-entry-stack-switch-trace">syscall stack switch</a>
+<ul>
+<li><code>syscall_entry.S</code>가 register snapshot을 만드는 과정.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li><code>write(1, buf, size)</code> 전체 흐름 Trace와 비교.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-handler-dispatch" class="internal internal-link alias" data-slug="wiki/os/syscall-handler-dispatch">syscall handler() 분기</a>
+<ul>
+<li>syscall 번호별 분기 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-abi-convention" class="internal internal-link alias" data-slug="wiki/os/syscall-abi-convention">syscall ABI</a>
+<ul>
+<li>RAX/RDI/RSI/RDX 인자 전달 규약.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/rdi-rsi-rdx-arguments" class="internal internal-link alias" data-slug="wiki/os/rdi-rsi-rdx-arguments">RDX 인자</a>
+<ul>
+<li>3인자까지의 register 배치.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a>
+<ul>
+<li>fd 숫자가 열린 file object로 해석되는 방식.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fd-number-meaning" class="internal internal-link alias" data-slug="wiki/os/fd-number-meaning">fd 번호</a>
+<ul>
+<li>fd 0=stdin, 1=stdout 특수 처리.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">Page Fault Trace</a>
+<ul>
+<li>handler에서 등록한 lazy page가 첫 접근 때 살아나는 관문.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lstar-msr-entry" class="internal internal-link alias" data-slug="wiki/os/lstar-msr-entry">LSTAR MSR</a>
+<ul>
+<li>LSTAR MSR 진입점 등록 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 권한 전환</a>
+<ul>
+<li>CPL 3→0 권한 전환 상세.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal">file-backed page metadata에는 무엇을 저장해야 하나</a></li><li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal">mmap dirty write-back은 어떻게 디스크 쓰기로 내려가나</a></li><li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal">mmap file-backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li><li><a href="../../wiki/os/mmap-invalid-argument-matrix-lab" class="internal">mmap 실패 조건은 어떤 순서로 검사해야 하나</a></li><li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal">mmap munmap 범위 흐름 (Mmap Munmap Range Trace)</a></li><li><a href="../../wiki/os/mmap-overlap-validation-lab" class="internal">mmap은 왜 이미 쓰는 주소 범위를 덮으면 안 되나</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-536" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#mmap-시스템콜-핸들러-흐름-mmap-syscall-handler-trace" data-for="mmap-시스템콜-핸들러-흐름-mmap-syscall-handler-trace">mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace)</a></li><li class="depth-1"><a href="#mmap-시스템콜-핸들러-흐름" data-for="mmap-시스템콜-핸들러-흐름">mmap 시스템콜 핸들러 흐름</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#mmap-시스템콜-핸들러-흐름-값-추적" data-for="mmap-시스템콜-핸들러-흐름-값-추적">mmap 시스템콜 핸들러 흐름 값 추적</a></li><li class="depth-2"><a href="#5인자-register-배치-예제" data-for="5인자-register-배치-예제">5인자 register 배치 예제</a></li><li class="depth-2"><a href="#실패-조건별-테스트-매핑" data-for="실패-조건별-테스트-매핑">실패 조건별 테스트 매핑</a></li><li class="depth-2"><a href="#r10-주의점" data-for="r10-주의점">R10 주의점</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

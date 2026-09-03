@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>timer_sleep 구현 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="timer_sleep 구현 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="timer_sleep 구현 · 최우녕"/><meta name="twitter:description" content="timersleep은 busy-wait로 CPU를 태우는 대신 스레드를 BLOCKED로 재워 sleeplist에 넣고 타이머 인터럽트가 시각을 검사해 깨우며, 재우는 구간은 인터럽트를 끈 채 처리해야 깨우기 신호를 놓치지 않는다."/><meta property="og:description" content="timersleep은 busy-wait로 CPU를 태우는 대신 스레드를 BLOCKED로 재워 sleeplist에 넣고 타이머 인터럽트가 시각을 검사해 깨우며, 재우는 구간은 인터럽트를 끈 채 처리해야 깨우기 신호를 놓치지 않는다."/><meta property="og:image:alt" content="timersleep은 busy-wait로 CPU를 태우는 대신 스레드를 BLOCKED로 재워 sleeplist에 넣고 타이머 인터럽트가 시각을 검사해 깨우며, 재우는 구간은 인터럽트를 끈 채 처리해야 깨우기 신호를 놓치지 않는다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/timer-sleep-implementation"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/timer-sleep-implementation"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="timersleep은 busy-wait로 CPU를 태우는 대신 스레드를 BLOCKED로 재워 sleeplist에 넣고 타이머 인터럽트가 시각을 검사해 깨우며, 재우는 구간은 인터럽트를 끈 채 처리해야 깨우기 신호를 놓치지 않는다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/timer-sleep-implementation" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-682" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-682" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>timer_sleep 구현</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="timer_sleep-구현">timer_sleep 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer_sleep-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 sleep/wakeup의 일반 원리와 구현 선택 기준을 PintOS의 timer_sleep 및 Linux·QEMU와의 비교를 통해 설명한다. 제시된 코드 좌표, 버전별 내부 구조, 실행·GDB 관찰 결과, 재현성 및 성능·복잡도 판단은 실제 대상 코드와 환경의 실행 기록이나 측정으로 별도 검증해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: <code>timer_sleep</code>은 busy-wait로 CPU를 태우는 대신 스레드를 BLOCKED로 재워 sleep_list에 넣고 타이머 인터럽트가 시각을 검사해 깨우며, 재우는 구간은 인터럽트를 끈 채 처리해야 깨우기 신호를 놓치지 않는다.</p>
+</blockquote>
+<h2 id="timer_sleep-구현-구조">timer_sleep 구현 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer_sleep-구현-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>timer_sleep(ticks)</code>는 호출한 스레드를 지정된 틱 수만큼 재운 뒤 깨우는 함수다. PintOS의 기본 구현은 busy-wait(틱이 지날 때까지 CPU를 소모하며 반복)이지만, Project 1에서 sleep_list 기반의 block/unblock 방식으로 개선한다. 이 개선은 CPU 낭비를 없애고, alarm clock의 기본 동작을 올바르게 구현하는 첫 번째 과제다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념--sleepwakeup-메커니즘">추상 개념 — Sleep/Wakeup 메커니즘<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념--sleepwakeup-메커니즘" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>OS에서 “일정 시간 후 깨어나기”는 두 단계로 나뉜다.</p>
+<ol>
+<li><strong>Sleep</strong>: 현재 스레드를 실행 가능 목록에서 빼고 (BLOCKED 상태), 깨울 조건(시각)을 기록한다.</li>
+<li><strong>Wakeup</strong>: 타이머 인터럽트마다 조건을 검사하여, 조건이 만족된 스레드를 READY 상태로 복원한다.</li>
+</ol>
+<p>핵심 제약: Sleep 과정에서 인터럽트 비활성화가 필수다. <code>thread_block()</code> 호출과 sleep_list 삽입 사이에 타이머 인터럽트가 끼어들면 스레드가 영원히 깨지 못할 수 있기 때문이다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서는 <code>schedule_timeout()</code>이 같은 역할을 한다. 내부적으로 hrtimer(고해상도 타이머)를 등록하고, 타이머 만료 시 <code>wake_up_process()</code>를 콜백으로 호출한다. PintOS의 sleep_list + tick 비교는 Linux의 timer wheel을 극도로 단순화한 것이다.</p>
+<h3 id="pintos-구현--기본-busy-wait">PintOS 구현 — 기본 (busy-wait)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현--기본-busy-wait" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>원래 제공된 코드:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> timer_sleep</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> ticks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    int64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> timer_ticks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_get_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">() </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> INTR_ON);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">timer_elapsed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(start) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ticks)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        thread_yield</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // CPU를 양보하지만 READY 상태로 남음</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>문제: READY 상태로 남아 있으므로 스케줄러가 계속 이 스레드를 선택하고, <code>timer_elapsed</code> 검사만 반복한다. n개 스레드가 sleep하면 O(n)의 CPU 시간이 매 틱마다 낭비된다.</p>
+<h3 id="pintos-구현--개선-sleep_list--block">PintOS 구현 — 개선 (sleep_list + block)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현--개선-sleep_list--block" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> timer_sleep</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> ticks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    int64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> timer_ticks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_get_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">() </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> INTR_ON);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_sleep</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ticks);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 절대 시각을 전달</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>thread_sleep()</code>이 실제 작업을 수행한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_sleep</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> wake_ticks</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">cur </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> intr_level old_level </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> intr_disable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // ①</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    cur->wake_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> wake_ticks;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                   // ②</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">sleep_list, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">cur->elem,</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // ③</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">                        cmp_thread_ticks, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_block</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                                // ④</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    intr_set_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(old_level);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                     // ⑤</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>timer_sleep은 순수 소프트웨어 로직이므로 QEMU가 특별히 개입하는 부분은 없다. 다만 sleep/wakeup의 <strong>타이밍 근원</strong>인 timer interrupt는 QEMU의 i8254 PIT 에뮬레이션에 의존한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>QEMU 구성요소</th><th>동작</th></tr></thead><tbody><tr><td>1</td><td>i8254 PIT (hw/timer/i8254.c)</td><td>host timer 만료 → IRQ0 raise</td></tr><tr><td>2</td><td>i8259 PIC (hw/intc/i8259.c)</td><td>IRQ0 → CPU interrupt 전달</td></tr><tr><td>3</td><td>TCG (target/i386/tcg/cc_helper.c)</td><td>guest <code>timer_interrupt()</code> 실행</td></tr><tr><td>4</td><td>guest OS</td><td><code>thread_awake(ticks)</code> → sleep_list 순회</td></tr></tbody></table></div>
+<p>QEMU의 <code>-icount</code> 옵션을 사용하면 가상 clock을 결정적으로 진행시킬 수 있어, timer_sleep 테스트의 재현성이 높아진다. 기본(real-time) 모드에서는 host 부하에 따라 tick 간격이 불규칙해질 수 있다.</p>
+<p><strong>GDB에서 sleep/wakeup 관찰:</strong></p>
+<pre><code>(gdb) b thread_sleep
+(gdb) commands
+  p/d thread_current()->wake_tick
+  p/d timer_ticks()
+  continue
+end
+(gdb) b thread_awake
+(gdb) commands
+  p/d global_ticks
+  info threads
+  continue
+end
+</code></pre>
+<p>이렇게 하면 sleep 진입 시 wake_tick과 현재 ticks를, wakeup 시 global_ticks와 깨어날 스레드를 자동으로 출력한다.</p>
+<h3 id="linux-hrtimer-상세-비교">Linux hrtimer 상세 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-hrtimer-상세-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 timer_sleep은 Linux <code>schedule_timeout()</code> / <code>msleep()</code>의 교육용 단순화다. 주요 차이:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>PintOS timer_sleep</th><th>Linux schedule_timeout</th><th>Linux hrtimer_nanosleep</th></tr></thead><tbody><tr><td>해상도</td><td>1 tick (≈ 10 ms, TIMER_FREQ=100)</td><td>1 jiffy (1~10 ms, HZ 의존)</td><td>나노초 (ns)</td></tr><tr><td>자료구조</td><td>정렬된 sleep_list (linked list)</td><td>timer wheel (계층적 해시)</td><td>red-black tree</td></tr><tr><td>삽입 비용</td><td>O(n) — list_insert_ordered</td><td>O(1) — bucket 직접 삽입</td><td>O(log n) — RB tree</td></tr><tr><td>깨우기 비용</td><td>O(k) — front에서 k개 pop</td><td>O(1) amortized — wheel cascade</td><td>O(log n) — tree 제거</td></tr><tr><td>인터럽트 원자성</td><td>intr_disable() 전역</td><td>spin_lock_irqsave() per-CPU</td><td>hrtimer_lock</td></tr><tr><td>멀티코어</td><td>단일 CPU, 전역 sleep_list</td><td>per-CPU timer wheel</td><td>per-CPU hrtimer base</td></tr><tr><td>오버슬립 보정</td><td>없음 (다음 tick에 깨움)</td><td>없음 (jiffy 정밀도)</td><td>재프로그래밍 (HRTIMER_MODE_ABS)</td></tr></tbody></table></div>
+<p><strong>timer wheel 구조 (Linux):</strong></p>
+<pre><code>Level 0: 64 buckets — 각 1 jiffy 간격     (0~63 jiffies)
+Level 1: 64 buckets — 각 8 jiffy 간격      (64~575 jiffies)
+Level 2: 64 buckets — 각 64 jiffy 간격     (576~4671 jiffies)
+Level 3: 64 buckets — 각 512 jiffy 간격    (4672~37439 jiffies)
+Level 4: 64 buckets — 각 4096 jiffy 간격   (37440~299135 jiffies)
+</code></pre>
+<p>만료 시 하위 level로 “cascade”하여 정밀한 bucket에 재배치한다. PintOS의 단일 정렬 리스트 대비 삽입이 O(1)인 대신 cascade 비용이 간헐적으로 발생한다.</p>
+<h2 id="timer_sleep-구현-숫자-추적">timer_sleep 구현 숫자 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer_sleep-구현-숫자-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구체적 타이밍 시나리오:</p>
+<pre><code>현재 ticks = 1000, timer_sleep(50) 호출
+→ wake_tick = 1000 + 50 = 1050
+
+sleep_list 상태 (정렬된 순서):
+  [thread A, wake_tick=1020]
+  [thread B, wake_tick=1035]
+  [thread C, wake_tick=1050]  ← 새로 삽입
+  [thread D, wake_tick=1100]
+
+tick 1020: thread_awake(1020)
+  → A의 wake_tick(1020) &lt;= 1020 → unblock
+tick 1035: thread_awake(1035)
+  → B의 wake_tick(1035) &lt;= 1035 → unblock
+tick 1050: thread_awake(1050)
+  → C의 wake_tick(1050) &lt;= 1050 → unblock
+  → D의 wake_tick(1100) > 1050 → break (이후 검사 불필요)
+</code></pre>
+<p>정렬 삽입 비용: O(n) — sleep_list에 n개 스레드가 있을 때.
+깨우기 비용: O(1) amortized — front에서만 꺼내고, wake_tick이 아직 미래이면 즉시 break.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant User as 사용자 스레드\n    participant TS as timer_sleep()\n    participant TH as thread_sleep()\n    participant SL as sleep_list\n    participant TI as timer_interrupt\n    participant TA as thread_awake()\n\n    User->>TS: timer_sleep(50)\n    TS->>TS: start = timer_ticks() → 1000\n    TS->>TH: thread_sleep(1050)\n    TH->>TH: intr_disable()\n    TH->>TH: cur->wake_tick = 1050\n    TH->>SL: list_insert_ordered(elem)\n    TH->>TH: thread_block() → BLOCKED\n\n    Note over TI: 매 틱마다 실행\n    TI->>TI: ticks++ → 1050\n    TI->>TA: thread_awake(1050)\n    TA->>SL: list_front() → wake_tick 검사\n    TA->>User: thread_unblock() → READY&quot;">sequenceDiagram
+    participant User as 사용자 스레드
+    participant TS as timer_sleep()
+    participant TH as thread_sleep()
+    participant SL as sleep_list
+    participant TI as timer_interrupt
+    participant TA as thread_awake()
+
+    User->>TS: timer_sleep(50)
+    TS->>TS: start = timer_ticks() → 1000
+    TS->>TH: thread_sleep(1050)
+    TH->>TH: intr_disable()
+    TH->>TH: cur->wake_tick = 1050
+    TH->>SL: list_insert_ordered(elem)
+    TH->>TH: thread_block() → BLOCKED
+
+    Note over TI: 매 틱마다 실행
+    TI->>TI: ticks++ → 1050
+    TI->>TA: thread_awake(1050)
+    TA->>SL: list_front() → wake_tick 검사
+    TA->>User: thread_unblock() → READY
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="경쟁-조건-방지">경쟁 조건 방지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#경쟁-조건-방지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>인터럽트 비활성화가 필수인 이유:</p>
+<ul>
+<li>위험한 시나리오 (intr_disable 없이):</li>
+<li>
+<ol>
+<li>cur->wake_tick = 1050 // 설정 완료</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>타이머 인터럽트 발생</li>
+</ol>
+</li>
+<li>→ thread_awake(1050) 호출</li>
+<li>→ sleep_list에 cur가 아직 없으므로 무시</li>
+<li>
+<ol start="3">
+<li>list_insert_ordered(sleep_list, …) // 이제 삽입</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>thread_block() // BLOCKED</li>
+</ol>
+</li>
+<li>→ 이미 깨울 시각이 지났는데 sleep_list에 남아 영원히 BLOCKED</li>
+</ul>
+<p><code>intr_disable()</code>로 ②③④를 원자적으로 묶으면 이 문제가 발생하지 않는다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>devices/timer.c:91–99</td><td><code>timer_sleep()</code></td><td>사용자 진입점, wake_tick 계산 후 thread_sleep 호출</td></tr><tr><td>threads/thread.c:38</td><td><code>sleep_list</code></td><td>전역 정적 리스트, 자는 스레드 보관</td></tr><tr><td>threads/thread.c:755–768</td><td><code>thread_sleep()</code></td><td>intr_disable → wake_tick 설정 → 정렬 삽입 → block</td></tr><tr><td>threads/thread.c:770–776</td><td><code>cmp_thread_ticks()</code></td><td>wake_tick 오름차순 비교 함수</td></tr><tr><td>threads/thread.c:781–791</td><td><code>thread_awake()</code></td><td>front부터 wake_tick 검사, 만족 시 unblock</td></tr><tr><td>devices/timer.c:138</td><td><code>timer_interrupt()</code></td><td>ticks++ 후 thread_tick() 호출 (thread_awake 트리거)</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/sleep-list-wake-tick" class="internal internal-link alias" data-slug="wiki/os/sleep-list-wake-tick">sleep list와 wake tick</a>
+<ul>
+<li><code>sleep_list</code> 구조와 <code>wake_tick</code> 필드 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/timer-interrupt-handler" class="internal internal-link alias" data-slug="wiki/os/timer-interrupt-handler">timer interrupt()</a>
+<ul>
+<li>매 틱마다 <code>thread_awake()</code>를 호출하는 인터럽트 핸들러.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/thread-state-transition" class="internal internal-link alias" data-slug="wiki/os/thread-state-transition">스레드 상태 전이</a>
+<ul>
+<li>RUNNING → BLOCKED → READY 전이.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/thread-tick-time-slice" class="internal internal-link alias" data-slug="wiki/os/thread-tick-time-slice">TIME SLICE 검사</a>
+<ul>
+<li><code>timer_interrupt()</code>에서의 TIME_SLICE 검사.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/list-entry-macro" class="internal internal-link alias" data-slug="wiki/os/list-entry-macro">list entry()</a>
+<ul>
+<li><code>cmp_thread_ticks</code> 내부에서 <code>list_elem</code> → <code>thread</code> 변환.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/i8254-pit-model" class="internal internal-link alias" data-slug="wiki/os/i8254-pit-model">i8254 PIT</a>
+<ul>
+<li><code>sleep_list</code>를 깨우는 타이머 인터럽트의 하드웨어 원천.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a>
+<ul>
+<li>QEMU의 PIT → PIC → <code>timer_interrupt()</code> 전체 경로.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/alarm-clock-sleep-list-lab" class="internal internal-link alias" data-slug="wiki/os/alarm-clock-sleep-list-lab">alarm clock sleep list Lab</a>
+<ul>
+<li><code>sleep_list</code> 구현을 실험하는 Lab.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/interrupt-timer-qemu" class="internal">QEMU 타이머 인터럽트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-680" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#timer_sleep-구현" data-for="timer_sleep-구현">timer_sleep 구현</a></li><li class="depth-1"><a href="#timer_sleep-구현-구조" data-for="timer_sleep-구현-구조">timer_sleep 구현 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념--sleepwakeup-메커니즘" data-for="추상-개념--sleepwakeup-메커니즘">추상 개념 — Sleep/Wakeup 메커니즘</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현--기본-busy-wait" data-for="pintos-구현--기본-busy-wait">PintOS 구현 — 기본 (busy-wait)</a></li><li class="depth-2"><a href="#pintos-구현--개선-sleep_list--block" data-for="pintos-구현--개선-sleep_list--block">PintOS 구현 — 개선 (sleep_list + block)</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-2"><a href="#linux-hrtimer-상세-비교" data-for="linux-hrtimer-상세-비교">Linux hrtimer 상세 비교</a></li><li class="depth-1"><a href="#timer_sleep-구현-숫자-추적" data-for="timer_sleep-구현-숫자-추적">timer_sleep 구현 숫자 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#경쟁-조건-방지" data-for="경쟁-조건-방지">경쟁 조건 방지</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

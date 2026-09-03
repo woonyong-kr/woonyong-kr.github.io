@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Resident Page 복사 (fork SPT copy) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Resident Page 복사 (fork SPT copy) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Resident Page 복사 (fork SPT copy) · 최우녕"/><meta name="twitter:description" content="fork로 SPT를 복제할 때, 물리 frame을 점유한 resident page(page->frame != NULL)를 자식 주소 공간에 반영하는 방식을 설명한다."/><meta property="og:description" content="fork로 SPT를 복제할 때, 물리 frame을 점유한 resident page(page->frame != NULL)를 자식 주소 공간에 반영하는 방식을 설명한다."/><meta property="og:image:alt" content="fork로 SPT를 복제할 때, 물리 frame을 점유한 resident page(page->frame != NULL)를 자식 주소 공간에 반영하는 방식을 설명한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/spt-copy-resident-page"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/spt-copy-resident-page"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fork로 SPT를 복제할 때, 물리 frame을 점유한 resident page(page->frame != NULL)를 자식 주소 공간에 반영하는 방식을 설명한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/spt-copy-resident-page" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-641" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-641" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Resident Page 복사 (fork SPT copy)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="resident-page-복사-fork-spt-copy">Resident Page 복사 (fork SPT copy)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#resident-page-복사-fork-spt-copy" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: fork로 SPT를 복제할 때, 물리 frame을 점유한 resident page(page->frame != NULL)를 자식 주소 공간에 반영하는 방식을 설명한다.</p>
+</blockquote>
+<h2 id="resident-page-복사-흐름">Resident Page 복사 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#resident-page-복사-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 문서에서 <strong>resident page</strong>는 부모의 SPT에 속한 페이지 중 현재 물리 frame을 점유한 페이지(<code>page->frame != NULL</code>)를 뜻한다. fork가 이 페이지를 자식 주소 공간에 반영하는 방법은 eager copy와 Copy-on-Write(COW)로 나뉜다. eager copy는 자식용 frame을 확보해 내용을 즉시 복사한다. COW는 부모와 자식이 같은 frame을 공유하다가 쓰기가 발생할 때 복사한다.</p>
+<p>아래의 eager copy 설명은 <code>spt_copy_loaded_page()</code>에 제시된 처리 흐름을 풀어 쓴 것이다. 이 문서가 현재 구현으로 제시하는 <code>anon_copy()</code>는 COW 방식이므로, eager copy의 단계와 수치가 그대로 적용된다고 해석해서는 안 된다. 먼저 두 방식에 공통인 주소 매핑을 살펴본 뒤, eager copy의 코드 흐름과 현재 COW 구현을 차례로 비교한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="주소-공간-복제와-페이지-매핑">주소 공간 복제와 페이지 매핑<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#주소-공간-복제와-페이지-매핑" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>fork의 주소 공간 복제는 하드웨어가 직접 수행하는 기능이 아니다. 이 문서의 설명에서는 CPU/MMU가 CR3가 가리키는 페이지 테이블을 따라 주소를 변환하며, OS가 부모의 페이지 테이블 엔트리를 순회해 자식에게 필요한 매핑을 만든다.</p>
+<p>이 문서에 제시된 eager copy 모델은 resident page 하나를 다음 순서로 처리한다.</p>
+<ol>
+<li>palloc으로 자식용 물리 frame을 확보해 새 PFN(Physical Frame Number)을 얻는다.</li>
+<li>자식 PML4에 <code>upage → 새 frame</code> 매핑을 설치하기 위해 pml4_set_page()를 호출한다.</li>
+<li>부모 frame의 내용을 자식 frame으로 복사한다.</li>
+</ol>
+<h3 id="linux와-cow">Linux와 COW<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux와-cow" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서에서는 Linux의 fork()가 일반적으로 resident page를 즉시 복사하지 않고 **Copy-on-Write(COW)**를 사용한다고 설명한다.</p>
+<ul>
+<li>부모와 자식의 PTE에서 writable 비트를 제거한다.</li>
+<li>두 프로세스가 같은 물리 frame을 read-only로 공유한다.</li>
+<li>어느 한쪽이 쓰기를 시도해 page fault가 발생하면 그때 새 frame을 할당하고 내용을 복사한다.</li>
+<li><code>struct page</code>의 <code>_mapcount</code>와 <code>_refcount</code>로 공유 상태를 추적한다.</li>
+</ul>
+<p>이 방식은 fork() 직후 exec()가 호출되어 기존 주소 공간이 폐기되는 상황에서 즉시 복사할 페이지를 줄이는 데 목적이 있다.</p>
+<h3 id="pintos에서-페이지-유형을-나누는-흐름">PintOS에서 페이지 유형을 나누는 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서-페이지-유형을-나누는-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서에 제시된 <code>supplemental_page_table_copy()</code> 설명에서는 부모 SPT를 순회하면서 페이지 타입에 따라 복제 방법을 선택한다. resident page를 eager copy하는 경로는 자식 page 생성, frame 확보와 매핑, 내용 복사의 순서로 읽을 수 있다. UNINIT page와 swapped page는 별도의 경로로 분기한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: spt-copy-resident-page-flow.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;spt copy resident page flow&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>페이지와 frame의 관계는 다음 설계 메모로 남아 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: page-frame-struct-relationship.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;page frame struct relationship&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p><code>page->frame->kva</code>는 커널 가상 주소이므로 memcpy의 src와 dst로 사용할 수 있다. 이 문서의 eager copy 코드에서 복사 범위는 한 페이지 전체인 4096바이트(PGSIZE)다.</p>
+<p>부모 page가 코드 세그먼트처럼 read-only라면 자식도 read-only로 매핑해야 한다. 따라서 vm_do_claim_page() 또는 pml4_set_page()를 호출할 때 부모와 같은 writable 플래그를 사용한다.</p>
+<h3 id="pintos-eager-copy-코드">PintOS eager copy 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-eager-copy-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서가 eager copy 함수로 제시한 코드는 <code>spt_copy_loaded_page()</code>다 (vm/vm.c:503).</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">spt_copy_loaded_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">dst</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> vm_type page_type </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> page_get_type</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page->frame->kva </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_alloc_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page_type, page->va, page->writable), </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">child_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> spt_find_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (dst, page->va);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (child_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_do_claim_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (child_page), </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    memcpy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (child_page->frame->kva, page->frame->kva, PGSIZE);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>코드는 다음 순서로 읽을 수 있다.</p>
+<ol>
+<li><strong>타입 보존</strong> — <code>page_get_type(page)</code>로 <code>VM_ANON</code> 또는 <code>VM_FILE</code>을 얻고, 자식 page를 같은 타입으로 생성한다.</li>
+<li><strong>가드 조건</strong> — <code>page->frame == NULL</code>이면 resident page가 아니므로 이 함수의 처리 대상에서 제외한다. 제시된 흐름에서는 <code>spt_copy_page()</code>가 UNINIT 타입을 먼저 분기한다.</li>
+<li><strong>자식 page 생성</strong> — <code>vm_alloc_page</code>가 자식 SPT의 hash에 새 <code>struct page</code>를 삽입한다. 이 시점에는 아직 frame이 연결되지 않았다. 이는 page 타입이 UNINIT이라는 뜻이 아니라 claim 전이라는 뜻이다.</li>
+<li><strong>생성한 page 조회</strong> — <code>spt_find_page</code>로 방금 삽입한 page를 <code>dst</code>에서 찾는다. 이 설명은 <code>vm_alloc_page</code>가 내부적으로 <code>thread_current()->spt</code>에 삽입한다는 전제를 따른다.</li>
+<li><strong>frame 확보와 매핑</strong> — <code>vm_do_claim_page</code>가 새 frame을 할당해 <code>page->frame = frame</code>으로 연결하고, <code>pml4_set_page()</code>로 자식 PML4에 매핑한다. 매핑에는 부모에서 전달된 <code>page->writable</code> 값이 사용된다.</li>
+<li><strong>내용 복사</strong> — <code>memcpy</code>가 부모 <code>frame->kva</code>에서 자식 <code>frame->kva</code>로 4096바이트를 복사한다.</li>
+</ol>
+<p>처리 중 실패하면 이미 복사한 page가 남을 수 있다. 문서의 예처럼 <code>supplemental_page_table_copy()</code>가 100개 page 중 73번째에서 OOM으로 false를 반환하면 앞서 복사한 72개 page의 frame과 SPT 엔트리가 정리 대상이 된다. 제시된 호출 흐름에서는 <code>__do_fork()</code>가 <code>supplemental_page_table_kill()</code>을 호출해 이를 정리한다.</p>
+<h3 id="qemu에서-관찰할-대상">QEMU에서 관찰할 대상<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu에서-관찰할-대상" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서가 제시한 QEMU TCG 관찰 흐름은 다음과 같다.</p>
+<ol>
+<li><code>pml4_set_page()</code>가 자식 페이지 테이블에 frame의 kva를 매핑하면 QEMU guest의 PTE가 갱신된다.</li>
+<li>COW에서는 부모와 자식의 PTE가 같은 물리 frame을 가리키며 writable=false로 설정된다.</li>
+<li>이후 쓰기로 page fault가 발생하면 <code>memcpy</code>로 frame을 복사한다. 문서에서는 이 과정에서 TCG가 <code>rep movsb</code> 등을 host 명령어로 번역하고 메모리 접근마다 softmmu TLB lookup을 수행한다고 설명한다.</li>
+<li>QEMU 내부의 src kva와 dst kva는 <code>address_space_rw()</code>를 통해 RAMBlock(pc.ram)의 서로 다른 offset에 접근하는 것으로 설명되어 있다.</li>
+</ol>
+<p>GDB에서 <code>pml4_get_page(부모pml4, va)</code>와 <code>pml4_get_page(자식pml4, va)</code>가 같은 kva를 반환한다면, 이 문서의 COW 모델에서는 두 page가 같은 frame을 공유하는 상태로 해석한다. 이는 아래 스크립트로 직접 관찰할 수 있는 점검 기준이며, 이 문서 자체가 실행 결과를 제시하는 것은 아니다.</p>
+<h3 id="현재-pintos-구현으로-제시된-cow-흐름">현재 PintOS 구현으로 제시된 COW 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#현재-pintos-구현으로-제시된-cow-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>앞의 eager copy 경로와 달리, 이 문서가 현재 PintOS 코드로 제시한 <code>anon_copy()</code>는 COW 방식을 사용한다. fork 시점에는 새 frame을 만들고 내용을 복사하는 대신 기존 frame을 공유한다. 부모와 자식의 매핑을 read-only로 만들고, 이후 쓰기 시점의 page fault에서 새 frame을 확보해 복사한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>비교</th><th>Eager Copy (기본 템플릿)</th><th>COW (현재 구현)</th></tr></thead><tbody><tr><td>fork 시 동작</td><td>palloc + memcpy 즉시</td><td>PTE writable 해제 + frame 공유</td></tr><tr><td>frame 수</td><td>부모 + 자식 각각 N개</td><td>공유하므로 N개 유지</td></tr><tr><td>write 시</td><td>이미 별도 frame</td><td>page fault → 그때 palloc + memcpy</td></tr><tr><td>exec 후 fork 비용</td><td>N × 4 KB 낭비</td><td>거의 0 (exec이 전부 버림)</td></tr><tr><td>구현 복잡도</td><td>낮음</td><td>높음 (ref_count, PTE writable 관리)</td></tr><tr><td>rollback 복잡도</td><td>spt_remove_page만</td><td>pml4_clear_page + owner 제거 + writable 복원</td></tr></tbody></table></div>
+<p>표의 계산 조건대로 부모에게 resident page가 100개 있고 각 페이지가 4 KB라면, eager copy가 복사하는 양은 100 × 4 KB = 400 KB다. 같은 조건에서 COW는 fork 시점에 page 내용을 복사하지 않는다. 이 계산은 두 방식의 차이를 설명하기 위한 조건부 비교이며, 실제 실행을 측정한 결과는 아니다.</p>
+<h3 id="현재-구현-코드--anon_copy-상세">현재 구현 코드 — anon_copy() 상세<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#현재-구현-코드--anon_copy-상세" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서가 제시한 <code>anon_copy()</code> (vm/anon.c:190)의 resident page 처리 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">anon_copy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">dst</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">src_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 1. 자식 SPT에 page 구조체 생성</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    vm_alloc_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_get_type</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (src_page), src_page->va, src_page->writable);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">dst_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> spt_find_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (dst, src_page->va);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 2. swapped page는 swap_slot_ref로 공유 (별도 문서)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (src_page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> src_page->anon.swapped) { ... }</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 3. COW: writable page이고 ref_count==1이면 부모도 read-only로 전환</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (src_page->writable </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> frame->ref_count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        pml4_set_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (owner->pml4, src_page->va, frame->kva, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 4. 자식 PML4에 같은 frame을 read-only로 매핑</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    pml4_set_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (curr->pml4, dst_page->va, frame->kva, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // 5. frame의 owner 목록에 자식 추가</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    dst_page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    vm_frame_add_owner</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (frame, dst_page, curr);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 코드 조각에서는 자식 page를 만든 뒤 swapped 상태를 분기하고, resident frame이라면 부모와 자식의 매핑을 read-only로 조정한 후 owner를 추가한다.</p>
+<ul>
+<li><code>memcpy</code>가 없으며 새 frame을 만드는 대신 기존 frame을 공유한다.</li>
+<li><code>ref_count == 1</code>일 때 부모의 writable을 끈다. 문서의 설명에 따르면 이미 공유 중인 frame은 앞선 처리에서 read-only로 바뀐 상태다.</li>
+<li>처리에 실패하면 부모의 writable 상태를 복원해야 한다.</li>
+<li><code>vm_frame_add_owner()</code>가 <code>ref_count++</code>를 담당한다.</li>
+</ul>
+<h3 id="linux-비교--cow-fork-구현">Linux 비교 — COW fork 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-비교--cow-fork-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>PintOS (현재)</th><th>Linux</th></tr></thead><tbody><tr><td>COW 단위</td><td>page 단위</td><td>page 단위</td></tr><tr><td>참조 카운트 위치</td><td><code>frame->ref_count</code></td><td><code>struct page._refcount</code> (atomic)</td></tr><tr><td>PTE writable 제거</td><td><code>pml4_set_page(..., false)</code></td><td><code>ptep_set_writable()</code> + TLB flush</td></tr><tr><td>COW fault 처리</td><td><code>vm_handle_cow()</code> → memcpy + 새 frame</td><td><code>do_wp_page()</code> → alloc + copy</td></tr><tr><td>TLB flush</td><td>PintOS는 단일 CPU → 불필요</td><td><code>flush_tlb_page()</code> 필수 (SMP)</td></tr><tr><td>KSM (동일 page 병합)</td><td>미지원</td><td>지원 — COW와 유사한 메커니즘</td></tr><tr><td>fork vfork 분리</td><td>fork만</td><td>fork + vfork (vfork는 주소 공간 공유)</td></tr><tr><td>huge page COW</td><td>미지원 (4 KB 고정)</td><td>2 MB/1 GB huge page COW 지원</td></tr></tbody></table></div>
+<p>이 표는 입력 문서가 제시한 구현 비교다. 별도의 실행 결과나 외부 자료로 검증한 내용은 포함하지 않는다.</p>
+<h3 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 스크립트는 frame 공유, read-only 매핑, 참조 수 변화와 COW 복사를 관찰하기 위한 것이다. 스크립트의 출력은 예상 관찰 지점을 나타내며, 이 문서에는 실제 실행 결과가 포함되어 있지 않다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 1. fork 시 resident page의 frame 공유 확인</span></span>
+<span data-line><span>b anon_copy</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $sp = (struct page *)$rsi</span></span>
+<span data-line><span>  if $sp->frame != 0</span></span>
+<span data-line><span>    printf &quot;anon_copy: va=%p frame=%p kva=%p ref=%d writable=%d\n&quot;, \</span></span>
+<span data-line><span>      $sp->va, $sp->frame, $sp->frame->kva, $sp->frame->ref_count, $sp->writable</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 2. COW: 부모 PTE가 read-only로 전환되는 순간 포착</span></span>
+<span data-line><span>b pml4_set_page</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  # RDI=pml4, RSI=upage, RDX=kpage, RCX=writable</span></span>
+<span data-line><span>  if $rcx == 0</span></span>
+<span data-line><span>    printf &quot;pml4_set_page READ-ONLY: pml4=%p upage=%p kpage=%p\n&quot;, $rdi, $rsi, $rdx</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 3. fork 완료 후 부모/자식의 같은 va가 같은 frame을 가리키는지 확인</span></span>
+<span data-line><span>define check_cow_sharing</span></span>
+<span data-line><span>  set $parent_spt = &amp;((struct thread *)$arg0)->spt</span></span>
+<span data-line><span>  set $child_spt = &amp;((struct thread *)$arg1)->spt</span></span>
+<span data-line><span>  set $va = (void *)$arg2</span></span>
+<span data-line><span>  set $pp = spt_find_page($parent_spt, $va)</span></span>
+<span data-line><span>  set $cp = spt_find_page($child_spt, $va)</span></span>
+<span data-line><span>  printf &quot;parent page=%p frame=%p kva=%p\n&quot;, $pp, $pp->frame, $pp->frame->kva</span></span>
+<span data-line><span>  printf &quot;child  page=%p frame=%p kva=%p\n&quot;, $cp, $cp->frame, $cp->frame->kva</span></span>
+<span data-line><span>  if $pp->frame == $cp->frame</span></span>
+<span data-line><span>    printf &quot;→ SHARED (COW active, ref_count=%d)\n&quot;, $pp->frame->ref_count</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;→ SEPARATE (already copied)\n&quot;</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 4. ref_count 변화 추적</span></span>
+<span data-line><span>b vm_frame_add_owner</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $fr = (struct frame *)$rdi</span></span>
+<span data-line><span>  printf &quot;frame_add_owner: frame=%p kva=%p ref_count %d→%d\n&quot;, \</span></span>
+<span data-line><span>    $fr, $fr->kva, $fr->ref_count, $fr->ref_count + 1</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 5. COW fault 발생 시 memcpy 관찰</span></span>
+<span data-line><span>b vm_copy_cow_page</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $p = (struct page *)$rdi</span></span>
+<span data-line><span>  set $old = (struct frame *)$rsi</span></span>
+<span data-line><span>  printf &quot;COW copy: va=%p old_frame=%p old_kva=%p\n&quot;, $p->va, $old, $old->kva</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 6. fork 전체 page 수 카운트</span></span>
+<span data-line><span>b supplemental_page_table_copy</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $src = (struct supplemental_page_table *)$rsi</span></span>
+<span data-line><span>  printf &quot;spt_copy: src hash size=%d\n&quot;, $src->hash_table.elem_cnt</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="resident-page-복사-값-추적">Resident Page 복사 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#resident-page-복사-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>한 페이지 크기 (PGSIZE)</td><td>4096 bytes (4 KB)</td></tr><tr><td>memcpy 한 번 크기</td><td>4096 bytes</td></tr><tr><td>resident page 100개 fork 비용</td><td>100 × 4096 = 409,600 bytes ≈ 400 KB</td></tr><tr><td>palloc_get_page(PAL_USER) 1회</td><td>user pool에서 1 frame (4 KB) 할당</td></tr><tr><td>pml4_set_page() 1회</td><td>PML4→PDPT→PD→PT 4단계 중 필요한 중간 테이블 자동 생성</td></tr><tr><td>spt_copy_loaded_page 함수 호출 스택 깊이</td><td>4단계 (spt_copy → spt_copy_page → spt_copy_loaded_page → vm_do_claim_page)</td></tr><tr><td>vm_do_claim_page 내부 할당</td><td>palloc 1회 + pml4_set_page 1회 + swap_in 1회 (anon_swap_in은 noop)</td></tr></tbody></table></div>
+<p>이 값들은 입력 문서가 제시한 eager copy 코드와 계산 조건을 설명한 것이다. 실제 실행을 측정한 결과로 보아서는 안 된다.</p>
+<p>Eager copy에서는 자식이 받은 frame이 부모와 다른 <strong>새 물리 주소</strong>를 갖는다. 가상 주소(va)는 같게 매핑할 수 있지만 물리 주소는 서로 다르다.</p>
+<ul>
+<li>부모: va=0x400000 → PFN=0x1A3 → PA=0x1A3000</li>
+<li>자식: va=0x400000 → PFN=0x2F7 → PA=0x2F7000</li>
+<li>memcpy 직후 두 frame의 4096바이트 내용은 같다.</li>
+</ul>
+<p>이 주소는 eager copy의 관계를 설명하기 위한 예시다. 현재 COW 구현처럼 frame을 공유하는 동안에는 적용되지 않는다.</p>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 순서도는 현재 COW 구현이 아니라 앞에서 설명한 eager copy 경로를 나타낸다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[supplemental_page_table_copy 시작] --> B[부모 SPT 순회: 다음 page]\n    B --> C{page->frame != NULL?}\n    C -->|YES: resident| D[자식 SPT에 page 구조체 생성]\n    D --> E[vm_do_claim_page: palloc + PML4 매핑]\n    E --> F{할당 성공?}\n    F -->|YES| G[\&quot;memcpy(child kva, parent kva, PGSIZE)\&quot;]\n    G --> B\n    F -->|NO| H[return false — OOM]\n    C -->|NO: UNINIT| I[aux deep copy 또는 file reopen]\n    I --> B\n    C -->|NO: swapped| J[swap slot snapshot 복사]\n    J --> B\n    B -->|순회 완료| K[return true]&quot;">flowchart TD
+    A[supplemental_page_table_copy 시작] --> B[부모 SPT 순회: 다음 page]
+    B --> C{page->frame != NULL?}
+    C -->|YES: resident| D[자식 SPT에 page 구조체 생성]
+    D --> E[vm_do_claim_page: palloc + PML4 매핑]
+    E --> F{할당 성공?}
+    F -->|YES| G[&quot;memcpy(child kva, parent kva, PGSIZE)&quot;]
+    G --> B
+    F -->|NO| H[return false — OOM]
+    C -->|NO: UNINIT| I[aux deep copy 또는 file reopen]
+    I --> B
+    C -->|NO: swapped| J[swap slot snapshot 복사]
+    J --> B
+    B -->|순회 완료| K[return true]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아래 좌표는 입력 문서에 제시된 경로와 줄 번호다. 이 수정 과정에서 실제 저장소와 대조하지 않았다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>vm/vm.c:617</td><td><code>supplemental_page_table_copy()</code></td><td>SPT 전체 복제 진입점, hash_iterator로 순회</td></tr><tr><td>vm/vm.c:625</td><td><code>copy(dst, src_page)</code> 매크로</td><td><code>page->operations->copy()</code>로 디스패치</td></tr><tr><td>vm/anon.c:190</td><td><code>anon_copy()</code></td><td>anon resident page COW 복사 핵심 함수</td></tr><tr><td>vm/file.c:13</td><td><code>file_copy()</code></td><td>file-backed resident page 복사</td></tr><tr><td>vm/uninit.c:16</td><td><code>uninit_copy()</code></td><td>UNINIT page 복사 (lazy 상태 유지)</td></tr><tr><td>include/vm/vm.h:84</td><td><code>struct page_operations</code></td><td><code>.copy</code> 함수 포인터 포함</td></tr><tr><td>include/vm/vm.h:96</td><td><code>#define copy(dst, src_page)</code></td><td>operations 디스패치 매크로</td></tr><tr><td>vm/vm.c:434</td><td><code>vm_do_claim_page()</code></td><td>frame 확보 + PML4 매핑 + swap_in</td></tr><tr><td>vm/vm.c</td><td><code>vm_frame_add_owner()</code></td><td>frame의 owner 목록에 page/thread 추가, ref_count++</td></tr><tr><td>include/vm/vm.h</td><td><code>struct page</code></td><td>va, frame 포인터, writable, 타입별 union</td></tr><tr><td>include/vm/vm.h</td><td><code>struct frame</code></td><td>kva, ref_count, owner_thread, owners list</td></tr><tr><td>userprog/process.c:373</td><td><code>__do_fork()</code></td><td>fork에서 spt copy 호출, 실패 시 spt kill</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_set_page()</code></td><td>PML4에 va→frame 매핑 설치 (writable 인자로 COW 제어)</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">fork SPT 복사 전체 흐름 Trace</a></li>
+<li><a href="../../wiki/os/process-fork-mechanism" class="internal internal-link alias" data-slug="wiki/os/process-fork-mechanism">fork 주소 공간 복제 상위 개념</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">COW로 즉시 복사를 지연시키는 최적화</a></li>
+<li><a href="../../wiki/os/cow-pte-writable-off" class="internal internal-link alias" data-slug="wiki/os/cow-pte-writable-off">PTE writable 비트 해제 상세</a></li>
+<li><a href="../../wiki/os/spt-copy-lazy-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-lazy-page">UNINIT page 복사 (aux deep copy)</a></li>
+<li><a href="../../wiki/os/spt-copy-swapped-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-swapped-page">swap slot에 있는 page 복사</a></li>
+<li><a href="../../wiki/os/spt-copy-file-backed-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-file-backed-page">file backed page 복사</a></li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">struct page와 struct frame 구조</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT의 역할과 구조</a></li>
+<li><a href="../../wiki/os/fork-intr-frame-copy" class="internal internal-link alias" data-slug="wiki/os/fork-intr-frame-copy">fork에서 intr frame 복사와 rax=0</a></li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page 상세 흐름</a></li>
+<li><a href="../../wiki/os/ramblock-mechanism" class="internal internal-link alias" data-slug="wiki/os/ramblock-mechanism">QEMU에서 memcpy 대상 메모리의 실제 backing</a></li>
+<li><a href="../../wiki/os/pintos-cow-presentation-troubleshooting" class="internal internal-link alias" data-slug="wiki/os/pintos-cow-presentation-troubleshooting">COW 발표 정리와 트러블슈팅</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/file-system-storage" class="internal">파일시스템과 저장소</a></li><li><a href="../../wiki/os/copy-on-write-mechanism" class="internal">Copy-on-Write — 쓰기 전까지 복사를 미루는 메모리 최적화</a></li><li><a href="../../wiki/os/cow-pte-writable-off" class="internal">COW — PTE Writable 비트 해제</a></li><li><a href="../../wiki/os/spt-copy-file-backed-page" class="internal">File-backed Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/spt-copy-lazy-page" class="internal">Lazy UNINIT Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-copy-swapped-page" class="internal">Swapped Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal">Supplemental Page Table은 왜 필요한가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-639" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#resident-page-복사-fork-spt-copy" data-for="resident-page-복사-fork-spt-copy">Resident Page 복사 (fork SPT copy)</a></li><li class="depth-1"><a href="#resident-page-복사-흐름" data-for="resident-page-복사-흐름">Resident Page 복사 흐름</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#주소-공간-복제와-페이지-매핑" data-for="주소-공간-복제와-페이지-매핑">주소 공간 복제와 페이지 매핑</a></li><li class="depth-2"><a href="#linux와-cow" data-for="linux와-cow">Linux와 COW</a></li><li class="depth-2"><a href="#pintos에서-페이지-유형을-나누는-흐름" data-for="pintos에서-페이지-유형을-나누는-흐름">PintOS에서 페이지 유형을 나누는 흐름</a></li><li class="depth-2"><a href="#pintos-eager-copy-코드" data-for="pintos-eager-copy-코드">PintOS eager copy 코드</a></li><li class="depth-2"><a href="#qemu에서-관찰할-대상" data-for="qemu에서-관찰할-대상">QEMU에서 관찰할 대상</a></li><li class="depth-2"><a href="#현재-pintos-구현으로-제시된-cow-흐름" data-for="현재-pintos-구현으로-제시된-cow-흐름">현재 PintOS 구현으로 제시된 COW 흐름</a></li><li class="depth-2"><a href="#현재-구현-코드--anon_copy-상세" data-for="현재-구현-코드--anon_copy-상세">현재 구현 코드 — anon_copy() 상세</a></li><li class="depth-2"><a href="#linux-비교--cow-fork-구현" data-for="linux-비교--cow-fork-구현">Linux 비교 — COW fork 구현</a></li><li class="depth-2"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-1"><a href="#resident-page-복사-값-추적" data-for="resident-page-복사-값-추적">Resident Page 복사 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>fork — intr_frame 복사와 rax=0 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="fork — intr_frame 복사와 rax=0 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="fork — intr_frame 복사와 rax=0 · 최우녕"/><meta name="twitter:description" content="fork가 부모와 같은 지점에서 시작하는 자식을 만드는 비결은 부모의 intrframe(전체 레지스터 스냅샷)을 통째로 복사하되 자식의 rax만 0으로 바꿔 부모(자식 tid)와 자식(0)을 반환값으로 구분하는 것이다."/><meta property="og:description" content="fork가 부모와 같은 지점에서 시작하는 자식을 만드는 비결은 부모의 intrframe(전체 레지스터 스냅샷)을 통째로 복사하되 자식의 rax만 0으로 바꿔 부모(자식 tid)와 자식(0)을 반환값으로 구분하는 것이다."/><meta property="og:image:alt" content="fork가 부모와 같은 지점에서 시작하는 자식을 만드는 비결은 부모의 intrframe(전체 레지스터 스냅샷)을 통째로 복사하되 자식의 rax만 0으로 바꿔 부모(자식 tid)와 자식(0)을 반환값으로 구분하는 것이다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/fork-intr-frame-copy"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/fork-intr-frame-copy"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fork가 부모와 같은 지점에서 시작하는 자식을 만드는 비결은 부모의 intrframe(전체 레지스터 스냅샷)을 통째로 복사하되 자식의 rax만 0으로 바꿔 부모(자식 tid)와 자식(0)을 반환값으로 구분하는 것이다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/fork-intr-frame-copy" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-473" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-473" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>fork — intr_frame 복사와 rax=0</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="fork--intr_frame-복사와-rax0">fork — intr_frame 복사와 rax=0<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork--intr_frame-복사와-rax0" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>범위: 이 문서는 fork가 실행 상태를 복제하고 자식의 반환값을 구분하는 일반 원리와, 제시된 Linux·PintOS 코드에서 intr_frame 복사 및 rax=0 설정이 이루어지는 방식을 설명한다. 구조체 크기·복사 횟수·offset·코드 위치·QEMU 동작·경합 여부는 특정 구현과 현재 코드 상태에 의존하므로, 실제 버전의 소스와 빌드·GDB 실행 기록을 확인해야 검증 결과로 판단할 수 있다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: fork가 부모와 같은 지점에서 시작하는 자식을 만드는 비결은 부모의 <code>intr_frame</code>(전체 레지스터 스냅샷)을 통째로 복사하되 자식의 rax만 0으로 바꿔 부모(자식 tid)와 자식(0)을 반환값으로 구분하는 것이다.</p>
+</blockquote>
+<h2 id="fork-상태">fork 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>fork()가 “부모와 같은 지점에서 실행을 시작하는 자식”을 만들 수 있는 이유는, 부모의 <code>struct intr_frame</code>을 자식에게 <strong>통째로 복사</strong>하기 때문이다. 현재 packed intr_frame은 CPU 실행 상태(RIP, RSP, 범용 레지스터, RFLAGS 등)를 담은 192-byte 스냅샷이므로, 이것을 복사하면 자식은 부모가 중단된 바로 그 명령어에서 재개할 수 있다.</p>
+<p>단, 딱 한 가지 — <code>rax</code>만 0으로 바꾼다. x86-64 ABI에서 함수 반환값은 RAX에 담기므로, 부모는 fork()에서 자식 tid를 받고 자식은 0을 받아 서로를 구분한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-fork의-핵심-원리">추상 개념 (fork의 핵심 원리)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-fork의-핵심-원리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>fork의 의미는 “현재 실행 상태를 복제한다”이다. 실행 상태란 곧 CPU 레지스터 집합이며, OS에서 이것을 담는 구조체가 intr_frame이다.</p>
+<pre><code>부모 fork() 호출 시점의 레지스터:
+  RIP = fork() 반환 직후 명령어 주소
+  RSP = 유저 스택 꼭대기
+  RAX = (아직 반환값 미정)
+  RDI, RSI, ... = fork() 호출 시점의 값
+
+자식이 받는 복사본:
+  RIP = 동일  ← 같은 명령어에서 시작
+  RSP = 동일  ← 같은 스택 위치
+  RAX = 0     ← 유일한 차이: fork() 반환값 = 0
+  RDI, RSI, ... = 동일
+</code></pre>
+<p>이 원리는 POSIX 표준이며, Linux, macOS, PintOS 모두 동일하다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux의 <code>copy_thread_tls()</code> (arch/x86/kernel/process.c):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// 부모의 pt_regs를 자식 커널 스택에 복사</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">childregs </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">current_pt_regs</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// 자식의 fork 반환값 = 0</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">childregs</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ax </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>Linux는 추가로 <code>childregs->sp</code>를 자식 커널 스택으로 조정하고, <code>ret_from_fork</code>를 통해 유저 모드로 복귀한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 fork frame 전달은 3단계로 이루어진다:</p>
+<p><strong>1단계: 부모가 frame을 args에 값 복사</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// process_fork() — userprog/process.c:201</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">args</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">if_ </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">if_;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // 현재 packed 구조체 값 복사 (192 bytes)</span></span></code></pre></figure>
+<p>부모가 <code>syscall_handler(struct intr_frame *f)</code>를 통해 받은 <code>if_</code> 포인터가 가리키는 frame은 부모의 커널 스택 위에 있다. 이것을 heap에 할당된 <code>fork_args</code>로 값 복사한다. 부모 스레드가 다른 인터럽트를 받아도 <code>args->if_</code>는 안전하다.</p>
+<p><strong>2단계: 자식이 args에서 로컬 변수로 복사</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// __do_fork() — userprog/process.c:363-364</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">memcpy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">if_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">args</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">if_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">sizeof</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> if_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">free</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(args);</span></span></code></pre></figure>
+<p>자식 thread는 <code>__do_fork()</code>에서 로컬 <code>struct intr_frame if_</code>를 선언하고, args에서 memcpy한 뒤 args를 해제한다. 이제 frame은 자식의 커널 스택에 있다.</p>
+<p><strong>3단계: rax=0 설정 후 do_iret()</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// __do_fork() — userprog/process.c:387-394</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">if_.R.rax </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">         // 자식의 fork 반환값 = 0</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">process_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">self_status</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fork_success </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">sema_up</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">self_status</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">fork_sema</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // 부모 깨움</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">do_iret</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">if_</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">         // 유저 모드 진입</span></span></code></pre></figure>
+<p><code>do_iret()</code>은 if_의 모든 레지스터를 CPU에 복원하고 <code>iretq</code>로 유저 모드에 진입한다. 자식은 부모가 fork()를 호출한 바로 다음 명령어에서 실행을 시작하며, RAX=0이므로 <code>fork() == 0</code> 분기를 탄다.</p>
+<p>주의: <code>sema_up</code> 이후 부모는 즉시 실행 재개할 수 있다. 하지만 자식은 아직 <code>do_iret</code>를 호출하지 않은 상태(커널 모드)이므로 경합은 없다 — 자식의 유저 주소 공간은 이미 완전히 복제 완료된 상태다.</p>
+<h3 id="frame-전달-경로-시각화">frame 전달 경로 시각화<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-전달-경로-시각화" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% fork intr_frame 값 복사 경로\nflowchart LR\n  parent_frame[\&quot;부모 커널 스택&lt;br/>intr_frame&lt;br/>(syscall 진입 시 생성됨)\&quot;]\n  fork_args[\&quot;heap (fork_args)&lt;br/>args-&amp;gt;if_&lt;br/>(192 bytes)\&quot;]\n  child_frame[\&quot;자식 커널 스택&lt;br/>로컬 if_&lt;br/>(192 bytes)&lt;br/>rax = 0 설정\&quot;]\n  do_iret[\&quot;do_iret(&amp;amp;if_)&lt;br/>유저 모드 진입\&quot;]\n  parent_frame -->|① 값 복사| fork_args\n  fork_args -->|② memcpy| child_frame\n  child_frame -->|③| do_iret&quot;">%% fork intr_frame 값 복사 경로
+flowchart LR
+  parent_frame[&quot;부모 커널 스택&lt;br/>intr_frame&lt;br/>(syscall 진입 시 생성됨)&quot;]
+  fork_args[&quot;heap (fork_args)&lt;br/>args-&amp;gt;if_&lt;br/>(192 bytes)&quot;]
+  child_frame[&quot;자식 커널 스택&lt;br/>로컬 if_&lt;br/>(192 bytes)&lt;br/>rax = 0 설정&quot;]
+  do_iret[&quot;do_iret(&amp;amp;if_)&lt;br/>유저 모드 진입&quot;]
+  parent_frame -->|① 값 복사| fork_args
+  fork_args -->|② memcpy| child_frame
+  child_frame -->|③| do_iret
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="왜-포인터가-아니라-값-복사인가">왜 포인터가 아니라 값 복사인가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#왜-포인터가-아니라-값-복사인가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>부모의 frame은 부모 커널 스택에 있다. 자식이 이 포인터를 직접 쓰면:</p>
+<ul>
+<li>부모가 syscall에서 복귀하면 스택이 해제되어 dangling pointer</li>
+<li>부모에게 다음 인터럽트가 오면 frame이 덮어씌워짐</li>
+</ul>
+<p>따라서 heap(fork_args)을 거치는 <strong>2회 값 복사</strong>가 필수적이다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU 관점에서 fork frame 복사 과정은 대부분 순수 소프트웨어 동작이다. 구조체 값 복사는 guest memory 안의 현재 packed <code>intr_frame</code> 192 bytes를 옮길 뿐이며, QEMU의 특별한 개입은 없다.</p>
+<p><strong>QEMU가 개입하는 유일한 순간: <code>iretq</code></strong></p>
+<p><code>do_iret()</code>의 <code>iretq</code> 명령어에서 QEMU TCG는 <code>gen_helper_iret_protected()</code>를 호출한다:</p>
+<ol>
+<li>스택에서 RIP, CS, RFLAGS를 pop하고, CPL 0→3 전환이므로 RSP와 SS도 pop</li>
+<li>CS의 RPL 비트(하위 2비트)를 확인 → 현재 <code>SEL_UCSEG=0x23</code> → RPL=3</li>
+<li>CPL을 3으로 전환 (kernel → user mode)</li>
+<li><code>env->eip</code>을 새 RIP로 설정 → 기존 TranslationBlock 무효화 → 새 TB 생성</li>
+</ol>
+<p><strong>GDB에서 fork frame 복사 관찰법</strong></p>
+<pre><code>(gdb) b __do_fork
+(gdb) c
+[자식 thread가 __do_fork에 진입]
+
+# 1. memcpy 직후 자식의 로컬 if_ 확인
+(gdb) n  # memcpy 실행
+(gdb) p/x if_.R.rax        # 아직 부모의 반환값(부모 tid)
+(gdb) p/x if_.rip          # 부모가 fork() 호출한 다음 명령어
+
+# 2. rax=0 설정 관찰
+(gdb) n  # if_.R.rax = 0 실행
+(gdb) p/x if_.R.rax        # 0x0 확인
+
+# 3. do_iret 직전 frame 전체 덤프
+(gdb) p if_                 # 현재 packed layout 192 bytes 확인
+(gdb) p/x if_.cs            # 0x23 (SEL_UCSEG, user code selector)
+
+# 4. do_iret 이후 유저 모드 확인
+(gdb) b *if_.rip            # 자식이 도착할 유저 주소에 BP
+(gdb) c
+(gdb) p $rax                # 0x0 — fork() 반환값
+(gdb) p $cs                 # RPL=3 확인
+</code></pre>
+<h2 id="fork-값">fork 값<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-값" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><code>intr_frame 크기:       192 bytes
+fork 당 복사 횟수:     2회 (부모→heap, heap→자식)
+총 복사량:             192 × 2 = 384 bytes
+
+rax 변경 offset:
+  gp_registers 내 rax 위치 = 마지막 필드
+  struct gp_registers 시작부터 rax field까지: 14 × 8 = 112 bytes
+  intr_frame 시작부터 R.rax field까지: 112 bytes
+  gp_registers 전체 크기: 15 × 8 = 120 bytes
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% fork intr_frame 복사 순서\nflowchart LR\n  parent_start[\&quot;부모 Thread&lt;br/>syscall_handler(f)&lt;br/>f는 부모 frame 포인터\&quot;]\n  process_fork[\&quot;부모 Thread&lt;br/>process_fork() 진입\&quot;]\n  create_child[\&quot;부모 Thread&lt;br/>thread_create(&amp;quot;child&amp;quot;,&lt;br/>__do_fork, args)\&quot;]\n  parent_wait[\&quot;부모 Thread&lt;br/>sema_down(fork_sema)&lt;br/>자식 완료 대기\&quot;]\n  child_start[\&quot;자식 Thread&lt;br/>__do_fork(args) 시작\&quot;]\n  child_free[\&quot;자식 Thread&lt;br/>free(args)\&quot;]\n  child_duplicate[\&quot;자식 Thread&lt;br/>pml4 복제&lt;br/>fd 복제&lt;br/>SPT 복제\&quot;]\n  child_rax[\&quot;자식 Thread&lt;br/>if_.R.rax = 0\&quot;]\n  parent_wake[\&quot;부모 Thread&lt;br/>sema_up(fork_sema)&lt;br/>부모 깨움\&quot;]\n  user_mode[\&quot;자식 Thread&lt;br/>do_iret(&amp;amp;if_)&lt;br/>user mode&lt;br/>RIP=부모와 동일&lt;br/>RAX=0\&quot;]\n  heap_copy[\&quot;heap_copy\&quot;]\n  child_copy[\&quot;child_copy\&quot;]\n  parent_start --> process_fork\n  process_fork --> heap_copy\n  heap_copy --> create_child\n  create_child --> parent_wait\n  create_child -->|__do_fork| child_start\n  child_start --> child_copy\n  child_copy --> child_free\n  child_free --> child_duplicate\n  child_duplicate --> child_rax\n  child_rax --> parent_wake\n  parent_wake --> user_mode\n  parent_wake -->|fork_sema| parent_wait&quot;">%% fork intr_frame 복사 순서
+flowchart LR
+  parent_start[&quot;부모 Thread&lt;br/>syscall_handler(f)&lt;br/>f는 부모 frame 포인터&quot;]
+  process_fork[&quot;부모 Thread&lt;br/>process_fork() 진입&quot;]
+  create_child[&quot;부모 Thread&lt;br/>thread_create(&amp;quot;child&amp;quot;,&lt;br/>__do_fork, args)&quot;]
+  parent_wait[&quot;부모 Thread&lt;br/>sema_down(fork_sema)&lt;br/>자식 완료 대기&quot;]
+  child_start[&quot;자식 Thread&lt;br/>__do_fork(args) 시작&quot;]
+  child_free[&quot;자식 Thread&lt;br/>free(args)&quot;]
+  child_duplicate[&quot;자식 Thread&lt;br/>pml4 복제&lt;br/>fd 복제&lt;br/>SPT 복제&quot;]
+  child_rax[&quot;자식 Thread&lt;br/>if_.R.rax = 0&quot;]
+  parent_wake[&quot;부모 Thread&lt;br/>sema_up(fork_sema)&lt;br/>부모 깨움&quot;]
+  user_mode[&quot;자식 Thread&lt;br/>do_iret(&amp;amp;if_)&lt;br/>user mode&lt;br/>RIP=부모와 동일&lt;br/>RAX=0&quot;]
+  heap_copy[&quot;heap_copy&quot;]
+  child_copy[&quot;child_copy&quot;]
+  parent_start --> process_fork
+  process_fork --> heap_copy
+  heap_copy --> create_child
+  create_child --> parent_wait
+  create_child -->|__do_fork| child_start
+  child_start --> child_copy
+  child_copy --> child_free
+  child_free --> child_duplicate
+  child_duplicate --> child_rax
+  child_rax --> parent_wake
+  parent_wake --> user_mode
+  parent_wake -->|fork_sema| parent_wait
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄 번호</th><th>역할</th></tr></thead><tbody><tr><td>userprog/process.c</td><td>struct fork_args</td><td>:45-49</td><td>parent, if_, cs를 묶는 구조체</td></tr><tr><td>userprog/process.c</td><td>process_fork()</td><td>:172</td><td>args->if_ = *if_ (:201)로 부모 frame을 heap에 복사</td></tr><tr><td>userprog/process.c</td><td>__do_fork()</td><td>:347</td><td>memcpy (:363), rax=0 (:387), do_iret (:394)</td></tr><tr><td>userprog/process.c</td><td>sema_down/up</td><td>:210, :391</td><td>fork_sema로 부모-자식 동기화</td></tr><tr><td>userprog/process.c</td><td>duplicate_fd_table()</td><td>:380</td><td>fork 중 fd table 복제</td></tr><tr><td>include/threads/interrupt.h</td><td>struct intr_frame</td><td>—</td><td>현재 packed layout의 192-byte 레지스터 스냅샷</td></tr><tr><td>threads/interrupt.c</td><td>do_iret()</td><td>—</td><td>frame → CPU 레지스터 복원 + iretq</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/process-fork-mechanism" class="internal internal-link alias" data-slug="wiki/os/process-fork-mechanism">fork 메커니즘</a></li>
+<li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal internal-link alias" data-slug="wiki/os/intr-frame-register-snapshot">register snapshot</a></li>
+<li><a href="../../wiki/os/intr-frame-layout" class="internal internal-link alias" data-slug="wiki/os/intr-frame-layout">intr frame 레이아웃</a></li>
+<li><a href="../../wiki/os/fork-semaphore-sync" class="internal internal-link alias" data-slug="wiki/os/fork-semaphore-sync">fork semaphore sync</a></li>
+<li><a href="../../wiki/os/do-iret-restore" class="internal internal-link alias" data-slug="wiki/os/do-iret-restore">do iret() 복원</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">Copy on Write</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/do-iret-user-mode-entry" class="internal">do_iret() → user mode 진입</a></li><li><a href="../../wiki/os/fork-semaphore-sync" class="internal">fork 세마포어 동기화</a></li><li><a href="../../wiki/os/intr-frame-layout" class="internal">struct intr_frame 레이아웃</a></li><li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal">인터럽트 프레임 레지스터 스냅샷 (Intr Frame Register Snapshot)</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/rip-instruction-pointer" class="internal">RIP — 다음 명령어 주소</a></li><li><a href="../../wiki/os/spt-copy-file-backed-page" class="internal">File-backed Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-copy-resident-page" class="internal">Resident Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/syscall-return-path" class="internal">syscall 복귀 경로 — sysretq vs iretq</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-471" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#fork--intr_frame-복사와-rax0" data-for="fork--intr_frame-복사와-rax0">fork — intr_frame 복사와 rax=0</a></li><li class="depth-1"><a href="#fork-상태" data-for="fork-상태">fork 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-fork의-핵심-원리" data-for="추상-개념-fork의-핵심-원리">추상 개념 (fork의 핵심 원리)</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#frame-전달-경로-시각화" data-for="frame-전달-경로-시각화">frame 전달 경로 시각화</a></li><li class="depth-2"><a href="#왜-포인터가-아니라-값-복사인가" data-for="왜-포인터가-아니라-값-복사인가">왜 포인터가 아니라 값 복사인가</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#fork-값" data-for="fork-값">fork 값</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

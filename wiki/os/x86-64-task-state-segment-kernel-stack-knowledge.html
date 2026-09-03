@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>x86-64 TSS 커널 스택 전환 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="x86-64 TSS 커널 스택 전환 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="x86-64 TSS 커널 스택 전환 · 최우녕"/><meta name="twitter:description" content="유저 프로그램이 실행 중일 때 CPU의 RSP는 유저 스택을 가리킨다."/><meta property="og:description" content="유저 프로그램이 실행 중일 때 CPU의 RSP는 유저 스택을 가리킨다."/><meta property="og:image:alt" content="유저 프로그램이 실행 중일 때 CPU의 RSP는 유저 스택을 가리킨다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/x86-64-task-state-segment-kernel-stack-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/x86-64-task-state-segment-kernel-stack-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="유저 프로그램이 실행 중일 때 CPU의 RSP는 유저 스택을 가리킨다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-711" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-711" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>x86-64 TSS 커널 스택 전환</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="x86-64-tss-커널-스택-전환">x86-64 TSS 커널 스택 전환<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-tss-커널-스택-전환" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>유저 프로그램이 커널에 진입할 때는 유저 스택을 그대로 믿을 수 없어서, x86-64는 TSS의 <code>rsp0</code>을 통해 현재 스레드의 커널 스택 꼭대기를 찾는다.</p>
+</blockquote>
+<h2 id="x86-64-tss-커널-스택-전환-1">x86-64 TSS 커널 스택 전환<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-tss-커널-스택-전환-1" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>유저 프로그램이 실행 중일 때 CPU의 RSP는 유저 스택을 가리킨다. 이 상태에서 interrupt, page fault, syscall로 커널에 진입해야 할 때, 유저 스택을 그대로 쓰면 안 된다 — 유저 스택은 조작되었거나 매핑이 깨져 있을 수 있다. TSS(Task-State Segment)는 이 문제에 대한 x86-64 CPU의 답이다. TSS의 <code>rsp0</code> 필드에 현재 스레드의 커널 스택 꼭대기 주소를 넣어 두면, 권한 전환 시 CPU(또는 OS entry code)가 안전한 커널 스택으로 갈아탈 수 있다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>커널 진입에는 두 가지가 동시에 필요하다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필요한 것</th><th>이유</th><th>담당 구조</th></tr></thead><tbody><tr><td>권한 전환</td><td>ring 3 → ring 0</td><td>CS selector, GDT descriptor</td></tr><tr><td>스택 전환</td><td>유저 스택 → 커널 스택</td><td>TSS의 rsp0 (또는 OS entry code)</td></tr></tbody></table></div>
+<p>Page table과 TSS/GDT는 역할이 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>답하는 구조</th></tr></thead><tbody><tr><td>이 VA가 어느 frame으로 번역되는가?</td><td>page table</td></tr><tr><td>이 VA는 유저 모드에서 접근 가능한가?</td><td>page table의 PTE_U bit</td></tr><tr><td>지금 실행 중인 코드는 유저 권한인가 커널 권한인가?</td><td>CS selector, CPL</td></tr><tr><td>유저→커널 진입 시 새 RSP는 어디인가?</td><td>TSS의 rsp0 (또는 entry code가 직접 읽음)</td></tr></tbody></table></div>
+<p>네 가지 이름만 분리하면 전체 구조가 잡힌다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이름</th><th>의미</th></tr></thead><tbody><tr><td>GDT</td><td>selector 숫자를 descriptor 의미로 바꾸는 CPU용 표</td></tr><tr><td>TSS descriptor</td><td>GDT 안에서 “TSS 구조체는 메모리 여기 있다”라고 가리키는 항목</td></tr><tr><td>TR (Task Register)</td><td>CPU가 현재 사용할 TSS descriptor를 기억하는 레지스터</td></tr><tr><td>TSS.rsp0</td><td>ring 0 진입 때 사용할 커널 스택 꼭대기 주소</td></tr></tbody></table></div>
+<p>등록 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% TSS 등록 흐름\nflowchart LR\n  tss_init[\&quot;tss_init()&lt;br/>TSS 구조체 할당\&quot;]\n  gdt_init[\&quot;gdt_init()&lt;br/>GDT[SEL_TSS]에&lt;br/>TSS descriptor 등록\&quot;]\n  ltr[\&quot;ltr(SEL_TSS)&lt;br/>TR ← SEL_TSS\&quot;]\n  update[\&quot;tss_update(next)&lt;br/>rsp0 ← next + PGSIZE\&quot;]\n  tss_init --> gdt_init\n  gdt_init --> ltr\n  ltr --> update&quot;">%% TSS 등록 흐름
+flowchart LR
+  tss_init[&quot;tss_init()&lt;br/>TSS 구조체 할당&quot;]
+  gdt_init[&quot;gdt_init()&lt;br/>GDT[SEL_TSS]에&lt;br/>TSS descriptor 등록&quot;]
+  ltr[&quot;ltr(SEL_TSS)&lt;br/>TR ← SEL_TSS&quot;]
+  update[&quot;tss_update(next)&lt;br/>rsp0 ← next + PGSIZE&quot;]
+  tss_init --> gdt_init
+  gdt_init --> ltr
+  ltr --> update
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>유저 스택과 커널 스택은 완전히 분리된 두 영역이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이름</th><th>누가 쓰나</th><th>주소 범위</th><th>누가 준비하나</th></tr></thead><tbody><tr><td>유저 스택</td><td>유저 프로그램</td><td>USER_STACK 아래 유저 VA</td><td>setup_stack(), vm_stack_growth()</td></tr><tr><td>커널 스택</td><td>커널 코드</td><td>struct thread의 4KB page 위쪽</td><td>thread_create(), tss_update()</td></tr></tbody></table></div>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현대 x86-64 OS도 TSS를 “하드웨어 스레드 스케줄러”로 쓰지 않는다. 오래된 x86의 hardware task switching은 거의 쓰이지 않으며, TSS는 세 가지 용도로만 남는다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>용도</th><th>의미</th></tr></thead><tbody><tr><td>ring 0 stack pointer</td><td>유저→커널 진입 시 사용할 스택</td></tr><tr><td>IST (Interrupt Stack Table)</td><td>double fault, NMI용 별도 안전 스택</td></tr><tr><td>CPU 요구 구조</td><td>x86-64 권한 전환에 유효한 TSS/TR이 필수</td></tr></tbody></table></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>TSS 개수</td><td>per-CPU 1개</td><td>per-CPU 1개</td><td>전역 1개 (단일 CPU)</td></tr><tr><td>커널 스택 크기</td><td>16KB (4 pages, THREAD_SIZE)</td><td>24KB (일반), 12KB (ISR)</td><td>4KB 내 상단</td></tr><tr><td>IST 사용</td><td>IST1=double fault, IST2=NMI 등</td><td>예외별 IST</td><td>미사용</td></tr><tr><td>KPTI</td><td>유저/커널 PML4 분리</td><td>KVA Shadow</td><td>미적용</td></tr><tr><td>syscall stack</td><td><code>MSR_KERNEL_GS_BASE</code> → per-CPU 영역에서 스택 전환</td><td>KVASCODE 진입점에서 전환</td><td><code>syscall_entry.S</code>가 tss→rsp0 직접 읽음</td></tr></tbody></table></div>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 TSS 사용 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS TSS 갱신 순서\nflowchart TD\n  boot[\&quot;init (부팅)\&quot;]\n  tss_init[\&quot;tss_init()&lt;br/>tss = palloc_get_page(PAL_ZERO)\&quot;]\n  tss_update_boot[\&quot;tss_update(thread_current())&lt;br/>tss-&amp;gt;rsp0 = next + PGSIZE\&quot;]\n  gdt_init[\&quot;gdt_init()&lt;br/>GDT[SEL_TSS &amp;gt;&amp;gt; 3] = TSS descriptor\&quot;]\n  tr_load[\&quot;lgdt()\&quot;]\n  schedule[\&quot;schedule()&lt;br/>다음 thread 선택\&quot;]\n  activate[\&quot;process_activate(next)&lt;br/>tss_update(next) + pml4_activate(next-&amp;gt;pml4)\&quot;]\n  tss_update_next[\&quot;tss_update(next)&lt;br/>tss-&amp;gt;rsp0 = next + PGSIZE\&quot;]\n  boot -->|부팅 중| tss_init\n  tss_init --> tss_update_boot\n  tss_update_boot --> gdt_init\n  gdt_init --> tr_load\n  tr_load -->|이후 context switch| schedule\n  schedule --> activate\n  activate --> tss_update_next&quot;">%% PintOS TSS 갱신 순서
+flowchart TD
+  boot[&quot;init (부팅)&quot;]
+  tss_init[&quot;tss_init()&lt;br/>tss = palloc_get_page(PAL_ZERO)&quot;]
+  tss_update_boot[&quot;tss_update(thread_current())&lt;br/>tss-&amp;gt;rsp0 = next + PGSIZE&quot;]
+  gdt_init[&quot;gdt_init()&lt;br/>GDT[SEL_TSS &amp;gt;&amp;gt; 3] = TSS descriptor&quot;]
+  tr_load[&quot;lgdt()&quot;]
+  schedule[&quot;schedule()&lt;br/>다음 thread 선택&quot;]
+  activate[&quot;process_activate(next)&lt;br/>tss_update(next) + pml4_activate(next-&amp;gt;pml4)&quot;]
+  tss_update_next[&quot;tss_update(next)&lt;br/>tss-&amp;gt;rsp0 = next + PGSIZE&quot;]
+  boot -->|부팅 중| tss_init
+  tss_init --> tss_update_boot
+  tss_update_boot --> gdt_init
+  gdt_init --> tr_load
+  tr_load -->|이후 context switch| schedule
+  schedule --> activate
+  activate --> tss_update_next
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>커널 진입 경로별 TSS 사용 방식이 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>경로</th><th>TSS 사용 방식</th></tr></thead><tbody><tr><td>interrupt/trap gate (ring 3→0)</td><td>CPU가 TSS rsp0을 자동 사용 가능</td></tr><tr><td>x86-64 <code>syscall</code> fast path</td><td>PintOS <code>syscall_entry.S</code>가 <code>tss->rsp0</code>을 직접 읽어 RSP에 넣음</td></tr></tbody></table></div>
+<p>syscall entry의 핵심 어셈블리:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="asm" data-theme="github-light github-dark"><code data-language="asm" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">movabs $tss, %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">r12</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        ; tss 전역 포인터 로드</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">movq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> (%</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">r12</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">), %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">r12</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        ; tss 구조체 주소</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">movq</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(%</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">r12</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">), %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rsp</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       ; rsp0 읽어 커널 스택으로 전환</span></span></code></pre></figure>
+<p>즉 <code>syscall</code> 명령은 CPU가 자동으로 intr_frame을 만들어 주는 것이 아니다. LSTAR MSR이 가리키는 진입점(<code>syscall_entry</code>)에서 PintOS entry code가 TSS의 rsp0을 읽고, 커널 스택 위에 struct intr_frame을 직접 구성한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 PintOS의 thread, process, syscall_handler() 의미를 모른다. QEMU가 재현하는 것은 guest x86 CPU의 TSS/GDT/TR 하드웨어 규칙이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>QEMU 코드</th><th>역할</th></tr></thead><tbody><tr><td><code>helper_ltr()</code> (seg_helper.c)</td><td>guest <code>ltr</code> 명령 처리, GDT에서 TSS descriptor를 읽어 <code>env->tr</code>에 저장</td></tr><tr><td><code>do_interrupt64()</code> (seg_helper.c)</td><td>ring 3→0 진입 시 <code>get_rsp_from_tss()</code>로 새 RSP 획득</td></tr><tr><td><code>helper_syscall()</code> (seg_helper.c)</td><td><code>syscall</code> instruction의 CPU 상태 변화(RCX, R11, RIP=LSTAR) 재현. TSS stack switch는 하지 않음 — PintOS entry code가 직접 수행</td></tr></tbody></table></div>
+<h2 id="x86-64-tss-커널-스택-전환-값-추적">x86-64 TSS 커널 스택 전환 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-tss-커널-스택-전환-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="sel_tss--0x28은-gdt-index-5">SEL_TSS = 0x28은 GDT index 5<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#sel_tss--0x28은-gdt-index-5" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SEL_TSS = 0x28 = 0b 0010_1000</span></span>
+<span data-line> </span>
+<span data-line><span>index = 0x28 >> 3 = 5</span></span>
+<span data-line><span>TI    = 0 (GDT)</span></span>
+<span data-line><span>RPL   = 0 (ring 0)</span></span>
+<span data-line> </span>
+<span data-line><span>따라서 TSS descriptor는 GDT의 5번 항목(offset 40 bytes)에서 시작한다.</span></span></code></pre></figure>
+<p>x86-64 TSS descriptor는 16바이트(일반 descriptor 2칸)를 차지한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>GDT[5]: TSS descriptor low  (8 bytes)</span></span>
+<span data-line><span>GDT[6]: TSS descriptor high (8 bytes)</span></span></code></pre></figure>
+<h3 id="rsp0-offset--4-bytes">rsp0 offset = 4 bytes<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#rsp0-offset--4-bytes" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct task_state {</span></span>
+<span data-line><span>    uint32_t res1;     // offset 0, 4 bytes (reserved)</span></span>
+<span data-line><span>    uint64_t rsp0;     // offset 4, 8 bytes ← 여기</span></span>
+<span data-line><span>    uint64_t rsp1;     // offset 12</span></span>
+<span data-line><span>    uint64_t rsp2;     // offset 20</span></span>
+<span data-line><span>    ...</span></span>
+<span data-line><span>};</span></span></code></pre></figure>
+<p>그래서 <code>syscall_entry.S</code>가 <code>movq 4(%r12), %rsp</code>로 rsp0을 읽는다.</p>
+<h3 id="rsp0--thread--pgsize-계산-예제">rsp0 = thread + PGSIZE 계산 예제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#rsp0--thread--pgsize-계산-예제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 thread page 시작: 0x800420000</span></span>
+<span data-line><span>PGSIZE:                0x1000</span></span>
+<span data-line> </span>
+<span data-line><span>rsp0 = 0x800420000 + 0x1000 = 0x800421000</span></span>
+<span data-line> </span>
+<span data-line><span>struct intr_frame 크기 ≈ 0xC0 (192 bytes)</span></span>
+<span data-line> </span>
+<span data-line><span>syscall entry 후 intr_frame 시작:</span></span>
+<span data-line><span>  0x800421000 - 0xC0 = 0x800420F40</span></span></code></pre></figure>
+<h3 id="4kb-thread-page-안-커널-스택-레이아웃">4KB thread page 안 커널 스택 레이아웃<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4kb-thread-page-안-커널-스택-레이아웃" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 4KB thread page 안 커널 스택 레이아웃\nflowchart TD\n  layout[\&quot;0x800421000 &amp;#124; rsp0 (커널 스택 top)&lt;br/>&amp;#124; struct intr_frame&lt;br/>push 영역 약 0xC0&lt;br/>0x800420F40 &amp;#124; intr_frame 시작&lt;br/>&amp;#124; kernel 지역변수&lt;br/>return address&lt;br/>아래로 성장&lt;br/>&amp;#124; 사용 가능 공간&lt;br/>&amp;#124; struct thread&lt;br/>약 200+ bytes\&quot;]&quot;">%% 4KB thread page 안 커널 스택 레이아웃
+flowchart TD
+  layout[&quot;0x800421000 &amp;#124; rsp0 (커널 스택 top)&lt;br/>&amp;#124; struct intr_frame&lt;br/>push 영역 약 0xC0&lt;br/>0x800420F40 &amp;#124; intr_frame 시작&lt;br/>&amp;#124; kernel 지역변수&lt;br/>return address&lt;br/>아래로 성장&lt;br/>&amp;#124; 사용 가능 공간&lt;br/>&amp;#124; struct thread&lt;br/>약 200+ bytes&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="유저커널-전환-전체-흐름">유저→커널 전환 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저커널-전환-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 유저에서 커널로 전환되는 전체 흐름\nflowchart TD\n  user[\&quot;유저 모드 실행 중&lt;br/>RSP = 유저 스택&lt;br/>CPL = 3\&quot;]\n  entry[\&quot;커널 진입점\&quot;]\n  rsp0[\&quot;RSP ← tss-&amp;gt;rsp0&lt;br/>현재 thread의 커널 스택 top\&quot;]\n  frame[\&quot;유저 상태 저장&lt;br/>커널 스택에 struct intr_frame 구성\&quot;]\n  kernel[\&quot;커널 코드 실행&lt;br/>CPL = 0\&quot;]\n  return_user[\&quot;유저 모드 복귀&lt;br/>RSP = 유저 스택 복원\&quot;]\n  user -->|syscall / interrupt / trap| entry\n  entry --> rsp0\n  rsp0 --> frame\n  frame --> kernel\n  kernel -->|iretq / sysretq| return_user&quot;">%% 유저에서 커널로 전환되는 전체 흐름
+flowchart TD
+  user[&quot;유저 모드 실행 중&lt;br/>RSP = 유저 스택&lt;br/>CPL = 3&quot;]
+  entry[&quot;커널 진입점&quot;]
+  rsp0[&quot;RSP ← tss-&amp;gt;rsp0&lt;br/>현재 thread의 커널 스택 top&quot;]
+  frame[&quot;유저 상태 저장&lt;br/>커널 스택에 struct intr_frame 구성&quot;]
+  kernel[&quot;커널 코드 실행&lt;br/>CPL = 0&quot;]
+  return_user[&quot;유저 모드 복귀&lt;br/>RSP = 유저 스택 복원&quot;]
+  user -->|syscall / interrupt / trap| entry
+  entry --> rsp0
+  rsp0 --> frame
+  frame --> kernel
+  kernel -->|iretq / sysretq| return_user
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="page-table과-tssgdt의-역할-분리">page table과 TSS/GDT의 역할 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-table과-tssgdt의-역할-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% page table과 TSS/GDT의 역할 분리\nflowchart LR\n  page_table[\&quot;page table (CR3 기반)&lt;br/>VA -&amp;gt; PA 변환&lt;br/>접근 권한 (U/S)&lt;br/>R/W\&quot;]\n  tss_gdt[\&quot;TSS/GDT (TR 기반)&lt;br/>권한 전환 정보&lt;br/>커널 스택 주소&lt;br/>IST 포인터\&quot;]\n  address_translation[\&quot;메모리 주소 번역\&quot;]\n  mode_switch[\&quot;CPU 모드 전환\&quot;]\n  page_table --> address_translation\n  tss_gdt --> mode_switch&quot;">%% page table과 TSS/GDT의 역할 분리
+flowchart LR
+  page_table[&quot;page table (CR3 기반)&lt;br/>VA -&amp;gt; PA 변환&lt;br/>접근 권한 (U/S)&lt;br/>R/W&quot;]
+  tss_gdt[&quot;TSS/GDT (TR 기반)&lt;br/>권한 전환 정보&lt;br/>커널 스택 주소&lt;br/>IST 포인터&quot;]
+  address_translation[&quot;메모리 주소 번역&quot;]
+  mode_switch[&quot;CPU 모드 전환&quot;]
+  page_table --> address_translation
+  tss_gdt --> mode_switch
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>include/userprog/tss.h</td><td>struct task_state</td><td>7</td><td>TSS 구조체 정의, rsp0 필드 포함</td></tr><tr><td>userprog/tss.c</td><td>tss_init()</td><td>51</td><td>TSS 할당 및 초기화</td></tr><tr><td>userprog/tss.c</td><td>tss_update()</td><td>76</td><td><code>tss->rsp0 = next + PGSIZE</code></td></tr><tr><td>userprog/gdt.c</td><td>gdt_init()</td><td>84</td><td>GDT에 TSS descriptor 등록</td></tr><tr><td>userprog/gdt.c</td><td><code>gdt[SEL_TSS >> 3]</code></td><td>68</td><td>GDT index 5에 TSS descriptor 슬롯</td></tr><tr><td>threads/interrupt.c</td><td>ltr(SEL_TSS)</td><td>232</td><td>CPU TR 레지스터에 TSS selector 적재</td></tr><tr><td>userprog/syscall-entry.S</td><td><code>movabs $tss, %r12</code></td><td>10</td><td>syscall entry에서 TSS 포인터 로드</td></tr><tr><td>userprog/syscall-entry.S</td><td><code>movq 4(%r12), %rsp</code></td><td>12</td><td>rsp0 읽어 커널 스택으로 전환</td></tr><tr><td>userprog/process.c</td><td>process_activate()</td><td>730</td><td>tss_update(next) + pml4_activate() 호출</td></tr><tr><td>threads/thread.c</td><td>thread_create()</td><td>229</td><td>새 thread용 4KB page 할당</td></tr></tbody></table></div>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-tss-rsp0-값-확인">1) TSS rsp0 값 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-tss-rsp0-값-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># schedule() 이후 process_activate() 내에서</span></span>
+<span data-line><span>b tss_update</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $old_rsp0 = tss->rsp0</span></span>
+<span data-line><span>  printf &quot;[tss_update] old_rsp0=%p  next=%p  new_rsp0=%p\n&quot;, \</span></span>
+<span data-line><span>    $old_rsp0, next, (unsigned long)next + 0x1000</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>context switch마다 rsp0이 다음 thread의 page 끝으로 바뀌는지 확인.</p>
+<h3 id="2-syscall-진입-시-rsp-전환-관찰">2) syscall 진입 시 RSP 전환 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-syscall-진입-시-rsp-전환-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># syscall_entry.S의 movq 4(%r12), %rsp 직후에 break</span></span>
+<span data-line><span>b *syscall_entry+20</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[syscall_entry] RSP=%p (커널 스택)\n&quot;, $rsp</span></span>
+<span data-line><span>  printf &quot;  thread_current()=%p\n&quot;, (unsigned long)$rsp &amp; ~0xfff</span></span>
+<span data-line><span>  printf &quot;  rsp0 expected=%p\n&quot;, ((unsigned long)$rsp &amp; ~0xfff) + 0x1000</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>RSP가 현재 thread page + PGSIZE 근처인지 확인.</p>
+<h3 id="3-tss-구조체-전체-덤프">3) TSS 구조체 전체 덤프<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-tss-구조체-전체-덤프" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define dump_tss</span></span>
+<span data-line><span>  printf &quot;TSS addr = %p\n&quot;, tss</span></span>
+<span data-line><span>  printf &quot;  rsp0   = %p\n&quot;, tss->rsp0</span></span>
+<span data-line><span>  printf &quot;  rsp1   = %p\n&quot;, tss->rsp1</span></span>
+<span data-line><span>  printf &quot;  rsp2   = %p\n&quot;, tss->rsp2</span></span>
+<span data-line><span>  printf &quot;  ist1   = %p\n&quot;, tss->ist1</span></span>
+<span data-line><span>  printf &quot;  ist2   = %p\n&quot;, tss->ist2</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span>dump_tss</span></span></code></pre></figure>
+<h3 id="4-gdt-tss-descriptor-검증">4) GDT TSS descriptor 검증<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-gdt-tss-descriptor-검증" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># GDT에서 SEL_TSS (index 5) 항목 읽기</span></span>
+<span data-line><span>define dump_gdt_tss</span></span>
+<span data-line><span>  set $gdt = (uint64_t *)gdt</span></span>
+<span data-line><span>  printf &quot;GDT[5] (TSS low)  = 0x%016lx\n&quot;, $gdt[5]</span></span>
+<span data-line><span>  printf &quot;GDT[6] (TSS high) = 0x%016lx\n&quot;, $gdt[6]</span></span>
+<span data-line><span>  # TSS base 추출 (low word에서 bits 16-31,0-7,56-63 + high word 0-31)</span></span>
+<span data-line><span>  set $base_lo = (($gdt[5] >> 16) &amp; 0xffffff) | (($gdt[5] >> 32) &amp; 0xff000000)</span></span>
+<span data-line><span>  set $base_hi = $gdt[6] &amp; 0xffffffff</span></span>
+<span data-line><span>  printf &quot;  TSS base = 0x%08lx%08lx\n&quot;, $base_hi, $base_lo</span></span>
+<span data-line><span>  printf &quot;  actual tss = %p (should match)\n&quot;, tss</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span>dump_gdt_tss</span></span></code></pre></figure>
+<h3 id="5-context-switch-전후-rsp0-변화-추적">5) context switch 전후 rsp0 변화 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-context-switch-전후-rsp0-변화-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b schedule</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $prev = thread_current()</span></span>
+<span data-line><span>  printf &quot;[schedule] prev=%s(%d)  rsp0_before=%p\n&quot;, \</span></span>
+<span data-line><span>    $prev->name, $prev->tid, tss->rsp0</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span>b process_activate</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[activate] next=%s(%d)  rsp0_will_be=%p\n&quot;, \</span></span>
+<span data-line><span>    next->name, next->tid, (unsigned long)next + 0x1000</span></span>
+<span data-line><span>  cont</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>schedule → process_activate → tss_update 순서대로 rsp0 변화 확인.</p>
+<h3 id="6-커널-스택-사용량-측정">6) 커널 스택 사용량 측정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-커널-스택-사용량-측정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define kernel_stack_usage</span></span>
+<span data-line><span>  set $t = thread_current()</span></span>
+<span data-line><span>  set $top = (unsigned long)$t + 0x1000</span></span>
+<span data-line><span>  set $used = $top - (unsigned long)$rsp</span></span>
+<span data-line><span>  set $avail = (unsigned long)$rsp - (unsigned long)$t - sizeof(struct thread)</span></span>
+<span data-line><span>  printf &quot;thread=%s  stack_top=%p  RSP=%p\n&quot;, $t->name, $top, $rsp</span></span>
+<span data-line><span>  printf &quot;  used=%d bytes  available=%d bytes  (of ~%d total)\n&quot;, \</span></span>
+<span data-line><span>    $used, $avail, 0x1000 - sizeof(struct thread)</span></span>
+<span data-line><span>end</span></span>
+<span data-line><span>kernel_stack_usage</span></span></code></pre></figure>
+<p>커널 스택 오버플로우 감지: avail이 음수이면 struct thread 영역 침범.</p>
+<h2 id="tss-사용-방식-비교">TSS 사용 방식 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#tss-사용-방식-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>TSS 개수</td><td>per-CPU 1개</td><td>per-CPU 1개</td><td>전역 1개</td></tr><tr><td>rsp0 갱신 시점</td><td><code>__switch_to()</code>에서</td><td><code>KiSwapContext()</code>에서</td><td><code>tss_update()</code>에서 (schedule 후)</td></tr><tr><td>syscall 스택 전환</td><td>per-CPU 변수 (<code>MSR_GS_BASE</code> + 오프셋)</td><td>KVASCODE 진입점</td><td><code>syscall_entry.S</code>가 <code>tss->rsp0</code> 직접 읽음</td></tr><tr><td>interrupt 스택 전환</td><td>TSS rsp0 (CPU 자동)</td><td>TSS rsp0 (CPU 자동)</td><td>TSS rsp0 (CPU 자동)</td></tr><tr><td>IST 사용</td><td>IST1=double fault, IST2=NMI, IST3=MCE</td><td>예외별 IST</td><td>미사용</td></tr><tr><td>커널 스택 크기</td><td>16KB (4 pages)</td><td>24KB (일반) / 12KB (ISR)</td><td>~3.8KB (4KB - struct thread)</td></tr><tr><td>KPTI</td><td>유저/커널 PML4 분리, 진입 시 CR3 전환</td><td>KVA Shadow</td><td>미적용</td></tr><tr><td>스택 가드 페이지</td><td>CONFIG_VMAP_STACK (커널 스택 guard page)</td><td>guard page 있음</td><td>THREAD_MAGIC 체크만</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal internal-link alias" data-slug="wiki/os/tss-rsp0-mechanism">TSS rsp0</a></li>
+<li><a href="../../wiki/os/process-activate-tss" class="internal internal-link alias" data-slug="wiki/os/process-activate-tss">process activate()</a></li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 권한 전환</a></li>
+<li><a href="../../wiki/os/lstar-msr-entry" class="internal internal-link alias" data-slug="wiki/os/lstar-msr-entry">LSTAR MSR</a></li>
+<li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal internal-link alias" data-slug="wiki/os/syscall-entry-stack-switch-trace">syscall 스택 전환</a></li>
+<li><a href="../../wiki/os/user-kernel-stack-separation" class="internal internal-link alias" data-slug="wiki/os/user-kernel-stack-separation">커널 스택 분리</a></li>
+<li><a href="../../wiki/os/intr-frame-layout" class="internal internal-link alias" data-slug="wiki/os/intr-frame-layout">intr frame 레이아웃</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">x86 64 page table walk</a></li>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">stack growth fault</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">CPU register 실행</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/cpl-privilege-switch" class="internal">CPL 3→0 권한 전환</a></li><li><a href="../../wiki/os/interrupt-descriptor-table" class="internal">인터럽트 디스크립터 테이블 (Interrupt Descriptor Table)</a></li><li><a href="../../wiki/os/intr-frame-layout" class="internal">struct intr_frame 레이아웃</a></li><li><a href="../../wiki/os/kernel-user-protection" class="internal">보호 (Protection)</a></li><li><a href="../../wiki/os/lstar-msr-entry" class="internal">LSTAR MSR → syscall 진입점</a></li><li><a href="../../wiki/os/pintos-directory-structure" class="internal">PintOS 디렉터리 구조</a></li><li><a href="../../wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge" class="internal">PintOS 초기 main thread와 커널 주소 공간</a></li><li><a href="../../wiki/os/pintos-user-programs-execution-boundary" class="internal">PintOS User Programs 실행 경계와 System Call</a></li><li><a href="../../wiki/os/process-activate-tss" class="internal">process_activate() — TSS rsp0 설정과 주소 공간 전환</a></li><li><a href="../../wiki/os/stack-growth-rsp-check" class="internal">Stack Growth RSP 근처 Fault 판단</a></li><li><a href="../../wiki/os/syscall-boundary" class="internal">syscall 경계</a></li><li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal">시스템 콜 진입의 스택 전환과 intr_frame</a></li><li><a href="../../wiki/os/syscall-instruction" class="internal">syscall 명령어</a></li><li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal">TSS rsp0 커널 스택</a></li><li><a href="../../wiki/os/user-kernel-mode" class="internal">유저 모드 / 커널 모드</a></li><li><a href="../../wiki/os/user-kernel-stack-separation" class="internal">유저 스택 / 커널 스택 분리</a></li><li><a href="../../wiki/pintos/" class="internal">PintOS 운영체제 학습 프로젝트</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-709" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#x86-64-tss-커널-스택-전환" data-for="x86-64-tss-커널-스택-전환">x86-64 TSS 커널 스택 전환</a></li><li class="depth-1"><a href="#x86-64-tss-커널-스택-전환-1" data-for="x86-64-tss-커널-스택-전환-1">x86-64 TSS 커널 스택 전환</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#x86-64-tss-커널-스택-전환-값-추적" data-for="x86-64-tss-커널-스택-전환-값-추적">x86-64 TSS 커널 스택 전환 값 추적</a></li><li class="depth-2"><a href="#sel_tss--0x28은-gdt-index-5" data-for="sel_tss--0x28은-gdt-index-5">SEL_TSS = 0x28은 GDT index 5</a></li><li class="depth-2"><a href="#rsp0-offset--4-bytes" data-for="rsp0-offset--4-bytes">rsp0 offset = 4 bytes</a></li><li class="depth-2"><a href="#rsp0--thread--pgsize-계산-예제" data-for="rsp0--thread--pgsize-계산-예제">rsp0 = thread + PGSIZE 계산 예제</a></li><li class="depth-2"><a href="#4kb-thread-page-안-커널-스택-레이아웃" data-for="4kb-thread-page-안-커널-스택-레이아웃">4KB thread page 안 커널 스택 레이아웃</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#유저커널-전환-전체-흐름" data-for="유저커널-전환-전체-흐름">유저→커널 전환 전체 흐름</a></li><li class="depth-2"><a href="#page-table과-tssgdt의-역할-분리" data-for="page-table과-tssgdt의-역할-분리">page table과 TSS/GDT의 역할 분리</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#1-tss-rsp0-값-확인" data-for="1-tss-rsp0-값-확인">1) TSS rsp0 값 확인</a></li><li class="depth-2"><a href="#2-syscall-진입-시-rsp-전환-관찰" data-for="2-syscall-진입-시-rsp-전환-관찰">2) syscall 진입 시 RSP 전환 관찰</a></li><li class="depth-2"><a href="#3-tss-구조체-전체-덤프" data-for="3-tss-구조체-전체-덤프">3) TSS 구조체 전체 덤프</a></li><li class="depth-2"><a href="#4-gdt-tss-descriptor-검증" data-for="4-gdt-tss-descriptor-검증">4) GDT TSS descriptor 검증</a></li><li class="depth-2"><a href="#5-context-switch-전후-rsp0-변화-추적" data-for="5-context-switch-전후-rsp0-변화-추적">5) context switch 전후 rsp0 변화 추적</a></li><li class="depth-2"><a href="#6-커널-스택-사용량-측정" data-for="6-커널-스택-사용량-측정">6) 커널 스택 사용량 측정</a></li><li class="depth-1"><a href="#tss-사용-방식-비교" data-for="tss-사용-방식-비교">TSS 사용 방식 비교</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

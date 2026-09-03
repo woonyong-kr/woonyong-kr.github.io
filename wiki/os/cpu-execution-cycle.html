@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>명령어 실행 사이클 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="명령어 실행 사이클 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="명령어 실행 사이클 · 최우녕"/><meta name="twitter:description" content="CPU는 전원이 켜진 순간부터 꺼질 때까지 하나의 루프를 반복한다."/><meta property="og:description" content="CPU는 전원이 켜진 순간부터 꺼질 때까지 하나의 루프를 반복한다."/><meta property="og:image:alt" content="CPU는 전원이 켜진 순간부터 꺼질 때까지 하나의 루프를 반복한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/cpu-execution-cycle"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/cpu-execution-cycle"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="CPU는 전원이 켜진 순간부터 꺼질 때까지 하나의 루프를 반복한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/cpu-execution-cycle" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-439" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-439" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>명령어 실행 사이클</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="명령어-실행-사이클">명령어 실행 사이클<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#명령어-실행-사이클" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>CPU는 전원이 켜진 동안 명령어를 읽고, 해석하고, 실행하는 루프를 계속 돈다. OS가 끼어드는 지점은 이 루프가 인터럽트나 예외로 꺾이는 순간이다.</p>
+</blockquote>
+<h2 id="명령어-실행-사이클-구조">명령어 실행 사이클 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#명령어-실행-사이클-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>CPU는 전원이 켜진 순간부터 꺼질 때까지 하나의 루프를 반복한다. <strong>fetch → decode → execute</strong>. 이 세 단계가 한 바퀴 도는 것이 하나의 명령어 실행 사이클이다. OS가 프로세스를 전환하든, 인터럽트를 처리하든, 결국 CPU가 하는 일은 이 사이클의 반복이다. OS를 이해하려면 이 사이클이 어떤 상태를 읽고, 어떤 상태를 바꾸는지 먼저 알아야 한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpu-하드웨어-규칙">추상 개념 (CPU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>사이클의 각 단계는 다음과 같다.</p>
+<p><strong>Fetch</strong>: <code>RIP</code>(Instruction Pointer)가 가리키는 메모리 주소에서 명령어 바이트를 읽는다. x86-64는 가변 길이 명령어를 사용하므로, CPU는 첫 바이트(opcode)를 보고 나머지 길이를 판단한다.</p>
+<p><strong>Decode</strong>: 읽어 온 바이트를 opcode, operand, addressing mode로 분해한다. 현대 CPU는 이 단계에서 마이크로아키텍처 내부의 micro-op으로 변환하지만, OS 관점에서는 ISA 수준의 의미만 중요하다.</p>
+<p><strong>Execute</strong>: 분해된 명령어의 의미대로 연산을 수행한다. ALU 연산이면 레지스터 값이 바뀌고, 메모리 접근이면 load/store가 일어나며, 분기이면 <code>RIP</code>가 대상 주소로 변경된다. 실행 후 <code>RIP</code>는 다음 명령어를 가리키도록 갱신된다(분기가 아니면 현재 명령어 길이만큼 증가).</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% CPU 메인 루프\nflowchart LR\n  fetch[\&quot;Fetch&lt;br/>RIP에서 바이트 읽기\&quot;]\n  decode[\&quot;Decode&lt;br/>opcode 분해\&quot;]\n  execute[\&quot;Execute&lt;br/>ALU / 분기 / 메모리\&quot;]\n  check[\&quot;사이클 중단 지점&lt;br/>인터럽트 검사: execute 완료 후\&quot;]\n  fetch --> decode\n  decode --> execute\n  execute --> fetch\n  execute -.-> check&quot;">%% CPU 메인 루프
+flowchart LR
+  fetch[&quot;Fetch&lt;br/>RIP에서 바이트 읽기&quot;]
+  decode[&quot;Decode&lt;br/>opcode 분해&quot;]
+  execute[&quot;Execute&lt;br/>ALU / 분기 / 메모리&quot;]
+  check[&quot;사이클 중단 지점&lt;br/>인터럽트 검사: execute 완료 후&quot;]
+  fetch --> decode
+  decode --> execute
+  execute --> fetch
+  execute -.-> check
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>이 사이클에서 OS와 관련된 핵심 이벤트가 끼어드는 지점이 있다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이벤트</th><th>발생 시점</th><th>CPU 동작</th></tr></thead><tbody><tr><td>인터럽트</td><td>명령어 경계에서 전달</td><td><code>RIP</code>/<code>CS</code>/<code>RFLAGS</code>를 저장하고 IDT로 점프. CPL 또는 스택이 바뀔 때만 이전 <code>SS:RSP</code>도 저장</td></tr><tr><td>예외(#PF 등)</td><td>execute 중</td><td>현재 명령어 중단, 핸들러로 점프</td></tr><tr><td><code>syscall</code> 명령</td><td>execute 단계</td><td><code>RCX</code>=<code>RIP</code>, <code>R11</code>=<code>RFLAGS</code>, <code>MSR_LSTAR</code>로 점프</td></tr></tbody></table></div>
+<p>분기·호출·복귀와 <code>syscall</code>도 다음 <code>RIP</code>를 바꾸는 명시적 제어 이전이다. 그중 인터럽트와 예외는 정상적인 분기 명령 없이 제어를 handler로 넘길 수 있다. OS는 특히 비동기 인터럽트를 이용해 “유저 프로그램이 자발적으로 커널을 부르지 않아도” 제어권을 가져온다(선점 스케줄링의 기초).</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>실제 OS에서 이 사이클 자체는 하드웨어가 처리하므로 OS가 개입하지 않는다. OS가 관여하는 것은 사이클이 <strong>중단되는 순간</strong>이다.</p>
+<p>Linux의 경우, timer interrupt가 <code>RIP</code>를 커널의 인터럽트 핸들러로 바꾸면 <code>scheduler_tick()</code>이 현재 프로세스의 시간을 감소시키고, 시간이 다 되면 <code>schedule()</code>을 호출해 다른 프로세스의 <code>RIP</code>로 교체한다. 이것이 선점 스케줄링이다.</p>
+<p>Windows도 동일한 원리로 작동하며, IRQL(Interrupt Request Level) 체계를 통해 인터럽트 우선순위를 관리한다.</p>
+<p>핵심은 같다. CPU는 항상 fetch-decode-execute만 하고, OS는 인터럽트/예외를 통해 “어떤 명령어를 다음에 fetch할지”를 결정한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 이 사이클이 관찰되는 핵심 경로는 두 가지다.</p>
+<p><strong>1. 부팅 후 첫 명령어 실행</strong></p>
+<p>BIOS → bootloader → <code>kernel.o</code>의 <code>start</code> → <code>main()</code> 순서로 <code>RIP</code>가 이동한다. <code>main()</code>에서 <code>thread_start()</code> → <code>schedule()</code> → <code>do_iret()</code>을 통해 idle thread가 첫 번째로 실행된다. 이 전체 과정은 fetch-decode-execute 사이클이 RIP를 따라가는 것일 뿐이다.</p>
+<p><strong>2. Timer interrupt로 인한 스케줄링</strong></p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS timer interrupt와 schedule()\nflowchart LR\n  cpu_a[\&quot;CPU&lt;br/>Thread A 실행 중&lt;br/>RIP=0x4000b0\&quot;]\n  pit[\&quot;i8254 PIT&lt;br/>IRQ0&lt;br/>100Hz\&quot;]\n  pic[\&quot;i8259 PIC&lt;br/>인터럽트 신호\&quot;]\n  save[\&quot;CPU 상태 저장&lt;br/>RIP/CS/RFLAGS push&lt;br/>CPL·스택 전환 시 이전 SS:RSP도 push&lt;br/>RIP ← IDT[0x20]\&quot;]\n  handler[\&quot;timer_interrupt()&lt;br/>thread_tick()&lt;br/>thread_ticks++&lt;br/>≥4이면 yield 예약\&quot;]\n  scheduler[\&quot;schedule()&lt;br/>intr_yield_on_return&lt;br/>next = ready_list에서 최고 우선순위 선택\&quot;]\n  cpu_b[\&quot;CPU&lt;br/>do_iret()&lt;br/>RIP ← Thread B의 저장된 RIP&lt;br/>Thread B 실행 시작\&quot;]\n  cpu_a -->|\&quot;Thread A 실행 중\&quot;| pit\n  pit -->|\&quot;IRQ0\&quot;| pic\n  pic -->|\&quot;CPU로 전달\&quot;| save\n  save -->|\&quot;timer interrupt handler\&quot;| handler\n  handler -->|\&quot;intr_yield_on_return\&quot;| scheduler\n  scheduler -->|\&quot;do_iret()\&quot;| cpu_b&quot;">%% PintOS timer interrupt와 schedule()
+flowchart LR
+  cpu_a[&quot;CPU&lt;br/>Thread A 실행 중&lt;br/>RIP=0x4000b0&quot;]
+  pit[&quot;i8254 PIT&lt;br/>IRQ0&lt;br/>100Hz&quot;]
+  pic[&quot;i8259 PIC&lt;br/>인터럽트 신호&quot;]
+  save[&quot;CPU 상태 저장&lt;br/>RIP/CS/RFLAGS push&lt;br/>CPL·스택 전환 시 이전 SS:RSP도 push&lt;br/>RIP ← IDT[0x20]&quot;]
+  handler[&quot;timer_interrupt()&lt;br/>thread_tick()&lt;br/>thread_ticks++&lt;br/>≥4이면 yield 예약&quot;]
+  scheduler[&quot;schedule()&lt;br/>intr_yield_on_return&lt;br/>next = ready_list에서 최고 우선순위 선택&quot;]
+  cpu_b[&quot;CPU&lt;br/>do_iret()&lt;br/>RIP ← Thread B의 저장된 RIP&lt;br/>Thread B 실행 시작&quot;]
+  cpu_a -->|&quot;Thread A 실행 중&quot;| pit
+  pit -->|&quot;IRQ0&quot;| pic
+  pic -->|&quot;CPU로 전달&quot;| save
+  save -->|&quot;timer interrupt handler&quot;| handler
+  handler -->|&quot;intr_yield_on_return&quot;| scheduler
+  scheduler -->|&quot;do_iret()&quot;| cpu_b
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>결국 “다른 스레드를 실행한다”는 것은 CPU의 <code>RIP</code>를 다른 스레드의 저장된 <code>RIP</code> 값으로 교체하는 것이다. CPU는 여전히 fetch-decode-execute를 할 뿐이다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 guest CPU의 fetch-decode-execute를 소프트웨어로 재현한다.</p>
+<p>TCG(Tiny Code Generator) 모드에서의 흐름:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% QEMU TCG에서 guest 명령어 실행\nflowchart TD\n  guest[\&quot;Guest 코드 블록&lt;br/>RIP 0x4000b0~0x4000c8\&quot;]\n  tb[\&quot;TB&lt;br/>host native code\&quot;]\n  reason[\&quot;TB 끝 이유?\&quot;]\n  next[\&quot;다음 Guest 블록&lt;br/>translate or 캐시 hit\&quot;]\n  interrupt[\&quot;QEMU 메인 루프&lt;br/>인터럽트 주입\&quot;]\n  mmio[\&quot;device model&lt;br/>MMIO 접근 처리\&quot;]\n  guest -->|\&quot;translate\&quot;| tb\n  tb -->|\&quot;execute\&quot;| reason\n  reason -->|\&quot;분기/점프\&quot;| next\n  reason -->|\&quot;인터럽트 대기\&quot;| interrupt\n  reason -->|\&quot;MMIO 접근\&quot;| mmio\n  next -->|\&quot;다음 블록\&quot;| guest\n  interrupt -->|\&quot;env-&amp;gt;eip 갱신\&quot;| guest\n  mmio -->|\&quot;복귀\&quot;| guest&quot;">%% QEMU TCG에서 guest 명령어 실행
+flowchart TD
+  guest[&quot;Guest 코드 블록&lt;br/>RIP 0x4000b0~0x4000c8&quot;]
+  tb[&quot;TB&lt;br/>host native code&quot;]
+  reason[&quot;TB 끝 이유?&quot;]
+  next[&quot;다음 Guest 블록&lt;br/>translate or 캐시 hit&quot;]
+  interrupt[&quot;QEMU 메인 루프&lt;br/>인터럽트 주입&quot;]
+  mmio[&quot;device model&lt;br/>MMIO 접근 처리&quot;]
+  guest -->|&quot;translate&quot;| tb
+  tb -->|&quot;execute&quot;| reason
+  reason -->|&quot;분기/점프&quot;| next
+  reason -->|&quot;인터럽트 대기&quot;| interrupt
+  reason -->|&quot;MMIO 접근&quot;| mmio
+  next -->|&quot;다음 블록&quot;| guest
+  interrupt -->|&quot;env-&amp;gt;eip 갱신&quot;| guest
+  mmio -->|&quot;복귀&quot;| guest
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>QEMU TCG는 guest PC를 매 명령 뒤 반드시 <code>env->eip</code>에 기록하지 않는다. Translation Block 내부에서는 다음 PC가 생성된 host code와 TB metadata에 암묵적으로 유지될 수 있고, TB exit·fault·interrupt·debug 경계에서 <code>env->eip</code>를 동기화한다. guest 인터럽트를 주입할 때는 동기화된 상태와 guest IDT를 사용해 handler 주소로 제어를 옮긴다. 이것은 실제 CPU의 상태 전이를 소프트웨어로 모사한 것이다.</p>
+<p>KVM 가속 모드에서는 guest 명령어를 실제 CPU가 직접 실행하므로 fetch-decode-execute는 하드웨어가 수행하고, QEMU는 VM exit 시에만 개입한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>모드</th><th>fetch-decode-execute 수행자</th><th>QEMU 개입 시점</th></tr></thead><tbody><tr><td>TCG</td><td>QEMU 소프트웨어</td><td>매 TB(Translation Block)</td></tr><tr><td>KVM</td><td>실제 CPU 하드웨어</td><td>VM exit (I/O, <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 등)</td></tr></tbody></table></div>
+<h2 id="명령어-실행-사이클-값-추적">명령어 실행 사이클 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#명령어-실행-사이클-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>x86-64 명령어의 길이 예시:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>명령어</th><th>바이트 수</th><th>바이트 내용</th></tr></thead><tbody><tr><td><code>nop</code></td><td>1</td><td><code>90</code></td></tr><tr><td><code>mov $1, %rdi</code></td><td>7</td><td><code>48 c7 c7 01 00 00 00</code></td></tr><tr><td><code>syscall</code></td><td>2</td><td><code>0f 05</code></td></tr><tr><td><code>ret</code></td><td>1</td><td><code>c3</code></td></tr></tbody></table></div>
+<p><code>RIP = 0x00000000004000b0</code>에서 <code>mov $1, %rdi</code>(7바이트)를 실행하면, 다음 fetch 시 <code>RIP = 0x00000000004000b7</code>이 된다.</p>
+<p>PintOS의 TIME_SLICE는 4 tick이다. QEMU PIT(i8254)의 기본 주파수는 100 Hz이므로, 한 tick은 10ms다. 따라서 한 스레드가 연속 실행되는 최대 시간은 약 40ms(4 × 10ms)이며, 이 시간 동안 CPU는 수백만 번의 fetch-decode-execute 사이클을 수행한다.</p>
+<pre><code>100 MHz 기준 (단순 계산):
+  40ms × 100,000,000 cycles/s = 4,000,000 cycles
+  IPC 1 가정 시: ~4,000,000 instructions per time slice
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 명령어 실행 사이클 순서도\nflowchart TD\n  read[\&quot;RIP가 가리키는 주소에서 바이트 읽기\&quot;]\n  decode[\&quot;opcode + operand 분해\&quot;]\n  kind[\&quot;명령어 종류?\&quot;]\n  dispatch[\&quot;Execute 경로 선택&lt;br/>ALU 연산 / 분기·점프 / syscall / 메모리 접근\&quot;]\n  alu[\&quot;레지스터/메모리 갱신\&quot;]\n  branch[\&quot;RIP ← 대상 주소\&quot;]\n  syscall[\&quot;RCX←RIP\&quot;]\n  mmu[\&quot;MMU 변환 성공?\&quot;]\n  pf[\&quot;#PF 예외 → page_fault handler\&quot;]\n  pending[\&quot;인터럽트 대기 중?\&quot;]\n  idt[\&quot;현재 상태 저장 → IDT handler로 RIP 변경\&quot;]\n  read -->|\&quot;Fetch\&quot;| decode\n  decode -->|\&quot;Decode\&quot;| kind\n  kind --> dispatch\n  dispatch -->|\&quot;ALU 연산\&quot;| alu\n  dispatch -->|\&quot;분기/점프\&quot;| branch\n  dispatch -->|\&quot;syscall\&quot;| syscall\n  dispatch -->|\&quot;메모리 접근\&quot;| mmu\n  mmu -->|\&quot;성공\&quot;| alu\n  mmu -->|\&quot;실패\&quot;| pf\n  alu --> pending\n  branch --> pending\n  syscall --> pending\n  pf --> pending\n  pending -->|\&quot;없음\&quot;| read\n  pending -->|\&quot;있음\&quot;| idt\n  idt -->|\&quot;다음 fetch\&quot;| read&quot;">%% 명령어 실행 사이클 순서도
+flowchart TD
+  read[&quot;RIP가 가리키는 주소에서 바이트 읽기&quot;]
+  decode[&quot;opcode + operand 분해&quot;]
+  kind[&quot;명령어 종류?&quot;]
+  dispatch[&quot;Execute 경로 선택&lt;br/>ALU 연산 / 분기·점프 / syscall / 메모리 접근&quot;]
+  alu[&quot;레지스터/메모리 갱신&quot;]
+  branch[&quot;RIP ← 대상 주소&quot;]
+  syscall[&quot;RCX←RIP&quot;]
+  mmu[&quot;MMU 변환 성공?&quot;]
+  pf[&quot;#PF 예외 → page_fault handler&quot;]
+  pending[&quot;인터럽트 대기 중?&quot;]
+  idt[&quot;현재 상태 저장 → IDT handler로 RIP 변경&quot;]
+  read -->|&quot;Fetch&quot;| decode
+  decode -->|&quot;Decode&quot;| kind
+  kind --> dispatch
+  dispatch -->|&quot;ALU 연산&quot;| alu
+  dispatch -->|&quot;분기/점프&quot;| branch
+  dispatch -->|&quot;syscall&quot;| syscall
+  dispatch -->|&quot;메모리 접근&quot;| mmu
+  mmu -->|&quot;성공&quot;| alu
+  mmu -->|&quot;실패&quot;| pf
+  alu --> pending
+  branch --> pending
+  syscall --> pending
+  pf --> pending
+  pending -->|&quot;없음&quot;| read
+  pending -->|&quot;있음&quot;| idt
+  idt -->|&quot;다음 fetch&quot;| read
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>threads/interrupt.h</code></td><td><code>struct intr_frame</code></td><td>fetch-decode-execute 중단 시 저장되는 CPU 상태</td></tr><tr><td><code>threads/intr-stubs.S</code></td><td><code>intr_entry</code></td><td>인터럽트/예외 진입점, 레지스터를 스택에 push</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_interrupt()</code></td><td>100Hz tick마다 사이클을 중단시키는 핸들러</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_tick()</code></td><td>TIME_SLICE(4) 초과 검사</td></tr><tr><td><code>threads/thread.c</code></td><td><code>schedule()</code></td><td><code>RIP</code> 교체(다른 스레드의 저장된 상태로 복원)</td></tr><tr><td><code>userprog/syscall-entry.S</code></td><td><code>syscall_entry</code></td><td><code>syscall</code> 명령 후 커널 진입점</td></tr></tbody></table></div>
+<p>QEMU 측:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>target/i386/cpu.h</code></td><td><code>CPUX86State</code></td><td>guest의 RIP, 레지스터 등 사이클 상태 보관</td></tr><tr><td><code>accel/tcg/cpu-exec.c</code></td><td><code>cpu_exec()</code></td><td>guest fetch-decode-execute 메인 루프</td></tr><tr><td><code>target/i386/tcg/translate.c</code></td><td><code>disas_insn()</code></td><td>guest 명령어 decode</td></tr></tbody></table></div>
+<p><strong>Linux vs PintOS 사이클 중단 비교:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>timer 주파수</td><td>CONFIG_HZ (250/1000 Hz), tickless 가능</td><td>100 Hz 고정 (PIT)</td></tr><tr><td>time slice</td><td>CFS: vruntime 기반 (수~수십 ms)</td><td>4 tick = 40 ms 고정</td></tr><tr><td>선점 판단</td><td><code>need_resched</code> TIF 플래그</td><td><code>intr_yield_on_return()</code></td></tr><tr><td>scheduler 호출</td><td><code>__schedule()</code></td><td><code>schedule()</code></td></tr><tr><td>인터럽트 컨트롤러</td><td>APIC (LAPIC + I/O APIC)</td><td>i8259 PIC (단일)</td></tr><tr><td>idle 상태</td><td><code>hlt</code> + tickless (NO_HZ) — interrupt까지 CPU 멈춤</td><td><code>hlt</code> in idle thread — PIT tick마다 깨어남</td></tr><tr><td>preemption 설정</td><td><code>CONFIG_PREEMPT_NONE</code> / <code>VOLUNTARY</code> / <code>FULL</code></td><td>항상 선점 (timer tick 기반)</td></tr></tbody></table></div>
+<p><strong>Linux vs PintOS 사이클 중단 세부 비교:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>인터럽트 진입</td><td><code>entry_SYSCALL_64</code> / <code>idtentry</code> (어셈블리 매크로)</td><td><code>intr_entry</code> (intr-stubs.S:15)</td></tr><tr><td>레지스터 저장</td><td><code>struct pt_regs</code> (168 bytes, callee-saved 전략)</td><td><code>struct intr_frame</code> (200 bytes, 모든 GP regs)</td></tr><tr><td>tick 카운터</td><td><code>jiffies_64</code> (64-bit 글로벌)</td><td><code>ticks</code> (int64_t 글로벌, devices/timer.c)</td></tr><tr><td>tick당 작업</td><td><code>update_process_times()</code> → <code>scheduler_tick()</code></td><td><code>timer_interrupt()</code> → <code>thread_tick()</code></td></tr><tr><td>yield 판단</td><td><code>set_tsk_need_resched()</code> → 복귀 경로에서 <code>__schedule()</code></td><td><code>intr_yield_on_return()</code> → <code>do_schedule(THREAD_READY)</code></td></tr><tr><td>복귀 경로</td><td><code>irqreturn</code> → <code>exit_to_user_mode_loop()</code> → <code>schedule()</code></td><td><code>intr_exit</code> → <code>do_iret()</code></td></tr></tbody></table></div>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아래 스크립트로 PintOS에서 fetch-decode-execute 사이클이 중단/재개되는 과정을 관찰할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 1. timer interrupt 발생 관찰 — 사이클이 끊기는 순간</span></span>
+<span data-line><span>b timer_interrupt</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[tick] ticks=%lld, running=%s (tid=%d), thread_ticks=%d\n&quot;, \</span></span>
+<span data-line><span>    ticks, thread_current()->name, thread_current()->tid, thread_ticks</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 2. TIME_SLICE 초과로 yield 예약 — 선점 결정 순간</span></span>
+<span data-line><span>b thread_tick</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  if thread_ticks >= 4</span></span>
+<span data-line><span>    printf &quot;[preempt] thread_ticks=%d >= TIME_SLICE(4), yield scheduled for %s\n&quot;, \</span></span>
+<span data-line><span>      thread_ticks, thread_current()->name</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 3. schedule() 호출 — RIP 교체 직전</span></span>
+<span data-line><span>b schedule</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $curr = running_thread()</span></span>
+<span data-line><span>  set $next = next_thread_to_run()</span></span>
+<span data-line><span>  printf &quot;[schedule] %s (tid=%d) → %s (tid=%d)\n&quot;, \</span></span>
+<span data-line><span>    $curr->name, $curr->tid, $next->name, $next->tid</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 4. do_iret 직전 — 복원될 RIP 확인</span></span>
+<span data-line><span>b do_iret</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[do_iret] restoring RIP=%p, RSP=%p, CS=0x%lx\n&quot;, \</span></span>
+<span data-line><span>    ((struct intr_frame*)$rdi)->rip, \</span></span>
+<span data-line><span>    ((struct intr_frame*)$rdi)->rsp, \</span></span>
+<span data-line><span>    ((struct intr_frame*)$rdi)->cs</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span>
+<span data-line> </span>
+<span data-line><span># 5. 유저 프로그램의 fetch-decode-execute 관찰</span></span>
+<span data-line><span>#    특정 유저 주소에 BP를 걸고 레지스터 변화 추적</span></span>
+<span data-line><span>b *0x400c10</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[user-fetch] RIP=%p, RSP=%p, RAX=%p\n&quot;, $rip, $rsp, $rax</span></span>
+<span data-line><span>  # 다음 5개 명령어를 단일 스텝 관찰</span></span>
+<span data-line><span>  # si 5</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p><strong>관찰 시나리오 1: timer tick으로 인한 context switch 전체 추적</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 모든 위 BP를 설정한 뒤 실행하면 다음과 같은 출력을 볼 수 있다:</span></span>
+<span data-line><span>#</span></span>
+<span data-line><span># [tick] ticks=42, running=main (tid=1), thread_ticks=0</span></span>
+<span data-line><span># [tick] ticks=43, running=main (tid=1), thread_ticks=1</span></span>
+<span data-line><span># [tick] ticks=44, running=main (tid=1), thread_ticks=2</span></span>
+<span data-line><span># [tick] ticks=45, running=main (tid=1), thread_ticks=3</span></span>
+<span data-line><span># [preempt] thread_ticks=4 >= TIME_SLICE(4), yield scheduled for main</span></span>
+<span data-line><span># [schedule] main (tid=1) → child-1 (tid=3)</span></span>
+<span data-line><span># [do_iret] restoring RIP=0x400c28, RSP=0x4747ffd0, CS=0x2b</span></span>
+<span data-line><span>#</span></span>
+<span data-line><span># 해석: main이 4 tick(40ms) 연속 실행 → timer가 yield 예약</span></span>
+<span data-line><span>#        → schedule()이 child-1의 저장된 RIP로 CPU를 전환</span></span>
+<span data-line><span>#        → CS=0x2b (RPL=3)이므로 유저 모드 복귀</span></span></code></pre></figure>
+<p><strong>관찰 시나리오 2: 사이클 카운팅 — idle vs kernel vs user tick 분포</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 프로그램 종료 직전에 tick 통계 확인</span></span>
+<span data-line><span>b thread_print_stats</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[stats] idle=%lld, kernel=%lld, user=%lld, total=%lld\n&quot;, \</span></span>
+<span data-line><span>    idle_ticks, kernel_ticks, user_ticks, \</span></span>
+<span data-line><span>    idle_ticks + kernel_ticks + user_ticks</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/cpu-execution-program-loading" class="internal internal-link alias" data-slug="wiki/hubs/cpu-execution-program-loading">CPU 실행 흐름</a></li>
+<li><a href="../../wiki/os/fetch-decode-execute" class="internal internal-link alias" data-slug="wiki/os/fetch-decode-execute">execute</a></li>
+<li><a href="../../wiki/os/variable-length-instruction" class="internal internal-link alias" data-slug="wiki/os/variable-length-instruction">가변 길이 명령어</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">CPU register 실행</a></li>
+<li><a href="../../wiki/os/rip-instruction-pointer" class="internal internal-link alias" data-slug="wiki/os/rip-instruction-pointer">RIP</a></li>
+<li><a href="../../wiki/os/eflags-register" class="internal internal-link alias" data-slug="wiki/os/eflags-register">EFLAGS</a></li>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a></li>
+<li><a href="../../wiki/os/timer-interrupt-handler" class="internal internal-link alias" data-slug="wiki/os/timer-interrupt-handler">timer interrupt()</a></li>
+<li><a href="../../wiki/os/thread-tick-time-slice" class="internal internal-link alias" data-slug="wiki/os/thread-tick-time-slice">TIME SLICE 검사</a></li>
+<li><a href="../../wiki/os/why-intr-yield-on-return" class="internal internal-link alias" data-slug="wiki/os/why-intr-yield-on-return">인터럽트 끝에서 yield하는 이유</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge">첫 kernel thread</a></li>
+<li><a href="../../wiki/os/qemu-tcg-translation-block" class="internal internal-link alias" data-slug="wiki/os/qemu-tcg-translation-block">QEMU TCG Translation Block</a></li>
+<li><a href="../../wiki/os/interrupt-descriptor-table" class="internal internal-link alias" data-slug="wiki/os/interrupt-descriptor-table">IDT</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/fetch-decode-execute" class="internal">fetch → decode → execute</a></li><li><a href="../../wiki/os/thread-state-transition" class="internal">Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-437" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#명령어-실행-사이클" data-for="명령어-실행-사이클">명령어 실행 사이클</a></li><li class="depth-1"><a href="#명령어-실행-사이클-구조" data-for="명령어-실행-사이클-구조">명령어 실행 사이클 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpu-하드웨어-규칙" data-for="추상-개념-cpu-하드웨어-규칙">추상 개념 (CPU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#명령어-실행-사이클-값-추적" data-for="명령어-실행-사이클-값-추적">명령어 실행 사이클 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>바이트와 명령어 해석 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="바이트와 명령어 해석 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="바이트와 명령어 해석 · 최우녕"/><meta name="twitter:description" content="RIP가 가리킬 때 x86-64 디코더가 바이트를 명령어로 해석하는 방식 — 같은 바이트도 위치에 따라 코드가 됨."/><meta property="og:description" content="RIP가 가리킬 때 x86-64 디코더가 바이트를 명령어로 해석하는 방식 — 같은 바이트도 위치에 따라 코드가 됨."/><meta property="og:image:alt" content="RIP가 가리킬 때 x86-64 디코더가 바이트를 명령어로 해석하는 방식 — 같은 바이트도 위치에 따라 코드가 됨."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/byte-as-instruction"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/byte-as-instruction"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="RIP가 가리킬 때 x86-64 디코더가 바이트를 명령어로 해석하는 방식 — 같은 바이트도 위치에 따라 코드가 됨."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/byte-as-instruction" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-421" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-421" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>바이트와 명령어 해석</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="바이트와-명령어-해석">바이트와 명령어 해석<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#바이트와-명령어-해석" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: RIP가 가리킬 때 x86-64 디코더가 바이트를 명령어로 해석하는 방식 — 같은 바이트도 위치에 따라 코드가 됨.</p>
+</blockquote>
+<h2 id="바이트와-명령어-해석-차이">바이트와 명령어 해석 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#바이트와-명령어-해석-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>메모리의 바이트 시퀀스는 그 자체로 의미가 없다. CPU의 RIP가 해당 주소를 가리킬 때, x86-64 디코더가 그 바이트를 <strong>명령어로 해석</strong>한다. 같은 바이트 <code>48 c7 c7 01 00 00 00</code>이 RIP가 가리키면 <code>mov $0x1, %rdi</code>라는 명령어가 되지만, 데이터 영역에 있으면 그냥 7바이트 정수(<code>0x000001c7c748</code>)일 뿐이다. GDB의 <code>x/i</code>(instruction) 포맷과 <code>x/x</code>(hex) 포맷을 전환하면 이 차이를 직접 확인할 수 있다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-x86-64-명령어-인코딩">추상 개념 (x86-64 명령어 인코딩)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-x86-64-명령어-인코딩" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64는 **가변 길이 명령어 집합(Variable-Length ISA)**이다. 한 명령어가 1바이트에서 15바이트까지 될 수 있다. CPU의 fetch 단계에서 RIP가 가리키는 주소부터 바이트를 읽고, 디코더가 prefix → opcode → ModR/M → SIB → displacement → immediate 순으로 파싱하여 명령어 경계를 결정한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th>크기</th><th>예시</th></tr></thead><tbody><tr><td>REX prefix</td><td>0~1 byte</td><td><code>48</code> = REX.W (64비트 피연산자)</td></tr><tr><td>Opcode</td><td>1~3 bytes</td><td><code>c7</code> = MOV imm32 to r/m</td></tr><tr><td>ModR/M</td><td>0~1 byte</td><td><code>c7</code> = mod=11 reg=000 r/m=111 → %rdi</td></tr><tr><td>Immediate</td><td>0~8 bytes</td><td><code>01 00 00 00</code> = 0x00000001</td></tr></tbody></table></div>
+<p><strong>핵심</strong>: instruction fetch는 RIP에서 시작한다. 다만 RIP가 가리키기만 하면 충분한 것은 아니며, 해당 가상 주소가 present이고 현재 privilege에서 executable이어야 한다(NX 등 권한 검사 포함). 같은 물리적 바이트도 fetch 경로에서는 명령어로 디코딩되고, data load 경로에서는 정수·포인터·문자열의 바이트로 읽힌다.</p>
+<h3 id="x86-64-명령어-바이트-해석-예제">x86-64 명령어 바이트 해석 예제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-명령어-바이트-해석-예제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 실제로 만나는 명령어 패턴들:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>바이트</th><th>명령어</th><th>의미</th><th>출현 위치</th></tr></thead><tbody><tr><td><code>0f 05</code></td><td><code>syscall</code></td><td>유저→커널 전환</td><td><code>lib/user/syscall.c</code> inline asm</td></tr><tr><td><code>cf</code> (primary opcode), 현재 assembler 출력 <code>48 cf</code></td><td><code>iretq</code></td><td>커널→유저 복귀</td><td><code>do_iret()</code>; 실제 object를 <code>objdump -d</code>로 확인</td></tr><tr><td><code>48 89 e5</code></td><td><code>mov %rsp, %rbp</code></td><td>프레임 포인터 설정</td><td>대부분의 함수 프롤로그</td></tr><tr><td><code>48 c7 c7 01 00 00 00</code></td><td><code>mov $0x1, %rdi</code></td><td>첫 번째 인자 = 1</td><td>syscall 래퍼</td></tr><tr><td><code>e8 xx xx xx xx</code></td><td><code>call &lt;offset></code></td><td>함수 호출</td><td>모든 함수 호출</td></tr><tr><td><code>c3</code></td><td><code>ret</code></td><td>함수 복귀</td><td>모든 함수 에필로그</td></tr><tr><td><code>f4</code></td><td><code>hlt</code></td><td>CPU 정지</td><td>idle 스레드 루프</td></tr><tr><td><code>fa</code></td><td><code>cli</code></td><td>인터럽트 비활성화</td><td><code>intr_disable()</code></td></tr><tr><td><code>fb</code></td><td><code>sti</code></td><td>인터럽트 활성화</td><td><code>intr_enable()</code></td></tr></tbody></table></div>
+<p><code>syscall</code> 명령어가 단 2바이트(<code>0f 05</code>)라는 점은 중요하다. QEMU TCG는 이를 target별 translator와 helper 경로로 구현하지만 helper 이름과 호출 단계는 QEMU version에 따라 달라질 수 있다. 현재 checkout에서 <code>rg 'gen.*syscall|helper.*syscall' target/i386</code>와 trace로 확인한다.</p>
+<h3 id="gdb에서-같은-바이트를-다르게-보기">GDB에서 같은 바이트를 다르게 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb에서-같은-바이트를-다르게-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) x/7bx 0x80042100        ← 바이트 단위로 보기
+0x80042100: 0x48  0xc7  0xc7  0x01  0x00  0x00  0x00
+
+(gdb) x/1i 0x80042100         ← 명령어로 보기
+0x80042100: mov    $0x1,%rdi
+
+(gdb) x/1gx 0x80042100        ← 8바이트 정수로 보기
+0x80042100: ...                ← 명령어 7바이트 + 다음 바이트까지 읽음
+</code></pre>
+<p><code>x/7bx</code>와 <code>x/1i</code>는 같은 7바이트 명령어 범위를 각각 raw byte와 instruction으로 본다. <code>x/1gx</code>의 giant word는 8바이트 단위이므로 다음 명령어의 첫 바이트까지 포함한다. 따라서 8번째 바이트를 확인하지 않고 정수값을 고정해서는 안 된다.</p>
+<h3 id="syscall_entry의-실제-바이트">syscall_entry의 실제 바이트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#syscall_entry의-실제-바이트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS <code>syscall_entry</code>(userprog/syscall-entry.S)의 첫 몇 줄을 바이트로 보면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="asm" data-theme="github-light github-dark"><code data-language="asm" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">syscall_entry:</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">    movq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rbx</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, temp1(%</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rip</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)    </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment"> # 48 89 1d xx xx xx xx  (7 bytes)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">    movq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">r12</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, temp2(%</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rip</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)    </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment"> # 4c 89 25 xx xx xx xx  (7 bytes)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">    movq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rsp</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rbx</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">            # 48 89 e3              (3 bytes)</span></span></code></pre></figure>
+<p>처음 17바이트가 3개의 명령어를 인코딩한다. CPU는 RIP를 기준으로 각 명령어의 끝을 파악하고 다음 명령어로 넘어간다. 만약 RIP가 두 번째 바이트(<code>89</code>)를 가리킨다면, 전혀 다른 명령어(<code>mov</code>)로 해석될 수 있다 — 이것이 “alignment 문제”다.</p>
+<h3 id="pintos에서-바이트명령어-해석이-중요한-순간">PintOS에서 바이트→명령어 해석이 중요한 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서-바이트명령어-해석이-중요한-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>1. Page Fault 디버깅</strong></p>
+<p>page fault가 발생하면 <code>f->rip</code>에 fault를 일으킨 명령어 주소가 담긴다. 이 주소의 바이트를 명령어로 해석해야 “어떤 메모리 접근이 실패했는가”를 알 수 있다.</p>
+<pre><code>(gdb) p/x f->rip
+$1 = 0x804a100
+
+(gdb) x/1i 0x804a100
+0x804a100: mov    (%rax),%rdx     ← RAX가 가리키는 주소를 읽다 실패
+
+(gdb) p/x $rax
+$2 = 0x0                          ← NULL 포인터 역참조!
+</code></pre>
+<p><strong>2. 스택 프레임 추적 (backtrace)</strong></p>
+<p><code>bt</code> 명령어는 스택의 return address를 명령어 주소로 해석하여 call chain을 보여준다. 스택이 깨지면 return address가 엉뚱한 바이트를 가리키고, <code>x/i</code>로 보면 의미 없는 명령어가 나온다 — 이것이 “stack corruption” 증상이다.</p>
+<p><strong>3. QEMU TCG Translation Block</strong></p>
+<p>QEMU의 TCG는 guest 코드 영역의 바이트를 읽어서 IR(Intermediate Representation)로 번역하고, 이를 호스트 코드로 컴파일한다. TCG가 바이트를 명령어로 해석하는 과정이 <code>disas_insn()</code>이다. 잘못된 RIP로 점프하면 TCG가 유효하지 않은 바이트를 디코딩하다 실패한다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서도 동일한 원리가 적용된다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>상황</th><th>바이트→명령어 해석</th></tr></thead><tbody><tr><td><code>objdump -d vmlinux</code></td><td>ELF text section의 바이트를 명령어로 디스어셈블</td></tr><tr><td><code>perf record</code></td><td>IP(Instruction Pointer) 샘플의 바이트를 명령어로 매핑</td></tr><tr><td>kprobes</td><td>타겟 주소의 첫 바이트를 <code>int3</code>(0xCC)로 교체하여 브레이크포인트 설정</td></tr><tr><td><code>dmesg</code> + <code>decode_stacktrace.sh</code></td><td>oops 메시지의 Code: 바이트를 명령어로 표시</td></tr></tbody></table></div>
+<p>Linux 커널 oops 메시지의 <code>Code:</code> 줄이 바로 바이트→명령어 해석의 전형적 예다:</p>
+<pre><code>Code: 48 89 e5 48 83 ec 10 48 8b 45 f8 48 8b 00 &lt;48> 8b 00 ...
+</code></pre>
+<p><code>&lt;48></code>이 fault 지점이고, 이후 바이트를 명령어로 디코딩하면 <code>mov (%rax),%rax</code> — RAX가 가리키는 주소의 접근 실패.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU TCG의 바이트→명령어 디코딩 개념 흐름(구체 함수명은 version별 확인):</p>
+<pre><code>1. RIP 주소에서 instruction fetch와 권한 검사를 수행
+
+2. x86 translator가 prefix·opcode·피연산자를 파싱
+   → prefix 판별 → opcode 판별 → 피연산자 파싱
+
+3. target 동작을 TCG IR/helper 호출로 변환
+
+4. Translation Block(TB)에 저장
+   → 같은 주소를 다시 실행하면 TB 캐시에서 바로 실행
+</code></pre>
+<p>TB 캐시 무효화가 일어나는 경우: self-modifying code, CR3 변경, <code>tb_flush()</code> 호출.</p>
+<h2 id="바이트와-명령어-해석-값-추적">바이트와 명령어 해석 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#바이트와-명령어-해석-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><code>x86-64 명령어 길이 범위:
+  최소: 1 byte (ret = 0xc3, hlt = 0xf4, nop = 0x90)
+  최대: 15 bytes (prefix + opcode + ModR/M + SIB + disp32 + imm32)
+  평균: ~4.5 bytes (일반적 x86-64 코드)
+
+PintOS 커널 코드 크기 (대략):
+  .text section ≈ 80~120 KB
+  → 약 18,000~27,000개 명령어 (평균 4.5 bytes 가정)
+
+QEMU TCG Translation Block:
+  크기·종료 조건은 version과 build에 따라 달라짐
+  → 현재 checkout의 translator 상수와 trace로 측정
+
+syscall 명령어 바이트:
+  0f 05 = 2 bytes
+  이 2바이트가 user→kernel 전체 전환을 촉발
+
+iretq 명령어 바이트:
+  architecture primary opcode = cf
+  현재 x86-64 assembler/object 출력 = 48 cf
+  → 소스 표기만으로 단정하지 않고 object disassembly로 확인
+</code></pre>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 같은 바이트의 해석 방식\nflowchart LR\n  bytes[\&quot;메모리의 바이트&lt;br/>48 c7 c7 01 00 00 00\&quot;]\n  instruction[\&quot;명령어&lt;br/>mov $1\&quot;]\n  integer[\&quot;정수&lt;br/>0x000001c7c748\&quot;]\n  pointer[\&quot;포인터&lt;br/>유효하지 않은 주소\&quot;]\n  string[\&quot;문자열&lt;br/>의미 없음\&quot;]\n  bytes --> instruction\n  bytes --> integer\n  bytes --> pointer\n  bytes --> string&quot;">%% 같은 바이트의 해석 방식
+flowchart LR
+  bytes[&quot;메모리의 바이트&lt;br/>48 c7 c7 01 00 00 00&quot;]
+  instruction[&quot;명령어&lt;br/>mov $1&quot;]
+  integer[&quot;정수&lt;br/>0x000001c7c748&quot;]
+  pointer[&quot;포인터&lt;br/>유효하지 않은 주소&quot;]
+  string[&quot;문자열&lt;br/>의미 없음&quot;]
+  bytes --> instruction
+  bytes --> integer
+  bytes --> pointer
+  bytes --> string
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% x86-64 명령어 인코딩 구조\nflowchart TD\n  encoding[\&quot;REX &amp;#124; Opcode &amp;#124; ModR/M &amp;#124; SIB &amp;#124; Displacement &amp;#124; Immediate&lt;br/>0~1 byte &amp;#124; 1~3 B &amp;#124; 0~1 B &amp;#124; 0~1 B &amp;#124; 0/1/2/4 B &amp;#124; 0/1/2/4 B\&quot;]\n  example[\&quot;예: mov $0x1\&quot;]\n  encoding --> example&quot;">%% x86-64 명령어 인코딩 구조
+flowchart TD
+  encoding[&quot;REX &amp;#124; Opcode &amp;#124; ModR/M &amp;#124; SIB &amp;#124; Displacement &amp;#124; Immediate&lt;br/>0~1 byte &amp;#124; 1~3 B &amp;#124; 0~1 B &amp;#124; 0~1 B &amp;#124; 0/1/2/4 B &amp;#124; 0/1/2/4 B&quot;]
+  example[&quot;예: mov $0x1&quot;]
+  encoding --> example
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>lib/user/syscall.c</code></td><td><code>syscall()</code> inline asm</td><td><code>0f 05</code> (SYSCALL) 바이트 생성</td></tr><tr><td><code>userprog/syscall-entry.S</code></td><td><code>syscall_entry</code></td><td>커널 진입 명령어 시퀀스</td></tr><tr><td><code>threads/intr-stubs.S</code></td><td><code>intr_entry</code></td><td>인터럽트 진입 명령어 시퀀스</td></tr><tr><td><code>threads/thread.c</code></td><td><code>do_iret</code> inline asm</td><td><code>iretq</code>; 현재 build의 실제 byte는 object disassembly로 확인</td></tr><tr><td>(QEMU) <code>target/i386/tcg/translate.c</code></td><td><code>disas_insn()</code></td><td>guest 바이트 → TCG IR 디코딩</td></tr><tr><td>(QEMU) <code>tcg/tcg.c</code></td><td><code>tcg_gen_code()</code></td><td>TCG IR → 호스트 기계어 변환</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/byte-level-debugging" class="internal internal-link alias" data-slug="wiki/os/byte-level-debugging">바이트 단위 디버깅</a></li>
+<li><a href="../../wiki/os/byte-as-integer" class="internal internal-link alias" data-slug="wiki/os/byte-as-integer">바이트를 정수로 해석</a></li>
+<li><a href="../../wiki/os/byte-as-pointer" class="internal internal-link alias" data-slug="wiki/os/byte-as-pointer">바이트를 포인터로 해석</a></li>
+<li><a href="../../wiki/os/byte-as-struct-field" class="internal internal-link alias" data-slug="wiki/os/byte-as-struct-field">바이트를 구조체 필드로 해석</a></li>
+<li><a href="../../wiki/os/variable-length-instruction" class="internal internal-link alias" data-slug="wiki/os/variable-length-instruction">x86 64 가변 길이 명령어 상세</a></li>
+<li><a href="../../wiki/os/fetch-decode-execute" class="internal internal-link alias" data-slug="wiki/os/fetch-decode-execute">CPU fetch decode execute 사이클</a></li>
+<li><a href="../../wiki/os/rip-instruction-pointer" class="internal internal-link alias" data-slug="wiki/os/rip-instruction-pointer">RIP 레지스터와 명령어 위치</a></li>
+<li><a href="../../wiki/os/qemu-tcg-translation-block" class="internal internal-link alias" data-slug="wiki/os/qemu-tcg-translation-block">QEMU TCG 번역 블록</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/os-responsibility-boundary" class="internal">OS 책임 경계</a></li><li><a href="../../wiki/os/byte-as-integer" class="internal">바이트 정수 해석</a></li><li><a href="../../wiki/os/byte-as-pointer" class="internal">바이트를 Pointer로 해석하기</a></li><li><a href="../../wiki/os/byte-as-struct-field" class="internal">바이트를 Struct Field로 해석하기</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-419" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#바이트와-명령어-해석" data-for="바이트와-명령어-해석">바이트와 명령어 해석</a></li><li class="depth-1"><a href="#바이트와-명령어-해석-차이" data-for="바이트와-명령어-해석-차이">바이트와 명령어 해석 차이</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-x86-64-명령어-인코딩" data-for="추상-개념-x86-64-명령어-인코딩">추상 개념 (x86-64 명령어 인코딩)</a></li><li class="depth-2"><a href="#x86-64-명령어-바이트-해석-예제" data-for="x86-64-명령어-바이트-해석-예제">x86-64 명령어 바이트 해석 예제</a></li><li class="depth-2"><a href="#gdb에서-같은-바이트를-다르게-보기" data-for="gdb에서-같은-바이트를-다르게-보기">GDB에서 같은 바이트를 다르게 보기</a></li><li class="depth-2"><a href="#syscall_entry의-실제-바이트" data-for="syscall_entry의-실제-바이트">syscall_entry의 실제 바이트</a></li><li class="depth-2"><a href="#pintos에서-바이트명령어-해석이-중요한-순간" data-for="pintos에서-바이트명령어-해석이-중요한-순간">PintOS에서 바이트→명령어 해석이 중요한 순간</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#바이트와-명령어-해석-값-추적" data-for="바이트와-명령어-해석-값-추적">바이트와 명령어 해석 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

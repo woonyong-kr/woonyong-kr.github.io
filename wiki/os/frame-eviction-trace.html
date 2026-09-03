@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>프레임 교체 (Frame Eviction) Trace · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="프레임 교체 (Frame Eviction) Trace · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="프레임 교체 (Frame Eviction) Trace · 최우녕"/><meta name="twitter:description" content="메모리가 부족하면 프로그램을 그대로 실패시켜도 된다고 생각하기 쉽다."/><meta property="og:description" content="메모리가 부족하면 프로그램을 그대로 실패시켜도 된다고 생각하기 쉽다."/><meta property="og:image:alt" content="메모리가 부족하면 프로그램을 그대로 실패시켜도 된다고 생각하기 쉽다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/frame-eviction-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/frame-eviction-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="메모리가 부족하면 프로그램을 그대로 실패시켜도 된다고 생각하기 쉽다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/frame-eviction-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-478" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-478" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>프레임 교체 (Frame Eviction) Trace</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="프레임-교체-frame-eviction-trace">프레임 교체 (Frame Eviction) Trace<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#프레임-교체-frame-eviction-trace" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 프레임 교체의 일반 원리와 선택·보존 기준을 설명하면서, 입력에 제시된 현재 PintOS VM 구현의 코드 경로와 QEMU의 역할을 구분해 해설한다. 구체적인 함수·줄 번호·상태 전이와 테스트·GDB 관찰값은 해당 코드 및 실행 환경에서 별도로 확인해야 하며, 본문 자체는 특정 버전의 실행 기록이나 성능 측정 결과를 제시하지 않는다.</p>
+</blockquote>
+<h2 id="프레임이-부족하면-어떤-일이-일어나는가">프레임이 부족하면 어떤 일이 일어나는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#프레임이-부족하면-어떤-일이-일어나는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>메모리가 부족하면 프로그램을 그대로 실패시켜도 된다고 생각하기 쉽다. 그러나 가상 메모리(VM)를 사용하는 운영체제는 먼저 다른 가능성을 살핀다.</p>
+<blockquote>
+<p>지금 RAM에 올라온 페이지 중 하나를 잠시 내보내고, 그 자리에 새 페이지를 올릴 수 있나?</p>
+</blockquote>
+<p>프레임은 한정된 실제 메모리 공간이고, 페이지는 그 공간을 빌려 쓰는 가상 메모리 단위다. 새 페이지에 내줄 빈 프레임이 없다면 운영체제는 기존 페이지가 차지한 프레임을 회수해야 한다. 이 과정이 frame eviction이다.</p>
+<p>가상 메모리는 프로세스가 실제 DRAM보다 넉넉한 메모리를 가진 것처럼 보이게 한다. 이를 유지하려면 운영체제가 다음 세 가지 일을 해야 한다.</p>
+<ol>
+<li>비어 있는 프레임을 관리한다.</li>
+<li>빈 프레임이 없으면 victim frame을 고른다.</li>
+<li>victim의 내용을 보존해야 한다면 swap 영역이나 파일에 기록한 뒤, 회수한 프레임을 새 페이지에 넘긴다.</li>
+</ol>
+<p>따라서 frame eviction은 <a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a>의 뒷부분에 해당한다. <code>vm_try_handle_fault()</code>가 복구할 수 있는 fault라고 판단했더라도 실제 프레임을 확보하지 못하면 프로그램은 실행을 계속할 수 없다.</p>
+<h2 id="페이지와-프레임을-구분해서-보기">페이지와 프레임을 구분해서 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#페이지와-프레임을-구분해서-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>프레임 교체 흐름을 따라가려면 각 구조가 어떤 질문에 답하는지 구분해야 한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>개념</th><th>질문</th></tr></thead><tbody><tr><td><code>struct page</code></td><td>이 유저 VA는 어떤 의미의 페이지인가?</td></tr><tr><td><code>struct frame</code></td><td>지금 어느 실제 프레임이 이 페이지 내용을 담고 있는가?</td></tr><tr><td>page table PTE</td><td>CPU가 이 VA를 지금 어떤 프레임으로 번역할 수 있는가?</td></tr><tr><td>swap/file backing</td><td>프레임에서 쫓겨난 내용을 어디에 보관할 것인가?</td></tr></tbody></table></div>
+<p>전체 실행 순서는 아래 <a href="#frame-eviction-%EC%A0%84%EC%B2%B4-%ED%9D%90%EB%A6%84" class="internal internal-link alias">Frame Eviction 전체 흐름</a> Mermaid를 정본으로 삼는다. <code>vm_get_frame()</code>은 빈 user page를 얻지 못하면 내부에서 <code>vm_evict_frame()</code>을 호출한다. <code>vm_evict_frame()</code>은 <code>vm_get_victim()</code>으로 내보낼 프레임을 고르고 <code>swap_out()</code>을 수행한 뒤, 재사용할 frame을 반환한다.</p>
+<p>여기서 SPT는 <a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">supplemental page table</a>이다. page table이 현재 CPU가 해당 VA를 번역할 수 있는지를 나타낸다면, SPT는 그 VA가 원래 합법적인 페이지인지와 backing이 어디에 있는지를 기억한다.</p>
+<h2 id="프레임-세-개로-보는-교체-과정">프레임 세 개로 보는 교체 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#프레임-세-개로-보는-교체-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>페이지 크기가 4096B이고 유저 풀에서 쓸 수 있는 프레임이 3개뿐이라고 해보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame F0 -> page A (VA 0x8048000)</span></span>
+<span data-line><span>frame F1 -> page B (VA 0x8049000)</span></span>
+<span data-line><span>frame F2 -> page C (VA 0x804a000)</span></span>
+<span data-line> </span>
+<span data-line><span>새로 필요한 page D (VA 0x804b000)</span></span></code></pre></figure>
+<p>빈 프레임이 없으므로 운영체제는 A, B, C 중 하나를 victim으로 골라야 한다. B를 고른다면 다음 순서로 프레임을 넘길 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. B가 수정되었는지 확인</span></span>
+<span data-line><span>2. 필요하면 B 내용을 swap/file에 기록</span></span>
+<span data-line><span>3. B의 PTE present bit를 끔</span></span>
+<span data-line><span>4. F1.page를 D로 바꿈</span></span>
+<span data-line><span>5. D 내용을 F1.kva로 읽어 옴</span></span>
+<span data-line><span>6. D의 PTE를 F1에 매핑</span></span></code></pre></figure>
+<p>유저 프로그램에는 D에 대한 접근이 잠시 느려진 것으로 보이지만, 내부에서는 4KB 크기의 프레임을 다른 페이지에 넘기는 작업이 일어난다.</p>
+<h2 id="현실의-운영체제와-pintos">현실의 운영체제와 PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#현실의-운영체제와-pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows는 PintOS보다 훨씬 복잡한 물리 메모리 관리자와 페이지 교체 정책을 사용한다.</p>
+<ul>
+<li>Linux는 LRU 계열 reclaim, anonymous/file-backed page, page cache, writeback, cgroup, NUMA 같은 요소를 함께 다룬다.</li>
+<li>Windows는 working set, standby/modified page list, section object, pagefile 같은 구조로 resident page와 backing store를 관리한다.</li>
+</ul>
+<p>그래도 운영체제가 답해야 하는 기본 질문은 PintOS와 같다.</p>
+<blockquote>
+<p>이 페이지를 RAM에서 내보내도 되는가? 내보낸다면 내용을 어디에 보관해야 하는가?</p>
+</blockquote>
+<p>현실의 운영체제는 여기에 SMP, 장치 I/O, 파일 캐시, 보안, 성능 정책까지 고려하므로 PintOS보다 훨씬 많은 상태를 살핀다.</p>
+<p>현재 기준 PintOS VM 구현에서 frame eviction의 뼈대는 다음 파일에 있다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/vm.c</code>
+<ul>
+<li><code>vm_get_frame()</code></li>
+<li><code>vm_evict_frame()</code></li>
+<li><code>vm_get_victim()</code></li>
+<li><code>vm_do_claim_page()</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/vm/vm.h</code>
+<ul>
+<li><code>struct page</code></li>
+<li><code>struct frame</code></li>
+<li><code>struct page_operations</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/anon.c</code>
+<ul>
+<li><code>anon_swap_in()</code></li>
+<li><code>anon_swap_out()</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/file.c</code>
+<ul>
+<li><code>file_backed_swap_in()</code></li>
+<li><code>file_backed_swap_out()</code></li>
+</ul>
+</li>
+</ul>
+<p>현재 기준 저장소에서 eviction은 clock 기반 victim 선택에서 page type별 swap out 호출로 이어진다. 일부 함수에는 이전 과제 주석이 남아 있지만, 그 아래에 실제 구현 코드가 들어 있다.</p>
+<p><code>vm_get_frame()</code>의 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>palloc()으로 frame을 얻는다.</span></span>
+<span data-line><span>유저 풀 메모리가 꽉 차면 frame을 evict해서 사용 가능한 공간을 얻는다.</span></span></code></pre></figure>
+<p>따라서 코드를 읽을 때는 어디를 새로 채워야 하는지가 아니라, 빈 프레임 확보 실패를 어떤 구현 경로로 복구하는지를 따라가야 한다.</p>
+<h2 id="qemu가-담당하는-층">QEMU가 담당하는 층<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-담당하는-층" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 frame eviction 정책을 알지 못한다.</p>
+<p>QEMU에서 PintOS의 유저 프레임은 guest physical memory 안의 4KB 영역이다. 이 guest physical memory는 QEMU process의 <code>MemoryRegion</code>/<code>RAMBlock</code> 같은 구조로 backing된다.</p>
+<p>대표 코드 위치:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/include/system/memory.h" class="external external-link">include/system/memory.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>struct MemoryRegion</code></li>
+<li><code>address_space_rw()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/include/system/ramblock.h" class="external external-link">include/system/ramblock.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>struct RAMBlock</code></li>
+<li><code>host</code></li>
+<li><code>ramblock_ptr()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/system/physmem.c" class="external external-link">system/physmem.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>address_space_rw()</code></li>
+<li><code>cpu_physical_memory_read()</code></li>
+<li><code>cpu_physical_memory_write()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li>x86 page walk 중 present/accessed/dirty bit를 확인하고 갱신하는 경로</li>
+</ul>
+</li>
+</ul>
+<p>PintOS의 swap out과 host OS의 swap out은 이름은 비슷하지만 서로 다른 층에서 일어난다.</p>
+<ul>
+<li>PintOS swap out: guest OS가 자신의 페이지를 디스크나 파일 backing으로 내보내기로 결정한다.</li>
+<li>Host OS swap out: macOS/Linux가 QEMU process의 host memory를 swap할 수 있다.</li>
+</ul>
+<p>PintOS가 <code>anon_swap_out()</code>을 구현해도 QEMU가 그 의미를 해석하는 것은 아니다. QEMU는 guest가 디스크 장치와 메모리를 읽고 쓰는 하드웨어 효과를 제공할 뿐이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>victim 선택</td><td>복잡한 reclaim/working set 정책</td><td><code>vm_get_victim()</code>의 clock algorithm</td><td>정책 없음</td></tr><tr><td>프레임 관리</td><td>전역/NUMA/per-process 상태가 얽힘</td><td><code>struct frame</code>과 별도 frame table을 직접 설계</td><td>guest RAM backing을 제공</td></tr><tr><td>dirty 판단</td><td>PTE dirty, writeback 상태, file cache 등</td><td><code>pml4_is_dirty()</code>와 page type별 <code>swap_out()</code> 활용 가능</td><td>guest PTE bit 효과를 에뮬레이션</td></tr><tr><td>내보낼 위치</td><td>swap/pagefile/file backing</td><td>anon은 swap, file-backed는 파일 writeback</td><td>OS 정책을 모름</td></tr><tr><td>실패 처리</td><td>OOM killer, working set 조정, 프로세스 예외 등</td><td>구현 실패 시 테스트 실패 또는 panic 가능</td><td>guest가 한 메모리 접근의 하드웨어 결과만 제공</td></tr></tbody></table></div>
+<h2 id="프레임을-넘길-때-지켜야-할-계약">프레임을 넘길 때 지켜야 할 계약<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#프레임을-넘길-때-지켜야-할-계약" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>eviction의 목표는 단순히 프레임 하나를 얻는 것이 아니다. old page와 이어진 모든 연결을 안전하게 끊고, 같은 프레임을 new page에 넘겨야 한다.</p>
+<p>현재 구현에서 확인할 계약은 네 단계로 나눌 수 있다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>구현 질문</th><th>코드 자리</th></tr></thead><tbody><tr><td>1. 빈 frame 시도</td><td><code>palloc_get_page(PAL_USER)</code>가 성공했는가</td><td><code>vm_get_frame()</code></td></tr><tr><td>2. victim 선택</td><td>빈 frame이 없으면 어떤 <code>struct frame</code>을 고를 것인가</td><td><code>vm_get_victim()</code>의 clock hand</td></tr><tr><td>3. old page 보존</td><td>victim page의 bytes를 swap 또는 file에 저장했는가</td><td><code>swap_out(victim->page)</code></td></tr><tr><td>4. stale mapping 제거</td><td>old page의 PTE와 <code>page->frame</code> 연결을 끊었는가</td><td><code>anon_swap_out()</code>, <code>file_backed_swap_out()</code>의 owner 순회</td></tr></tbody></table></div>
+<p><code>swap_out()</code>만 호출하고 작업을 끝내면 위험하다. <code>swap_out()</code>이 bytes를 보존하더라도 old PTE가 present로 남아 있으면 CPU는 이미 다른 page가 사용하기 시작한 frame을 old VA로 계속 접근할 수 있다.</p>
+<p>victim frame을 재사용하기 위한 최소 후처리는 다음과 같은 흐름이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>victim = vm_get_victim()</span></span>
+<span data-line><span>old = victim->page</span></span>
+<span data-line> </span>
+<span data-line><span>swap_out(old) 성공</span></span>
+<span data-line><span>old page table entry를 not-present로 변경</span></span>
+<span data-line><span>old->frame = NULL</span></span>
+<span data-line><span>victim->page = NULL</span></span>
+<span data-line> </span>
+<span data-line><span>return victim</span></span></code></pre></figure>
+<p>이후 <code>vm_do_claim_page(new_page)</code>가 같은 frame을 받아 새 연결을 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>victim->page = new_page</span></span>
+<span data-line><span>new_page->frame = victim</span></span>
+<span data-line><span>pml4_set_page(new_page->va, victim->kva, writable)</span></span>
+<span data-line><span>swap_in(new_page, victim->kva)</span></span></code></pre></figure>
+<p>이 과정에서 빠진 단계에 따라 서로 다른 문제가 생긴다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>빠진 단계</th><th>생기는 문제</th><th>증상</th></tr></thead><tbody><tr><td><code>swap_out(old)</code> 실패를 무시</td><td>old page의 dirty bytes가 사라짐</td><td>swap 테스트에서 이전 값이 깨짐</td></tr><tr><td>old PTE clear 누락</td><td>old VA와 new VA가 같은 frame을 공유</td><td>서로 다른 주소의 값이 같이 변함</td></tr><tr><td><code>old->frame = NULL</code> 누락</td><td>SPT metadata가 resident라고 오해</td><td>다음 fault/cleanup에서 같은 frame을 두 번 만짐</td></tr><tr><td><code>victim->page = NULL</code> 누락</td><td>새 claim 전에 frame owner가 섞임</td><td>frame table 순회와 destroy에서 잘못된 page를 봄</td></tr></tbody></table></div>
+<p><code>swap_out()</code>이 내용을 보존할 위치는 page type에 따라 달라진다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>page type</th><th>내보낼 위치</th><th>판단 기준</th><th>이어서 볼 문서</th></tr></thead><tbody><tr><td><code>VM_ANON</code></td><td>swap disk slot</td><td>원본 파일이 없으므로 4096B snapshot 필요</td><td><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">Anonymous Page와 Swap Slot</a>, <a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></td></tr><tr><td><code>VM_FILE</code> dirty</td><td>원래 file offset</td><td>mmap으로 수정된 bytes를 파일에 write-back</td><td><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">mmap dirty write back은 어떻게 디스크 쓰기로 내려가나</a></td></tr><tr><td><code>VM_FILE</code> clean</td><td>다시 파일에서 읽을 수 있음</td><td>dirty bit가 꺼져 있으면 write-back 생략 가능</td><td><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-backed-page-metadata-knowledge">file backed page metadata에는 무엇을 저장해야 하나</a></td></tr><tr><td><code>VM_UNINIT</code></td><td>보통 frame이 아직 없음</td><td>아직 claim되지 않은 lazy page는 eviction 대상이 아님</td><td><a href="../../wiki/os/lazy-loading-segment-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-segment-trace">Lazy Loading Segment 흐름</a></td></tr></tbody></table></div>
+<p><code>vm_get_victim()</code>도 아무 frame이나 고를 수 없다. 현재 구현은 frame table을 순환하면서 <a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">clock hand</a>로 accessed bit를 확인한다. 최근에 접근된 frame에는 <code>vm_frame_set_accessed(frame, false)</code>를 적용해 한 번 더 기회를 준다.</p>
+<h2 id="코드에서-교체-흐름-찾기">코드에서 교체 흐름 찾기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드에서-교체-흐름-찾기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="frame과-page의-양방향-연결">frame과 page의 양방향 연결<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame과-page의-양방향-연결" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/vm/vm.h</code></li>
+</ul>
+<p>핵심 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page_operations </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">operations;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">va;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">frame;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    ...</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 양방향 연결을 통해 프레임을 비울 때 어느 유저 VA의 매핑을 끊어야 하는지 찾을 수 있다.</p>
+<h3 id="user-pool에서-프레임-얻기">user pool에서 프레임 얻기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#user-pool에서-프레임-얻기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/palloc.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/threads/palloc.h</code></li>
+</ul>
+<p><code>palloc_get_page(PAL_USER)</code>는 user pool에서 free page 하나를 얻는다. 확보하지 못하면 <code>NULL</code>을 반환할 수 있으며, 이때 eviction을 시도한다.</p>
+<h3 id="pte에-새-mapping-설치하기">PTE에 새 mapping 설치하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte에-새-mapping-설치하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/mmu.c</code></li>
+</ul>
+<p>핵심 줄:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p>이 코드는 유저 VA page가 <code>kpage</code>가 가리키는 물리 프레임으로 번역되도록 PTE를 구성한다.</p>
+<h3 id="old-pte의-present-bit-제거하기">old PTE의 present bit 제거하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#old-pte의-present-bit-제거하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>같은 파일의 <code>pml4_clear_page()</code>는 present bit를 끈다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ~</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">PTE_P;</span></span></code></pre></figure>
+<p>victim page가 쫓겨났는데도 PTE가 present로 남으면 CPU가 예전 프레임에 계속 접근할 수 있다. 그러면 new page와 old page가 같은 프레임을 동시에 소유한 것처럼 되어 메모리 내용이 깨진다.</p>
+<h3 id="accesseddirty-bit로-선택과-보존-결정하기">accessed/dirty bit로 선택과 보존 결정하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#accesseddirty-bit로-선택과-보존-결정하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 다음 helper를 제공한다.</p>
+<ul>
+<li><code>pml4_is_accessed()</code></li>
+<li><code>pml4_set_accessed()</code></li>
+<li><code>pml4_is_dirty()</code></li>
+<li><code>pml4_set_dirty()</code></li>
+</ul>
+<p><code>PTE_A = 0x20</code>, <code>PTE_D = 0x40</code>이다. clock 알고리즘은 <code>accessed</code> bit를 보고 최근에 사용한 페이지에 한 번 더 기회를 줄 수 있다. <code>dirty</code> bit는 수정된 페이지를 swap이나 파일에 기록해야 하는지 판단하는 데 사용할 수 있다.</p>
+<p>QEMU의 x86 TCG 경로도 같은 하드웨어 의미를 흉내 낸다. <a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>에는 page walk 중 <code>PG_ACCESSED_MASK</code>를 세우고, store 접근이면 <code>PG_DIRTY_MASK</code>까지 세우는 흐름이 있다.</p>
+<h3 id="구현-파일-사이의-책임-분리">구현 파일 사이의 책임 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-파일-사이의-책임-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/vm.c</code></li>
+</ul>
+<p>확인할 줄:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th style="text-align:right;">줄</th><th>함수</th><th>읽어야 할 의미</th></tr></thead><tbody><tr><td style="text-align:right;">284</td><td><code>vm_get_victim()</code></td><td>frame table을 clock hand로 순회하며 accessed bit가 꺼진 frame을 고름</td></tr><tr><td style="text-align:right;">316</td><td><code>vm_evict_frame()</code></td><td>victim page를 <code>swap_out()</code>한 뒤 frame의 owner/page/ref_count 상태를 비움</td></tr><tr><td style="text-align:right;">339</td><td><code>vm_get_frame()</code></td><td><code>palloc_get_page(PAL_USER)</code> 실패 시 <code>vm_evict_frame()</code>으로 이어짐</td></tr><tr><td style="text-align:right;">563</td><td><code>vm_do_claim_page()</code></td><td>frame/page 연결, PTE 설치, owner 등록, <code>swap_in()</code>을 순서대로 수행</td></tr></tbody></table></div>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/anon.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/file.c</code></li>
+</ul>
+<p>확인할 함수:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수</th><th>현재 구현에서 읽어야 할 의미</th></tr></thead><tbody><tr><td><code>anon.c</code></td><td><code>vm_anon_init()</code></td><td><code>disk_get(1, 1)</code>로 swap disk를 잡고 slot bitmap과 <code>swap_ref_count</code>를 준비</td></tr><tr><td><code>anon.c</code></td><td><code>anon_swap_out()</code></td><td>frame 4096B를 swap sector 8개로 기록하고 COW owner들의 <code>swap_idx</code>, <code>swapped</code>, PTE 상태를 함께 바꿈</td></tr><tr><td><code>anon.c</code></td><td><code>anon_swap_in()</code></td><td>저장된 slot에서 4096B를 읽고 <code>swap_slot_unref()</code>로 참조 카운트를 줄임</td></tr><tr><td><code>file.c</code></td><td><code>file_backed_swap_out()</code></td><td>dirty file-backed page를 file offset으로 write-back하고 owner PTE를 제거</td></tr><tr><td><code>file.c</code></td><td><code>file_backed_swap_in()</code></td><td>file offset에서 read bytes를 읽고 나머지를 zero-fill</td></tr></tbody></table></div>
+<p>이 표는 구현해야 할 빈칸을 나열한 것이 아니라 각 파일의 책임을 구분한 것이다. victim 선택은 <code>vm.c</code>, anonymous backing은 <code>anon.c</code>, mmap/file backing은 <code>file.c</code>가 맡는다. PTE present bit를 제거하는 처리는 page type별 swap out 경로에서 확인한다.</p>
+<h2 id="주소와-상태-값-추적하기">주소와 상태 값 추적하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#주소와-상태-값-추적하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="한-프레임-안에서-바이트-찾기">한 프레임 안에서 바이트 찾기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#한-프레임-안에서-바이트-찾기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PGSIZE = 4096 = 0x1000</span></span>
+<span data-line> </span>
+<span data-line><span>frame->kva = 0x800012340000</span></span>
+<span data-line><span>page->va   = 0x0000008048000</span></span></code></pre></figure>
+<p><code>pml4_set_page(pml4, page->va, frame->kva, writable)</code>가 성공하면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA 0x8048123</span></span>
+<span data-line><span>  page base = 0x8048000</span></span>
+<span data-line><span>  offset    = 0x123</span></span>
+<span data-line> </span>
+<span data-line><span>frame base = frame->kva</span></span>
+<span data-line><span>byte addr  = frame->kva + 0x123</span></span></code></pre></figure>
+<p>유저가 <code>0x8048123</code>을 읽으면 현재 mapping에 따라 <code>frame->kva + 0x123</code>에 있는 바이트를 읽는다.</p>
+<h3 id="pte에서-주소와-flag-분리하기">PTE에서 주소와 flag 분리하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte에서-주소와-flag-분리하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>어떤 PTE가 다음 값이라고 해보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE = 0x0000000012345067</span></span></code></pre></figure>
+<p>낮은 12비트는 flag이고 위쪽 비트는 frame base 주소다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE_ADDR(PTE) = 0x0000000012345000</span></span>
+<span data-line><span>flags         = 0x067</span></span>
+<span data-line> </span>
+<span data-line><span>0x001 PTE_P present</span></span>
+<span data-line><span>0x002 PTE_W writable</span></span>
+<span data-line><span>0x004 PTE_U user</span></span>
+<span data-line><span>0x020 PTE_A accessed</span></span>
+<span data-line><span>0x040 PTE_D dirty</span></span></code></pre></figure>
+<p>이 PTE는 유저가 읽고 쓸 수 있으며 최근에 접근되었고 수정된 적도 있는 페이지를 나타낸다. 이 페이지를 victim으로 고른다면 dirty data를 먼저 보존해야 한다.</p>
+<h3 id="eviction-전후의-소유-관계">eviction 전후의 소유 관계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#eviction-전후의-소유-관계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>eviction 전:</span></span>
+<span data-line><span>  F1.kva bytes = page B 내용</span></span>
+<span data-line><span>  B.frame      = F1</span></span>
+<span data-line><span>  F1.page      = B</span></span>
+<span data-line><span>  B의 PTE      = present</span></span>
+<span data-line> </span>
+<span data-line><span>eviction 후:</span></span>
+<span data-line><span>  B.frame      = NULL 또는 non-resident 표시</span></span>
+<span data-line><span>  B의 PTE      = not-present</span></span>
+<span data-line><span>  F1.page      = D</span></span>
+<span data-line><span>  D.frame      = F1</span></span>
+<span data-line><span>  F1.kva bytes = page D 내용</span></span>
+<span data-line><span>  D의 PTE      = present</span></span></code></pre></figure>
+<p>이 상태 전이가 완전하지 않으면 대표적으로 두 가지 버그가 생긴다.</p>
+<ul>
+<li>stale mapping: 쫓겨난 page B가 여전히 F1을 가리킨다.</li>
+<li>lost dirty data: 수정된 B를 저장하지 않고 F1을 D로 덮어쓴다.</li>
+</ul>
+<h2 id="gdb로-교체-과정-관찰하기">GDB로 교체 과정 관찰하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-교체-과정-관찰하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>eviction 구현 전에는 다음 breakpoint로 관련 경로가 어디까지 이어지는지 확인할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b vm_get_frame</span></span>
+<span data-line><span>b vm_evict_frame</span></span>
+<span data-line><span>b vm_get_victim</span></span>
+<span data-line><span>b vm_do_claim_page</span></span>
+<span data-line><span>b pml4_set_page</span></span>
+<span data-line><span>b pml4_clear_page</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x page->va</span></span>
+<span data-line><span>p/x frame->kva</span></span>
+<span data-line><span>p/x frame->page</span></span>
+<span data-line><span>p/x page->frame</span></span>
+<span data-line><span>p page->operations->type</span></span></code></pre></figure>
+<p>구현 후에는 다음 VM 테스트가 프레임 부족 상황을 만든다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/vm/page-linear.c</code>
+<ul>
+<li>5MB 버퍼를 읽고 수정하며 여러 페이지를 반복 접근한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/vm/swap-anon.c</code>
+<ul>
+<li>20MB anonymous 배열의 각 페이지 첫 바이트를 쓰고 다시 읽어 일관성을 확인한다.</li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/vm/swap-file.c</code>
+<ul>
+<li>mmap된 file-backed page가 swap out/in 뒤에도 데이터를 보존하는지 본다.</li>
+</ul>
+</li>
+</ul>
+<p>이때 관찰할 목표는 다음과 같다.</p>
+<blockquote>
+<p>프레임은 바뀌어도, 유저 프로그램이 보는 페이지 내용은 보존되어야 한다.</p>
+</blockquote>
+<p>구현 중에는 다음 값을 함께 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p old->va</span></span>
+<span data-line><span>p old->frame</span></span>
+<span data-line><span>p victim->page</span></span>
+<span data-line><span>p pml4_get_page(thread_current()->pml4, old->va)</span></span></code></pre></figure>
+<p>eviction 직후 기대하는 상태는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>old->frame == NULL</span></span>
+<span data-line><span>victim->page == NULL 또는 새 page claim 전 상태</span></span>
+<span data-line><span>pml4_get_page(..., old->va) == NULL</span></span>
+<span data-line><span>old page metadata에는 swap slot 또는 file backing 정보가 남아 있음</span></span></code></pre></figure>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="frame-eviction-전체-흐름">Frame Eviction 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-eviction-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    PF[page fault 발생] --> SPT[SPT에서 struct page 찾기]\n    SPT --> CLAIM[vm_do_claim_page]\n    CLAIM --> GF[vm_get_frame]\n    GF --> PALLOC{palloc_get_page&lt;br/>PAL_USER 성공?}\n    PALLOC -- Yes --> LINK[frame↔page 연결]\n    PALLOC -- No --> EVICT[vm_evict_frame]\n    EVICT --> VICTIM[vm_get_victim&lt;br/>clock algorithm]\n    VICTIM --> SWAP{victim page&lt;br/>dirty?}\n    SWAP -- Yes, ANON --> SWAPOUT[anon_swap_out&lt;br/>→ swap slot 8 sectors]\n    SWAP -- Yes, FILE --> WRITEBACK[file_backed_swap_out&lt;br/>→ file write-back]\n    SWAP -- No --> CLEAR[저장 생략]\n    SWAPOUT --> PTE_CLEAR[pml4_clear_page&lt;br/>old PTE → not-present]\n    WRITEBACK --> PTE_CLEAR\n    CLEAR --> PTE_CLEAR\n    PTE_CLEAR --> UNLINK[old page↔frame 연결 해제]\n    UNLINK --> LINK\n    LINK --> SET[pml4_set_page&lt;br/>new PTE 설치]\n    SET --> SWAPIN[swap_in&lt;br/>new page 내용 적재]&quot;">flowchart TD
+    PF[page fault 발생] --> SPT[SPT에서 struct page 찾기]
+    SPT --> CLAIM[vm_do_claim_page]
+    CLAIM --> GF[vm_get_frame]
+    GF --> PALLOC{palloc_get_page&lt;br/>PAL_USER 성공?}
+    PALLOC -- Yes --> LINK[frame↔page 연결]
+    PALLOC -- No --> EVICT[vm_evict_frame]
+    EVICT --> VICTIM[vm_get_victim&lt;br/>clock algorithm]
+    VICTIM --> SWAP{victim page&lt;br/>dirty?}
+    SWAP -- Yes, ANON --> SWAPOUT[anon_swap_out&lt;br/>→ swap slot 8 sectors]
+    SWAP -- Yes, FILE --> WRITEBACK[file_backed_swap_out&lt;br/>→ file write-back]
+    SWAP -- No --> CLEAR[저장 생략]
+    SWAPOUT --> PTE_CLEAR[pml4_clear_page&lt;br/>old PTE → not-present]
+    WRITEBACK --> PTE_CLEAR
+    CLEAR --> PTE_CLEAR
+    PTE_CLEAR --> UNLINK[old page↔frame 연결 해제]
+    UNLINK --> LINK
+    LINK --> SET[pml4_set_page&lt;br/>new PTE 설치]
+    SET --> SWAPIN[swap_in&lt;br/>new page 내용 적재]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="eviction-전후-상태-비교">Eviction 전후 상태 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#eviction-전후-상태-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant User as User Program\n    participant CPU as CPU/MMU\n    participant OS as PintOS VM\n    participant Disk as Swap/File\n\n    Note over User,Disk: page D 접근 → frame 부족\n    User->>CPU: mov [0x804b000], val\n    CPU->>OS: #PF (not present)\n    OS->>OS: vm_get_frame(): palloc NULL → vm_evict_frame()\n    OS->>OS: vm_evict_frame() → vm_get_victim() → frame F1 (page B)\n    OS->>OS: pml4_is_dirty(B.va) → true\n    OS->>Disk: anon_swap_out(B) → slot #3\n    OS->>OS: pml4_clear_page(B.va)\n    OS->>OS: B.frame = NULL, F1.page = D\n    OS->>OS: pml4_set_page(D.va, F1.kva)\n    OS->>Disk: swap_in(D, F1.kva)\n    OS->>CPU: iretq (재시도)\n    CPU->>User: mov 성공&quot;">sequenceDiagram
+    participant User as User Program
+    participant CPU as CPU/MMU
+    participant OS as PintOS VM
+    participant Disk as Swap/File
+
+    Note over User,Disk: page D 접근 → frame 부족
+    User->>CPU: mov [0x804b000], val
+    CPU->>OS: #PF (not present)
+    OS->>OS: vm_get_frame(): palloc NULL → vm_evict_frame()
+    OS->>OS: vm_evict_frame() → vm_get_victim() → frame F1 (page B)
+    OS->>OS: pml4_is_dirty(B.va) → true
+    OS->>Disk: anon_swap_out(B) → slot #3
+    OS->>OS: pml4_clear_page(B.va)
+    OS->>OS: B.frame = NULL, F1.page = D
+    OS->>OS: pml4_set_page(D.va, F1.kva)
+    OS->>Disk: swap_in(D, F1.kva)
+    OS->>CPU: iretq (재시도)
+    CPU->>User: mov 성공
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="linuxwindowspintos-비교">Linux/Windows/PintOS 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linuxwindowspintos-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>victim 선택</td><td>Multi-gen LRU (MGLRU), kswapd</td><td>Working Set Trimmer, Balance Set Manager</td><td><code>vm_get_victim()</code> clock algorithm</td></tr><tr><td>frame 관리</td><td>per-zone buddy + per-CPU page cache</td><td>PFN database + standby/modified lists</td><td><code>struct frame</code> + palloc user pool</td></tr><tr><td>dirty 처리</td><td>writeback thread, pdflush</td><td>Modified Page Writer</td><td><code>swap_out()</code> type별 직접 호출</td></tr><tr><td>내보낼 곳</td><td>swap partition/file, tmpfs, file backing</td><td>pagefile.sys, section object</td><td>swap disk slot 또는 file offset</td></tr><tr><td>실패 처리</td><td>OOM killer, reclaim watermark</td><td>Hard page fault → wait, process termination</td><td>panic 또는 NULL 반환</td></tr><tr><td>교체 단위</td><td>4KB page (huge page는 split)</td><td>4KB page</td><td>4KB page (PGSIZE)</td></tr></tbody></table></div>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th style="text-align:right;">줄</th><th>역할</th></tr></thead><tbody><tr><td><code>pintos/vm/vm.c</code></td><td><code>vm_get_frame()</code></td><td style="text-align:right;">339</td><td>palloc으로 frame 획득, 실패 시 eviction 진입점</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td><code>vm_evict_frame()</code></td><td style="text-align:right;">316</td><td>victim swap_out 후 frame 상태 초기화</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td><code>vm_get_victim()</code></td><td style="text-align:right;">284</td><td>clock algorithm으로 victim frame 선택</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td><code>vm_do_claim_page()</code></td><td style="text-align:right;">563</td><td>frame↔page 연결 + PTE 설치 + owner 등록 + swap_in</td></tr><tr><td><code>pintos/include/vm/vm.h</code></td><td><code>struct page</code></td><td style="text-align:right;">42</td><td>VA, frame 포인터, operations, type union</td></tr><tr><td><code>pintos/include/vm/vm.h</code></td><td><code>struct frame</code></td><td style="text-align:right;">71</td><td>kva, page 포인터, owner list, ref_count</td></tr><tr><td><code>pintos/include/vm/vm.h</code></td><td><code>struct page_operations</code></td><td style="text-align:right;">84</td><td>swap_in/swap_out/destroy/copy 함수 포인터</td></tr><tr><td><code>pintos/vm/anon.c</code></td><td><code>anon_swap_in()</code></td><td style="text-align:right;">116</td><td>swap slot → frame kva로 4096B 읽기</td></tr><tr><td><code>pintos/vm/anon.c</code></td><td><code>anon_swap_out()</code></td><td style="text-align:right;">134</td><td>frame kva → swap slot으로 4096B 쓰기, COW owner 정리</td></tr><tr><td><code>pintos/vm/file.c</code></td><td><code>file_backed_swap_in()</code></td><td style="text-align:right;">43</td><td>file offset → frame kva로 read</td></tr><tr><td><code>pintos/vm/file.c</code></td><td><code>file_backed_swap_out()</code></td><td style="text-align:right;">54</td><td>dirty page → file offset으로 write-back</td></tr><tr><td><code>pintos/threads/mmu.c</code></td><td><code>pml4_set_page()</code></td><td style="text-align:right;">251</td><td>PTE에 frame mapping 설치</td></tr><tr><td><code>pintos/threads/mmu.c</code></td><td><code>pml4_clear_page()</code></td><td style="text-align:right;">271</td><td>PTE present bit 제거 + invlpg</td></tr><tr><td><code>pintos/threads/mmu.c</code></td><td><code>pml4_is_accessed()</code></td><td style="text-align:right;">320</td><td>accessed bit 검사</td></tr><tr><td><code>pintos/threads/mmu.c</code></td><td><code>pml4_is_dirty()</code></td><td style="text-align:right;">291</td><td>dirty bit 검사</td></tr><tr><td><code>pintos/threads/palloc.c</code></td><td><code>palloc_get_page()</code></td><td style="text-align:right;">323</td><td>user pool에서 4KB 물리 frame 할당</td></tr><tr><td>QEMU <code>memory.h</code></td><td><code>struct MemoryRegion</code></td><td style="text-align:right;">—</td><td>guest RAM backing 구조</td></tr><tr><td>QEMU <code>excp_helper.c</code></td><td>page walk 경로</td><td style="text-align:right;">—</td><td>guest A/D bit 하드웨어 효과 재현</td></tr></tbody></table></div>
+<h2 id="점검할-불변식">점검할 불변식<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#점검할-불변식" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>빈 user frame을 얻지 못하면 <code>vm_get_frame()</code>은 <code>vm_evict_frame()</code>으로 넘어간다.</li>
+<li>victim 선택은 frame table을 clock hand로 돌며 accessed bit가 꺼진 frame을 찾는 일이다.</li>
+<li><code>swap_out(victim->page)</code>는 bytes를 보존하고 old owner들의 PTE와 <code>page->frame</code> 연결을 끊어야 한다.</li>
+<li>anonymous page와 file-backed page는 서로 다른 기준으로 내용을 보존한다. anonymous page는 swap slot과 <code>swap_ref_count</code>를 사용하고, file-backed page는 file offset과 dirty bit를 사용한다.</li>
+<li>QEMU는 이 정책을 해석하지 않고 guest 메모리 접근과 디스크 I/O라는 하드웨어 효과만 제공한다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table</a>
+<ul>
+<li>쫓겨난 page가 여전히 합법인지 기억하는 장부.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환과 PTE</a>
+<ul>
+<li>VA, page base, offset, PTE를 숫자로 분해하는 법.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE 비트</a>
+<ul>
+<li>present/accessed/dirty bit가 eviction 판단으로 이어지는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">Dirty bit</a>
+<ul>
+<li>clock식 victim 선택과 dirty write-back 판단을 bit 단위로 분해.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/clock-algorithm-victim" class="internal internal-link alias" data-slug="wiki/os/clock-algorithm-victim">Clock 교체 정책</a>
+<ul>
+<li>frame victim을 고르는 기본 정책.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">Anonymous Page와 Swap Slot</a>
+<ul>
+<li>anon page의 swap slot 할당/해제 메커니즘.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap 파일 기반 페이지</a>
+<ul>
+<li>file-backed page eviction 시 write-back 대상.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">O와 QEMU IDE</a>
+<ul>
+<li>swap I/O가 QEMU IDE/BlockBackend를 거치는 경로.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델</a>
+<ul>
+<li><code>struct page</code>와 <code>struct frame</code> 객체 모델 총론.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Eviction과 Swap</a>
+<ul>
+<li>eviction과 swap의 전체 관계.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pml4-clear-page" class="internal internal-link alias" data-slug="wiki/os/pml4-clear-page">pml4 clear page()</a>
+<ul>
+<li>present bit 제거와 <code>invlpg</code> 호출.</li>
+</ul>
+</li>
+</ul>
+<h2 id="프레임-교체를-설명하는-관점">프레임 교체를 설명하는 관점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#프레임-교체를-설명하는-관점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>frame eviction은 메모리가 부족할 때 페이지를 포기하는 작업이 아니다. 한정된 프레임을 다른 페이지가 안전하게 재사용할 수 있도록 기존 내용을 보존하고 소유 관계와 주소 변환을 바꾸는 작업이다.</p>
+<p>PintOS에서는 <code>vm_get_frame()</code>이 빈 프레임을 얻지 못하면 <code>vm_evict_frame()</code>으로 이어진다. 이때 victim의 <code>struct page</code>, PTE present bit, dirty/accessed bit, swap/file backing을 함께 처리해야 페이지 내용과 주소 변환을 보존할 수 있다.</p>
+<p>QEMU는 이러한 교체 정책을 알지 못한다. QEMU가 제공하는 것은 guest physical memory와 x86 page-table의 하드웨어 효과다. 따라서 PintOS가 수행하는 swap out과 host OS가 QEMU process를 swap out하는 현상은 구분해서 보아야 한다.</p>
+<h2 id="다음으로-읽기">다음으로 읽기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#다음으로-읽기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">Page Fault Trace</a>
+<ul>
+<li>fault가 <code>vm_try_handle_fault()</code>까지 들어오는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page() Trace</a>
+<ul>
+<li>빈 frame을 얻지 못해 eviction으로 이어지는 앞 단계.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">Clock hand 실습</a>
+<ul>
+<li>frame table과 clock hand를 실제 구현 후보로 계산하고 관찰.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">mmap dirty write back</a>
+<ul>
+<li>dirty file-backed page가 sector write로 내려가는 구체적인 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">Swap 실습</a>
+<ul>
+<li>anonymous page를 swap slot과 연결해 보는 실험.</li>
+</ul>
+</li>
+<li>바이트 버퍼와 캐스팅 실험
+<ul>
+<li>frame/page/PTE를 바이트로 보는 연습.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal">Clock hand로 victim frame 고르기 Lab</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal">mmap dirty write-back은 어떻게 디스크 쓰기로 내려가나</a></li><li><a href="../../wiki/os/page-fault-trace" class="internal">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li><li><a href="../../wiki/os/pintos-e820-palloc-pool-trace" class="internal">E820 메모리 맵에서 palloc Pool까지의 Trace</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/swap-fork-process-isolation-lab" class="internal">swap-fork Lab (fork/exec 뒤 child별 swap 상태가 섞이지 않는가)</a></li><li><a href="../../wiki/os/swap-lab" class="internal">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></li><li><a href="../../wiki/os/vm-claim-rollback-trace" class="internal">pml4_set_page 실패 뒤 claim 롤백 Trace</a></li><li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal">vm_do_claim_page는 fault를 실제 frame mapping으로 바꾼다</a></li><li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal">vm_try_handle_fault 판단 흐름 Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-476" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#프레임-교체-frame-eviction-trace" data-for="프레임-교체-frame-eviction-trace">프레임 교체 (Frame Eviction) Trace</a></li><li class="depth-1"><a href="#프레임이-부족하면-어떤-일이-일어나는가" data-for="프레임이-부족하면-어떤-일이-일어나는가">프레임이 부족하면 어떤 일이 일어나는가</a></li><li class="depth-1"><a href="#페이지와-프레임을-구분해서-보기" data-for="페이지와-프레임을-구분해서-보기">페이지와 프레임을 구분해서 보기</a></li><li class="depth-1"><a href="#프레임-세-개로-보는-교체-과정" data-for="프레임-세-개로-보는-교체-과정">프레임 세 개로 보는 교체 과정</a></li><li class="depth-1"><a href="#현실의-운영체제와-pintos" data-for="현실의-운영체제와-pintos">현실의 운영체제와 PintOS</a></li><li class="depth-1"><a href="#qemu가-담당하는-층" data-for="qemu가-담당하는-층">QEMU가 담당하는 층</a></li><li class="depth-1"><a href="#프레임을-넘길-때-지켜야-할-계약" data-for="프레임을-넘길-때-지켜야-할-계약">프레임을 넘길 때 지켜야 할 계약</a></li><li class="depth-1"><a href="#코드에서-교체-흐름-찾기" data-for="코드에서-교체-흐름-찾기">코드에서 교체 흐름 찾기</a></li><li class="depth-2"><a href="#frame과-page의-양방향-연결" data-for="frame과-page의-양방향-연결">frame과 page의 양방향 연결</a></li><li class="depth-2"><a href="#user-pool에서-프레임-얻기" data-for="user-pool에서-프레임-얻기">user pool에서 프레임 얻기</a></li><li class="depth-2"><a href="#pte에-새-mapping-설치하기" data-for="pte에-새-mapping-설치하기">PTE에 새 mapping 설치하기</a></li><li class="depth-2"><a href="#old-pte의-present-bit-제거하기" data-for="old-pte의-present-bit-제거하기">old PTE의 present bit 제거하기</a></li><li class="depth-2"><a href="#accesseddirty-bit로-선택과-보존-결정하기" data-for="accesseddirty-bit로-선택과-보존-결정하기">accessed/dirty bit로 선택과 보존 결정하기</a></li><li class="depth-2"><a href="#구현-파일-사이의-책임-분리" data-for="구현-파일-사이의-책임-분리">구현 파일 사이의 책임 분리</a></li><li class="depth-1"><a href="#주소와-상태-값-추적하기" data-for="주소와-상태-값-추적하기">주소와 상태 값 추적하기</a></li><li class="depth-2"><a href="#한-프레임-안에서-바이트-찾기" data-for="한-프레임-안에서-바이트-찾기">한 프레임 안에서 바이트 찾기</a></li><li class="depth-2"><a href="#pte에서-주소와-flag-분리하기" data-for="pte에서-주소와-flag-분리하기">PTE에서 주소와 flag 분리하기</a></li><li class="depth-2"><a href="#eviction-전후의-소유-관계" data-for="eviction-전후의-소유-관계">eviction 전후의 소유 관계</a></li><li class="depth-1"><a href="#gdb로-교체-과정-관찰하기" data-for="gdb로-교체-과정-관찰하기">GDB로 교체 과정 관찰하기</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#frame-eviction-전체-흐름" data-for="frame-eviction-전체-흐름">Frame Eviction 전체 흐름</a></li><li class="depth-2"><a href="#eviction-전후-상태-비교" data-for="eviction-전후-상태-비교">Eviction 전후 상태 비교</a></li><li class="depth-2"><a href="#linuxwindowspintos-비교" data-for="linuxwindowspintos-비교">Linux/Windows/PintOS 비교</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#점검할-불변식" data-for="점검할-불변식">점검할 불변식</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="depth-1"><a href="#프레임-교체를-설명하는-관점" data-for="프레임-교체를-설명하는-관점">프레임 교체를 설명하는 관점</a></li><li class="depth-1"><a href="#다음으로-읽기" data-for="다음으로-읽기">다음으로 읽기</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>CPU 메모리 접근에서 Page Fault 복구까지의 Trace · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="CPU 메모리 접근에서 Page Fault 복구까지의 Trace · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="CPU 메모리 접근에서 Page Fault 복구까지의 Trace · 최우녕"/><meta name="twitter:description" content="CPU가 가상 주소에 접근할 때 매핑이 없으면 #PF(인터럽트 14번)가 발생한다."/><meta property="og:description" content="CPU가 가상 주소에 접근할 때 매핑이 없으면 #PF(인터럽트 14번)가 발생한다."/><meta property="og:image:alt" content="CPU가 가상 주소에 접근할 때 매핑이 없으면 #PF(인터럽트 14번)가 발생한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/page-fault-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/page-fault-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="CPU가 가상 주소에 접근할 때 매핑이 없으면 #PF(인터럽트 14번)가 발생한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/page-fault-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-555" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-555" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="cpu-메모리-접근에서-page-fault-복구까지의-trace">CPU 메모리 접근에서 Page Fault 복구까지의 Trace<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cpu-메모리-접근에서-page-fault-복구까지의-trace" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: CPU가 가상 주소에 접근할 때 매핑이 없으면 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a>(인터럽트 14번)가 발생한다. 운영체제는 <code>rcr2()</code>에서 fault 주소를, <code>error_code</code>에서 fault 성격을 읽고, <code>vm_try_handle_fault()</code> → <code>vm_do_claim_page()</code> 경로를 거쳐 프레임을 연결한다. 이 과정을 Linux·PintOS·QEMU의 역할을 구분해 단계별로 추적한다.</p>
+</blockquote>
+<h2 id="page-fault-복구-키워드">Page Fault 복구 키워드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-복구-키워드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>나중에 필요한 내용을 다시 찾을 때는 다음 기준과 용어를 사용한다.</p>
+<ul>
+<li>CPU memory access
+<ul>
+<li>기준 구분
+<ul>
+<li>Linux / Windows VM subsystem</li>
+<li>PintOS <code>pml4</code> / <code>page_fault()</code> / <code>vm_try_handle_fault()</code></li>
+<li>QEMU guest MMU emulation</li>
+</ul>
+</li>
+<li>주소 변환 기준
+<ul>
+<li><code>thread_current()->pml4</code></li>
+<li><code>pml4_activate()</code></li>
+<li><code>lcr3(vtop(pml4))</code></li>
+</ul>
+</li>
+<li>x86-64 page walk
+<ul>
+<li><code>PML4(va)</code></li>
+<li><code>PDPE(va)</code></li>
+<li><code>PDX(va)</code></li>
+<li><code>PTX(va)</code></li>
+<li><code>pg_ofs(va)</code></li>
+</ul>
+</li>
+<li>fault 처리
+<ul>
+<li><code>rcr2()</code></li>
+<li><code>f->error_code</code></li>
+<li><code>vm_try_handle_fault()</code></li>
+<li><code>vm_do_claim_page()</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="먼저-이해할-질문">먼저 이해할 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#먼저-이해할-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>왜 어떤 주소에 접근하면 프로그램이 곧바로 종료되는 반면, 어떤 주소에 접근하면 운영체제가 페이지를 준비한 뒤 아무 일도 없었던 것처럼 실행이 계속될까?</p>
+<p>이 질문을 이해하려면 먼저 <strong>page fault가 항상 치명적인 오류는 아니라는 점</strong>을 알아야 한다. Page fault는 CPU가 운영체제에 다음 판단을 요청하는 예외에 가깝다.</p>
+<blockquote>
+<p>“방금 이 가상 주소를 읽거나 쓰거나 실행하려 했지만 현재 상태로는 변환할 수 없다. 이 접근을 복구할 것인가, 아니면 프로세스를 종료할 것인가?”</p>
+</blockquote>
+<h2 id="page-fault-복구가-헷갈리는-이유">Page Fault 복구가 헷갈리는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-복구가-헷갈리는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>운영체제가 메모리를 관리할 때 달성하려는 목적은 크게 두 가지다.</p>
+<ol>
+<li>보호(protection): 프로세스가 다른 프로세스의 메모리처럼 허용되지 않은 영역에 접근하지 못하게 막는다.</li>
+<li>지연 로딩(demand paging): 실제로 필요해진 페이지만 메모리에 올려 RAM 사용을 줄인다.</li>
+</ol>
+<p>CPU만으로는 현재 접근이 복구 가능한 상황인지, 잘못된 접근인지 판단할 수 없다. 따라서 <strong>CPU는 문제를 예외(exception)로 보고하고, 운영체제가 정책에 따라 복구 또는 종료를 결정한다.</strong></p>
+<p>이후 흐름은 다음 순서로 읽으면 된다.</p>
+<ol>
+<li>CPU가 현재 주소 공간을 기준으로 가상 주소 변환을 시도한다.</li>
+<li>변환이나 권한 검사에 실패하면 <a href="../.././../tags/pf와" class="tag-link internal internal-link alias" data-slug="tags/pf와">pf와</a> 진단 정보를 남긴다.</li>
+<li>운영체제가 해당 fault를 복구할 수 있는지 판단한다.</li>
+<li>복구할 수 있다면 프레임과 PTE를 준비한다.</li>
+<li>예외에서 복귀해 fault가 발생했던 명령어를 다시 실행한다.</li>
+</ol>
+<h2 id="기준을-먼저-분리하기">기준을 먼저 분리하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#기준을-먼저-분리하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>설명의 기준이 섞이지 않도록 각 주체의 역할을 먼저 구분한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>기준</th><th>이 문서에서의 역할</th><th>여기서 말하는 것</th></tr></thead><tbody><tr><td>CPU / MMU</td><td>하드웨어 규칙</td><td>명령 실행 중 생성된 가상 주소를 현재 <code>CR3</code>의 page table로 번역한다</td></tr><tr><td>Linux / Windows</td><td>실제 OS 개념 기준</td><td>demand paging, memory protection, file mapping, copy-on-write 같은 현실의 VM 정책을 설명한다</td></tr><tr><td>PintOS</td><td>실제 코드 증거</td><td><code>pml4</code>, <code>pml4e_walk()</code>, <code>page_fault()</code>, <code>vm_try_handle_fault()</code> 같은 과제 코드와 변수 흐름을 보여 준다</td></tr><tr><td>QEMU</td><td>하드웨어 에뮬레이터 기준</td><td>PintOS가 실제 CPU·MMU·메모리로 인식하는 동작을 guest CPU state로 재현한다</td></tr></tbody></table></div>
+<p>먼저 자주 생기는 오해를 바로잡자.</p>
+<p>CPU가 메모리를 먼저 읽은 뒤 그 결과를 MMU에 넘기는 구조가 아니다. 더 정확히는 <strong>CPU가 명령어를 실행하면서 가상 주소를 만들고, 그 주소가 load/store/fetch에 필요해지는 순간 CPU 내부의 주소 변환 장치인 MMU/TLB 경로가 현재 <code>CR3</code>을 기준으로 번역을 시도한다.</strong></p>
+<p>PintOS의 C 코드가 MMU 자체로 동작하는 것도 아니다. PintOS는 MMU가 사용할 구조를 준비하고, MMU가 보고한 예외를 처리한다.</p>
+<ul>
+<li>MMU가 참조할 page table page를 만든다.</li>
+<li>현재 주소 공간의 PML4를 <code>CR3</code>에 올린다.</li>
+<li>Page fault가 발생하면 <code>CR2</code>와 error code를 읽는다.</li>
+<li>복구가 허용된 fault라면 frame을 확보하고 PTE를 설치한다.</li>
+</ul>
+<h2 id="page-fault-발생-시-남는-상태">Page Fault 발생 시 남는 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-발생-시-남는-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Page fault(#PF)는 x86에서 메모리 접근을 주소 변환으로 이어갈 수 없거나 접근 권한이 맞지 않을 때 발생하는 CPU 예외다.</p>
+<p>CPU는 page fault가 발생하면 운영체제가 원인을 판단할 수 있도록 두 가지 핵심 정보를 남긴다.</p>
+<ul>
+<li><strong>CR2</strong>: fault가 발생한 가상 주소, 즉 “어떤 VA 때문에 발생했는가?”를 알려 준다.</li>
+<li><strong>error code</strong>: not present, write, user 등 “어떤 성격의 fault인가?”를 알려 준다.</li>
+</ul>
+<p>운영체제는 이 정보를 바탕으로 다음 중 하나를 선택한다.</p>
+<ul>
+<li>합법적인 접근이라면 페이지를 준비하고 매핑을 설치한 뒤 <strong>같은 명령어를 다시 실행</strong>한다.</li>
+<li>복구할 수 없는 접근이나 버그라면 프로세스를 종료한다.</li>
+</ul>
+<h2 id="전체-흐름-미리-보기">전체 흐름 미리 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#전체-흐름-미리-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as User Code\n    participant CPU as CPU/MMU\n    participant PF as page_fault()\n    participant VM as vm_try_handle_fault()\n    participant SPT as SPT (spt_find_page)\n    participant CLM as vm_do_claim_page()\n    participant PT as pml4_set_page()\n\n    U->>CPU: mov (%rax), %rbx (VA=0x8048123)\n    CPU->>CPU: CR3 → PML4 → page walk\n    CPU->>CPU: PTE not present → #PF\n\n    Note over CPU,PF: CR2 = 0x8048123, error_code = PF_U\n    CPU->>PF: exception vector 14\n\n    PF->>PF: fault_addr = rcr2()\n    PF->>PF: not_present / write / user 해석\n    PF->>VM: vm_try_handle_fault(f, addr, user, write, not_present)\n\n    VM->>VM: is_user_vaddr(addr) 확인\n    VM->>SPT: spt_find_page(spt, pg_round_down(addr))\n    SPT-->>VM: page (또는 NULL → stack growth 판단)\n\n    alt page found &amp; valid\n        VM->>CLM: vm_do_claim_page(page)\n        CLM->>CLM: frame = vm_get_frame()\n        CLM->>PT: pml4_set_page(pml4, page->va, frame->kva, writable)\n        CLM->>CLM: swap_in(page, frame->kva)\n        CLM-->>VM: true\n        VM-->>PF: true\n        PF-->>CPU: iretq → 같은 명령어 재실행\n        CPU->>CPU: page walk 성공 → load 완료\n    else invalid access\n        VM-->>PF: false\n        PF->>PF: kill(f) → process 종료\n    end&quot;">sequenceDiagram
+    participant U as User Code
+    participant CPU as CPU/MMU
+    participant PF as page_fault()
+    participant VM as vm_try_handle_fault()
+    participant SPT as SPT (spt_find_page)
+    participant CLM as vm_do_claim_page()
+    participant PT as pml4_set_page()
+
+    U->>CPU: mov (%rax), %rbx (VA=0x8048123)
+    CPU->>CPU: CR3 → PML4 → page walk
+    CPU->>CPU: PTE not present → #PF
+
+    Note over CPU,PF: CR2 = 0x8048123, error_code = PF_U
+    CPU->>PF: exception vector 14
+
+    PF->>PF: fault_addr = rcr2()
+    PF->>PF: not_present / write / user 해석
+    PF->>VM: vm_try_handle_fault(f, addr, user, write, not_present)
+
+    VM->>VM: is_user_vaddr(addr) 확인
+    VM->>SPT: spt_find_page(spt, pg_round_down(addr))
+    SPT-->>VM: page (또는 NULL → stack growth 판단)
+
+    alt page found &amp; valid
+        VM->>CLM: vm_do_claim_page(page)
+        CLM->>CLM: frame = vm_get_frame()
+        CLM->>PT: pml4_set_page(pml4, page->va, frame->kva, writable)
+        CLM->>CLM: swap_in(page, frame->kva)
+        CLM-->>VM: true
+        VM-->>PF: true
+        PF-->>CPU: iretq → 같은 명령어 재실행
+        CPU->>CPU: page walk 성공 → load 완료
+    else invalid access
+        VM-->>PF: false
+        PF->>PF: kill(f) → process 종료
+    end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="같은-pf가-서로-다른-결말로-이어지는-예">같은 <a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> 서로 다른 결말로 이어지는 예<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#같은-pf가-서로-다른-결말로-이어지는-예" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="a-복구-가능-스택이-아래로-성장해야-하는-순간">A) 복구 가능: 스택이 아래로 성장해야 하는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#a-복구-가능-스택이-아래로-성장해야-하는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>유저 프로그램이 함수를 깊게 호출해 스택을 더 사용하려 하면, 아직 매핑되지 않은 스택 페이지에 처음 접근할 수 있다.</p>
+<ul>
+<li>Page fault가 발생한다.</li>
+<li>OS가 해당 접근을 허용 가능한 스택 성장으로 판단한다.</li>
+<li>새 프레임을 할당하고 매핑을 설치한다.</li>
+<li>같은 명령어를 다시 실행하며 프로그램이 계속 진행된다.</li>
+</ul>
+<h3 id="b-복구-불가-잘못된-포인터-접근">B) 복구 불가: 잘못된 포인터 접근<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#b-복구-불가-잘못된-포인터-접근" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>예를 들어 <code>char *p = (char *)0xdeadbeef; *p = 1;</code> 같은 접근은 일반적으로 유저 프로그램에 허용되지 않은 주소를 대상으로 한다.</p>
+<ul>
+<li>Page fault가 발생한다.</li>
+<li>OS가 정상적인 매핑이나 성장 규칙에 해당하지 않는다고 판단한다.</li>
+<li>프로세스를 종료한다.</li>
+</ul>
+<h2 id="실제-운영체제의-판단">실제 운영체제의 판단<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제의-판단" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현실의 운영체제는 page fault를 다음과 같이 처리한다.</p>
+<ul>
+<li><strong>복구할 수 있는 fault</strong>: demand paging, <a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">file mapping(mmap)</a>, copy-on-write 같은 정책을 적용한 뒤 실행을 재개한다.</li>
+<li><strong>복구할 수 없는 fault</strong>: Linux는 일반적으로 <code>SIGSEGV</code>(segmentation fault)로, Windows는 Access Violation 계열로 종료하거나 예외 처리한다.</li>
+</ul>
+<p>즉, 현실의 운영체제에는 어떤 fault를 복구할지 결정하는 다양한 정책이 있으며, 이 정책은 파일 시스템·캐시·보안·성능과 깊이 연결된다.</p>
+<h2 id="pintos에서-보는-복구-경로">PintOS에서 보는 복구 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서-보는-복구-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 page fault 처리의 관문은 다음 코드다. 여기서는 현재 기준 저장소인 W11 PintOS를 대상으로 한다.</p>
+<ul>
+<li><code>pintos/userprog/exception.c</code>
+<ul>
+<li><code>exception_init()</code>의 <code>intr_register_int(14, ..., page_fault, &quot;#PF ...&quot;)</code></li>
+<li><code>page_fault(struct intr_frame *f)</code></li>
+</ul>
+</li>
+</ul>
+<p>사건이 발생하는 순서대로 정리하면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>유저 코드(또는 커널 코드)가 어떤 VA에 접근</span></span>
+<span data-line><span>  -> x86 MMU가 주소 변환/권한 체크 시도</span></span>
+<span data-line><span>  -> 실패하면 CPU가 #PF 예외를 발생</span></span>
+<span data-line><span>  -> PintOS의 page_fault() 핸들러로 진입</span></span>
+<span data-line><span>     - CR2에서 faulting VA를 읽음</span></span>
+<span data-line><span>     - error_code를 PF_P/PF_W/PF_U로 해석</span></span>
+<span data-line><span>     - (VM 켜짐) vm_try_handle_fault()에게 처리 기회를 줌</span></span>
+<span data-line><span>     - 처리 불가면 kill()로 종료</span></span>
+<span data-line><span>  -> 처리 성공이면 핸들러에서 복귀</span></span>
+<span data-line><span>  -> CPU는 fault를 일으킨 명령어를 다시 실행(= “아무 일 없던 것처럼” 보임)</span></span></code></pre></figure>
+<p>핵심은 PintOS가 page fault를 복구할지 종료로 처리할지를 <code>vm_try_handle_fault()</code>에서 결정하도록 구성되어 있다는 점이다.</p>
+<p><code>PF_P/PF_W/PF_U</code> 비트를 실제 판단표로 해석하는 과정은 <a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">페이지 폴트 error code</a>에서 별도로 다룬다. 이 trace에서는 전체 복구 경로를 먼저 파악하고 세부 분류는 해당 문서에 맡긴다.</p>
+<p>복구 후 프로그램이 왜 아무 일도 없었던 것처럼 이어지는지는 <a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a>에서 자세히 다룬다. 핵심은 <code>CR2</code>의 <code>fault_addr</code>와 <code>struct intr_frame</code>의 <code>f->rip</code>가 서로 다른 값이며, PintOS가 PTE를 설치한 뒤 <code>iretq</code>가 fault를 일으킨 바로 그 명령어로 돌아간다는 점이다.</p>
+<h2 id="전체-변수-흐름-유저-명령어-하나가-메모리를-읽는-과정">전체 변수 흐름: 유저 명령어 하나가 메모리를 읽는 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#전체-변수-흐름-유저-명령어-하나가-메모리를-읽는-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구체적인 흐름을 보기 위해 예시 명령어 하나를 사용한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="asm" data-theme="github-light github-dark"><code data-language="asm" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">mov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> (%</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rax</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">), %</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">rbx</span></span></code></pre></figure>
+<p>예시 register 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAX = 0x0000000008048123</span></span></code></pre></figure>
+<p>이 명령어는 <code>RAX</code>에 든 값을 주소로 해석하고, 그 주소에서 8바이트를 읽어 <code>RBX</code>에 저장하려 한다. 이때 <code>0x8048123</code>은 PintOS 유저 프로그램이 보는 <strong>guest virtual address</strong>다.</p>
+<h3 id="0-실행할-주소-공간을-먼저-선택한다">0. 실행할 주소 공간을 먼저 선택한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#0-실행할-주소-공간을-먼저-선택한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서는 현재 thread의 <code>pml4</code>가 <code>CR3</code>에 올라가면서 CPU가 참조할 page table이 결정된다.</p>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/threads/thread.c</code></li>
+<li><code>pintos/userprog/process.c</code></li>
+<li><code>pintos/threads/mmu.c</code></li>
+<li><code>pintos/include/intrinsic.h</code></li>
+</ul>
+<p>함수 호출 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>schedule()</span></span>
+<span data-line><span>  -> next = next_thread_to_run()</span></span>
+<span data-line><span>  -> process_activate(next)</span></span>
+<span data-line><span>      -> pml4_activate(next->pml4)</span></span>
+<span data-line><span>          -> lcr3(vtop(pml4 ? pml4 : base_pml4))</span></span>
+<span data-line><span>              -> asm &quot;movq %0, %%cr3&quot;</span></span></code></pre></figure>
+<p>변수 흐름:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>변수</th><th>의미</th></tr></thead><tbody><tr><td><code>schedule()</code></td><td><code>next</code></td><td>이번에 CPU에서 실행할 PintOS thread</td></tr><tr><td><code>process_activate(next)</code></td><td><code>next->pml4</code></td><td>이 thread/process의 PML4 page를 커널에서 바라본 주소</td></tr><tr><td><code>pml4_activate(pml4)</code></td><td><code>pml4</code></td><td><code>next->pml4</code>에 인자로 전달된 값</td></tr><tr><td><code>vtop(pml4)</code></td><td>guest physical address</td><td>PML4 page의 물리 주소 형태</td></tr><tr><td><code>lcr3(...)</code></td><td><code>CR3</code></td><td>CPU/MMU가 page walk를 시작할 최상위 table 주소</td></tr></tbody></table></div>
+<p>따라서 같은 <code>0x8048123</code>이라도 <code>CR3</code>가 다르면 서로 다른 프로세스의 다른 frame으로 변환될 수 있다. Linux와 Windows에서도 같은 원리에 따라 프로세스별로 주소 공간의 기준이 다르다. PintOS에서는 <code>struct thread</code>의 <code>pml4</code>와 <code>process_activate()</code>가 이 원리를 비교적 단순하게 보여 준다.</p>
+<h3 id="1-cpummu-load-주소로-page-walk를-수행한다">1. CPU/MMU: load 주소로 page walk를 수행한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-cpummu-load-주소로-page-walk를-수행한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>CPU/MMU가 받는 입력은 다음과 같이 정리할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>access_type = read/load</span></span>
+<span data-line><span>virtual address = 0x8048123</span></span>
+<span data-line><span>current CR3 = vtop(thread_current()->pml4)</span></span></code></pre></figure>
+<p>CPU는 <code>0x8048123</code>이라는 값을 RAM 주소로 곧바로 사용하지 않는다. 현재 <code>CR3</code>가 가리키는 PML4에서 시작해 page table walk를 먼저 수행한다.</p>
+<p>PintOS에서 같은 bit 분해를 C 매크로로 확인할 수 있는 파일은 다음과 같다.</p>
+<ul>
+<li><code>pintos/include/threads/pte.h</code></li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PML4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PML4SHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDPE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PDPESHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PDXSHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTXSHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTE_ADDR</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pte</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (pte) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ~0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">FFF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p>예시 값을 대입하면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA = 0x0000000008048123</span></span>
+<span data-line> </span>
+<span data-line><span>PML4 index = (VA >> 39) &amp; 0x1ff = 0</span></span>
+<span data-line><span>PDPE index = (VA >> 30) &amp; 0x1ff = 0</span></span>
+<span data-line><span>PDX index  = (VA >> 21) &amp; 0x1ff = 64</span></span>
+<span data-line><span>PTX index  = (VA >> 12) &amp; 0x1ff = 72</span></span>
+<span data-line><span>offset     =  VA        &amp; 0xfff = 0x123</span></span></code></pre></figure>
+<h3 id="2-pintos-c-코드-pml4e_walk의-역할">2. PintOS C 코드: pml4e_walk()의 역할<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pintos-c-코드-pml4e_walk의-역할" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>pml4e_walk()</code>는 CPU가 실제로 호출하는 함수가 아니다. PintOS 커널이 page table을 조회하거나 새 PTE를 설치할 때 x86-64 page walk와 같은 구조를 C 코드로 따라가는 helper다.</p>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/threads/mmu.c</code></li>
+</ul>
+<p>입력:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pml4, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">upage</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, create)</span></span></code></pre></figure>
+<p>핵심 변수:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>변수</th><th>출처</th><th>의미</th></tr></thead><tbody><tr><td><code>pml4e</code></td><td><code>thread_current()->pml4</code> 또는 caller 인자</td><td>PML4 page를 커널에서 바라본 주소</td></tr><tr><td><code>va</code></td><td><code>upage</code>, <code>uaddr</code>, <code>fault_addr</code> 등</td><td>조회하거나 매핑할 유저 가상 주소</td></tr><tr><td><code>create</code></td><td>caller가 결정</td><td>중간 page table page가 없을 때 새로 만들지 여부</td></tr><tr><td><code>idx</code></td><td><code>PML4(va)</code>, <code>PDPE(va)</code>, <code>PDX(va)</code></td><td>각 단계에서 사용하는 0..511 범위의 index</td></tr><tr><td><code>pte</code></td><td>반환값</td><td>최종 PTE 8바이트 칸의 주소</td></tr></tbody></table></div>
+<p>처리 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pml4e_walk(pml4e, va, create)</span></span>
+<span data-line><span>  -> idx = PML4(va)</span></span>
+<span data-line><span>  -> pml4e[idx]가 present인가?</span></span>
+<span data-line><span>     - 아니고 create=false면 NULL</span></span>
+<span data-line><span>     - 아니고 create=true면 palloc_get_page(PAL_ZERO)로 PDPT page 생성</span></span>
+<span data-line><span>  -> pdpe_walk(ptov(PTE_ADDR(pml4e[idx])), va, create)</span></span>
+<span data-line><span>      -> idx = PDPE(va)</span></span>
+<span data-line><span>      -> pdpe[idx]가 present인가?</span></span>
+<span data-line><span>      -> pgdir_walk(ptov(PTE_ADDR(pdpe[idx])), va, create)</span></span>
+<span data-line><span>          -> idx = PDX(va)</span></span>
+<span data-line><span>          -> pdp[idx]가 present인가?</span></span>
+<span data-line><span>          -> return ptov(PTE_ADDR(pdp[idx]) + 8 * PTX(va))</span></span></code></pre></figure>
+<p>이때 다음 차이를 주의해야 한다.</p>
+<ul>
+<li><code>pml4_get_page()</code>는 조회 함수이므로 <code>create = 0</code>으로 호출한다.</li>
+<li><code>pml4_set_page()</code>는 새 mapping을 설치해야 하므로 <code>create = 1</code>로 호출한다.</li>
+<li><code>PTE_ADDR(entry)</code>는 entry의 하위 flag bit를 제거하고 다음 table 또는 frame의 주소 부분만 추출한다.</li>
+<li><code>ptov(...)</code>는 PintOS 커널이 해당 guest physical address에 접근할 수 있도록 kernel virtual address로 변환한다.</li>
+</ul>
+<h3 id="3-pte가-이미-present인-경우-실제-주소를-만든다">3. PTE가 이미 present인 경우: 실제 주소를 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-pte가-이미-present인-경우-실제-주소를-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PTE가 이미 존재한다고 가정하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE value  = 0x0000000012345067</span></span>
+<span data-line><span>frame base = PTE_ADDR(PTE) = 0x12345000</span></span>
+<span data-line><span>offset     = 0x123</span></span></code></pre></figure>
+<p>CPU/MMU가 계산하는 최종 주소는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>guest physical address = 0x12345000 + 0x123</span></span>
+<span data-line><span>                       = 0x12345123</span></span></code></pre></figure>
+<p>PintOS의 <code>pml4_get_page()</code>는 같은 계산 결과를 커널이 읽을 수 있는 주소 형태로 보여 준다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pml4, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">uaddr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_P))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> ptov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">PTE_ADDR</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pte</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pg_ofs</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (uaddr);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>여기서 반환되는 값은 유저 VA가 아니다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>uaddr = 0x8048123                 // 유저가 사용한 guest virtual address</span></span>
+<span data-line><span>*pte  = 0x12345067                // frame base + PTE flags</span></span>
+<span data-line><span>return ptov(0x12345000) + 0x123   // PintOS 커널이 같은 frame을 보는 kernel VA</span></span></code></pre></figure>
+<p>Linux와 Windows에서도 기본 개념은 같다. CPU는 page table과 TLB를 기준으로 주소를 번역하고, OS는 page table과 VM metadata를 관리한다. 다만 Linux와 Windows에는 VMA/VAD, page cache, working set, copy-on-write 등 더 많은 자료구조가 사용된다.</p>
+<h3 id="4-pte가-없거나-권한이-맞지-않는-경우-pf를-발생시킨다">4. PTE가 없거나 권한이 맞지 않는 경우: <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 발생시킨다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-pte가-없거나-권한이-맞지-않는-경우-pf를-발생시킨다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 조건 중 하나에 해당하면 CPU는 load/store를 완료할 수 없다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4E not present</span></span>
+<span data-line><span>PDPE  not present</span></span>
+<span data-line><span>PDE   not present</span></span>
+<span data-line><span>PTE   not present</span></span>
+<span data-line><span>PTE_U/PTE_W/NX 같은 권한 불일치</span></span></code></pre></figure>
+<p>CPU/MMU가 남기는 결과는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>CR2        = faulting virtual address</span></span>
+<span data-line><span>error code = present/write/user/instruction 등 fault 종류</span></span>
+<span data-line><span>exception  = #PF, vector 14</span></span></code></pre></figure>
+<p>PintOS에서는 <code>exception_init()</code>이 vector 14를 <code>page_fault()</code>에 연결한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_register_int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">14</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, INTR_OFF, page_fault, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;#PF Page-Fault Exception&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p><code>INTR_OFF</code>가 중요한 이유는 <code>CR2</code> 때문이다. <code>CR2</code>는 마지막 page fault 주소를 담는 CPU register이므로 다른 interrupt가 개입하기 전에 빠르게 읽어야 한다.</p>
+<h3 id="5-page_fault-cpu의-힌트를-pintos-변수로-옮긴다">5. page_fault(): CPU의 힌트를 PintOS 변수로 옮긴다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-page_fault-cpu의-힌트를-pintos-변수로-옮긴다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/userprog/exception.c</code></li>
+</ul>
+<p>핵심 변수 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fault_addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">rcr2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_enable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">not_present </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_P) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">write </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">user </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_U) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>PintOS 변수</th><th>CPU/MMU 기준 의미</th><th>예시</th></tr></thead><tbody><tr><td><code>fault_addr</code></td><td><code>CR2</code>에서 읽은 faulting VA</td><td><code>0x8048123</code></td></tr><tr><td><code>f->rip</code></td><td>fault를 발생시킨 명령어 주소</td><td><code>mov (%rax), %rbx</code>가 있는 코드 주소</td></tr><tr><td><code>not_present</code></td><td><code>PF_P == 0</code>, present bit가 없어서 발생한 fault인지 여부</td><td>lazy load, stack growth 후보</td></tr><tr><td><code>write</code></td><td>write 접근이었는지 여부</td><td>read-only page에 store하면 true</td></tr><tr><td><code>user</code></td><td>user mode 접근이었는지 여부</td><td>유저 프로그램의 접근이면 true</td></tr></tbody></table></div>
+<p>여기서 <code>fault_addr</code>와 <code>f->rip</code>는 서로 다른 의미이므로 혼동하면 안 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr = 접근하려던 데이터 주소</span></span>
+<span data-line><span>f->rip     = 그 접근 명령어가 놓인 코드 주소</span></span></code></pre></figure>
+<h3 id="6-vm이-활성화된-경우-vm_try_handle_fault가-복구-가능성을-판단한다">6. VM이 활성화된 경우: vm_try_handle_fault()가 복구 가능성을 판단한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-vm이-활성화된-경우-vm_try_handle_fault가-복구-가능성을-판단한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 기준 호출은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_try_handle_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f, fault_addr, user, write, not_present))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>의도된 VM 처리 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>vm_try_handle_fault(f, addr, user, write, not_present)</span></span>
+<span data-line><span>  -> addr가 user address인지 확인</span></span>
+<span data-line><span>  -> not_present/protection fault 구분</span></span>
+<span data-line><span>  -> page = spt_find_page(&amp;thread_current()->spt, pg_round_down(addr))</span></span>
+<span data-line><span>  -> page가 있으면 writable 정책 확인</span></span>
+<span data-line><span>  -> vm_do_claim_page(page)</span></span>
+<span data-line><span>  -> 성공하면 true</span></span></code></pre></figure>
+<p>주요 변수:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>변수</th><th>어느 층의 정보인가</th><th>의미</th></tr></thead><tbody><tr><td><code>addr</code></td><td>CPU/MMU에서 전달된 <code>CR2</code> 값</td><td>fault가 발생한 VA</td></tr><tr><td><code>pg_round_down(addr)</code></td><td>PintOS VM lookup key</td><td>SPT가 page 단위로 조회할 key</td></tr><tr><td><code>spt</code></td><td>PintOS 정책 metadata</td><td>page table에 없는 “원래 이 page가 무엇인지”에 관한 정보</td></tr><tr><td><code>page</code></td><td>PintOS VM object</td><td>lazy/file/anon/swap 같은 의미를 지닌 page</td></tr><tr><td><code>page->va</code></td><td>PintOS VM object key</td><td>일반적으로 page-aligned user VA</td></tr></tbody></table></div>
+<p>Linux와 Windows에 빗대면 SPT는 실제 운영체제의 VMA/VAD와 page metadata를 학습용으로 축소한 장부에 가깝다. 실제 Linux나 Windows가 PintOS의 <code>struct supplemental_page_table</code>을 사용하는 것은 아니다.</p>
+<h3 id="7-vm_do_claim_page-page와-frame을-연결한다">7. vm_do_claim_page(): page와 frame을 연결한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#7-vm_do_claim_page-page와-frame을-연결한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS skeleton 파일:</p>
+<ul>
+<li><code>pintos/vm/vm.c</code></li>
+</ul>
+<p>현재 skeleton에서는 다음 구조를 확인할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_do_claim_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_get_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    frame->page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* TODO: Insert page table entry to map page's VA to frame's PA. */</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> swap_in</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page, frame->kva);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>의도된 완성 흐름은 다음 순서로 이어져야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame = vm_get_frame()</span></span>
+<span data-line><span>  -> frame->kva = palloc_get_page(PAL_USER) 또는 eviction 결과</span></span>
+<span data-line> </span>
+<span data-line><span>frame->page = page</span></span>
+<span data-line><span>page->frame = frame</span></span>
+<span data-line> </span>
+<span data-line><span>pml4_set_page(thread_current()->pml4, page->va, frame->kva, writable)</span></span>
+<span data-line><span>  -> pml4e_walk(..., create=1)</span></span>
+<span data-line><span>  -> *pte = vtop(frame->kva) | PTE_P | PTE_W? | PTE_U</span></span>
+<span data-line> </span>
+<span data-line><span>swap_in(page, frame->kva)</span></span>
+<span data-line><span>  -> lazy file load, anon zero/swap-in, mmap file load 등 page type별 내용 채우기</span></span></code></pre></figure>
+<p>변수 연결:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>변수</th><th>어디에 저장되는가</th><th>의미</th></tr></thead><tbody><tr><td><code>page</code></td><td>SPT 안의 VM object</td><td>이 VA가 어떤 종류의 page인지 설명하는 정보</td></tr><tr><td><code>page->va</code></td><td><code>struct page</code></td><td>user virtual page base</td></tr><tr><td><code>frame</code></td><td>frame table에 들어갈 object</td><td>실제 4KB 메모리 frame의 metadata</td></tr><tr><td><code>frame->kva</code></td><td><code>struct frame</code></td><td>PintOS kernel이 user frame을 바라보는 kernel VA</td></tr><tr><td><code>pml4</code></td><td><code>thread_current()->pml4</code></td><td>현재 주소 공간의 page table root</td></tr><tr><td><code>pte</code></td><td><code>pml4e_walk()</code> 반환값</td><td>최종 PTE 8바이트 칸</td></tr></tbody></table></div>
+<p><code>pml4_set_page()</code>에 전달되는 세 인자는 특히 혼동하기 쉽다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>upage = page->va       // 유저가 접근할 page-aligned VA</span></span>
+<span data-line><span>kpage = frame->kva     // 커널이 frame을 보는 KVA</span></span>
+<span data-line><span>rw    = page의 writable 정책</span></span></code></pre></figure>
+<p>PTE에 실제로 기록되는 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p>따라서 <code>frame->kva</code>가 PTE에 그대로 들어가는 것은 아니다. <code>vtop(frame->kva)</code>을 거쳐 guest physical frame address가 되고, 하위 bit에는 <code>PTE_P/PTE_W/PTE_U</code> 같은 flag가 결합된다.</p>
+<h3 id="8-현재-w11-저장소-상태-skeleton과-의도된-흐름을-구분한다">8. 현재 W11 저장소 상태: skeleton과 의도된 흐름을 구분한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#8-현재-w11-저장소-상태-skeleton과-의도된-흐름을-구분한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현재 W11 PintOS VM 코드는 아직 skeleton 상태다. 따라서 현재 구현과 구현 목표를 명확히 구분해야 한다.</p>
+<p>확인된 상태는 다음과 같다.</p>
+<ul>
+<li><code>struct supplemental_page_table</code>은 비어 있다.</li>
+<li><code>spt_find_page()</code>는 <code>page = NULL</code>을 반환한다.</li>
+<li><code>vm_get_frame()</code>은 TODO 뒤에 <code>ASSERT(frame != NULL)</code>가 있다.</li>
+<li><code>vm_try_handle_fault()</code>는 <code>page = NULL</code> 상태로 <code>vm_do_claim_page(page)</code>를 호출하는 skeleton이다.</li>
+<li><code>vm_do_claim_page()</code> 안에는 PTE 설치 TODO가 남아 있다.</li>
+</ul>
+<p>따라서 이 문서의 <code>spt_find_page -> vm_do_claim_page -> pml4_set_page -> swap_in</code> 흐름은 <strong>현재 완성된 동작이 아니라 구현해야 할 VM 경로</strong>다. 현재 코드에서 이미 안정적으로 확인할 수 있는 부분은 다음과 같다.</p>
+<ul>
+<li><code>pml4_create()</code></li>
+<li><code>process_activate()</code></li>
+<li><code>pml4_activate()</code></li>
+<li><code>lcr3()</code></li>
+<li><code>pml4e_walk()</code></li>
+<li><code>pml4_get_page()</code></li>
+<li><code>pml4_set_page()</code></li>
+<li><code>page_fault()</code> 진입과 <code>CR2/error_code</code> 해석</li>
+</ul>
+<h3 id="9-예외에서-복귀하면-같은-명령어를-다시-실행한다">9. 예외에서 복귀하면 같은 명령어를 다시 실행한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#9-예외에서-복귀하면-같은-명령어를-다시-실행한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>vm_try_handle_fault()</code>가 true를 반환하면 <code>page_fault()</code>는 그대로 <code>return</code>한다. 이후 interrupt return 경로가 <code>struct intr_frame</code>에 저장된 실행 상태로 복귀한다.</p>
+<p>여기서 중요한 점은 PintOS가 <code>f->rip</code>를 다음 명령어로 이동시키지 않는다는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault 발생 전:</span></span>
+<span data-line><span>  RIP = mov (%rax), %rbx 명령어 주소</span></span>
+<span data-line><span>  RAX = 0x8048123</span></span>
+<span data-line> </span>
+<span data-line><span>fault 처리 중:</span></span>
+<span data-line><span>  fault_addr = CR2 = 0x8048123</span></span>
+<span data-line><span>  PTE 설치</span></span>
+<span data-line> </span>
+<span data-line><span>handler return 후:</span></span>
+<span data-line><span>  RIP는 여전히 같은 mov 명령어 주소</span></span>
+<span data-line><span>  CPU가 같은 load를 다시 시도</span></span>
+<span data-line><span>  이번에는 PTE가 present라서 성공</span></span></code></pre></figure>
+<p>따라서 유저 프로그램에서는 “첫 접근 때 OS가 보이지 않게 page를 준비했고, 해당 명령어가 정상적으로 성공한 뒤 실행이 이어진 것”처럼 보인다.</p>
+<h3 id="pintos-코드-증거-1-cr2와-error_code-해석">PintOS 코드 증거 1: CR2와 error_code 해석<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-코드-증거-1-cr2와-error_code-해석" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/userprog/exception.c</code></li>
+<li><code>pintos/include/userprog/exception.h</code> (<code>PF_P/PF_W/PF_U</code>)</li>
+</ul>
+<p>핵심 부분만 보면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fault_addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">rcr2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_enable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">not_present </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_P) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">write       </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">user        </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_U) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>이 코드의 의미는 다음 두 가지다.</p>
+<ul>
+<li><strong>CR2는 fault가 발생한 VA</strong>이며, <code>rcr2()</code>로 읽는다.</li>
+<li><strong>error_code는 fault의 종류</strong>를 비트로 담는다.</li>
+</ul>
+<h3 id="pintos-코드-증거-2-복구를-시도할-기회를-주는-지점">PintOS 코드 증거 2: 복구를 시도할 기회를 주는 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-코드-증거-2-복구를-시도할-기회를-주는-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/userprog/exception.c</code></li>
+<li><code>pintos/vm/vm.c</code></li>
+</ul>
+<p>VM이 활성화된 프로젝트 3 이후에는 다음 코드가 복구 판단의 진입점이 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_try_handle_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(f, fault_addr, user, write, not_present))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><code>vm_try_handle_fault()</code>는 현재 코드에서 TODO skeleton이지만, fault를 복구할지 프로세스를 종료할지 결정하는 정책을 구현할 자리라는 점이 중요하다.</p>
+<h3 id="pintos-코드-증거-3-매핑-설치pml4_set_page">PintOS 코드 증거 3: 매핑 설치(pml4_set_page)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-코드-증거-3-매핑-설치pml4_set_page" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Page fault를 복구하려면 결국 “VA page → frame” 매핑을 page table에 설치해야 한다.</p>
+<p>관련 파일:</p>
+<ul>
+<li><code>pintos/threads/mmu.c</code></li>
+</ul>
+<p>핵심 부분은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p>이 코드는 유저 가상 페이지(upage)에 해당하는 page table entry에 프레임의 물리 주소와 권한 비트를 기록한다는 뜻이다.</p>
+<h2 id="qemu가-담당하는-범위">QEMU가 담당하는 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-담당하는-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 <code>page_fault()</code>는 guest OS 코드이며, QEMU는 guest의 syscall이나 VM 정책을 대신 처리하지 않는다.</p>
+<p>QEMU의 역할은 guest CPU가 메모리에 접근할 때 x86 MMU가 수행할 주소 변환·권한 검사·예외 발생을 재현하는 것이다.</p>
+<p>대표적인 단서는 다음 코드 흐름에서 확인할 수 있다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>x86_cpu_tlb_fill()</code>이 주소 변환을 요청한다.</li>
+<li><code>get_physical_address()</code>가 현재 guest <code>CR3</code>와 access type을 준비한다.</li>
+<li><code>mmu_translate()</code>가 page walk와 permission check를 수행한다.</li>
+<li>실패하면 <code>TranslateFault</code>에 <code>exception_index = EXCP0E_PAGE</code>, <code>error_code</code>, <code>cr2 = addr</code>를 담는다.</li>
+</ul>
+</li>
+</ul>
+<p>QEMU의 4단계 page walk에도 PintOS의 <code>PML4/PDPE/PDX/PTX</code>와 같은 bit 위치가 나타난다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>level 4: (addr >> 39) &amp; 0x1ff</span></span>
+<span data-line><span>level 3: (addr >> 30) &amp; 0x1ff</span></span>
+<span data-line><span>level 2: (addr >> 21) &amp; 0x1ff</span></span>
+<span data-line><span>level 1: (addr >> 12) &amp; 0x1ff</span></span></code></pre></figure>
+<p>변환에 성공하면 QEMU는 최종 guest physical address를 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">paddr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PG_ADDRESS_MASK </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ~</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(page_size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page_size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">));</span></span></code></pre></figure>
+<p>변환에 실패하면 QEMU는 <code>env->cr[2] = err.cr2</code>로 guest CR2를 갱신한 뒤 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 발생시킨다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">env</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">cr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> err.cr2;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">raise_exception_err_ra</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(env, err.exception_index, err.error_code, retaddr);</span></span></code></pre></figure>
+<p>따라서 PintOS가 <code>rcr2()</code>로 읽는 CR2 값은 QEMU 내부에서 guest CPU state인 <code>env->cr[2]</code>로 표현된다. 다만 이것이 QEMU가 PintOS의 VM 정책까지 처리한다는 뜻은 아니다. QEMU는 하드웨어의 효과를 재현하고, fault를 복구할지 프로세스를 종료할지는 PintOS가 결정한다.</p>
+<h2 id="linuxwindows-pintos-qemu의-차이">Linux·Windows, PintOS, QEMU의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linuxwindows-pintos-qemu의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>page fault의 의미</td><td>OS가 정책에 따라 복구 또는 종료를 결정한다</td><td>과제 구현 상태에 따라 달라지며 VM 전에는 대부분 종료한다</td><td>x86 하드웨어의 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 동작을 재현한다</td></tr><tr><td>fault 정보</td><td>CR2 + error code + 추가 비트들</td><td>CR2 + PF_P/PF_W/PF_U 중심으로 단순화한다</td><td>guest CPU state 안에 CR2와 error code를 유지한다</td></tr><tr><td>처리 주체</td><td>커널 VM subsystem</td><td><code>vm_try_handle_fault()</code>가 정책 구현 지점이다</td><td>별도 정책 없이 하드웨어 이벤트만 재현한다</td></tr><tr><td>주소 공간 metadata</td><td>VMA/VAD/page cache/working set 등</td><td><code>pml4</code> + SPT + <code>struct page</code> + <code>struct frame</code></td><td>guest 구조체의 정책적 의미를 알지 못한다</td></tr><tr><td>실제 상태</td><td>구현이 완료된 제품 커널</td><td>현재 W11 VM에는 skeleton이 많다</td><td>QEMU TCG/KVM 등 backend에 따라 하드웨어 효과를 재현한다</td></tr></tbody></table></div>
+<h2 id="page-fault-값-추적-예시">Page Fault 값 추적 예시<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-값-추적-예시" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>예를 들어 fault 주소가 <code>0x8048123</code>이라면 다음과 같이 나눠 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page size  = 0x1000 (4096)</span></span>
+<span data-line><span>fault VA   = 0x8048123</span></span>
+<span data-line><span>page base  = 0x8048000</span></span>
+<span data-line><span>offset     = 0x123</span></span></code></pre></figure>
+<p>Page fault 처리 코드는 일반적으로 <code>page base</code> 단위로 어떤 페이지가 비어 있거나 권한이 없는지 판단한다. 같은 페이지 안에서 정확히 어떤 바이트(<code>offset</code>)에 접근했는지는 보통 그다음에 고려할 문제다.</p>
+<h2 id="page-fault-복구를-추적하는-gdb-체크리스트">Page Fault 복구를 추적하는 GDB 체크리스트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-fault-복구를-추적하는-gdb-체크리스트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음은 page fault가 발생했을 때 확인할 최소 항목이다. 주소 공간 선택 → fault 정보 → page walk → PTE 설치 순서로 추적한다.</p>
+<h3 id="1-현재-주소-공간의-pml4가-cr3에-올라가는지-확인한다">1. 현재 주소 공간의 PML4가 CR3에 올라가는지 확인한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-현재-주소-공간의-pml4가-cr3에-올라가는지-확인한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b process_activate</span></span>
+<span data-line><span>b pml4_activate</span></span>
+<span data-line><span>commands pml4_activate</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  p/x pml4</span></span>
+<span data-line><span>  p/x vtop(pml4 ? pml4 : base_pml4)</span></span>
+<span data-line><span>  p/x rcr3()</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<ul>
+<li><code>process_activate(next)</code>의 <code>next->pml4</code>가 <code>pml4_activate()</code>의 <code>pml4</code>로 전달되는가?</li>
+<li><code>lcr3()</code> 이후의 <code>rcr3()</code> 값이 <code>vtop(pml4)</code>와 일치하는가?</li>
+</ul>
+<h3 id="2-fault-주소와-fault-종류를-확인한다">2. fault 주소와 fault 종류를 확인한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-fault-주소와-fault-종류를-확인한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b page_fault</span></span>
+<span data-line><span>commands page_fault</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  p/x rcr2()</span></span>
+<span data-line><span>  p/x f->rip</span></span>
+<span data-line><span>  p/x f->error_code</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<ul>
+<li><code>rcr2()</code> 값이 실제로 접근하려던 데이터 VA인가?</li>
+<li><code>f->rip</code>는 해당 접근 명령어의 주소인가?</li>
+<li><code>PF_P/PF_W/PF_U</code> 해석이 <code>not_present/write/user</code>와 일치하는가?</li>
+</ul>
+<h3 id="3-page-walk-helper에서-index를-확인한다">3. page walk helper에서 index를 확인한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-page-walk-helper에서-index를-확인한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b pml4e_walk</span></span>
+<span data-line><span>commands pml4e_walk</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  p/x va</span></span>
+<span data-line><span>  p/x ((uint64_t) va >> 39) &amp; 0x1ff</span></span>
+<span data-line><span>  p/x ((uint64_t) va >> 30) &amp; 0x1ff</span></span>
+<span data-line><span>  p/x ((uint64_t) va >> 21) &amp; 0x1ff</span></span>
+<span data-line><span>  p/x ((uint64_t) va >> 12) &amp; 0x1ff</span></span>
+<span data-line><span>  p/x ((uint64_t) va) &amp; 0xfff</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<ul>
+<li><code>fault_addr</code>와 같은 page base를 사용해 <code>pml4e_walk()</code>가 호출되는가?</li>
+<li><code>create=0</code> 조회 경로와 <code>create=1</code> 설치 경로를 구분할 수 있는가?</li>
+</ul>
+<h3 id="4-pte가-설치되는-순간을-확인한다">4. PTE가 설치되는 순간을 확인한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-pte가-설치되는-순간을-확인한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b pml4_set_page</span></span>
+<span data-line><span>commands pml4_set_page</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  p/x upage</span></span>
+<span data-line><span>  p/x kpage</span></span>
+<span data-line><span>  p rw</span></span>
+<span data-line><span>  next</span></span>
+<span data-line><span>  p/x pte</span></span>
+<span data-line><span>  p/x *pte</span></span>
+<span data-line><span>  p/x PTE_ADDR(*pte)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<ul>
+<li><code>upage</code>는 <code>pg_round_down(fault_addr)</code>와 같은가?</li>
+<li><code>kpage</code>는 <code>frame->kva</code>와 같은가?</li>
+<li><code>PTE_ADDR(*pte)</code>는 <code>vtop(kpage)</code>와 같은가?</li>
+<li>하위 bit에 <code>PTE_P</code>, <code>PTE_U</code>, 필요한 경우 <code>PTE_W</code>가 들어갔는가?</li>
+</ul>
+<h2 id="순서도-page-fault-전체-복구-흐름">순서도: Page Fault 전체 복구 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도-page-fault-전체-복구-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant U as User Code\n    participant CPU as CPU/MMU\n    participant PF as page_fault()\n    participant VM as vm_try_handle_fault()\n    participant SPT as spt_find_page()\n    participant CL as vm_do_claim_page()\n    participant FR as vm_get_frame()\n    participant PT as pml4_set_page()\n    participant SW as swap_in()\n\n    U->>CPU: mov (%rax), %rbx (VA=0x8048123)\n    CPU->>CPU: CR3 기준 page walk 시작\n    CPU->>CPU: PML4[0]→PDPT[0]→PD[64]→PT[72]\n    alt PTE present &amp; 권한 OK\n        CPU->>U: 정상 load 완료\n    else PTE not present / 권한 불일치\n        CPU->>PF: #PF 예외 (vector 14)\n        Note over CPU,PF: CR2=0x8048123, error_code=PF_P|PF_W|PF_U\n        PF->>PF: fault_addr = rcr2()\n        PF->>PF: not_present/write/user 해석\n        PF->>VM: vm_try_handle_fault(f, addr, user, write, not_present)\n        VM->>VM: is_user_vaddr(addr) 확인\n        VM->>SPT: spt_find_page(&amp;spt, pg_round_down(addr))\n        alt SPT에 page 있음\n            SPT-->>VM: page (UNINIT/ANON/FILE)\n            VM->>CL: vm_do_claim_page(page)\n            CL->>FR: vm_get_frame()\n            FR-->>CL: frame (kva=palloc 또는 eviction)\n            CL->>PT: pml4_set_page(pml4, va, kva, writable)\n            Note over PT: *pte = vtop(kva)|PTE_P|PTE_W?|PTE_U\n            CL->>SW: swap_in(page, kva)\n            Note over SW: lazy load / swap read / file read\n            SW-->>CL: true\n            CL-->>VM: true\n            VM-->>PF: true\n            PF->>PF: return (iretq로 복귀)\n            CPU->>U: 같은 mov 명령어 재실행 → 성공\n        else SPT에 없음 (stack growth 후보?)\n            VM->>VM: stack growth 판단\n            alt stack growth 조건 충족\n                VM->>CL: vm_do_claim_page(new_page)\n                CL-->>VM: true\n                VM-->>PF: true\n            else 불법 접근\n                VM-->>PF: false\n                PF->>PF: kill(f) → 프로세스 종료\n            end\n        end\n    end&quot;">sequenceDiagram
+    participant U as User Code
+    participant CPU as CPU/MMU
+    participant PF as page_fault()
+    participant VM as vm_try_handle_fault()
+    participant SPT as spt_find_page()
+    participant CL as vm_do_claim_page()
+    participant FR as vm_get_frame()
+    participant PT as pml4_set_page()
+    participant SW as swap_in()
+
+    U->>CPU: mov (%rax), %rbx (VA=0x8048123)
+    CPU->>CPU: CR3 기준 page walk 시작
+    CPU->>CPU: PML4[0]→PDPT[0]→PD[64]→PT[72]
+    alt PTE present &amp; 권한 OK
+        CPU->>U: 정상 load 완료
+    else PTE not present / 권한 불일치
+        CPU->>PF: #PF 예외 (vector 14)
+        Note over CPU,PF: CR2=0x8048123, error_code=PF_P|PF_W|PF_U
+        PF->>PF: fault_addr = rcr2()
+        PF->>PF: not_present/write/user 해석
+        PF->>VM: vm_try_handle_fault(f, addr, user, write, not_present)
+        VM->>VM: is_user_vaddr(addr) 확인
+        VM->>SPT: spt_find_page(&amp;spt, pg_round_down(addr))
+        alt SPT에 page 있음
+            SPT-->>VM: page (UNINIT/ANON/FILE)
+            VM->>CL: vm_do_claim_page(page)
+            CL->>FR: vm_get_frame()
+            FR-->>CL: frame (kva=palloc 또는 eviction)
+            CL->>PT: pml4_set_page(pml4, va, kva, writable)
+            Note over PT: *pte = vtop(kva)|PTE_P|PTE_W?|PTE_U
+            CL->>SW: swap_in(page, kva)
+            Note over SW: lazy load / swap read / file read
+            SW-->>CL: true
+            CL-->>VM: true
+            VM-->>PF: true
+            PF->>PF: return (iretq로 복귀)
+            CPU->>U: 같은 mov 명령어 재실행 → 성공
+        else SPT에 없음 (stack growth 후보?)
+            VM->>VM: stack growth 판단
+            alt stack growth 조건 충족
+                VM->>CL: vm_do_claim_page(new_page)
+                CL-->>VM: true
+                VM-->>PF: true
+            else 불법 접근
+                VM-->>PF: false
+                PF->>PF: kill(f) → 프로세스 종료
+            end
+        end
+    end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>개념이나 변수를 다시 확인할 때는 다음 표에서 파일과 함수 위치를 찾는다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>userprog/exception.c</code></td><td><code>exception_init()</code></td><td>vector 14를 <code>page_fault()</code>에 등록</td></tr><tr><td><code>userprog/exception.c</code></td><td><code>page_fault()</code></td><td>CR2·error_code 읽기, vm_try_handle_fault 호출</td></tr><tr><td><code>include/userprog/exception.h</code></td><td><code>PF_P</code>, <code>PF_W</code>, <code>PF_U</code></td><td>error_code 비트 마스크 정의</td></tr><tr><td><code>include/intrinsic.h</code></td><td><code>rcr2()</code></td><td>CR2 레지스터 읽기 inline asm</td></tr><tr><td><code>include/intrinsic.h</code></td><td><code>lcr3()</code></td><td>CR3 레지스터 쓰기 inline asm</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_activate()</code></td><td><code>lcr3(vtop(pml4))</code> 주소 공간 전환</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4e_walk()</code></td><td>4단계 page walk를 C로 재현</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_get_page()</code></td><td>VA→KVA 조회 (create=0)</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_set_page()</code></td><td>VA→frame PTE 설치 (create=1)</td></tr><tr><td><code>include/threads/pte.h</code></td><td><code>PML4()</code>, <code>PDPE()</code>, <code>PDX()</code>, <code>PTX()</code></td><td>VA에서 각 단계 index를 추출하는 매크로</td></tr><tr><td><code>include/threads/pte.h</code></td><td><code>PTE_ADDR()</code>, <code>PTE_P</code>, <code>PTE_W</code>, <code>PTE_U</code></td><td>PTE flag 비트 정의</td></tr><tr><td><code>userprog/process.c</code></td><td><code>process_activate()</code></td><td>context switch 때 pml4_activate 호출</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_try_handle_fault()</code></td><td>SPT lookup·stack growth·권한 판단 정책</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_do_claim_page()</code></td><td>frame 할당 + PTE 설치 + swap_in</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_get_frame()</code></td><td>palloc_get_page(PAL_USER) 또는 eviction</td></tr><tr><td>QEMU target/i386/tcg/system/excp_helper.c</td><td><code>x86_cpu_tlb_fill()</code></td><td>guest 메모리 접근 때 주소 변환 요청</td></tr><tr><td>QEMU target/i386/tcg/system/excp_helper.c</td><td><code>mmu_translate()</code></td><td>4단계 page walk + permission check</td></tr><tr><td>QEMU target/i386/tcg/system/excp_helper.c</td><td><code>get_physical_address()</code></td><td>CR3에서 page walk 시작</td></tr><tr><td>QEMU target/i386/cpu.h</td><td><code>env->cr[2]</code></td><td>guest CR2에 faulting VA 보관</td></tr><tr><td>QEMU target/i386/cpu.h</td><td><code>EXCP0E_PAGE</code></td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> exception vector 상수</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>CPU가 메모리를 읽어 MMU에 넘기는 것이 아니다. CPU 명령 실행 중 생성된 VA를 MMU/TLB 경로가 현재 <code>CR3</code>을 기준으로 번역한다.</li>
+<li>Linux와 Windows에서 page fault는 VM subsystem이 복구 또는 종료를 결정하는 정책 이벤트다.</li>
+<li>PintOS에서 주소 공간의 기준은 <code>thread_current()->pml4 -> pml4_activate() -> lcr3(vtop(pml4)) -> CR3</code> 흐름으로 설정된다.</li>
+<li>PintOS에서 page table 조회와 설치는 <code>pml4e_walk()</code>, <code>pml4_get_page()</code>, <code>pml4_set_page()</code>를 통해 관찰할 수 있다.</li>
+<li>PintOS의 fault 처리는 <code>page_fault()</code>가 <code>rcr2()</code>와 <code>f->error_code</code>를 읽는 순간 시작된다.</li>
+<li>PintOS VM이 구현해야 할 복구 목표는 <code>vm_try_handle_fault() -> spt_find_page() -> vm_do_claim_page() -> pml4_set_page() -> swap_in()</code> 흐름이다.</li>
+<li>현재 W11 VM 코드는 skeleton 상태이므로 SPT lookup, frame allocation, PTE 설치, lazy load 정책을 구현해야 한다.</li>
+<li>QEMU는 PintOS의 정책을 알지 못하며, guest x86 MMU의 page walk와 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 전달 효과만 재현한다.</li>
+</ul>
+<h2 id="다음으로-볼-문서">다음으로 볼 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#다음으로-볼-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>학습 목적에 따라 다음 순서로 이어서 읽을 수 있다.</p>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a>
+<ul>
+<li>주소 변환의 큰 그림과 VA/page/frame/offset의 관계</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">x86 64 page table walk</a>
+<ul>
+<li><code>PML4/PDPE/PDX/PTX</code> index를 직접 계산하는 방법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB와 CR3</a>
+<ul>
+<li>현재 주소 공간의 기준인 <code>CR3</code>가 바뀌는 시점</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">Page Fault Error Code</a>
+<ul>
+<li><code>CR2</code>와 <code>PF_P/PF_W/PF_U</code>로 fault 종류를 분류하는 방법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-gdb-cr2-spt-lab">Page Fault GDB 관찰</a>
+<ul>
+<li>GDB에서 <code>CR2</code>, <code>f->rip</code>, SPT page key, frame metadata를 한 화면에서 맞춰 보는 방법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal internal-link alias" data-slug="wiki/os/vm-try-handle-fault-decision-trace">vm try handle fault()</a>
+<ul>
+<li><code>vm_try_handle_fault()</code>가 SPT, stack growth, protection fault로 분기하는 과정</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page()</a>
+<ul>
+<li><code>page->frame</code>, <code>frame->page</code>, <code>pml4_set_page()</code>가 연결되는 claim 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">Page Fault 명령어 재실행</a>
+<ul>
+<li>fault를 복구한 뒤 같은 명령어를 다시 실행하는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">스택 성장 Page Fault</a>
+<ul>
+<li><code>CR2</code>와 유저 <code>RSP</code>를 바탕으로 스택 성장 fault를 복구할지 판단하는 기준</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT와 PML4</a>
+<ul>
+<li>Page table만으로 설명할 수 없는 fault 처리 의미를 보관하는 장부</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">Frame Eviction Trace</a>
+<ul>
+<li>fault를 복구해야 하지만 빈 frame이 없을 때 이어지는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li>file-backed fault를 파일 offset과 frame에 연결하는 흐름</li>
+</ul>
+</li>
+<li>바이트 버퍼와 캐스팅 실험: 같은 바이트를 타입에 따라 해석하는 감각</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/cpu-register-execution" class="internal">CPU 레지스터와 명령어 실행</a></li><li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal">file-backed page metadata에는 무엇을 저장해야 하나</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/intr-handler-dispatch" class="internal">intr_handler() — 인터럽트 디스패치</a></li><li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal">Lazy Loading Segment 흐름</a></li><li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal">mmap file-backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li><li><a href="../../wiki/os/mmap-invalid-argument-matrix-lab" class="internal">mmap 실패 조건은 어떤 순서로 검사해야 하나</a></li><li><a href="../../wiki/os/mmap-syscall-handler-trace" class="internal">mmap 시스템콜 핸들러 흐름 (Mmap Syscall Handler Trace)</a></li><li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal">페이지 폴트 error code</a></li><li><a href="../../wiki/os/page-fault-gdb-cr2-spt-lab" class="internal">Page Fault GDB에서 CR2와 SPT를 한 화면에 맞춰 보기</a></li><li><a href="../../wiki/os/page-fault-handling" class="internal">페이지 폴트</a></li><li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/pintos-vm-structure-flow" class="internal">PintOS VM 구조와 흐름</a></li><li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal">스택 성장 페이지 폴트는 언제 살려야 하나</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/swap-lab" class="internal">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></li><li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal">vm_try_handle_fault 판단 흐름 Trace</a></li><li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal">x86-64 페이지 테이블 워크</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-553" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#cpu-메모리-접근에서-page-fault-복구까지의-trace" data-for="cpu-메모리-접근에서-page-fault-복구까지의-trace">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li><li class="depth-1"><a href="#page-fault-복구-키워드" data-for="page-fault-복구-키워드">Page Fault 복구 키워드</a></li><li class="depth-1"><a href="#먼저-이해할-질문" data-for="먼저-이해할-질문">먼저 이해할 질문</a></li><li class="depth-1"><a href="#page-fault-복구가-헷갈리는-이유" data-for="page-fault-복구가-헷갈리는-이유">Page Fault 복구가 헷갈리는 이유</a></li><li class="depth-1"><a href="#기준을-먼저-분리하기" data-for="기준을-먼저-분리하기">기준을 먼저 분리하기</a></li><li class="depth-1"><a href="#page-fault-발생-시-남는-상태" data-for="page-fault-발생-시-남는-상태">Page Fault 발생 시 남는 상태</a></li><li class="depth-1"><a href="#전체-흐름-미리-보기" data-for="전체-흐름-미리-보기">전체 흐름 미리 보기</a></li><li class="depth-1"><a href="#같은-pf가-서로-다른-결말로-이어지는-예" data-for="같은-pf가-서로-다른-결말로-이어지는-예">같은 pf가 서로 다른 결말로 이어지는 예</a></li><li class="depth-2"><a href="#a-복구-가능-스택이-아래로-성장해야-하는-순간" data-for="a-복구-가능-스택이-아래로-성장해야-하는-순간">A) 복구 가능: 스택이 아래로 성장해야 하는 순간</a></li><li class="depth-2"><a href="#b-복구-불가-잘못된-포인터-접근" data-for="b-복구-불가-잘못된-포인터-접근">B) 복구 불가: 잘못된 포인터 접근</a></li><li class="depth-1"><a href="#실제-운영체제의-판단" data-for="실제-운영체제의-판단">실제 운영체제의 판단</a></li><li class="depth-1"><a href="#pintos에서-보는-복구-경로" data-for="pintos에서-보는-복구-경로">PintOS에서 보는 복구 경로</a></li><li class="depth-1"><a href="#전체-변수-흐름-유저-명령어-하나가-메모리를-읽는-과정" data-for="전체-변수-흐름-유저-명령어-하나가-메모리를-읽는-과정">전체 변수 흐름: 유저 명령어 하나가 메모리를 읽는 과정</a></li><li class="depth-2"><a href="#0-실행할-주소-공간을-먼저-선택한다" data-for="0-실행할-주소-공간을-먼저-선택한다">0. 실행할 주소 공간을 먼저 선택한다</a></li><li class="depth-2"><a href="#1-cpummu-load-주소로-page-walk를-수행한다" data-for="1-cpummu-load-주소로-page-walk를-수행한다">1. CPU/MMU: load 주소로 page walk를 수행한다</a></li><li class="depth-2"><a href="#2-pintos-c-코드-pml4e_walk의-역할" data-for="2-pintos-c-코드-pml4e_walk의-역할">2. PintOS C 코드: pml4e_walk()의 역할</a></li><li class="depth-2"><a href="#3-pte가-이미-present인-경우-실제-주소를-만든다" data-for="3-pte가-이미-present인-경우-실제-주소를-만든다">3. PTE가 이미 present인 경우: 실제 주소를 만든다</a></li><li class="depth-2"><a href="#4-pte가-없거나-권한이-맞지-않는-경우-pf를-발생시킨다" data-for="4-pte가-없거나-권한이-맞지-않는-경우-pf를-발생시킨다">4. PTE가 없거나 권한이 맞지 않는 경우: pf를 발생시킨다</a></li><li class="depth-2"><a href="#5-page_fault-cpu의-힌트를-pintos-변수로-옮긴다" data-for="5-page_fault-cpu의-힌트를-pintos-변수로-옮긴다">5. page_fault(): CPU의 힌트를 PintOS 변수로 옮긴다</a></li><li class="depth-2"><a href="#6-vm이-활성화된-경우-vm_try_handle_fault가-복구-가능성을-판단한다" data-for="6-vm이-활성화된-경우-vm_try_handle_fault가-복구-가능성을-판단한다">6. VM이 활성화된 경우: vm_try_handle_fault()가 복구 가능성을 판단한다</a></li><li class="depth-2"><a href="#7-vm_do_claim_page-page와-frame을-연결한다" data-for="7-vm_do_claim_page-page와-frame을-연결한다">7. vm_do_claim_page(): page와 frame을 연결한다</a></li><li class="depth-2"><a href="#8-현재-w11-저장소-상태-skeleton과-의도된-흐름을-구분한다" data-for="8-현재-w11-저장소-상태-skeleton과-의도된-흐름을-구분한다">8. 현재 W11 저장소 상태: skeleton과 의도된 흐름을 구분한다</a></li><li class="depth-2"><a href="#9-예외에서-복귀하면-같은-명령어를-다시-실행한다" data-for="9-예외에서-복귀하면-같은-명령어를-다시-실행한다">9. 예외에서 복귀하면 같은 명령어를 다시 실행한다</a></li><li class="depth-2"><a href="#pintos-코드-증거-1-cr2와-error_code-해석" data-for="pintos-코드-증거-1-cr2와-error_code-해석">PintOS 코드 증거 1: CR2와 error_code 해석</a></li><li class="depth-2"><a href="#pintos-코드-증거-2-복구를-시도할-기회를-주는-지점" data-for="pintos-코드-증거-2-복구를-시도할-기회를-주는-지점">PintOS 코드 증거 2: 복구를 시도할 기회를 주는 지점</a></li><li class="depth-2"><a href="#pintos-코드-증거-3-매핑-설치pml4_set_page" data-for="pintos-코드-증거-3-매핑-설치pml4_set_page">PintOS 코드 증거 3: 매핑 설치(pml4_set_page)</a></li><li class="depth-1"><a href="#qemu가-담당하는-범위" data-for="qemu가-담당하는-범위">QEMU가 담당하는 범위</a></li><li class="depth-1"><a href="#linuxwindows-pintos-qemu의-차이" data-for="linuxwindows-pintos-qemu의-차이">Linux·Windows, PintOS, QEMU의 차이</a></li><li class="depth-1"><a href="#page-fault-값-추적-예시" data-for="page-fault-값-추적-예시">Page Fault 값 추적 예시</a></li><li class="depth-1"><a href="#page-fault-복구를-추적하는-gdb-체크리스트" data-for="page-fault-복구를-추적하는-gdb-체크리스트">Page Fault 복구를 추적하는 GDB 체크리스트</a></li><li class="depth-2"><a href="#1-현재-주소-공간의-pml4가-cr3에-올라가는지-확인한다" data-for="1-현재-주소-공간의-pml4가-cr3에-올라가는지-확인한다">1. 현재 주소 공간의 PML4가 CR3에 올라가는지 확인한다</a></li><li class="depth-2"><a href="#2-fault-주소와-fault-종류를-확인한다" data-for="2-fault-주소와-fault-종류를-확인한다">2. fault 주소와 fault 종류를 확인한다</a></li><li class="depth-2"><a href="#3-page-walk-helper에서-index를-확인한다" data-for="3-page-walk-helper에서-index를-확인한다">3. page walk helper에서 index를 확인한다</a></li><li class="depth-2"><a href="#4-pte가-설치되는-순간을-확인한다" data-for="4-pte가-설치되는-순간을-확인한다">4. PTE가 설치되는 순간을 확인한다</a></li><li class="depth-1"><a href="#순서도-page-fault-전체-복구-흐름" data-for="순서도-page-fault-전체-복구-흐름">순서도: Page Fault 전체 복구 흐름</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#다음으로-볼-문서" data-for="다음으로-볼-문서">다음으로 볼 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

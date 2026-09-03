@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Linux/Windows 실제 운영체제 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Linux/Windows 실제 운영체제 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Linux/Windows 실제 운영체제 · 최우녕"/><meta name="twitter:description" content="교육용 PintOS와 달리 멀티코어 확장성·보안 격리를 갖춘 프로덕션 OS Linux·Windows의 위치."/><meta property="og:description" content="교육용 PintOS와 달리 멀티코어 확장성·보안 격리를 갖춘 프로덕션 OS Linux·Windows의 위치."/><meta property="og:image:alt" content="교육용 PintOS와 달리 멀티코어 확장성·보안 격리를 갖춘 프로덕션 OS Linux·Windows의 위치."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/linux-windows-real-os"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/linux-windows-real-os"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="교육용 PintOS와 달리 멀티코어 확장성·보안 격리를 갖춘 프로덕션 OS Linux·Windows의 위치."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/linux-windows-real-os" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-518" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-518" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Linux/Windows 실제 운영체제</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="linuxwindows-실제-운영체제">Linux/Windows 실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linuxwindows-실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 PintOS의 교육용 개념이 Linux와 Windows의 구조·서브시스템으로 확장되는 방식을 설명하고 비교하는 개념적 개요다. 표에 제시된 구조체 크기, 한도, 시간·비용 등의 수치와 코드 좌표 및 동작 세부는 특정 버전의 실제 코드, 설정, 실행 기록이나 성능 측정으로 검증한 결과가 아니므로 적용 시 별도 확인이 필요하다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: 교육용 PintOS와 달리 멀티코어 확장성·보안 격리를 갖춘 프로덕션 OS Linux·Windows의 위치.</p>
+</blockquote>
+<h2 id="linuxwindows-실제-운영체제-구조">Linux/Windows 실제 운영체제 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linuxwindows-실제-운영체제-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows는 수십 년간 발전해 온 프로덕션 운영체제다. PintOS가 “OS가 해야 하는 일”을 가르치기 위해 핵심만 추린 교육용 OS라면, Linux/Windows는 그 핵심 위에 <strong>멀티코어 확장성, 보안 격리, 장치 다양성, ABI 호환성, 성능 최적화</strong>를 수십 겹 쌓아 올린 실전 시스템이다. PintOS에서 배운 개념이 실제 OS에서 어떤 형태로 확장되는지 이해하면, 학습한 지식을 현실에 연결할 수 있다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="아키텍처-비교">아키텍처 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#아키텍처-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>계층</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>커널 구조</td><td>Monolithic (모듈 로딩 가능)</td><td>Hybrid (NT kernel + 서브시스템)</td></tr><tr><td>Syscall 진입</td><td><code>syscall</code> instruction → LSTAR MSR</td><td><code>syscall</code> / <code>int 0x2E</code> → SSDT</td></tr><tr><td>프로세스 표현</td><td><code>task_struct</code> (~6KB)</td><td><code>EPROCESS</code> + <code>ETHREAD</code></td></tr><tr><td>스케줄러</td><td>CFS (Completely Fair Scheduler)</td><td>Windows Scheduler (priority + quantum)</td></tr><tr><td>메모리 관리</td><td><code>mm_struct</code> + VMA + page cache</td><td>VAD (Virtual Address Descriptor) tree</td></tr><tr><td>파일 시스템</td><td>VFS layer + ext4/btrfs/xfs</td><td>IFS + NTFS/ReFS</td></tr><tr><td>드라이버 모델</td><td>loadable kernel module (.ko)</td><td>WDM/WDF driver (.sys)</td></tr></tbody></table></div>
+<h3 id="linux-핵심-서브시스템">Linux 핵심 서브시스템<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-핵심-서브시스템" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Linux 핵심 서브시스템 계층\nflowchart TD\n  user[\&quot;User Space&lt;br/>libc -&amp;gt; syscall wrapper -&amp;gt; syscall instr.\&quot;]\n  syscall[\&quot;System Call Interface&lt;br/>LSTAR -&amp;gt; entry_64.S\&quot;]\n  process[\&quot;Process Mgmt&lt;br/>task_struct&lt;br/>scheduler&lt;br/>signal\&quot;]\n  memory[\&quot;Memory Mgmt&lt;br/>mm_struct&lt;br/>VMA&lt;br/>page cache\&quot;]\n  vfs[\&quot;VFS/FS&lt;br/>inode&lt;br/>dentry&lt;br/>file\&quot;]\n  drivers[\&quot;Device Drivers / Block Layer\&quot;]\n  hardware[\&quot;Hardware&lt;br/>via MMIO/PIO\&quot;]\n  user --> syscall\n  syscall --> process\n  syscall --> memory\n  syscall --> vfs\n  process --> drivers\n  memory --> drivers\n  vfs --> drivers\n  drivers --> hardware&quot;">%% Linux 핵심 서브시스템 계층
+flowchart TD
+  user[&quot;User Space&lt;br/>libc -&amp;gt; syscall wrapper -&amp;gt; syscall instr.&quot;]
+  syscall[&quot;System Call Interface&lt;br/>LSTAR -&amp;gt; entry_64.S&quot;]
+  process[&quot;Process Mgmt&lt;br/>task_struct&lt;br/>scheduler&lt;br/>signal&quot;]
+  memory[&quot;Memory Mgmt&lt;br/>mm_struct&lt;br/>VMA&lt;br/>page cache&quot;]
+  vfs[&quot;VFS/FS&lt;br/>inode&lt;br/>dentry&lt;br/>file&quot;]
+  drivers[&quot;Device Drivers / Block Layer&quot;]
+  hardware[&quot;Hardware&lt;br/>via MMIO/PIO&quot;]
+  user --> syscall
+  syscall --> process
+  syscall --> memory
+  syscall --> vfs
+  process --> drivers
+  memory --> drivers
+  vfs --> drivers
+  drivers --> hardware
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>핵심 차이 (vs PintOS):</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>OS 기능</th><th>PintOS</th><th>Linux</th></tr></thead><tbody><tr><td>CPU 수</td><td>1 (단일 CPU)</td><td>N (percpu run queue, RCU, spinlock)</td></tr><tr><td>스케줄러</td><td>priority round-robin</td><td>CFS (vruntime 기반 red-black tree)</td></tr><tr><td>메모리</td><td>flat palloc pool</td><td>NUMA-aware buddy allocator + slab</td></tr><tr><td>Page table</td><td>4-level (PML4) 단순 매핑</td><td>4/5-level + THP + KPTI + meltdown 완화</td></tr><tr><td>파일 시스템</td><td>단순 inode/block (교육용)</td><td>VFS + 다중 FS + journal + page cache</td></tr><tr><td>동기화</td><td>intr_disable()</td><td>spinlock, mutex, rwlock, RCU, futex</td></tr><tr><td>프로세스 상태</td><td>RUNNING/READY/BLOCKED/DYING</td><td>TASK_RUNNING/INTERRUPTIBLE/UNINTERRUPTIBLE/STOPPED/ZOMBIE</td></tr><tr><td>fork</td><td>SPT copy + COW (간략)</td><td>copy_process() + namespace + cgroup</td></tr></tbody></table></div>
+<h3 id="windows-핵심-서브시스템">Windows 핵심 서브시스템<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#windows-핵심-서브시스템" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Windows 핵심 서브시스템 계층\nflowchart TD\n  app[\&quot;Application / Subsystem&lt;br/>Win32 App / UWP App / Subsystem Process\&quot;]\n  syscall[\&quot;System Call Dispatch&lt;br/>ntdll.dll -&amp;gt; syscall (SSDT dispatch)\&quot;]\n  process[\&quot;Process Manager\&quot;]\n  memory[\&quot;Memory Manager\&quot;]\n  io[\&quot;I/O Manager\&quot;]\n  object[\&quot;Object Manager\&quot;]\n  kernel[\&quot;Kernel Layer&lt;br/>scheduling\&quot;]\n  hal[\&quot;HAL&lt;br/>Hardware Abstraction Layer\&quot;]\n  hardware[\&quot;Hardware\&quot;]\n  app --> syscall\n  syscall --> process\n  syscall --> memory\n  syscall --> io\n  syscall --> object\n  process --> kernel\n  memory --> kernel\n  io --> kernel\n  object --> kernel\n  kernel --> hal\n  hal --> hardware&quot;">%% Windows 핵심 서브시스템 계층
+flowchart TD
+  app[&quot;Application / Subsystem&lt;br/>Win32 App / UWP App / Subsystem Process&quot;]
+  syscall[&quot;System Call Dispatch&lt;br/>ntdll.dll -&amp;gt; syscall (SSDT dispatch)&quot;]
+  process[&quot;Process Manager&quot;]
+  memory[&quot;Memory Manager&quot;]
+  io[&quot;I/O Manager&quot;]
+  object[&quot;Object Manager&quot;]
+  kernel[&quot;Kernel Layer&lt;br/>scheduling&quot;]
+  hal[&quot;HAL&lt;br/>Hardware Abstraction Layer&quot;]
+  hardware[&quot;Hardware&quot;]
+  app --> syscall
+  syscall --> process
+  syscall --> memory
+  syscall --> io
+  syscall --> object
+  process --> kernel
+  memory --> kernel
+  io --> kernel
+  object --> kernel
+  kernel --> hal
+  hal --> hardware
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>Windows 고유 개념:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>개념</th><th>설명</th><th>PintOS 대응물</th></tr></thead><tbody><tr><td>Handle</td><td>커널 객체 참조 (fd의 일반화)</td><td>fd_table index</td></tr><tr><td>Object Manager</td><td>모든 커널 자원을 통합 관리</td><td>없음 (fd와 thread만)</td></tr><tr><td>IRQL</td><td>인터럽트 우선순위 레벨</td><td>intr_disable() on/off</td></tr><tr><td>DPC</td><td>Deferred Procedure Call</td><td>PintOS의 intr_yield_on_return과 유사</td></tr><tr><td>VAD</td><td>Virtual Address Descriptor</td><td>SPT entry</td></tr><tr><td>Section Object</td><td>메모리 매핑 파일</td><td>mmap file-backed page</td></tr></tbody></table></div>
+<h3 id="메모리-관리-심화-비교">메모리 관리 심화 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#메모리-관리-심화-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% OS별 메모리 관리 흐름 비교\nflowchart LR\n  p1[\&quot;palloc_get_page(PAL_USER)\&quot;]\n  p2[\&quot;user pool&lt;br/>(bitmap)\&quot;]\n  p3[\&quot;frame table&lt;br/>(list)\&quot;]\n  p4[\&quot;clock algorithm&lt;br/>eviction\&quot;]\n  l1[\&quot;alloc_pages(GFP_USER)\&quot;]\n  l2[\&quot;buddy allocator&lt;br/>(per-zone)\&quot;]\n  l3[\&quot;slab/slub&lt;br/>(kmalloc)\&quot;]\n  l4[\&quot;kswapd +&lt;br/>direct reclaim\&quot;]\n  l5[\&quot;Active/Inactive LRU\&quot;]\n  w1[\&quot;MmAllocatePages\&quot;]\n  w2[\&quot;PFN database\&quot;]\n  w3[\&quot;pool allocator\&quot;]\n  w4[\&quot;balance set manager\&quot;]\n  w5[\&quot;working set trimming\&quot;]\n  p1 --> p2\n  p2 --> p3\n  p3 --> p4\n  l1 --> l2\n  l2 --> l3\n  l3 --> l4\n  l4 --> l5\n  w1 --> w2\n  w2 --> w3\n  w3 --> w4\n  w4 --> w5&quot;">%% OS별 메모리 관리 흐름 비교
+flowchart LR
+  p1[&quot;palloc_get_page(PAL_USER)&quot;]
+  p2[&quot;user pool&lt;br/>(bitmap)&quot;]
+  p3[&quot;frame table&lt;br/>(list)&quot;]
+  p4[&quot;clock algorithm&lt;br/>eviction&quot;]
+  l1[&quot;alloc_pages(GFP_USER)&quot;]
+  l2[&quot;buddy allocator&lt;br/>(per-zone)&quot;]
+  l3[&quot;slab/slub&lt;br/>(kmalloc)&quot;]
+  l4[&quot;kswapd +&lt;br/>direct reclaim&quot;]
+  l5[&quot;Active/Inactive LRU&quot;]
+  w1[&quot;MmAllocatePages&quot;]
+  w2[&quot;PFN database&quot;]
+  w3[&quot;pool allocator&quot;]
+  w4[&quot;balance set manager&quot;]
+  w5[&quot;working set trimming&quot;]
+  p1 --> p2
+  p2 --> p3
+  p3 --> p4
+  l1 --> l2
+  l2 --> l3
+  l3 --> l4
+  l4 --> l5
+  w1 --> w2
+  w2 --> w3
+  w3 --> w4
+  w4 --> w5
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>Linux buddy allocator vs PintOS palloc:</strong></p>
+<p>PintOS의 <code>palloc</code>은 bitmap 기반으로 단일 page 할당만 지원한다. Linux의 buddy allocator는 2^n 페이지 블록을 관리하여 연속 물리 메모리 할당이 가능하다. NUMA 시스템에서는 node별 zone별로 독립된 buddy를 운용한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>PintOS palloc</th><th>Linux buddy</th><th>Windows PFN DB</th></tr></thead><tbody><tr><td>할당 단위</td><td>1 page (고정)</td><td>2^0 ~ 2^10 pages</td><td>1 page</td></tr><tr><td>자료 구조</td><td>bitmap</td><td>free_area[MAX_ORDER]</td><td>PFN array</td></tr><tr><td>NUMA</td><td>미지원</td><td>node/zone별 분리</td><td>node별 분리</td></tr><tr><td>연속 할당</td><td>불가</td><td>가능 (order 지정)</td><td>MDL scatter/gather</td></tr></tbody></table></div>
+<p><strong>Linux CFS (Completely Fair Scheduler) vs PintOS priority:</strong></p>
+<p>PintOS는 priority 기반 round-robin으로 TIME_SLICE(4 tick = 40ms)마다 preemption한다. Linux CFS는 <strong>vruntime</strong>(virtual runtime)을 red-black tree에서 관리하여, vruntime이 가장 작은 task를 다음에 실행한다. nice 값이 vruntime 증가 속도의 가중치를 결정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS: ready_list → 우선순위 내림차순 정렬 → 맨 앞 thread 선택</span></span>
+<span data-line><span>Linux:  cfs_rq.rb_root → vruntime 최소 task 선택 (O(1) leftmost cache)</span></span>
+<span data-line><span>        vruntime += delta_exec * (NICE_0_LOAD / weight)</span></span>
+<span data-line><span>Windows: 32 priority queues → 최고 우선순위 비-empty 큐에서 dequeue</span></span></code></pre></figure>
+<h3 id="pintos-학습과의-연결">PintOS 학습과의 연결<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-학습과의-연결" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 배운 개념이 실제 OS에서 어떻게 확장되는지:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>PintOS 개념</th><th>Linux 확장</th><th>Windows 확장</th></tr></thead><tbody><tr><td><code>sema_down()</code> + intr_disable</td><td><code>down()</code> + raw_spinlock + percpu</td><td>KeWaitForSingleObject + IRQL</td></tr><tr><td><code>struct thread</code> 하나</td><td><code>task_struct</code> + cgroup + namespace</td><td>EPROCESS + ETHREAD + Job</td></tr><tr><td><code>palloc_get_page()</code></td><td>buddy allocator + slab + NUMA</td><td>Pool allocator + lookaside list</td></tr><tr><td><code>pml4_set_page()</code></td><td>4/5-level PT + THP + KPTI</td><td>VAD + prototype PTE + working set</td></tr><tr><td><code>process_fork()</code> → SPT copy</td><td><code>copy_process()</code> + COW + vfork</td><td>NtCreateProcess + section 매핑</td></tr><tr><td><code>syscall_handler()</code> switch</td><td>sys_call_table[] 배열 디스패치</td><td>SSDT (System Service Dispatch Table)</td></tr><tr><td><code>timer_interrupt()</code> → scheduling</td><td>tick/tickless + hrtimer → CFS</td><td>timer interrupt → quantum 소진 체크</td></tr></tbody></table></div>
+<h2 id="linuxwindows-실제-운영체제-값-추적">Linux/Windows 실제 운영체제 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linuxwindows-실제-운영체제-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>PintOS</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>task/thread 구조체 크기</td><td>~472B (struct thread)</td><td>~6KB (task_struct)</td><td>~2KB (ETHREAD)</td></tr><tr><td>최대 fd/handle 수</td><td>128 (고정 배열)</td><td>1,048,576 (per-process soft limit)</td><td>~16M (handle table)</td></tr><tr><td>Page table 레벨</td><td>4 (PML4)</td><td>4 또는 5 (LA57)</td><td>4</td></tr><tr><td>물리 메모리 지원</td><td>64MB (QEMU 기본)</td><td>수 TB (NUMA)</td><td>수 TB</td></tr><tr><td>Scheduler time slice</td><td>4 ticks (40ms @100Hz)</td><td>~4ms (CFS target latency / nr_running)</td><td>20ms (기본 quantum)</td></tr><tr><td>Syscall 번호 범위</td><td>~20개</td><td>~450개 (x86-64)</td><td>~470개 (win10)</td></tr><tr><td>컨텍스트 스위치 비용</td><td>~수 μs (QEMU)</td><td>~1-5 μs (bare metal)</td><td>~1-5 μs</td></tr></tbody></table></div>
+<h2 id="시각화--syscall-진입-비교">시각화 — Syscall 진입 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시각화--syscall-진입-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Syscall 진입 비교\nflowchart LR\n  p_user[\&quot;user code\&quot;]\n  p_handler[\&quot;syscall_handler&lt;br/>switch\&quot;]\n  p_entry[\&quot;p_entry\&quot;]\n  l_user[\&quot;user code\&quot;]\n  l_handler[\&quot;sys_call_table&lt;br/>배열 인덱싱\&quot;]\n  l_entry[\&quot;l_entry\&quot;]\n  w_user[\&quot;user code\&quot;]\n  w_entry[\&quot;KiSystemCall64\&quot;]\n  w_handler[\&quot;SSDT 테이블&lt;br/>인덱싱\&quot;]\n  p_user -->|syscall instr| p_entry\n  p_entry --> p_handler\n  l_user -->|syscall instr| l_entry\n  l_entry --> l_handler\n  w_user -->|syscall instr| w_entry\n  w_entry --> w_handler&quot;">%% Syscall 진입 비교
+flowchart LR
+  p_user[&quot;user code&quot;]
+  p_handler[&quot;syscall_handler&lt;br/>switch&quot;]
+  p_entry[&quot;p_entry&quot;]
+  l_user[&quot;user code&quot;]
+  l_handler[&quot;sys_call_table&lt;br/>배열 인덱싱&quot;]
+  l_entry[&quot;l_entry&quot;]
+  w_user[&quot;user code&quot;]
+  w_entry[&quot;KiSystemCall64&quot;]
+  w_handler[&quot;SSDT 테이블&lt;br/>인덱싱&quot;]
+  p_user -->|syscall instr| p_entry
+  p_entry --> p_handler
+  l_user -->|syscall instr| l_entry
+  l_entry --> l_handler
+  w_user -->|syscall instr| w_entry
+  w_entry --> w_handler
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>진입점 표기: PintOS는 <code>LSTAR → syscall_entry</code>, Linux x86-64는 <code>LSTAR → entry_SYSCALL_64</code>를 거쳐 syscall dispatch로 진입한다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일 / 위치</th><th>역할</th></tr></thead><tbody><tr><td>Linux: arch/x86/entry/entry_64.S</td><td>syscall 진입점</td></tr><tr><td>Linux: kernel/sched/fair.c</td><td>CFS 스케줄러</td></tr><tr><td>Linux: mm/memory.c</td><td>page fault 처리</td></tr><tr><td>Linux: include/linux/sched.h</td><td>task_struct 정의</td></tr><tr><td>Windows: ntoskrnl.exe!KiSystemCall64</td><td>syscall 진입점</td></tr><tr><td>Windows: ntoskrnl.exe!KiDispatchInterrupt</td><td>스케줄러 dispatch</td></tr><tr><td>PintOS: userprog/syscall-entry.S</td><td>syscall 진입</td></tr><tr><td>PintOS: threads/thread.c</td><td>스케줄러</td></tr></tbody></table></div>
+<h3 id="동기화-메커니즘-계층-비교">동기화 메커니즘 계층 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#동기화-메커니즘-계층-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>계층</th><th>PintOS</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>인터럽트 제어</td><td><code>intr_disable()</code> / <code>intr_enable()</code></td><td><code>local_irq_disable()</code> / <code>local_irq_enable()</code></td><td><code>cli</code> / <code>sti</code> (HAL)</td></tr><tr><td>스핀락</td><td>없음 (단일 CPU)</td><td><code>spin_lock()</code> / <code>spin_lock_irqsave()</code></td><td><code>KeAcquireSpinLock()</code></td></tr><tr><td>세마포어</td><td><code>sema_down()</code> (waiters list)</td><td><code>down()</code> + raw_spinlock</td><td><code>KeWaitForSingleObject()</code></td></tr><tr><td>뮤텍스/락</td><td><code>lock_acquire()</code> (sema 기반)</td><td><code>mutex_lock()</code> (optimistic spin + sleep)</td><td><code>ExAcquireFastMutex()</code></td></tr><tr><td>조건 변수</td><td><code>cond_wait()</code> (lock + waiters list)</td><td><code>wait_event()</code> / <code>wake_up()</code></td><td><code>KeWaitForSingleObject()</code> + event</td></tr><tr><td>RCU</td><td>없음</td><td><code>rcu_read_lock()</code> (read-side lock-free)</td><td>없음 (유사: SLIST)</td></tr></tbody></table></div>
+<p>PintOS는 단일 CPU이므로 <code>intr_disable()</code>만으로 critical section을 보호할 수 있다. 멀티코어에서는 다른 CPU가 동시에 같은 데이터에 접근하므로 spinlock이 필수다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal internal-link alias" data-slug="wiki/os/real-os-pintos-qemu-differences">실제 OS·PintOS·QEMU 차이</a></li>
+<li><a href="../../wiki/os/pintos-educational-os" class="internal internal-link alias" data-slug="wiki/os/pintos-educational-os">PintOS 교육용 OS</a></li>
+<li><a href="../../wiki/os/os-abstraction-protection-storage-responsibility" class="internal internal-link alias" data-slug="wiki/os/os-abstraction-protection-storage-responsibility">OS의 핵심 책임</a></li>
+<li><a href="../../wiki/os/kernel-user-protection" class="internal internal-link alias" data-slug="wiki/os/kernel-user-protection">커널 보호</a></li>
+<li><a href="../../wiki/os/syscall-handler-dispatch" class="internal internal-link alias" data-slug="wiki/os/syscall-handler-dispatch">syscall handler() 분기</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction</a></li>
+<li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal internal-link alias" data-slug="wiki/os/semaphore-lock-condition-knowledge">동기화 프리미티브</a></li>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">priority donation</a></li>
+<li><a href="../../wiki/os/process-fork-mechanism" class="internal internal-link alias" data-slug="wiki/os/process-fork-mechanism">fork 메커니즘</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/os-responsibility-boundary" class="internal">OS 책임 경계</a></li><li><a href="../../wiki/os/os-kernel-architecture" class="internal">OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel</a></li><li><a href="../../wiki/os/pintos-educational-os" class="internal">PintOS 교육용 OS</a></li><li><a href="../../wiki/os/qemu-hardware-emulator" class="internal">QEMU 하드웨어 에뮬레이터</a></li><li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal">실제 OS, PintOS, QEMU의 차이</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-516" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#linuxwindows-실제-운영체제" data-for="linuxwindows-실제-운영체제">Linux/Windows 실제 운영체제</a></li><li class="depth-1"><a href="#linuxwindows-실제-운영체제-구조" data-for="linuxwindows-실제-운영체제-구조">Linux/Windows 실제 운영체제 구조</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#아키텍처-비교" data-for="아키텍처-비교">아키텍처 비교</a></li><li class="depth-2"><a href="#linux-핵심-서브시스템" data-for="linux-핵심-서브시스템">Linux 핵심 서브시스템</a></li><li class="depth-2"><a href="#windows-핵심-서브시스템" data-for="windows-핵심-서브시스템">Windows 핵심 서브시스템</a></li><li class="depth-2"><a href="#메모리-관리-심화-비교" data-for="메모리-관리-심화-비교">메모리 관리 심화 비교</a></li><li class="depth-2"><a href="#pintos-학습과의-연결" data-for="pintos-학습과의-연결">PintOS 학습과의 연결</a></li><li class="depth-1"><a href="#linuxwindows-실제-운영체제-값-추적" data-for="linuxwindows-실제-운영체제-값-추적">Linux/Windows 실제 운영체제 값 추적</a></li><li class="depth-1"><a href="#시각화--syscall-진입-비교" data-for="시각화--syscall-진입-비교">시각화 — Syscall 진입 비교</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-2"><a href="#동기화-메커니즘-계층-비교" data-for="동기화-메커니즘-계층-비교">동기화 메커니즘 계층 비교</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

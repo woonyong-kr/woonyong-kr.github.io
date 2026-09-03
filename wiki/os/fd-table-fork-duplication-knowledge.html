@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>fork하면 fd table은 어떻게 복제되는가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="fork하면 fd table은 어떻게 복제되는가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="fork하면 fd table은 어떻게 복제되는가 · 최우녕"/><meta name="twitter:description" content="fork 시 부모가 열어 둔 fd를 자식이 어떻게 공유·복제하는지 정리."/><meta property="og:description" content="fork 시 부모가 열어 둔 fd를 자식이 어떻게 공유·복제하는지 정리."/><meta property="og:image:alt" content="fork 시 부모가 열어 둔 fd를 자식이 어떻게 공유·복제하는지 정리."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/fd-table-fork-duplication-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/fd-table-fork-duplication-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fork 시 부모가 열어 둔 fd를 자식이 어떻게 공유·복제하는지 정리."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/fd-table-fork-duplication-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-462" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-462" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>fork하면 fd table은 어떻게 복제되는가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="fork하면-fd-table은-어떻게-복제되는가">fork하면 fd table은 어떻게 복제되는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork하면-fd-table은-어떻게-복제되는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: fork 시 부모가 열어 둔 fd를 자식이 어떻게 공유·복제하는지 정리.</p>
+</blockquote>
+<h2 id="fd-table-fork-복제-쟁점">fd table fork 복제 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd-table-fork-복제-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">pid_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> pid </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pid </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (fd, child_buf, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">10</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (fd);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">} </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">else</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (pid);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (fd, parent_buf, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">10</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 코드를 보면 두 가지 질문이 생긴다.</p>
+<ul>
+<li>자식이 <code>close(fd)</code>하면 부모의 fd도 닫힐까?</li>
+<li>자식이 <code>read(fd, ...)</code>로 파일 위치를 움직이면 부모의 파일 위치도 같이 움직일까?</li>
+</ul>
+<p>두 질문에 답하려면 먼저 <a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">fd</a>의 의미를 구분해야 한다. fd는 “파일 그 자체”가 아니라 <strong>현재 프로세스의 fd table index</strong>다. 따라서 자식이 <code>close(fd)</code>해도 부모의 fd table entry가 직접 지워지지는 않는다. 반면 파일 위치가 함께 움직이는지는 부모와 자식의 fd entry가 어떤 열린 파일 상태를 가리키는지에 따라 달라진다.</p>
+<h2 id="fork가-fd-table을-복제하는-이유">fork가 fd table을 복제하는 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork가-fd-table을-복제하는-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>fork()</code>는 실행 흐름을 하나 더 만드는 시스템 콜이다. 하지만 실행 흐름만 복제해서는 기존 프로그램의 I/O 상태를 이어갈 수 없다.</p>
+<p>프로그램은 이미 열린 파일, 표준 입출력, 현재 작업 중인 파일 위치를 가진 채 실행되고 있을 수 있다. 자식 프로세스가 부모의 열린 파일을 전혀 보지 못하면 <code>fork()</code> 뒤 <code>exec()</code>로 CGI 프로그램을 실행하거나 표준 출력 리다이렉션을 물려주는 패턴이 깨진다.</p>
+<p>그렇다고 모든 커널 객체를 구분 없이 공유할 수도 없다. 파일 위치와 닫기, 쓰기 금지 같은 상태가 부모와 자식에게 어떻게 보이고 언제까지 유지되는지 정해야 한다. 따라서 <code>fork()</code>의 fd 복제는 값을 단순히 복사하는 작업이 아니라, <strong>프로세스별 fd table과 열린 파일 상태의 공유 범위 및 수명을 정하는 경계</strong>다.</p>
+<h2 id="fd를-따라가는-세-경계">fd를 따라가는 세 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fd를-따라가는-세-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>fd는 <code>fd number → process별 fd_table slot → 열린 파일 상태 → inode</code> 순서로 읽어야 한다. Linux의 일반적인 fork 모델에서는 부모와 자식의 entry가 같은 open file description을 참조하므로 offset과 file status flag를 공유한다.</p>
+<p>현재 local PintOS의 동작은 다르다. <code>file_duplicate()</code>가 같은 inode를 다시 열고 <code>pos</code> 값을 복사한 별도의 <code>struct file</code>을 만든다. 부모와 자식은 같은 fd number와 fork 순간의 offset을 갖지만, 그 뒤의 offset은 독립적으로 움직인다. 두 구조는 아래 <a href="#pintos-vs-linux-fd-%EA%B3%B5%EC%9C%A0-%EB%AA%A8%EB%8D%B8" class="internal internal-link alias">PintOS vs Linux fd 공유 모델</a>에서 비교한다.</p>
+<h2 id="파일-위치가-달라지는-장면">파일 위치가 달라지는 장면<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#파일-위치가-달라지는-장면" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>sample.txt</code>의 처음 20바이트를 부모가 읽은 뒤 <code>fork()</code>한다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd, buf, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">20</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">      // parent의 pos = 20</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">pid_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> pid </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>시점</th><th>parent <code>struct file A</code></th><th>child <code>struct file B</code></th><th>공유되는 것</th></tr></thead><tbody><tr><td>fork 직후</td><td><code>pos=20</code></td><td><code>pos=20</code></td><td>fd number와 <code>sample.txt</code> inode</td></tr><tr><td>child가 10 B read 후</td><td><code>pos=20</code></td><td><code>pos=30</code></td><td>inode와 파일 내용</td></tr></tbody></table></div>
+<p>이 PintOS 구현에서 child의 read는 별도 객체 B의 offset만 전진시킨다. parent의 객체 A는 20을 유지한다. 이 흐름은 PintOS 테스트 <code>fork-read</code>가 기대하는 동작과 맞는다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/fork-read.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/fork-read.ck</code></li>
+</ul>
+<h2 id="실제-운영체제와의-차이">실제 운영체제와의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제와의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서 <code>fork()</code>는 자식에게 부모 fd table의 복사본을 준다. 그러나 각 fd entry는 보통 같은 open file description을 가리킨다.</p>
+<p>부모와 자식이 같은 open file description A(offset 20)를 참조한다면 child가 10 B를 읽었을 때 A의 offset은 30이 된다. 이후 parent도 30부터 읽는다. 이 공유 규칙은 shell redirection, pipe, CGI 서버, <code>dup2()</code> 같은 패턴의 기반이 된다.</p>
+<p><code>execve()</code>는 주소 공간과 프로그램 이미지를 바꾸지만 fd는 기본적으로 유지한다. 단, close-on-exec 플래그가 켜진 fd는 <code>execve()</code> 경계에서 닫힌다.</p>
+<p>Windows는 Unix식 <code>fork()</code>를 기본 모델로 사용하지 않는다. <code>CreateProcess</code>를 호출할 때 어떤 handle을 상속할지 정하거나 <code>DuplicateHandle</code>로 handle을 명시적으로 복제한다. 따라서 Windows의 동작을 Linux처럼 “fork가 자동으로 fd table을 복제한다”라고 설명하면 맞지 않는다.</p>
+<p>두 운영체제에는 공통점도 있다. 부모와 자식 사이에 I/O 대상을 넘길 때 유저 프로그램은 커널 객체 주소를 직접 받지 않는다. 대신 OS가 관리하는 간접 식별자인 fd 또는 handle을 받는다.</p>
+<h2 id="pintos의-복제-과정">PintOS의 복제 과정<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-복제-과정" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 저장소의 PintOS에서 <code>fork</code> syscall은 <code>syscall_handler()</code> → <code>process_fork()</code> → <code>__do_fork()</code> → <code>duplicate_fd_table()</code> 순서로 내려간다. parent는 child tid를 반환받고 child는 0을 반환받는다. 상세 호출과 fd별 loop는 아래 <a href="#fork-fd-%EB%B3%B5%EC%A0%9C-%EC%A0%84%EC%B2%B4-%ED%9D%90%EB%A6%84" class="internal internal-link alias">fork fd 복제 전체 흐름</a> Mermaid에서 확인할 수 있다.</p>
+<p>관련 파일은 다음과 같다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/syscall.c</code>
+<ul>
+<li><code>SYS_FORK</code></li>
+<li><code>fork</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code>
+<ul>
+<li><code>process_fork</code></li>
+<li><code>__do_fork</code></li>
+<li><code>duplicate_fd_table</code></li>
+<li><code>process_exec</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/filesys/file.c</code>
+<ul>
+<li><code>file_duplicate</code></li>
+</ul>
+</li>
+</ul>
+<p><code>duplicate_fd_table()</code>의 구현은 다음과 같은 선택을 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>for fd = 2; fd &lt; parent->next_fd &amp;&amp; fd &lt; FD_MAX; fd++:</span></span>
+<span data-line><span>  if parent->fd_table[fd] == NULL:</span></span>
+<span data-line><span>    continue</span></span>
+<span data-line><span>  curr->fd_table[fd] = file_duplicate(parent->fd_table[fd])</span></span>
+<span data-line> </span>
+<span data-line><span>curr->next_fd = parent->next_fd</span></span></code></pre></figure>
+<p><code>file_duplicate()</code>는 부모의 <code>struct file *</code>를 자식의 table에 그대로 넣지 않는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>file_duplicate(file)</span></span>
+<span data-line><span>  -> inode_reopen(file->inode)</span></span>
+<span data-line><span>  -> file_open(...)</span></span>
+<span data-line><span>  -> nfile->pos = file->pos</span></span>
+<span data-line><span>  -> deny_write 상태도 필요하면 복사</span></span></code></pre></figure>
+<p>따라서 부모와 자식의 fd 번호가 같더라도 <code>struct file</code> 객체는 서로 다르다. 두 객체는 같은 inode를 보지만, 파일 위치 <code>pos</code>는 fork 순간의 값을 복사한 뒤 각각 움직인다.</p>
+<p><code>process_exec()</code>의 동작도 함께 볼 필요가 있다. 이 함수는 <code>process_cleanup()</code>으로 기존 주소 공간을 정리하고 새 ELF를 로드하지만 fd table은 닫지 않는다. 따라서 <code>fork()</code>로 만들어진 자식이 곧바로 <code>exec()</code>를 호출해도 fd table은 유지된다.</p>
+<p>PintOS 테스트 <code>multi-child-fd</code>와 <code>child-close</code>는 이 흐름을 확인한다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/multi-child-fd.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/child-close.c</code></li>
+</ul>
+<p>현재 구현에는 별도로 살펴볼 경계도 있다. 중간 fd를 닫아 <code>next_fd</code>가 낮아진 상태에서 더 큰 fd가 아직 열려 있다면 <code>duplicate_fd_table()</code>은 그 fd를 보지 못한다. 예를 들어 <code>fd 2, 3, 4</code>를 연 뒤 <code>fd 3</code>만 닫고 바로 <code>fork()</code>하면, 현재 코드에서는 fd 4가 자식에게 복제되지 않는다.</p>
+<h2 id="qemu가-담당하는-범위">QEMU가 담당하는 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu가-담당하는-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>fd_table[4]</code>가 무엇을 뜻하는지 해석하지 않는다.</p>
+<p>PintOS 커널이 guest memory 안의 <code>struct thread</code>와 <code>fd_table</code> 포인터 배열을 읽고 쓴다. QEMU는 그 메모리 접근과 CPU 명령 실행을 에뮬레이션한다.</p>
+<p>두 fd는 다음처럼 구분된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS guest fd</span></span>
+<span data-line><span>  - guest OS 내부 fd table index</span></span>
+<span data-line><span>  - syscall_handler와 process.c가 의미를 해석</span></span>
+<span data-line> </span>
+<span data-line><span>QEMU host fd</span></span>
+<span data-line><span>  - QEMU 프로세스가 host 파일, 디스크 이미지, socket 등을 열 때 쓰는 fd</span></span>
+<span data-line><span>  - guest fd와 같은 번호 체계가 아님</span></span></code></pre></figure>
+<p>파일 내용이 디스크까지 내려갈 때 QEMU의 장치 모델이 등장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PintOS file_read/file_write</span></span>
+<span data-line><span>  -> inode_read_at/inode_write_at</span></span>
+<span data-line><span>  -> disk_read/disk_write</span></span>
+<span data-line><span>  -> QEMU IDE device model</span></span>
+<span data-line><span>  -> QEMU BlockBackend</span></span>
+<span data-line><span>  -> host backing file</span></span></code></pre></figure>
+<p>따라서 <code>fork()</code>의 fd table 복제 정책은 QEMU가 아니라 PintOS가 정한다.</p>
+<h2 id="linux-windows-pintos-qemu-비교">Linux, Windows, PintOS, QEMU 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-windows-pintos-qemu-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td><code>fork()</code> 뒤 fd가 보이는가</td><td>Linux는 보통 보인다. Windows는 명시적 handle 상속/복제 모델</td><td><code>duplicate_fd_table()</code>로 보이게 만든다</td><td>guest fd 의미를 모름</td></tr><tr><td>열린 파일 상태 공유</td><td>Linux는 같은 open file description을 공유</td><td>새 <code>struct file</code>을 만들고 <code>pos</code>를 복사</td><td>해당 없음</td></tr><tr><td>자식 <code>close(fd)</code>의 효과</td><td>자식 fd table slot만 제거, 공유 객체 refcount 감소</td><td>자식의 별도 <code>struct file</code>을 닫음</td><td>guest memory 변화만 저장</td></tr><tr><td>파일 위치 <code>pos</code></td><td>Linux는 공유될 수 있음</td><td>fork 시점 값만 복사, 이후 독립</td><td>해당 없음</td></tr><tr><td><code>exec()</code> 뒤 fd</td><td>기본 유지, close-on-exec이면 닫힘</td><td><code>process_exec()</code>에서 fd table을 닫지 않으므로 유지</td><td>해당 없음</td></tr><tr><td>교육용 단순화</td><td>refcount, fd flags, CLOEXEC, VFS, pipe/socket 등 복잡</td><td>파일 중심, <code>fd_table</code> 한 페이지, <code>file_duplicate()</code> 중심</td><td>OS 정책 없음</td></tr></tbody></table></div>
+<p>특히 <code>pos</code>의 차이를 주의해야 한다. PintOS 테스트를 근거로 “fork 후 fd는 항상 독립적인 파일 위치를 가진다”고 일반화할 수는 없다. 파일 위치가 독립적인 것은 이 PintOS 구현의 선택이며, Linux의 일반적인 fork fd 공유 모델과 다르다.</p>
+<h2 id="코드에서-복제-흐름-따라가기">코드에서 복제 흐름 따라가기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드에서-복제-흐름-따라가기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-syscall-번호가-fork-흐름으로-들어간다">1) syscall 번호가 fork 흐름으로 들어간다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-syscall-번호가-fork-흐름으로-들어간다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/syscall.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">case SYS_FORK:</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">  f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">R.rax </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> char</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">R.rdi, f);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  break</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><code>RDI</code>에는 자식 이름 문자열 포인터가 들어간다. syscall 진입 시점의 <code>struct intr_frame *f</code>도 <code>process_fork()</code>까지 전달된다.</p>
+<h3 id="2-자식은-__do_fork에서-fd-table을-복제한다">2) 자식은 <code>__do_fork()</code>에서 fd table을 복제한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-자식은-__do_fork에서-fd-table을-복제한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심 순서:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>__do_fork()</span></span>
+<span data-line><span>  -> 부모 intr_frame 복사</span></span>
+<span data-line><span>  -> 부모 주소 공간 복사</span></span>
+<span data-line><span>  -> duplicate_fd_table(curr, parent)</span></span>
+<span data-line><span>  -> if_.R.rax = 0</span></span>
+<span data-line><span>  -> do_iret(&amp;if_)</span></span></code></pre></figure>
+<p>자식에서 <code>fork()</code> 반환값이 0인 이유도 이 순서에서 드러난다. 부모는 <code>process_fork()</code>의 반환값으로 child tid를 받는다. 자식은 복사한 <code>intr_frame</code>의 <code>RAX</code>를 0으로 바꾼 뒤 유저 모드로 돌아간다.</p>
+<h3 id="3-file_duplicate는-같은-포인터를-공유하지-않는다">3) <code>file_duplicate()</code>는 같은 포인터를 공유하지 않는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-file_duplicate는-같은-포인터를-공유하지-않는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/filesys/file.c</code></li>
+</ul>
+<p>핵심 의미:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>nfile = file_open(inode_reopen(file->inode))</span></span>
+<span data-line><span>nfile->pos = file->pos</span></span></code></pre></figure>
+<p>두 줄은 각각 다음을 뜻한다.</p>
+<ul>
+<li><code>inode_reopen</code>: 같은 파일 내용을 가리키는 inode 참조를 다시 얻는다.</li>
+<li><code>nfile->pos = file->pos</code>: fork 순간의 파일 위치 값을 복사한다.</li>
+</ul>
+<p>하지만 <code>nfile</code>은 새 <code>struct file</code>이다. 이후 <code>file_read()</code>가 <code>nfile->pos</code>를 바꿔도 부모의 <code>file->pos</code>는 함께 바뀌지 않는다.</p>
+<h3 id="4-next_fd가-복제-범위를-제한한다">4) <code>next_fd</code>가 복제 범위를 제한한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-next_fd가-복제-범위를-제한한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현재 <code>duplicate_fd_table()</code>은 <code>fd &lt; parent->next_fd</code> 범위만 순회한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>for fd = 2; fd &lt; parent->next_fd &amp;&amp; fd &lt; FD_MAX; fd++:</span></span>
+<span data-line><span>  ...</span></span></code></pre></figure>
+<p>그런데 <code>process_close_file()</code>은 닫은 fd가 <code>next_fd</code>보다 작으면 <code>next_fd</code>를 그 fd로 내린다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>close(3)</span></span>
+<span data-line><span>  -> fd_table[3] = NULL</span></span>
+<span data-line><span>  -> next_fd = 3</span></span></code></pre></figure>
+<p>두 동작을 함께 보면 다음 질문이 생긴다.</p>
+<blockquote>
+<p>fd 4가 아직 열려 있는데 <code>next_fd</code>가 3으로 내려가면, <code>fork()</code>는 fd 4를 복제할까?</p>
+</blockquote>
+<p>현재 코드만 보면 답은 “복제하지 않는다”다. <code>duplicate_fd_table()</code>의 loop 조건 때문에 fd 4가 복제 범위 밖에 놓이기 때문이다. 이 지점은 fd allocation hint와 fd table 복제 범위를 같은 변수로 관리할 때 생기는 위험을 보여 준다.</p>
+<h2 id="값으로-fd-table-추적하기">값으로 fd table 추적하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#값으로-fd-table-추적하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-fd-table-한-페이지의-크기">1) fd table 한 페이지의 크기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-fd-table-한-페이지의-크기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 구현은 fd table을 4KB 페이지 하나로 잡는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PGSIZE = 4096</span></span>
+<span data-line><span>sizeof(struct file *) = 8</span></span>
+<span data-line> </span>
+<span data-line><span>FD_MAX = PGSIZE / sizeof(struct file *)</span></span>
+<span data-line><span>       = 4096 / 8 = 512  // 현재 local x86-64 build</span></span></code></pre></figure>
+<p>fd table base가 <code>0x80045000</code>이라고 가정하면 각 칸의 주소는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd_table[2] 주소 = 0x80045000 + 2 * 8 = 0x80045010</span></span>
+<span data-line><span>fd_table[3] 주소 = 0x80045000 + 3 * 8 = 0x80045018</span></span>
+<span data-line><span>fd_table[4] 주소 = 0x80045000 + 4 * 8 = 0x80045020</span></span></code></pre></figure>
+<h3 id="2-fork-후-file-객체와-pos">2) fork 후 file 객체와 pos<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-fork-후-file-객체와-pos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>fork 직전의 상태는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent fd_table[2] = 0x80041230</span></span>
+<span data-line><span>*(struct file *)0x80041230</span></span>
+<span data-line><span>  inode = 0x80039000</span></span>
+<span data-line><span>  pos   = 20</span></span></code></pre></figure>
+<p>fork 직후에는 부모와 자식의 fd entry가 서로 다른 <code>struct file</code>을 가리킨다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent fd_table[2] = 0x80041230</span></span>
+<span data-line><span>child  fd_table[2] = 0x80051000</span></span>
+<span data-line> </span>
+<span data-line><span>parent file.pos = 20</span></span>
+<span data-line><span>child  file.pos = 20</span></span>
+<span data-line><span>parent file.inode == child file.inode 또는 같은 inode 참조</span></span></code></pre></figure>
+<p>그 뒤 자식이 30바이트를 읽으면 자식의 위치만 바뀐다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>child  file.pos = 50</span></span>
+<span data-line><span>parent file.pos = 20</span></span></code></pre></figure>
+<p>이것이 PintOS의 <code>file_duplicate()</code> 방식이다.</p>
+<h3 id="3-next_fd-복제-범위-쟁점">3) <code>next_fd</code> 복제 범위 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-next_fd-복제-범위-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 순서로 fd를 열고 닫는 상황을 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // fd 2, next_fd = 3</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> b </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // fd 3, next_fd = 4</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> c </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // fd 4, next_fd = 5</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (b);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">                    // fd 3 비움, next_fd = 3</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+<p>fork 직전 부모의 상태는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent->next_fd    = 3</span></span>
+<span data-line><span>parent->fd_table[2] = file A</span></span>
+<span data-line><span>parent->fd_table[3] = NULL</span></span>
+<span data-line><span>parent->fd_table[4] = file C</span></span></code></pre></figure>
+<p>현재 <code>duplicate_fd_table()</code>의 loop는 다음 조건으로 돈다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>for fd = 2; fd &lt; parent->next_fd; fd++</span></span></code></pre></figure>
+<p>따라서 실제로 순회하는 범위는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd = 2만 순회</span></span>
+<span data-line><span>fd = 3은 fd &lt; 3 조건에서 중단</span></span>
+<span data-line><span>fd = 4는 보지도 않음</span></span></code></pre></figure>
+<p>이 구현에서는 fd 4가 자식에게 복제되지 않는다. 이 결론은 <code>process_close_file()</code>의 <code>next_fd</code> 갱신과 <code>duplicate_fd_table()</code>의 loop 조건을 함께 읽어서 얻은 결과다.</p>
+<h2 id="gdb로-확인할-지점">GDB로 확인할 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-확인할-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-fork-read-테스트로-pos-독립-여부-보기">1) fork-read 테스트로 <code>pos</code> 독립 여부 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-fork-read-테스트로-pos-독립-여부-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>테스트 파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/fork-read.c</code></li>
+</ul>
+<p>테스트에서 살펴볼 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>부모가 먼저 20바이트 읽음</span></span>
+<span data-line><span>자식이 fork 후 나머지를 읽음</span></span>
+<span data-line><span>부모가 wait 후 다시 나머지를 읽음</span></span>
+<span data-line><span>부모도 성공해야 함</span></span></code></pre></figure>
+<p>Linux처럼 같은 open file description의 offset을 공유한다면 자식이 나머지를 읽은 뒤 부모가 같은 위치에서 다시 나머지를 읽기 어렵다. 따라서 이 테스트는 PintOS의 <code>file_duplicate()</code> 방식과 연결해서 읽어야 한다.</p>
+<h3 id="2-gdb로-fd-table-복제-보기">2) GDB로 fd table 복제 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-gdb로-fd-table-복제-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>breakpoint:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b duplicate_fd_table</span></span>
+<span data-line><span>b file_duplicate</span></span>
+<span data-line><span>b process_close_file</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p parent->next_fd</span></span>
+<span data-line><span>p/x parent->fd_table</span></span>
+<span data-line><span>p/x parent->fd_table[2]</span></span>
+<span data-line><span>p/x parent->fd_table[3]</span></span>
+<span data-line><span>p/x parent->fd_table[4]</span></span></code></pre></figure>
+<p><code>file_duplicate()</code> 안에서는 부모 file과 새 file의 주소를 비교한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x file</span></span>
+<span data-line><span>n</span></span>
+<span data-line><span>p/x nfile</span></span>
+<span data-line><span>p file->pos</span></span>
+<span data-line><span>p nfile->pos</span></span></code></pre></figure>
+<p>주소가 다르고 <code>pos</code>가 같다면 “같은 file 객체 공유”가 아니라 “상태를 복사한 새 file 객체”라는 뜻이다.</p>
+<h3 id="3-next_fd-복제-범위-확인">3) <code>next_fd</code> 복제 범위 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-next_fd-복제-범위-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 테스트 상황을 만들고 <code>duplicate_fd_table()</code>에서 멈춘다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> a </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> b </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> c </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (b);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">fork</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+<p>확인할 질문은 세 가지다.</p>
+<ul>
+<li><code>parent->next_fd</code>가 3으로 내려갔는가?</li>
+<li><code>parent->fd_table[4]</code>는 아직 NULL이 아닌가?</li>
+<li>자식의 <code>fd_table[4]</code>가 NULL로 남는가?</li>
+</ul>
+<p>현재 코드에서 예상되는 상태는 <code>parent->fd_table[4] != NULL</code>인데도 <code>child->fd_table[4] == NULL</code>인 경우다. 자식이 유저 변수 <code>c == 4</code>로 <code>read(c, ...)</code>를 호출하면 <code>process_get_file(4)</code>가 NULL을 반환하므로 read는 실패한다.</p>
+<p>이 질문은 <a href="../../wiki/os/fd-close-reuse-lab" class="internal internal-link alias" data-slug="wiki/os/fd-close-reuse-lab">reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간)</a>에서 남긴 “닫힌 fd 번호 재사용” 실험의 다음 단계다.</p>
+<h3 id="4-fork--exec-fd-유지-보기">4) fork + exec fd 유지 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-fork--exec-fd-유지-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>테스트 파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/multi-child-fd.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/tests/userprog/child-close.c</code></li>
+</ul>
+<p>다음 흐름을 따라가면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>parent open(&quot;sample.txt&quot;) -> handle</span></span>
+<span data-line><span>child fork()</span></span>
+<span data-line><span>child exec(&quot;child-close &lt;handle>&quot;)</span></span>
+<span data-line><span>exec된 child가 같은 handle 번호로 파일 내용을 읽음</span></span></code></pre></figure>
+<p>이 흐름은 <code>process_exec()</code>이 fd table을 닫지 않는다는 사실과 연결된다.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="fork-fd-복제-전체-흐름">fork fd 복제 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-fd-복제-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant P as 부모 Thread\n    participant S as syscall_handler\n    participant F as __do_fork()\n    participant D as duplicate_fd_table()\n    participant FD as file_duplicate()\n    participant C as 자식 Thread\n\n    P->>S: SYS_FORK (RAX=2)\n    S->>F: process_fork(name, f)\n    F->>F: 자식 thread 생성\n    F->>F: 부모 intr_frame 복사\n    F->>F: 부모 주소 공간 복사\n    F->>D: duplicate_fd_table(child, parent)\n\n    loop fd = 2 to parent->next_fd - 1\n        D->>D: parent->fd_table[fd] NULL?\n        alt NOT NULL\n            D->>FD: file_duplicate(parent_file)\n            FD->>FD: inode_reopen(file->inode)\n            FD->>FD: nfile = file_open(inode)\n            FD->>FD: nfile->pos = file->pos\n            FD-->>D: 새 struct file*\n            D->>D: child->fd_table[fd] = nfile\n        end\n    end\n\n    D->>D: child->next_fd = parent->next_fd\n    F->>F: child if_.R.rax = 0\n    F->>C: do_iret(&amp;if_) → 자식 실행\n    F-->>S: child tid 반환\n    S-->>P: RAX = child tid&quot;">sequenceDiagram
+    participant P as 부모 Thread
+    participant S as syscall_handler
+    participant F as __do_fork()
+    participant D as duplicate_fd_table()
+    participant FD as file_duplicate()
+    participant C as 자식 Thread
+
+    P->>S: SYS_FORK (RAX=2)
+    S->>F: process_fork(name, f)
+    F->>F: 자식 thread 생성
+    F->>F: 부모 intr_frame 복사
+    F->>F: 부모 주소 공간 복사
+    F->>D: duplicate_fd_table(child, parent)
+
+    loop fd = 2 to parent->next_fd - 1
+        D->>D: parent->fd_table[fd] NULL?
+        alt NOT NULL
+            D->>FD: file_duplicate(parent_file)
+            FD->>FD: inode_reopen(file->inode)
+            FD->>FD: nfile = file_open(inode)
+            FD->>FD: nfile->pos = file->pos
+            FD-->>D: 새 struct file*
+            D->>D: child->fd_table[fd] = nfile
+        end
+    end
+
+    D->>D: child->next_fd = parent->next_fd
+    F->>F: child if_.R.rax = 0
+    F->>C: do_iret(&amp;if_) → 자식 실행
+    F-->>S: child tid 반환
+    S-->>P: RAX = child tid
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="pintos-vs-linux-fd-공유-모델">PintOS vs Linux fd 공유 모델<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-vs-linux-fd-공유-모델" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    subgraph \&quot;PintOS: file_duplicate 모델\&quot;\n        P1[\&quot;부모 fd_table[2]\&quot;] --> FA[\&quot;struct file A&lt;br/>pos=20, inode=X\&quot;]\n        C1[\&quot;자식 fd_table[2]\&quot;] --> FB[\&quot;struct file B (새로 생성)&lt;br/>pos=20, inode=X\&quot;]\n        FA -.->|\&quot;같은 inode\&quot;| IX[\&quot;inode X&lt;br/>(sample.txt)\&quot;]\n        FB -.->|\&quot;같은 inode\&quot;| IX\n    end\n\n    subgraph \&quot;Linux: shared open file description\&quot;\n        P2[\&quot;부모 fd_table[2]\&quot;] --> OFD[\&quot;open file description&lt;br/>pos=20, refcount=2\&quot;]\n        C2[\&quot;자식 fd_table[2]\&quot;] --> OFD\n        OFD --> IY[\&quot;inode Y&lt;br/>(sample.txt)\&quot;]\n    end&quot;">flowchart TD
+    subgraph &quot;PintOS: file_duplicate 모델&quot;
+        P1[&quot;부모 fd_table[2]&quot;] --> FA[&quot;struct file A&lt;br/>pos=20, inode=X&quot;]
+        C1[&quot;자식 fd_table[2]&quot;] --> FB[&quot;struct file B (새로 생성)&lt;br/>pos=20, inode=X&quot;]
+        FA -.->|&quot;같은 inode&quot;| IX[&quot;inode X&lt;br/>(sample.txt)&quot;]
+        FB -.->|&quot;같은 inode&quot;| IX
+    end
+
+    subgraph &quot;Linux: shared open file description&quot;
+        P2[&quot;부모 fd_table[2]&quot;] --> OFD[&quot;open file description&lt;br/>pos=20, refcount=2&quot;]
+        C2[&quot;자식 fd_table[2]&quot;] --> OFD
+        OFD --> IY[&quot;inode Y&lt;br/>(sample.txt)&quot;]
+    end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="next_fd-복제-범위-문제">next_fd 복제 범위 문제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#next_fd-복제-범위-문제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    subgraph \&quot;부모 fd_table (close(3) 후)\&quot;\n        FD0[\&quot;[0] NULL (stdin)\&quot;]\n        FD1[\&quot;[1] NULL (stdout)\&quot;]\n        FD2[\&quot;[2] file A ✓\&quot;]\n        FD3[\&quot;[3] NULL (closed)\&quot;]\n        FD4[\&quot;[4] file C ✓\&quot;]\n    end\n\n    NF[\&quot;next_fd = 3\&quot;]\n    NF -.->|\&quot;loop: fd &lt; 3\&quot;| FD3\n\n    subgraph \&quot;자식 fd_table (fork 후)\&quot;\n        CFD2[\&quot;[2] file A' ✓ 복제됨\&quot;]\n        CFD3[\&quot;[3] NULL\&quot;]\n        CFD4[\&quot;[4] NULL ✗ 복제 안 됨!\&quot;]\n    end\n\n    FD2 -->|\&quot;file_duplicate\&quot;| CFD2\n    FD4 -.-x|\&quot;범위 밖\&quot;| CFD4\n&quot;">flowchart LR
+    subgraph &quot;부모 fd_table (close(3) 후)&quot;
+        FD0[&quot;[0] NULL (stdin)&quot;]
+        FD1[&quot;[1] NULL (stdout)&quot;]
+        FD2[&quot;[2] file A ✓&quot;]
+        FD3[&quot;[3] NULL (closed)&quot;]
+        FD4[&quot;[4] file C ✓&quot;]
+    end
+
+    NF[&quot;next_fd = 3&quot;]
+    NF -.->|&quot;loop: fd &lt; 3&quot;| FD3
+
+    subgraph &quot;자식 fd_table (fork 후)&quot;
+        CFD2[&quot;[2] file A' ✓ 복제됨&quot;]
+        CFD3[&quot;[3] NULL&quot;]
+        CFD4[&quot;[4] NULL ✗ 복제 안 됨!&quot;]
+    end
+
+    FD2 -->|&quot;file_duplicate&quot;| CFD2
+    FD4 -.-x|&quot;범위 밖&quot;| CFD4
+
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="기억해야-할-경계">기억해야 할 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#기억해야-할-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>fd는 파일 자체가 아니라 프로세스별 fd table index다.</li>
+<li><code>fork()</code>는 자식에게 fd table의 의미를 물려줘야 표준 입출력, 리다이렉션, 열린 파일 상속을 이어갈 수 있다.</li>
+<li>Linux에서는 보통 부모와 자식의 fd가 같은 open file description을 가리키므로 file offset이 공유될 수 있다.</li>
+<li>이 PintOS 구현은 <code>file_duplicate()</code>로 새 <code>struct file</code>을 만들고 <code>pos</code>를 복사하므로 fork 이후 file offset이 독립적으로 움직인다.</li>
+<li>자식의 <code>close(fd)</code>는 자식 fd table entry를 닫는다. 부모 fd table entry를 직접 지우지는 않는다.</li>
+<li>QEMU는 guest fd의 의미를 해석하지 않는다. PintOS가 변경한 guest memory와 disk I/O를 에뮬레이션한다.</li>
+<li>현재 코드에서는 <code>next_fd</code>를 fd allocation hint와 fork 복제 범위로 함께 쓴다. 이 때문에 <code>open 2, 3, 4 -> close 3 -> fork</code> 흐름에서 fd 4가 자식 복제에서 빠진다.</li>
+<li>이 경계는 별도 regression test 후보다. 가능한 설계는 <code>FD_MAX</code> 전체에서 NULL이 아닌 slot을 복제하거나 <code>next_fd</code>를 항상 가장 큰 열린 fd보다 큰 값으로 유지하는 것이다.</li>
+</ul>
+<h2 id="함께-볼-개념">함께 볼 개념<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#함께-볼-개념" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a>
+<ul>
+<li>fd table index라는 기본 모델</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fd-close-reuse-lab" class="internal internal-link alias" data-slug="wiki/os/fd-close-reuse-lab">reuse</a>
+<ul>
+<li>닫힌 fd 번호가 다시 쓰이는 순간</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fork-fd-table-gap-lab" class="internal internal-link alias" data-slug="wiki/os/fork-fd-table-gap-lab">fork fd table gap</a>
+<ul>
+<li><code>open 2,3,4 -> close 3 -> fork</code> 경계를 GDB로 확인하는 실험</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/process-wait-exit-trace" class="internal internal-link alias" data-slug="wiki/os/process-wait-exit-trace">exit 흐름</a>
+<ul>
+<li>fork한 자식을 부모가 기다리는 생명주기</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li><code>SYS_FORK</code>, <code>SYS_READ</code>, <code>SYS_CLOSE</code>가 register 인자로 들어오는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li>fd와 mapping 생명주기가 분리되는 더 어려운 사례</li>
+</ul>
+</li>
+<li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal internal-link alias" data-slug="wiki/hubs/user-program-execution-boundary">User Programs 실행 경계</a>
+<ul>
+<li>User Programs 실행 경계 전체</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/file-system-storage" class="internal">파일시스템과 저장소</a></li><li><a href="../../wiki/os/deny-write-cnt-mechanism" class="internal">deny_write_cnt 관리</a></li><li><a href="../../wiki/os/executable-deny-write-lab" class="internal">실행 파일 쓰기 금지</a></li><li><a href="../../wiki/os/fd-close-reuse-lab" class="internal">fd close/reuse Lab (닫힌 fd 번호가 다시 쓰이는 순간)</a></li><li><a href="../../wiki/os/fd-number-meaning" class="internal">fd 숫자의 의미</a></li><li><a href="../../wiki/os/fd-table-per-process" class="internal">프로세스별 fd_table 배열</a></li><li><a href="../../wiki/os/file-deny-write-api" class="internal">파일 쓰기 거부 API</a></li><li><a href="../../wiki/os/file-descriptor-knowledge" class="internal">파일 디스크립터</a></li><li><a href="../../wiki/os/fork-fd-table-gap-lab" class="internal">fork fd table gap Lab (중간 fd를 닫은 뒤 큰 fd가 복제되는가)</a></li><li><a href="../../wiki/os/fork-semaphore-sync" class="internal">fork 세마포어 동기화</a></li><li><a href="../../wiki/os/pintos-user-programs-execution-boundary" class="internal">PintOS User Programs 실행 경계와 System Call</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/process-child-status-record-knowledge" class="internal">Process Record는 왜 thread와 따로 필요한가</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/process-fork-mechanism" class="internal">fork -- 주소 공간 복제</a></li><li><a href="../../wiki/os/process-fork-wait-exit" class="internal">fork/wait/exit 흐름</a></li><li><a href="../../wiki/os/process-orphan-reparent-trace" class="internal">부모가 먼저 종료되면 자식 상태는 누가 수거하는가</a></li><li><a href="../../wiki/os/shared-file-offset" class="internal">공유 파일 오프셋</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/spt-copy-lazy-page" class="internal">Lazy UNINIT Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/stdin-stdout-fd" class="internal">표준 입출력 fd</a></li><li><a href="../../wiki/os/struct-file-inode" class="internal">struct file → inode</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-460" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#fork하면-fd-table은-어떻게-복제되는가" data-for="fork하면-fd-table은-어떻게-복제되는가">fork하면 fd table은 어떻게 복제되는가</a></li><li class="depth-1"><a href="#fd-table-fork-복제-쟁점" data-for="fd-table-fork-복제-쟁점">fd table fork 복제 쟁점</a></li><li class="depth-1"><a href="#fork가-fd-table을-복제하는-이유" data-for="fork가-fd-table을-복제하는-이유">fork가 fd table을 복제하는 이유</a></li><li class="depth-1"><a href="#fd를-따라가는-세-경계" data-for="fd를-따라가는-세-경계">fd를 따라가는 세 경계</a></li><li class="depth-1"><a href="#파일-위치가-달라지는-장면" data-for="파일-위치가-달라지는-장면">파일 위치가 달라지는 장면</a></li><li class="depth-1"><a href="#실제-운영체제와의-차이" data-for="실제-운영체제와의-차이">실제 운영체제와의 차이</a></li><li class="depth-1"><a href="#pintos의-복제-과정" data-for="pintos의-복제-과정">PintOS의 복제 과정</a></li><li class="depth-1"><a href="#qemu가-담당하는-범위" data-for="qemu가-담당하는-범위">QEMU가 담당하는 범위</a></li><li class="depth-1"><a href="#linux-windows-pintos-qemu-비교" data-for="linux-windows-pintos-qemu-비교">Linux, Windows, PintOS, QEMU 비교</a></li><li class="depth-1"><a href="#코드에서-복제-흐름-따라가기" data-for="코드에서-복제-흐름-따라가기">코드에서 복제 흐름 따라가기</a></li><li class="depth-2"><a href="#1-syscall-번호가-fork-흐름으로-들어간다" data-for="1-syscall-번호가-fork-흐름으로-들어간다">1) syscall 번호가 fork 흐름으로 들어간다</a></li><li class="depth-2"><a href="#2-자식은-__do_fork에서-fd-table을-복제한다" data-for="2-자식은-__do_fork에서-fd-table을-복제한다">2) 자식은 __do_fork()에서 fd table을 복제한다</a></li><li class="depth-2"><a href="#3-file_duplicate는-같은-포인터를-공유하지-않는다" data-for="3-file_duplicate는-같은-포인터를-공유하지-않는다">3) file_duplicate()는 같은 포인터를 공유하지 않는다</a></li><li class="depth-2"><a href="#4-next_fd가-복제-범위를-제한한다" data-for="4-next_fd가-복제-범위를-제한한다">4) next_fd가 복제 범위를 제한한다</a></li><li class="depth-1"><a href="#값으로-fd-table-추적하기" data-for="값으로-fd-table-추적하기">값으로 fd table 추적하기</a></li><li class="depth-2"><a href="#1-fd-table-한-페이지의-크기" data-for="1-fd-table-한-페이지의-크기">1) fd table 한 페이지의 크기</a></li><li class="depth-2"><a href="#2-fork-후-file-객체와-pos" data-for="2-fork-후-file-객체와-pos">2) fork 후 file 객체와 pos</a></li><li class="depth-2"><a href="#3-next_fd-복제-범위-쟁점" data-for="3-next_fd-복제-범위-쟁점">3) next_fd 복제 범위 쟁점</a></li><li class="depth-1"><a href="#gdb로-확인할-지점" data-for="gdb로-확인할-지점">GDB로 확인할 지점</a></li><li class="depth-2"><a href="#1-fork-read-테스트로-pos-독립-여부-보기" data-for="1-fork-read-테스트로-pos-독립-여부-보기">1) fork-read 테스트로 pos 독립 여부 보기</a></li><li class="depth-2"><a href="#2-gdb로-fd-table-복제-보기" data-for="2-gdb로-fd-table-복제-보기">2) GDB로 fd table 복제 보기</a></li><li class="depth-2"><a href="#3-next_fd-복제-범위-확인" data-for="3-next_fd-복제-범위-확인">3) next_fd 복제 범위 확인</a></li><li class="depth-2"><a href="#4-fork--exec-fd-유지-보기" data-for="4-fork--exec-fd-유지-보기">4) fork + exec fd 유지 보기</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#fork-fd-복제-전체-흐름" data-for="fork-fd-복제-전체-흐름">fork fd 복제 전체 흐름</a></li><li class="depth-2"><a href="#pintos-vs-linux-fd-공유-모델" data-for="pintos-vs-linux-fd-공유-모델">PintOS vs Linux fd 공유 모델</a></li><li class="depth-2"><a href="#next_fd-복제-범위-문제" data-for="next_fd-복제-범위-문제">next_fd 복제 범위 문제</a></li><li class="depth-1"><a href="#기억해야-할-경계" data-for="기억해야-할-경계">기억해야 할 경계</a></li><li class="depth-1"><a href="#함께-볼-개념" data-for="함께-볼-개념">함께 볼 개념</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

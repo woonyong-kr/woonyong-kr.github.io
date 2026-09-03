@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Supplemental Page Table은 왜 필요한가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Supplemental Page Table은 왜 필요한가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Supplemental Page Table은 왜 필요한가 · 최우녕"/><meta name="twitter:description" content="page table은 MMU가 &quot;지금 이 VA를 어떤 PA로 번역할까&quot;를 보는 하드웨어용 표이고, supplemental page table은 page fault handler가 &quot;이 VA가 원래 합법인지, anon/file/uninit 중 무엇으로 frame을 준비할지&quot;를 판단하는 커널용 의미 장부다."/><meta property="og:description" content="page table은 MMU가 &quot;지금 이 VA를 어떤 PA로 번역할까&quot;를 보는 하드웨어용 표이고, supplemental page table은 page fault handler가 &quot;이 VA가 원래 합법인지, anon/file/uninit 중 무엇으로 frame을 준비할지&quot;를 판단하는 커널용 의미 장부다."/><meta property="og:image:alt" content="page table은 MMU가 &quot;지금 이 VA를 어떤 PA로 번역할까&quot;를 보는 하드웨어용 표이고, supplemental page table은 page fault handler가 &quot;이 VA가 원래 합법인지, anon/file/uninit 중 무엇으로 frame을 준비할지&quot;를 판단하는 커널용 의미 장부다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/supplemental-page-table-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/supplemental-page-table-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="page table은 MMU가 &quot;지금 이 VA를 어떤 PA로 번역할까&quot;를 보는 하드웨어용 표이고, supplemental page table은 page fault handler가 &quot;이 VA가 원래 합법인지, anon/file/uninit 중 무엇으로 frame을 준비할지&quot;를 판단하는 커널용 의미 장부다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/supplemental-page-table-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-653" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-653" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Supplemental Page Table은 왜 필요한가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="supplemental-page-table은-왜-필요한가">Supplemental Page Table은 왜 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#supplemental-page-table은-왜-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: page table은 MMU가 “지금 이 VA를 어떤 PA로 번역할까”를 보는 하드웨어용 표이고, supplemental page table은 page fault handler가 “이 VA가 원래 합법인지, anon/file/uninit 중 무엇으로 frame을 준비할지”를 판단하는 커널용 의미 장부다.</p>
+</blockquote>
+<h2 id="spt-필요성">SPT 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>CPU는 이미 page table을 보면서 가상 주소를 물리 주소로 바꾼다.</p>
+<p>그런데 PintOS VM 과제는 왜 또 <code>supplemental_page_table</code>이라는 테이블을 만들라고 할까?</p>
+<p>처음 헷갈리는 지점은 여기다.</p>
+<blockquote>
+<p>page table은 “지금 당장 번역 가능한가?”를 위한 하드웨어용 표이고, supplemental page table은 “이 주소가 원래 어떤 의미였는가?”를 기억하는 커널용 표다.</p>
+</blockquote>
+<h2 id="spt-구분">SPT 구분<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-구분" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>page table만 있으면 resident page, 즉 지금 물리 프레임에 올라와 있는 페이지만 잘 설명할 수 있다.</p>
+<p>하지만 VM은 “아직 프레임은 없지만 합법적인 주소”를 많이 만든다.</p>
+<ul>
+<li>실행 파일의 <code>.text</code>/<code>.data</code> 페이지는 처음부터 전부 RAM에 올리지 않을 수 있다.</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap</a>으로 파일을 주소 공간에 붙여도, 실제 파일 내용은 첫 접근 때 읽어 올 수 있다.</li>
+<li>스택은 아래로 자라며, 아직 없는 페이지를 첫 write 순간에 만들어 줄 수 있다.</li>
+<li>evict된 페이지는 page table에서는 빠졌지만 swap/file에는 원본이 남아 있을 수 있다.</li>
+</ul>
+<p>이 상태를 page table만으로는 충분히 설명하지 못한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page table:</span></span>
+<span data-line><span>  VPN 0x8048 -> 현재 프레임이 있나?</span></span>
+<span data-line> </span>
+<span data-line><span>supplemental page table:</span></span>
+<span data-line><span>  VPN 0x8048은 합법적인가?</span></span>
+<span data-line><span>  읽기/쓰기가 가능한가?</span></span>
+<span data-line><span>  처음 접근하면 어디서 내용을 가져와야 하나?</span></span>
+<span data-line><span>  지금 프레임에 있나, file에 있나, swap에 있나?</span></span></code></pre></figure>
+<p>이 말은 즉, supplemental page table은 page fault handler가 “이 fault를 살릴 수 있는지” 판단하기 위한 근거 장부다.</p>
+<h2 id="spt-흐름">SPT 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>머릿속에는 두 표를 분리해서 넣으면 된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>표</th><th>누가 주로 보는가</th><th>답하는 질문</th></tr></thead><tbody><tr><td>page table</td><td>CPU/MMU</td><td>이 VA를 지금 어떤 PA로 번역할까?</td></tr><tr><td>supplemental page table</td><td>커널 page fault handler</td><td>이 VA는 원래 합법이고, 필요하면 어떻게 준비할까?</td></tr></tbody></table></div>
+<p>정상 접근 경로에서는 MMU가 page table만 보고 끝난다.</p>
+<p>page fault가 난 뒤에야 커널이 supplemental page table을 본다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    VA[\&quot;VA 접근\&quot;] --> MMU[\&quot;MMU page-table walk\&quot;]\n    MMU -->|\&quot;PTE present\&quot;| HIT[\&quot;PA → 메모리 접근 성공\&quot;]\n    MMU -->|\&quot;PTE absent\&quot;| PF[\&quot;#PF 발생\&quot;]\n    PF --> SPT{\&quot;SPT에서&lt;br/>page base 검색\&quot;}\n    SPT -->|\&quot;없음\&quot;| KILL[\&quot;프로세스 종료&lt;br/>(불법 접근)\&quot;]\n    SPT -->|\&quot;있음\&quot;| TYPE{\&quot;page type?\&quot;}\n    TYPE -->|\&quot;UNINIT\&quot;| INIT[\&quot;initializer 호출&lt;br/>(file read / zero fill)\&quot;]\n    TYPE -->|\&quot;ANON\&quot;| SWAP[\&quot;swap에서 복원\&quot;]\n    TYPE -->|\&quot;FILE\&quot;| FREAD[\&quot;file에서 읽기\&quot;]\n    INIT --> INSTALL[\&quot;frame 할당 →&lt;br/>pml4_set_page()\&quot;]\n    SWAP --> INSTALL\n    FREAD --> INSTALL\n    INSTALL --> RETRY[\&quot;fault 명령 재실행\&quot;]&quot;">flowchart TD
+    VA[&quot;VA 접근&quot;] --> MMU[&quot;MMU page-table walk&quot;]
+    MMU -->|&quot;PTE present&quot;| HIT[&quot;PA → 메모리 접근 성공&quot;]
+    MMU -->|&quot;PTE absent&quot;| PF[&quot;#PF 발생&quot;]
+    PF --> SPT{&quot;SPT에서&lt;br/>page base 검색&quot;}
+    SPT -->|&quot;없음&quot;| KILL[&quot;프로세스 종료&lt;br/>(불법 접근)&quot;]
+    SPT -->|&quot;있음&quot;| TYPE{&quot;page type?&quot;}
+    TYPE -->|&quot;UNINIT&quot;| INIT[&quot;initializer 호출&lt;br/>(file read / zero fill)&quot;]
+    TYPE -->|&quot;ANON&quot;| SWAP[&quot;swap에서 복원&quot;]
+    TYPE -->|&quot;FILE&quot;| FREAD[&quot;file에서 읽기&quot;]
+    INIT --> INSTALL[&quot;frame 할당 →&lt;br/>pml4_set_page()&quot;]
+    SWAP --> INSTALL
+    FREAD --> INSTALL
+    INSTALL --> RETRY[&quot;fault 명령 재실행&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>정상 hit:</span></span>
+<span data-line><span>  VA -> MMU -> page table -> PA -> memory</span></span>
+<span data-line> </span>
+<span data-line><span>page fault:</span></span>
+<span data-line><span>  VA -> MMU -> page table 실패</span></span>
+<span data-line><span>     -> PintOS page_fault()</span></span>
+<span data-line><span>     -> supplemental page table 조회</span></span>
+<span data-line><span>     -> frame 준비 + 내용 로드 + page table 설치</span></span>
+<span data-line><span>     -> fault를 일으킨 명령 재실행</span></span></code></pre></figure>
+<h2 id="실행-파일의-한-페이지를-지연-로딩한다고-해보자">실행 파일의 한 페이지를 지연 로딩한다고 해보자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실행-파일의-한-페이지를-지연-로딩한다고-해보자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>실행 파일의 한 페이지를 지연 로딩한다고 해보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>user VA       = 0x8048123</span></span>
+<span data-line><span>page base     = 0x8048000</span></span>
+<span data-line><span>page offset   = 0x123</span></span>
+<span data-line><span>file offset   = 0x2000</span></span>
+<span data-line><span>read_bytes    = 1000</span></span>
+<span data-line><span>zero_bytes    = 3096</span></span>
+<span data-line><span>writable      = false</span></span></code></pre></figure>
+<p>프로세스를 시작할 때 커널은 아직 물리 프레임을 붙이지 않는다.</p>
+<p>대신 supplemental page table에 이런 뜻의 정보를 넣는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>key: 0x8048000</span></span>
+<span data-line><span>value:</span></span>
+<span data-line><span>  type        = executable-backed lazy page</span></span>
+<span data-line><span>  writable    = false</span></span>
+<span data-line><span>  file        = 실행 파일</span></span>
+<span data-line><span>  file offset = 0x2000</span></span>
+<span data-line><span>  read bytes  = 1000</span></span>
+<span data-line><span>  zero bytes  = 3096</span></span>
+<span data-line><span>  frame       = 없음</span></span></code></pre></figure>
+<p>프로그램이 <code>0x8048123</code>을 처음 읽으면 page fault가 난다.</p>
+<p>PintOS는 fault address를 page base <code>0x8048000</code>으로 내리고 supplemental page table에서 이 기록을 찾는다.</p>
+<p>기록이 있으면 “죽일 fault”가 아니라 “살릴 fault”다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에는 <code>vm_area_struct</code>와 page table이 역할을 나눠 가진다.</p>
+<ul>
+<li><code>vm_area_struct</code>: 주소 범위의 의미, 권한, backing object를 설명한다.</li>
+<li>page table/PTE: 현재 VA가 어떤 물리 프레임으로 번역되는지 설명한다.</li>
+</ul>
+<p>Windows도 이름과 구조는 다르지만, 같은 문제를 다룬다. 프로세스 주소 공간의 영역, protection, section/file mapping, demand paging 상태를 커널 메모리 관리자에서 관리하고, 하드웨어 page table은 현재 번역 가능한 resident mapping을 담는다.</p>
+<p>현실 OS는 PintOS보다 훨씬 복잡하다. copy-on-write, shared mapping, NUMA, huge page, page cache, working set, memory compression 같은 정책까지 들어간다.</p>
+<p>그래도 핵심 질문은 같다.</p>
+<blockquote>
+<p>page fault가 났을 때, 이 주소는 “원래 합법인데 아직 준비되지 않은 주소”인가, 아니면 “진짜 잘못된 주소”인가?</p>
+</blockquote>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 supplemental page table은 각 스레드, 더 정확히는 유저 프로세스의 주소 공간에 붙어 있다.</p>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code></li>
+<li><code>SW_AI-W11-pintos/pintos/include/vm/vm.h</code></li>
+</ul>
+<p><code>struct thread</code> 안에는 VM 옵션에서 다음 필드가 들어간다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> supplemental_page_table spt;</span></span></code></pre></figure>
+<p>그리고 <code>struct supplemental_page_table</code>은 이 저장소의 스켈레톤에서 비어 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> supplemental_page_table {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 빈 구조체는 “필요 없다”는 뜻이 아니다. 구현자가 어떤 자료구조로 만들지 채우라는 자리다.</p>
+<p>PintOS에서 흔한 설계는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct supplemental_page_table</span></span>
+<span data-line><span>  -> hash table 또는 ordered map</span></span>
+<span data-line><span>  -> key: page-rounded user VA</span></span>
+<span data-line><span>  -> value: struct page</span></span>
+<span data-line> </span>
+<span data-line><span>struct page</span></span>
+<span data-line><span>  -> va</span></span>
+<span data-line><span>  -> operations</span></span>
+<span data-line><span>  -> frame</span></span>
+<span data-line><span>  -> uninit/anon/file 타입별 정보</span></span></code></pre></figure>
+<p>이 저장소에는 해시 테이블 구현도 이미 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/lib/kernel/hash.h</code>
+<ul>
+<li><code>struct hash</code></li>
+<li><code>struct hash_elem</code></li>
+<li><code>hash_insert</code></li>
+<li><code>hash_find</code></li>
+<li><code>hash_delete</code></li>
+</ul>
+</li>
+</ul>
+<p>단, 현재 <code>struct page</code>에는 아직 <code>struct hash_elem</code> 필드가 없다. 해시 테이블로 구현하려면 <code>struct supplemental_page_table</code>과 <code>struct page</code> 양쪽에 필요한 필드를 직접 추가해야 한다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 supplemental page table의 의미를 모른다.</p>
+<p>QEMU가 보는 것은 guest CPU가 접근하는 메모리와 guest page table이 만드는 하드웨어적 효과다.</p>
+<p>파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/emulate/x86_mmu.c" class="external external-link">target/i386/emulate/x86_mmu.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>대표 흐름은 이렇다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>guest VA 접근</span></span>
+<span data-line><span>  -> QEMU가 x86 MMU 변환을 흉내 냄</span></span>
+<span data-line><span>  -> 변환 실패 시 EXCP0E_PAGE(#PF)를 guest에 전달</span></span>
+<span data-line><span>  -> PintOS page_fault()가 실행됨</span></span>
+<span data-line><span>  -> PintOS가 supplemental page table을 조회</span></span></code></pre></figure>
+<p>즉 supplemental page table은 PintOS 커널의 guest memory 안에 있는 소프트웨어 자료구조다. QEMU는 그 구조체를 “SPT”라고 이해하지 않고, 그냥 guest가 읽고 쓰는 바이트로만 본다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>의미 장부</td><td>VMA/section/prototype PTE 등 복잡한 VM 자료구조</td><td><code>struct supplemental_page_table</code>로 직접 구현</td><td>없음</td></tr><tr><td>하드웨어 번역표</td><td>실제 CPU page table</td><td>PintOS가 만드는 guest page table</td><td>guest page table walk를 에뮬레이션</td></tr><tr><td>page fault 정책</td><td>demand paging, COW, mmap, swap 등</td><td><code>vm_try_handle_fault()</code>에 과제 구현</td><td><a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> guest에게 전달</td></tr><tr><td>단순화</td><td>매우 복잡</td><td>교육용으로 핵심만 남김</td><td>OS 정책은 처리하지 않음</td></tr></tbody></table></div>
+<h2 id="spt-코드">SPT 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-page-fault는-spt를-조회할-기회를-만든다">1. page fault는 SPT를 조회할 기회를 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-page-fault는-spt를-조회할-기회를-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/exception.c</code></li>
+</ul>
+<p>핵심 흐름:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">fault_addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">rcr2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">not_present </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_P) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">write </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">user </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">error_code </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_U) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_try_handle_fault</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (f, fault_addr, user, write, not_present))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><code>vm_try_handle_fault()</code>가 true를 반환하면 fault는 해결된 것으로 보고 원래 명령어로 돌아간다.</p>
+<h3 id="2-vm_try_handle_fault는-현재-프로세스-spt에서-시작한다">2. vm_try_handle_fault()는 현재 프로세스 SPT에서 시작한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-vm_try_handle_fault는-현재-프로세스-spt에서-시작한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/vm/vm.c</code></li>
+</ul>
+<p>스켈레톤은 이미 방향을 보여준다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">spt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ()</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">spt;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>여기서 구현해야 할 판단은 보통 다음 순서다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. fault 주소가 유저 주소인지 확인</span></span>
+<span data-line><span>2. page base = pg_round_down(addr)</span></span>
+<span data-line><span>3. spt_find_page(spt, page_base)로 struct page 찾기</span></span>
+<span data-line><span>4. 쓰기 fault라면 writable 권한 확인</span></span>
+<span data-line><span>5. lazy page라면 vm_do_claim_page(page)</span></span>
+<span data-line><span>6. claim 성공 시 page table mapping 설치</span></span></code></pre></figure>
+<h3 id="3-lazy-page는-uninit-page로-태어난다">3. lazy page는 uninit page로 태어난다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-lazy-page는-uninit-page로-태어난다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/vm/uninit.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/include/vm/uninit.h</code></li>
+</ul>
+<p><code>uninit_new()</code>는 “아직 내용은 없지만, 첫 fault 때 어떻게 초기화할지”를 <code>struct page</code>에 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.operations </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">uninit_ops,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> va,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.uninit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> init,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .type </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> type,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> aux,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .page_initializer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> initializer,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>첫 접근에서 <code>swap_in(page, frame->kva)</code>가 호출되면, uninit page는 실제 anon/file page로 바뀌고 <code>init(page, aux)</code>로 내용을 채운다.</p>
+<h3 id="4-elf-segment-로딩은-spt에-나중에-읽을-정보를-넣는-자리다">4. ELF segment 로딩은 SPT에 “나중에 읽을 정보”를 넣는 자리다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-elf-segment-로딩은-spt에-나중에-읽을-정보를-넣는-자리다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/process.c</code></li>
+</ul>
+<p>VM 코드 경로의 <code>load_segment()</code>는 각 페이지마다 <code>vm_alloc_page_with_initializer()</code>를 호출한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_alloc_page_with_initializer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (VM_ANON, upage, writable,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">                                lazy_load_segment, aux)</span></span></code></pre></figure>
+<p>여기서 중요한 것은 <code>upage</code>가 page table에 곧바로 resident mapping으로 들어가는 것이 아니라, SPT에 “나중에 fault가 나면 <code>lazy_load_segment</code>를 호출하라”는 정보로 남아야 한다는 점이다.</p>
+<h2 id="spt-값-추적">SPT 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="page-base-계산">page base 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page-base-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>SPT 조회 키는 보통 fault address 그대로가 아니라 page base다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr = 0x8048123</span></span>
+<span data-line><span>PGSIZE     = 0x1000</span></span>
+<span data-line><span>PGMASK     = 0xfff</span></span>
+<span data-line> </span>
+<span data-line><span>offset     = fault_addr &amp; 0xfff</span></span>
+<span data-line><span>           = 0x123</span></span>
+<span data-line> </span>
+<span data-line><span>page base  = fault_addr &amp; ~0xfff</span></span>
+<span data-line><span>           = 0x8048000</span></span></code></pre></figure>
+<p><code>0x8048123</code>과 <code>0x8048fff</code>는 같은 페이지 안의 다른 바이트다. 따라서 SPT는 둘을 같은 key <code>0x8048000</code>으로 찾아야 한다.</p>
+<h2 id="pte-flag와-spt-metadata의-경계">PTE flag와 SPT metadata의 경계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-flag와-spt-metadata의-경계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>여기서 가장 중요한 오해가 하나 있다.</p>
+<blockquote>
+<p>PTE의 flag가 있으니, swap/file/lazy 상태도 PTE flag에 넣으면 되는 것 아닌가?</p>
+</blockquote>
+<p>답은 아니다.</p>
+<p>PTE의 낮은 12비트 flag는 CPU/MMU가 메모리 접근 순간에 빠르게 판단해야 하는 최소 상태만 담는다. PintOS 기준으로 자주 보는 flag는 다음이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>bit</th><th>PintOS 이름</th><th>의미</th><th>왜 필요한가</th></tr></thead><tbody><tr><td>0</td><td><code>PTE_P</code></td><td>present</td><td>지금 frame에 붙어 있으면 바로 번역하고, 없으면 page fault를 낸다</td></tr><tr><td>1</td><td><code>PTE_W</code></td><td>writable</td><td>text/read-only/mmap/COW page에 대한 쓰기 보호를 한다</td></tr><tr><td>2</td><td><code>PTE_U</code></td><td>user</td><td>유저 모드가 커널 전용 page에 접근하지 못하게 막는다</td></tr><tr><td>5</td><td><code>PTE_A</code></td><td>accessed</td><td>eviction에서 최근 접근된 page인지 판단하는 힌트로 쓴다</td></tr><tr><td>6</td><td><code>PTE_D</code></td><td>dirty</td><td>file-backed write-back 또는 swap 저장 필요성을 판단하는 힌트로 쓴다</td></tr></tbody></table></div>
+<p>예를 들어 PTE가 다음 값이라고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE = 0x0000000012345067</span></span></code></pre></figure>
+<p>4KB frame base는 항상 아래 12비트가 0이므로, PTE의 낮은 12비트는 flag로 쓴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>주소 부분 = PTE &amp; ~0xfff = 0x0000000012345000</span></span>
+<span data-line><span>flag 부분 = PTE &amp;  0xfff = 0x067</span></span></code></pre></figure>
+<p>2진수로 보면 더 분명하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE:</span></span>
+<span data-line><span>0000000000000000000000000000000000010010001101000101 | 000001100111</span></span>
+<span data-line><span>                    frame base                         | flags</span></span>
+<span data-line> </span>
+<span data-line><span>flags 12 bits:</span></span>
+<span data-line><span>bit:   11 10  9  8   7  6  5  4   3  2  1  0</span></span>
+<span data-line><span>       ----------------------------------------</span></span>
+<span data-line><span>value:  0  0  0  0   0  1  1  0   0  1  1  1</span></span>
+<span data-line><span>                         D  A         U  W  P</span></span></code></pre></figure>
+<p>반면 다음 정보는 PTE flag에 넣을 수 없거나, 넣더라도 커널 정책을 설명하기에 부족하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>이 page가 ELF 파일의 어느 offset에서 왔는가</span></span>
+<span data-line><span>이 page가 mmap된 파일 page인가</span></span>
+<span data-line><span>anonymous page가 swap slot 몇 번에 나가 있는가</span></span>
+<span data-line><span>lazy load callback에 넘길 aux는 무엇인가</span></span>
+<span data-line><span>fork 때 이 page를 어떻게 복제해야 하는가</span></span>
+<span data-line><span>munmap/exit 때 write-back이 필요한가</span></span></code></pre></figure>
+<p>이 정보가 SPT의 책임이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE:</span></span>
+<span data-line><span>  CPU가 지금 접근해도 되는지 판단하는 하드웨어 entry</span></span>
+<span data-line> </span>
+<span data-line><span>SPT:</span></span>
+<span data-line><span>  page fault가 났을 때 커널이 이 page를 어떻게 살릴지 판단하는 소프트웨어 entry</span></span></code></pre></figure>
+<h2 id="spt는-무엇을-저장하나">SPT는 무엇을 저장하나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt는-무엇을-저장하나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>SPT는 page table처럼 전체 주소 공간을 <code>[512][512][512][512]</code>로 미리 만드는 표가 아니다. 실제로 의미 있는 page만 저장하는 sparse map이다.</p>
+<p>기본 관계는 다음이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>key:</span></span>
+<span data-line><span>  page-aligned user virtual address</span></span>
+<span data-line><span>  예: 0x8048123 -> 0x8048000</span></span>
+<span data-line> </span>
+<span data-line><span>value:</span></span>
+<span data-line><span>  struct page</span></span>
+<span data-line><span>  이 page의 정체와 복구 방법</span></span></code></pre></figure>
+<p>예를 들어 executable lazy page 하나는 SPT 안에서 이런 의미로 저장된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SPT entry:</span></span>
+<span data-line><span>  va          = 0x8048000</span></span>
+<span data-line><span>  source      = executable file</span></span>
+<span data-line><span>  file offset = 0x2000</span></span>
+<span data-line><span>  read bytes  = 1000</span></span>
+<span data-line><span>  zero bytes  = 3096</span></span>
+<span data-line><span>  writable    = false</span></span>
+<span data-line><span>  frame       = NULL</span></span></code></pre></figure>
+<p>한 페이지 크기는 4096B이므로, 이 예시는 파일에서 1000바이트를 읽고 나머지 3096바이트를 0으로 채우는 page다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>file에서 읽을 바이트 = 1000</span></span>
+<span data-line><span>0으로 채울 바이트   = 4096 - 1000 = 3096</span></span></code></pre></figure>
+<p>page table의 PTE는 resident 상태가 된 뒤에야 다음 정도만 담는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE:</span></span>
+<span data-line><span>  frame base = 0x12345000</span></span>
+<span data-line><span>  present    = 1</span></span>
+<span data-line><span>  writable   = 0</span></span>
+<span data-line><span>  user       = 1</span></span></code></pre></figure>
+<p>따라서 file offset, read bytes, zero bytes 같은 복구 정보는 PTE가 아니라 SPT entry에 남아야 한다.</p>
+<p>공통으로 필요한 필드는 보통 다음이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> supplemental_page_table {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> hash pages;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page_operations </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">operations;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">va;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">frame;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> writable;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> hash_elem hash_elem;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    union</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page uninit;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page anon;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> file_page file;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    };</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>각 필드는 이런 뜻이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th>의미</th></tr></thead><tbody><tr><td><code>va</code></td><td>이 <code>struct page</code>가 대표하는 user virtual page의 시작 주소. SPT hash key</td></tr><tr><td><code>frame</code></td><td>현재 RAM에 올라와 있으면 연결된 <code>struct frame</code>, lazy/swap/file 상태면 <code>NULL</code>일 수 있음</td></tr><tr><td><code>writable</code></td><td>page table에 mapping을 설치할 때 <code>PTE_W</code>를 켤지 판단하는 권한</td></tr><tr><td><code>operations</code></td><td>현재 page가 <code>VM_UNINIT</code>, <code>VM_ANON</code>, <code>VM_FILE</code> 중 무엇인지와 <code>swap_in/out/destroy</code> 동작</td></tr><tr><td><code>hash_elem</code></td><td>PintOS hash table에 이 page를 넣기 위한 연결자</td></tr><tr><td><code>union</code></td><td>page type별 metadata를 같은 공간에 담기 위한 영역</td></tr></tbody></table></div>
+<p><code>frame</code>이 있다는 것은 page table에도 present mapping이 있을 가능성이 높다는 뜻이다. 하지만 frame이 붙은 뒤에도 SPT entry는 보통 계속 남아 있어야 한다. eviction, fork, munmap, exit, swap-in 같은 작업에서 이 page의 원래 의미를 다시 알아야 하기 때문이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>resident 상태:</span></span>
+<span data-line><span>  SPT entry 있음</span></span>
+<span data-line><span>  page->frame != NULL</span></span>
+<span data-line><span>  page table PTE_P = 1</span></span>
+<span data-line> </span>
+<span data-line><span>evicted/lazy 상태:</span></span>
+<span data-line><span>  SPT entry 있음</span></span>
+<span data-line><span>  page->frame == NULL</span></span>
+<span data-line><span>  page table PTE_P = 0 또는 mapping 없음</span></span></code></pre></figure>
+<h2 id="union은-왜-필요한가">union은 왜 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#union은-왜-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>struct page</code>는 모든 page의 공통 껍데기다. 하지만 page 종류마다 추가로 기억해야 할 정보가 다르다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>UNINIT page:</span></span>
+<span data-line><span>  첫 fault 때 어떤 initializer를 호출할지, aux가 무엇인지</span></span>
+<span data-line> </span>
+<span data-line><span>ANON page:</span></span>
+<span data-line><span>  swap에 나갔는지, swap slot 번호가 무엇인지</span></span>
+<span data-line> </span>
+<span data-line><span>FILE page:</span></span>
+<span data-line><span>  어느 file, 어느 offset, 몇 bytes를 읽고 쓸지</span></span></code></pre></figure>
+<p>한 page는 동시에 세 종류가 아니다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>이 page는 uninit이거나</span></span>
+<span data-line><span>anon이거나</span></span>
+<span data-line><span>file이다.</span></span></code></pre></figure>
+<p>그래서 PintOS는 <code>union</code>을 제공한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">union</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page uninit;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page anon;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> file_page file;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>union</code>은 멤버 중 가장 큰 구조체가 들어갈 만큼의 공간만 확보하고, 그 공간을 현재 page type에 맞게 해석한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct:</span></span>
+<span data-line><span>  [uninit 공간][anon 공간][file 공간]</span></span>
+<span data-line> </span>
+<span data-line><span>union:</span></span>
+<span data-line><span>  [uninit / anon / file 중 하나로 해석하는 공용 공간]</span></span></code></pre></figure>
+<p>현재 어떤 멤버를 써야 하는지는 <code>operations</code>와 <code>page_get_type(page)</code>가 알려준다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VM_UNINIT -> page->uninit 사용</span></span>
+<span data-line><span>VM_ANON   -> page->anon 사용</span></span>
+<span data-line><span>VM_FILE   -> page->file 사용</span></span></code></pre></figure>
+<h2 id="타입별-metadata-설계">타입별 metadata 설계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#타입별-metadata-설계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="uninit--lazy-page">UNINIT / lazy page<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#uninit--lazy-page" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>lazy page는 아직 실제 내용을 RAM에 채우지 않은 page다. 첫 page fault 때 어떤 방식으로 내용을 채울지 기억해야 한다.</p>
+<p>PintOS 기본 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    vm_initializer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">init;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> vm_type type;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">aux;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">page_initializer)(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> vm_type, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p><code>aux</code>에는 보통 page별 파일 로딩 정보가 들어간다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lazy_load_arg {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">file;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    off_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> offset;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> read_bytes;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> zero_bytes;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 정보는 다음 질문에 답한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>첫 fault가 나면 어느 file의 어느 offset에서 몇 바이트를 읽고,</span></span>
+<span data-line><span>나머지 몇 바이트를 0으로 채울 것인가?</span></span></code></pre></figure>
+<h3 id="anon-page">ANON page<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#anon-page" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>anonymous page는 특정 파일 원본과 직접 연결되지 않은 page다. stack page나 일반 anonymous page가 여기에 가깝다. swap out되면 swap slot을 기억해야 한다.</p>
+<p>추천 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swap_slot;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> swapped;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>상태 예:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>RAM에 있음:</span></span>
+<span data-line><span>  page->frame != NULL</span></span>
+<span data-line><span>  page->anon.swapped = false</span></span>
+<span data-line> </span>
+<span data-line><span>swap에 나감:</span></span>
+<span data-line><span>  page->frame = NULL</span></span>
+<span data-line><span>  page->anon.swapped = true</span></span>
+<span data-line><span>  page->anon.swap_slot = 7</span></span></code></pre></figure>
+<h3 id="file--mmap-page">FILE / mmap page<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#file--mmap-page" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>file-backed page는 파일의 일부를 user VA에 붙인 page다. mmap page 또는 executable-backed lazy page가 이 패턴을 쓴다.</p>
+<p>추천 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> file_page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">file;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    off_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> offset;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> read_bytes;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    size_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> zero_bytes;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 정보는 다음 질문에 답한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>이 VA page는 어느 file의 어느 offset과 연결되어 있는가?</span></span>
+<span data-line><span>page-in 때 몇 바이트를 읽고, 몇 바이트를 0으로 채울 것인가?</span></span>
+<span data-line><span>dirty면 munmap/eviction 때 어디에 write-back할 것인가?</span></span></code></pre></figure>
+<p>전체 <code>mmap()</code> 요청 길이 자체를 모든 SPT entry에 저장할 필요는 없다. SPT entry 하나는 4KB page 하나를 설명한다. 전체 mapping 범위가 필요하면 별도의 <code>mmap_region</code> list를 둘 수 있고, 단순 구현에서는 page별 SPT entry를 순회하거나 시작 주소부터 page 단위로 검사할 수 있다.</p>
+<h2 id="hash로-구현할-때">hash로 구현할 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#hash로-구현할-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서는 SPT를 hash table로 구현하는 것이 가장 현실적이다.</p>
+<p>이유는 SPT의 가장 흔한 연산이 단일 page lookup이기 때문이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault_addr 발생</span></span>
+<span data-line><span>  -> pg_round_down(fault_addr)</span></span>
+<span data-line><span>  -> SPT에서 정확히 이 page가 있는지 찾기</span></span></code></pre></figure>
+<p>구현 모양:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> unsigned</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_hash</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">e</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">UNUSED</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">p </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (e, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_bytes</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">p->va, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">sizeof</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> p->va);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_less</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">a</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">           const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">b</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">           void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">UNUSED</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pa </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (a, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pb </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (b, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> pa->va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> pb->va;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">supplemental_page_table_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">spt</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    hash_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">spt->pages, page_hash, page_less, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>lookup은 임시 <code>struct page</code>를 만들어 같은 key로 찾는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">spt_find_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">spt</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">va</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page temp;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    temp.va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pg_round_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (va);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_find</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">spt->pages, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">temp.hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (e, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>여기서 <code>pg_round_down()</code>이 중요하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x8048123 -> 0x8048000</span></span>
+<span data-line><span>0x8048fff -> 0x8048000</span></span>
+<span data-line><span>0x8049000 -> 0x8049000</span></span></code></pre></figure>
+<p>page 크기를 벗어난 주소는 다른 page base가 되므로 자연스럽게 다른 hash key로 간다.</p>
+<h2 id="tree로-구현할-때">tree로 구현할 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#tree로-구현할-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>SPT를 tree로 만들 수도 있다. 예를 들어 red-black tree나 B+ tree를 쓰면 주소 순서와 range query가 좋아진다.</p>
+<p>개념적 구조:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> supplemental_page_table {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> rb_tree pages;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">va;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> rb_node node;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    ...</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>장점:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>주소 순서대로 순회하기 쉽다.</span></span>
+<span data-line><span>mmap overlap 같은 range query가 자연스럽다.</span></span>
+<span data-line><span>특정 구간의 page를 한 번에 찾기 좋다.</span></span></code></pre></figure>
+<p>단점:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>lookup이 O(log n)이다.</span></span>
+<span data-line><span>포인터를 여러 번 따라가고 비교/branch가 많다.</span></span>
+<span data-line><span>rotation/rebalance 구현 부담이 있다.</span></span>
+<span data-line><span>PintOS에는 hash가 이미 제공되지만 balanced tree는 직접 준비해야 할 수 있다.</span></span></code></pre></figure>
+<p>CPU 자원 관점에서 SPT의 주 연산이 page fault의 point lookup이라면 hash가 유리하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>hash:</span></span>
+<span data-line><span>  평균 O(1)</span></span>
+<span data-line><span>  hash 계산 + bucket 접근 + 짧은 비교</span></span>
+<span data-line> </span>
+<span data-line><span>tree:</span></span>
+<span data-line><span>  O(log n)</span></span>
+<span data-line><span>  root부터 leaf까지 여러 pointer chasing과 branch</span></span></code></pre></figure>
+<p>다만 range query가 매우 많고 mapping 구간을 크게 다루는 실제 OS에서는 tree 계열 구조가 의미가 있다. Linux의 VMA 관리도 단순 hash 하나만으로 끝나지 않는 이유가 여기에 있다.</p>
+<h2 id="다른-spt-구현-방법">다른 SPT 구현 방법<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#다른-spt-구현-방법" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>SPT는 과제에서 반드시 hash여야 하는 것은 아니다. 가능한 선택지는 다음과 같다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>방식</th><th>장점</th><th>단점</th><th>PintOS 추천도</th></tr></thead><tbody><tr><td>hash table</td><td>page fault lookup이 빠르고 PintOS에 구현이 있음</td><td>range query가 불편</td><td>높음</td></tr><tr><td>linked list</td><td>구현이 가장 쉽다</td><td>page 수가 늘면 매번 선형 탐색</td><td>낮음, 초기 실험용</td></tr><tr><td>balanced tree</td><td>주소 순서와 range query가 좋다</td><td>구현 비용, branch/cache 비용</td><td>중간</td></tr><tr><td>B+ tree</td><td>큰 범위와 순차 탐색에 강함</td><td>PintOS 과제에는 과함</td><td>낮음</td></tr><tr><td>page table에 metadata 인코딩</td><td>하드웨어 구조와 가까워 보임</td><td>file/swap/mmap/lazy 정보를 충분히 담기 어렵고 복잡</td><td>낮음</td></tr><tr><td>hybrid</td><td>hash + mmap region list</td><td>lookup과 range 관리 균형</td><td>중간 이상</td></tr></tbody></table></div>
+<p>PintOS에서 실용적인 선택은 보통 이 조합이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SPT:</span></span>
+<span data-line><span>  hash table</span></span>
+<span data-line> </span>
+<span data-line><span>mmap range 관리:</span></span>
+<span data-line><span>  page 단위 spt_find_page 반복</span></span>
+<span data-line><span>  또는 별도 mmap_region list</span></span>
+<span data-line> </span>
+<span data-line><span>frame table:</span></span>
+<span data-line><span>  global list</span></span>
+<span data-line> </span>
+<span data-line><span>swap slot:</span></span>
+<span data-line><span>  bitmap</span></span></code></pre></figure>
+<h2 id="전체-흐름으로-다시-보기">전체 흐름으로 다시 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#전체-흐름으로-다시-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>예를 들어 <code>0x8048123</code> 접근으로 fault가 났다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. CPU가 page table walk를 한다.</span></span>
+<span data-line><span>2. PTE_P가 0이거나 PTE가 없어서 #PF가 난다.</span></span>
+<span data-line><span>3. CR2에 fault_addr = 0x8048123이 들어간다.</span></span>
+<span data-line><span>4. PintOS page_fault()가 fault_addr를 읽는다.</span></span>
+<span data-line><span>5. vm_try_handle_fault()가 page_base = 0x8048000을 만든다.</span></span>
+<span data-line><span>6. SPT hash에서 key 0x8048000을 찾는다.</span></span>
+<span data-line><span>7. struct page를 찾으면 type별로 복구한다.</span></span>
+<span data-line><span>8. frame을 얻고 page table에 PTE를 설치한다.</span></span>
+<span data-line><span>9. 같은 명령어를 다시 실행하면 이번에는 PTE_P=1이라 통과한다.</span></span></code></pre></figure>
+<p>여기서 PTE와 SPT의 정보는 겹치지 않고 이어진다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE:</span></span>
+<span data-line><span>  현재 frame base와 CPU 접근 flag</span></span>
+<span data-line> </span>
+<span data-line><span>SPT:</span></span>
+<span data-line><span>  이 page가 원래 무엇이며, 없을 때 어디서 복구할지</span></span></code></pre></figure>
+<h2 id="spt-gdb">SPT GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아래 breakpoint 순서로 보면 “page table에 아직 없지만 SPT에는 있는 페이지”라는 감각이 생긴다.</p>
+<h3 id="1-실행-파일-segment가-spt에-등록되는-순간">1. 실행 파일 segment가 SPT에 등록되는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-실행-파일-segment가-spt에-등록되는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b load_segment</span></span>
+<span data-line><span>b vm_alloc_page_with_initializer</span></span>
+<span data-line><span>b spt_insert_page</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x upage</span></span>
+<span data-line><span>p writable</span></span>
+<span data-line><span>p aux</span></span></code></pre></figure>
+<h3 id="2-첫-접근-page-fault">2. 첫 접근 page fault<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-첫-접근-page-fault" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b page_fault</span></span>
+<span data-line><span>b vm_try_handle_fault</span></span>
+<span data-line><span>b spt_find_page</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x fault_addr</span></span>
+<span data-line><span>p/x (uint64_t) fault_addr &amp; ~0xfff</span></span>
+<span data-line><span>p not_present</span></span>
+<span data-line><span>p write</span></span>
+<span data-line><span>p user</span></span></code></pre></figure>
+<h3 id="3-frame-claim과-page-table-설치">3. frame claim과 page table 설치<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-frame-claim과-page-table-설치" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b vm_do_claim_page</span></span>
+<span data-line><span>b uninit_initialize</span></span>
+<span data-line><span>b lazy_load_segment</span></span>
+<span data-line><span>b pml4_set_page</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x page->va</span></span>
+<span data-line><span>p/x page->frame</span></span>
+<span data-line><span>p page->operations->type</span></span>
+<span data-line><span>p/x pml4_get_page(thread_current()->pml4, page->va)</span></span></code></pre></figure>
+<p>관찰 목표는 이 변화다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fault 전:</span></span>
+<span data-line><span>  SPT에는 page 정보가 있음</span></span>
+<span data-line><span>  page table에는 present mapping이 없음</span></span>
+<span data-line> </span>
+<span data-line><span>fault 처리 후:</span></span>
+<span data-line><span>  frame이 붙음</span></span>
+<span data-line><span>  page table에 VA -> frame mapping이 생김</span></span></code></pre></figure>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>include/vm/vm.h</td><td><code>struct page</code></td><td>SPT entry 본체. va, frame, operations, union(anon/file/uninit)</td></tr><tr><td>include/vm/vm.h</td><td><code>struct supplemental_page_table</code></td><td>hash table wrapper</td></tr><tr><td>include/vm/vm.h</td><td><code>enum vm_type</code></td><td>VM_UNINIT, VM_ANON, VM_FILE 구분</td></tr><tr><td>vm/vm.c</td><td><code>supplemental_page_table_init()</code></td><td>hash_init으로 SPT 초기화</td></tr><tr><td>vm/vm.c</td><td><code>spt_find_page()</code></td><td>VA → struct page 검색 (hash_find)</td></tr><tr><td>vm/vm.c</td><td><code>vm_alloc_page_with_initializer()</code></td><td>UNINIT page를 SPT에 등록</td></tr><tr><td>vm/vm.c</td><td><code>vm_try_handle_fault()</code></td><td>page fault 시 SPT 조회 → claim</td></tr><tr><td>vm/vm.c</td><td><code>vm_do_claim_page()</code></td><td>frame 할당 + initializer 호출 + pml4_set_page</td></tr><tr><td>vm/vm.c</td><td><code>vm_dealloc_page()</code></td><td>page destroy + SPT에서 제거</td></tr><tr><td>vm/uninit.c</td><td><code>uninit_initialize()</code></td><td>UNINIT → ANON/FILE 전환, lazy_load 실행</td></tr><tr><td>vm/anon.c</td><td><code>anon_swap_in()</code> / <code>anon_swap_out()</code></td><td>anonymous page swap 입출</td></tr><tr><td>vm/file.c</td><td><code>file_backed_swap_in()</code> / <code>file_backed_swap_out()</code></td><td>file-backed page swap 입출</td></tr><tr><td>userprog/process.c</td><td><code>lazy_load_segment()</code></td><td>ELF 세그먼트 lazy loader (uninit initializer)</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_set_page()</code></td><td>하드웨어 page table에 매핑 설치</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>supplemental page table은 하드웨어 page table의 대체물이 아니다.</p>
+<p>page table은 빠른 주소 번역을 위한 표이고, supplemental page table은 page fault를 해석하기 위한 커널의 의미 장부다.</p>
+<p>PintOS에서는 이 장부를 직접 설계해야 한다. 핵심은 page-rounded VA로 <code>struct page</code>를 찾고, 그 페이지가 anon/file/uninit 중 무엇인지에 따라 frame을 준비한 뒤 page table mapping을 설치하는 것이다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">x86 64 page table walk</a></li>
+<li><a href="../../wiki/os/spt-vs-pml4-separation" class="internal internal-link alias" data-slug="wiki/os/spt-vs-pml4-separation">SPT와 PML4 분리</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">Page Fault 처리</a></li>
+<li><a href="../../wiki/os/uninit-page-type" class="internal internal-link alias" data-slug="wiki/os/uninit-page-type">UNINIT page type</a></li>
+<li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-demand-paging">Lazy Loading</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction</a></li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous swap slot</a></li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a></li>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">stack growth fault</a></li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">SPT fork copy</a></li>
+<li><a href="../../wiki/os/spt-copy-resident-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-resident-page">resident page copy</a></li>
+<li><a href="../../wiki/os/spt-copy-lazy-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-lazy-page">lazy page copy</a></li>
+<li><a href="../../wiki/os/spt-copy-swapped-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-swapped-page">swapped page copy</a></li>
+<li><a href="../../wiki/os/spt-copy-file-backed-page" class="internal internal-link alias" data-slug="wiki/os/spt-copy-file-backed-page">file backed page copy</a></li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup SPT</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/address-translation-memory" class="internal">주소 변환과 메모리</a></li><li><a href="../../wiki/os/clock-algorithm-victim" class="internal">시계 알고리즘 희생자 (Clock Algorithm Victim)</a></li><li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal">Clock hand로 victim frame 고르기 Lab</a></li><li><a href="../../wiki/os/cow-write-protect-fault-lab" class="internal">COW write-protect fault는 언제 page copy로 살아나나</a></li><li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal">file-backed page metadata에는 무엇을 저장해야 하나</a></li><li><a href="../../wiki/os/fork-lazy-uninit-aux-copy-question" class="internal">fork에서 lazy UNINIT page의 aux는 어떻게 복사해야 하나</a></li><li><a href="../../wiki/os/fork-swapped-anon-page-copy-question" class="internal">fork에서 swapped-out anonymous page는 어떻게 복사해야 하나</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/hardware-abstraction" class="internal">추상화</a></li><li><a href="../../wiki/os/install-page-mapping" class="internal">install_page — 유저 가상 주소 매핑 설치</a></li><li><a href="../../wiki/os/kernel-user-memory-layout" class="internal">커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가</a></li><li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal">Lazy Loading과 Demand Paging — 필요할 때만 물리 메모리 할당</a></li><li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal">Lazy Loading Segment 흐름</a></li><li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal">mmap file-backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li><li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal">mmap munmap 범위 흐름 (Mmap Munmap Range Trace)</a></li><li><a href="../../wiki/os/mmap-overlap-validation-lab" class="internal">mmap은 왜 이미 쓰는 주소 범위를 덮으면 안 되나</a></li><li><a href="../../wiki/os/os-abstraction-protection-storage-responsibility" class="internal">OS 추상화, 보호, 저장 책임</a></li><li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal">페이지 폴트 error code</a></li><li><a href="../../wiki/os/page-fault-handling" class="internal">페이지 폴트</a></li><li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li><li><a href="../../wiki/os/page-fault-trace" class="internal">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li><li><a href="../../wiki/os/page-operations-dispatch" class="internal">page_operations 분기</a></li><li><a href="../../wiki/os/page-type-transition" class="internal">페이지 타입 Transition (Page Type Transition)</a></li><li><a href="../../wiki/os/pintos-e820-palloc-pool-trace" class="internal">E820 메모리 맵에서 palloc Pool까지의 Trace</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/pintos-vm-structure-flow" class="internal">PintOS VM 구조와 흐름</a></li><li><a href="../../wiki/os/process-exec-address-space" class="internal">주소 공간 교체</a></li><li><a href="../../wiki/os/process-exit-cleanup" class="internal">프로세스 종료 자원 회수</a></li><li><a href="../../wiki/os/process-resource-teardown" class="internal">프로세스 자원 정리</a></li><li><a href="../../wiki/os/setup-stack-initial-page" class="internal">setup_stack — 초기 유저 스택 페이지 설정</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/spt-copy-lazy-page" class="internal">Lazy UNINIT Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-copy-resident-page" class="internal">Resident Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-vs-pml4-separation" class="internal">SPT와 PML4를 둘 다 두는 이유</a></li><li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal">스택 성장 페이지 폴트는 언제 살려야 하나</a></li><li><a href="../../wiki/os/stack-growth-rsp-check" class="internal">Stack Growth RSP 근처 Fault 판단</a></li><li><a href="../../wiki/os/supplemental-page-table-hash" class="internal">SPT 해시 테이블</a></li><li><a href="../../wiki/os/swap-lab" class="internal">Swap Lab (anonymous page가 디스크 슬롯으로 나갔다 돌아오는 법)</a></li><li><a href="../../wiki/os/uninit-page-type" class="internal">UNINIT Page — 지연 로딩을 위한 초기화 전 페이지</a></li><li><a href="../../wiki/os/vm-alloc-page-initializer" class="internal">vm_alloc_page_with_initializer() — UNINIT 페이지 등록</a></li><li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal">vm_do_claim_page는 fault를 실제 frame mapping으로 바꾼다</a></li><li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li><li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal">vm_try_handle_fault 판단 흐름 Trace</a></li><li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal">x86-64 페이지 테이블 워크</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-651" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#supplemental-page-table은-왜-필요한가" data-for="supplemental-page-table은-왜-필요한가">Supplemental Page Table은 왜 필요한가</a></li><li class="depth-1"><a href="#spt-필요성" data-for="spt-필요성">SPT 필요성</a></li><li class="depth-1"><a href="#spt-구분" data-for="spt-구분">SPT 구분</a></li><li class="depth-1"><a href="#spt-흐름" data-for="spt-흐름">SPT 흐름</a></li><li class="depth-1"><a href="#실행-파일의-한-페이지를-지연-로딩한다고-해보자" data-for="실행-파일의-한-페이지를-지연-로딩한다고-해보자">실행 파일의 한 페이지를 지연 로딩한다고 해보자</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#spt-코드" data-for="spt-코드">SPT 코드</a></li><li class="depth-2"><a href="#1-page-fault는-spt를-조회할-기회를-만든다" data-for="1-page-fault는-spt를-조회할-기회를-만든다">1. page fault는 SPT를 조회할 기회를 만든다</a></li><li class="depth-2"><a href="#2-vm_try_handle_fault는-현재-프로세스-spt에서-시작한다" data-for="2-vm_try_handle_fault는-현재-프로세스-spt에서-시작한다">2. vm_try_handle_fault()는 현재 프로세스 SPT에서 시작한다</a></li><li class="depth-2"><a href="#3-lazy-page는-uninit-page로-태어난다" data-for="3-lazy-page는-uninit-page로-태어난다">3. lazy page는 uninit page로 태어난다</a></li><li class="depth-2"><a href="#4-elf-segment-로딩은-spt에-나중에-읽을-정보를-넣는-자리다" data-for="4-elf-segment-로딩은-spt에-나중에-읽을-정보를-넣는-자리다">4. ELF segment 로딩은 SPT에 “나중에 읽을 정보”를 넣는 자리다</a></li><li class="depth-1"><a href="#spt-값-추적" data-for="spt-값-추적">SPT 값 추적</a></li><li class="depth-2"><a href="#page-base-계산" data-for="page-base-계산">page base 계산</a></li><li class="depth-1"><a href="#pte-flag와-spt-metadata의-경계" data-for="pte-flag와-spt-metadata의-경계">PTE flag와 SPT metadata의 경계</a></li><li class="depth-1"><a href="#spt는-무엇을-저장하나" data-for="spt는-무엇을-저장하나">SPT는 무엇을 저장하나</a></li><li class="depth-1"><a href="#union은-왜-필요한가" data-for="union은-왜-필요한가">union은 왜 필요한가</a></li><li class="depth-1"><a href="#타입별-metadata-설계" data-for="타입별-metadata-설계">타입별 metadata 설계</a></li><li class="depth-2"><a href="#uninit--lazy-page" data-for="uninit--lazy-page">UNINIT / lazy page</a></li><li class="depth-2"><a href="#anon-page" data-for="anon-page">ANON page</a></li><li class="depth-2"><a href="#file--mmap-page" data-for="file--mmap-page">FILE / mmap page</a></li><li class="depth-1"><a href="#hash로-구현할-때" data-for="hash로-구현할-때">hash로 구현할 때</a></li><li class="depth-1"><a href="#tree로-구현할-때" data-for="tree로-구현할-때">tree로 구현할 때</a></li><li class="depth-1"><a href="#다른-spt-구현-방법" data-for="다른-spt-구현-방법">다른 SPT 구현 방법</a></li><li class="depth-1"><a href="#전체-흐름으로-다시-보기" data-for="전체-흐름으로-다시-보기">전체 흐름으로 다시 보기</a></li><li class="depth-1"><a href="#spt-gdb" data-for="spt-gdb">SPT GDB</a></li><li class="depth-2"><a href="#1-실행-파일-segment가-spt에-등록되는-순간" data-for="1-실행-파일-segment가-spt에-등록되는-순간">1. 실행 파일 segment가 SPT에 등록되는 순간</a></li><li class="depth-2"><a href="#2-첫-접근-page-fault" data-for="2-첫-접근-page-fault">2. 첫 접근 page fault</a></li><li class="depth-2"><a href="#3-frame-claim과-page-table-설치" data-for="3-frame-claim과-page-table-설치">3. frame claim과 page table 설치</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>do_iret() 레지스터 복원 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="do_iret() 레지스터 복원 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="do_iret() 레지스터 복원 · 최우녕"/><meta name="twitter:description" content="컨텍스트 스위치나 유저 모드 복귀는 RIP 하나만 되돌린다고 끝나지 않는다."/><meta property="og:description" content="컨텍스트 스위치나 유저 모드 복귀는 RIP 하나만 되돌린다고 끝나지 않는다."/><meta property="og:image:alt" content="컨텍스트 스위치나 유저 모드 복귀는 RIP 하나만 되돌린다고 끝나지 않는다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/do-iret-restore"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/do-iret-restore"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="컨텍스트 스위치나 유저 모드 복귀는 RIP 하나만 되돌린다고 끝나지 않는다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/do-iret-restore" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-449" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-449" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>do_iret() 레지스터 복원</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="do_iret-레지스터-복원">do_iret() 레지스터 복원<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#do_iret-레지스터-복원" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p><code>do_iret()</code>는 <code>intr_frame</code>에 저장된 레지스터 스냅샷을 <code>iretq</code>로 원자적으로 복원해, 멈춰 있던 스레드의 실행을 다시 이어 준다.</p>
+</blockquote>
+<h2 id="왜-레지스터-스냅샷을-통째로-복원하나">왜 레지스터 스냅샷을 통째로 복원하나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#왜-레지스터-스냅샷을-통째로-복원하나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>컨텍스트 스위치나 유저 모드 복귀는 RIP 하나만 되돌린다고 끝나지 않는다. CPU가 다시 실행을 이어가려면 다음 명령어 주소, 권한 수준, 플래그, 스택 포인터가 서로 맞는 한 묶음으로 돌아와야 한다.</p>
+<p><code>do_iret()</code>는 <code>struct intr_frame</code>에 저장된 실행 스냅샷을 CPU에 다시 얹는 함수다. x86-64의 <code>iretq</code>는 항상 RIP, CS, RFLAGS를 하나의 architectural state transition으로 복원하고, 더 낮은 권한으로 돌아가는 CPL 전환(예: 0→3)이면 RSP와 SS도 함께 복원한다. <code>thread_launch()</code>가 현재 스레드의 상태를 <strong>저장</strong>하는 쪽이라면, <code>do_iret()</code>는 다음 스레드의 상태를 <strong>복원</strong>하는 짝이다.</p>
+<h2 id="iretq가-필요한-이유"><code>iretq</code>가 필요한 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#iretq가-필요한-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>일반 <code>ret</code> 명령어는 스택에서 RIP만 꺼낸다. 인터럽트나 예외에서 돌아갈 때는 최소한 RIP, CS, RFLAGS를 함께 복원해야 하고, 유저 모드처럼 바깥 privilege level로 돌아갈 때는 RSP와 SS도 같은 전이에 포함해야 한다. 이를 개별 <code>mov</code>로 나누면 권한과 실행 상태 사이에 관찰 가능한 불일치가 생길 수 있다.</p>
+<p><code>iretq</code>가 소비하는 스택 범위는 target CS가 가리키는 CPL에 따라 달라진다:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% iretq 스택 복원\nflowchart LR\n  stack[\&quot;iretq 직전 스택&lt;br/>RIP (8 B)&lt;br/>CS (8 B)&lt;br/>RFLAGS (8 B)&lt;br/>RSP (8 B, CPL 전환 시)&lt;br/>SS (8 B, CPL 전환 시)\&quot;]\n  rsp_pointer[\&quot;RSP&lt;br/>(iretq 직전)\&quot;]\n  atomic_restore[\&quot;CPU가 하나의 iretq로&lt;br/>항상 RIP/CS/RFLAGS 복원&lt;br/>바깥 CPL 전환 시 RSP/SS도 복원\&quot;]\n  next_rip[\&quot;복원: 다음 실행할 명령어 주소\&quot;]\n  cpl[\&quot;복원: code segment&lt;br/>RPL bits → CPL\&quot;]\n  flags[\&quot;복원: 상태/제어 플래그\&quot;]\n  user_stack[\&quot;복원: 스택 포인터&lt;br/>유저 스택으로\&quot;]\n  ss[\&quot;복원: stack segment\&quot;]\n  stack_rip[\&quot;stack:rip\&quot;]\n  stack_cs[\&quot;stack:cs\&quot;]\n  stack_rflags[\&quot;stack:rflags\&quot;]\n  stack_rsp[\&quot;stack:rsp\&quot;]\n  stack_ss[\&quot;stack:ss\&quot;]\n  rsp_pointer -->|\&quot;top\&quot;| stack_rip\n  stack_rip --> next_rip\n  stack_cs --> cpl\n  stack_rflags --> flags\n  stack_rsp -->|\&quot;CPL 전환 시\&quot;| user_stack\n  stack_ss -->|\&quot;CPL 전환 시\&quot;| ss\n  stack -->|\&quot;iretq\&quot;| atomic_restore&quot;">%% iretq 스택 복원
+flowchart LR
+  stack[&quot;iretq 직전 스택&lt;br/>RIP (8 B)&lt;br/>CS (8 B)&lt;br/>RFLAGS (8 B)&lt;br/>RSP (8 B, CPL 전환 시)&lt;br/>SS (8 B, CPL 전환 시)&quot;]
+  rsp_pointer[&quot;RSP&lt;br/>(iretq 직전)&quot;]
+  atomic_restore[&quot;CPU가 하나의 iretq로&lt;br/>항상 RIP/CS/RFLAGS 복원&lt;br/>바깥 CPL 전환 시 RSP/SS도 복원&quot;]
+  next_rip[&quot;복원: 다음 실행할 명령어 주소&quot;]
+  cpl[&quot;복원: code segment&lt;br/>RPL bits → CPL&quot;]
+  flags[&quot;복원: 상태/제어 플래그&quot;]
+  user_stack[&quot;복원: 스택 포인터&lt;br/>유저 스택으로&quot;]
+  ss[&quot;복원: stack segment&quot;]
+  stack_rip[&quot;stack:rip&quot;]
+  stack_cs[&quot;stack:cs&quot;]
+  stack_rflags[&quot;stack:rflags&quot;]
+  stack_rsp[&quot;stack:rsp&quot;]
+  stack_ss[&quot;stack:ss&quot;]
+  rsp_pointer -->|&quot;top&quot;| stack_rip
+  stack_rip --> next_rip
+  stack_cs --> cpl
+  stack_rflags --> flags
+  stack_rsp -->|&quot;CPL 전환 시&quot;| user_stack
+  stack_ss -->|&quot;CPL 전환 시&quot;| ss
+  stack -->|&quot;iretq&quot;| atomic_restore
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="cpl-전환-규칙">CPL 전환 규칙<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cpl-전환-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>iretq</code>는 복원하는 CS의 RPL(하위 2-bit)을 보고 CPL을 결정한다:</p>
+<ul>
+<li>CS=0x08 (RPL=0) → 커널 모드로 복원 (커널 스레드 간 전환)</li>
+<li>CS=0x23 (RPL=3) → 유저 모드로 복원 (유저 프로세스로 복귀)</li>
+</ul>
+<p>유저 모드로 전환될 때 CPU는 자동으로 SS:RSP도 스택에서 복원한다. 같은 CPL로 돌아가면 SS:RSP를 pop하지 않으며, live RSP는 RIP/CS/RFLAGS를 소비한 다음 위치를 가리킨다. 따라서 같은-CPL 전환 코드는 frame의 뒤쪽 배치가 곧 재개할 stack 위치가 되도록 구성해야 한다.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서도 <code>iretq</code>는 인터럽트/예외 리턴의 표준 경로다. 다만 성능을 위해 두 가지 빠른 경로를 추가로 사용한다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>경로</th><th>명령어</th><th>조건</th><th>복원 대상</th></tr></thead><tbody><tr><td>Fast path</td><td><code>sysretq</code></td><td>syscall 리턴, 단순 조건 충족 시</td><td>RCX→RIP, R11→RFLAGS</td></tr><tr><td>Slow path</td><td><code>iretq</code></td><td>인터럽트 리턴, signal 처리 등</td><td>스택에서 5개 레지스터</td></tr><tr><td>Very slow</td><td><code>iretq</code> + NMI workaround</td><td>NMI 중첩 시</td><td>동일 + IST 스택 보호</td></tr></tbody></table></div>
+<p><code>sysretq</code>는 <code>iretq</code>보다 수십 사이클 빠르지만, RFLAGS의 특정 비트(TF 등)를 제대로 복원하지 못하는 제약이 있어, 항상 사용할 수는 없다.</p>
+<p>Windows도 유사하게 <code>KiSystemServiceExit</code>에서 fast path(<code>sysretq</code>)와 slow path(<code>iretq</code>)를 분기한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>현재 로컬 PintOS는 경로를 나눈다. <code>do_iret()</code>을 통과하는 초기 유저 진입·인터럽트/예외·스레드 상태 복원은 <code>iretq</code>를 사용하지만, 정상 syscall 복귀는 <code>userprog/syscall-entry.S</code> 끝의 <code>sysretq</code>를 사용한다.</p>
+<p><code>do_iret()</code>의 핵심 동작을 단계별로 분해하면:</p>
+<p><strong>1단계: RSP를 intr_frame 시작 주소로 설정</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movq </span><span style="--shiki-light:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic;" data-token-type="error">%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">0, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // RSP = &amp;tf->R.r15 (intr_frame 시작)</span></span></code></pre></figure>
+<p>이 시점부터 <strong>기존 커널 스택은 포기</strong>된다. 스택 변수, 지역 변수 모두 접근 불가.</p>
+<p><strong>2단계: 범용 레지스터 15개 복원 (offset 0~112)</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movq 0(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp),</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">r15</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // offset 0</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movq 8(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp),</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">r14</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // offset 8</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// ... 중략 ...</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movq 112(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp),</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rax</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // offset 112</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;addq $120,</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // RSP를 es/ds 영역으로 이동</span></span></code></pre></figure>
+<p>15개 레지스터 × 8 bytes = 120 bytes. <code>struct gp_registers</code> 전체에 해당.</p>
+<p><strong>3단계: 세그먼트 레지스터 복원 + 건너뛰기</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movw 8(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp),</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">ds</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">     // ds는 offset +8 위치</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movw (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp),</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">es</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">      // es는 offset +0 위치</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;addq $32, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">rsp</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\n</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // es(2)+pad(6)+ds(2)+pad(6)+vec_no(8)+error_code(8) = 32 bytes 건너뛰기</span></span></code></pre></figure>
+<p><code>vec_no</code>와 <code>error_code</code>는 CPU가 인터럽트 진입 시 사용하는 값이므로 복원하지 않는다.</p>
+<p><strong>4단계: iretq 실행</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;iretq&quot;</span></span></code></pre></figure>
+<p>이 시점에서 RSP는 <code>intr_frame</code>의 <code>rip</code> 필드를 가리킨다. CPU는 RIP, CS, RFLAGS를 꺼내고, target CS가 바깥 CPL이면 이어서 RSP와 SS까지 꺼내 실행을 재개한다.</p>
+<h4 id="메모리-레이아웃과-오프셋-계산">메모리 레이아웃과 오프셋 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#메모리-레이아웃과-오프셋-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th style="text-align:right;">offset</th><th>필드</th><th style="text-align:right;">크기</th><th><code>do_iret()</code>에서의 의미</th></tr></thead><tbody><tr><td style="text-align:right;"><code>0x00</code>~<code>0x70</code></td><td><code>R.r15</code>~<code>R.rax</code></td><td style="text-align:right;">120 B</td><td>범용 레지스터 15개 복원</td></tr><tr><td style="text-align:right;"><code>0x78</code></td><td><code>es</code> slot</td><td style="text-align:right;">8 B</td><td>ES와 padding</td></tr><tr><td style="text-align:right;"><code>0x80</code></td><td><code>ds</code> slot</td><td style="text-align:right;">8 B</td><td>DS와 padding</td></tr><tr><td style="text-align:right;"><code>0x88</code></td><td><code>vec_no</code></td><td style="text-align:right;">8 B</td><td>복원하지 않고 건너뜀</td></tr><tr><td style="text-align:right;"><code>0x90</code></td><td><code>error_code</code></td><td style="text-align:right;">8 B</td><td>복원하지 않고 건너뜀</td></tr><tr><td style="text-align:right;"><code>0x98</code></td><td><code>rip</code></td><td style="text-align:right;">8 B</td><td>항상 pop</td></tr><tr><td style="text-align:right;"><code>0xA0</code></td><td><code>cs</code></td><td style="text-align:right;">8 B slot</td><td>항상 pop, target CPL 결정</td></tr><tr><td style="text-align:right;"><code>0xA8</code></td><td><code>eflags</code></td><td style="text-align:right;">8 B</td><td>항상 pop</td></tr><tr><td style="text-align:right;"><code>0xB0</code></td><td><code>rsp</code></td><td style="text-align:right;">8 B</td><td>바깥 CPL로 전환할 때만 pop</td></tr><tr><td style="text-align:right;"><code>0xB8</code></td><td><code>ss</code></td><td style="text-align:right;">8 B slot</td><td>바깥 CPL로 전환할 때만 pop</td></tr><tr><td style="text-align:right;"><code>0xC0</code></td><td>frame 끝</td><td style="text-align:right;">—</td><td>packed <code>intr_frame</code> 전체 192 B</td></tr></tbody></table></div>
+<h3 id="호출-경로-3가지">호출 경로 3가지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#호출-경로-3가지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>do_iret()</code>는 PintOS에서 세 가지 경로에서 호출된다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>경로</th><th>호출 위치</th><th>CS 값</th><th>효과</th></tr></thead><tbody><tr><td>Context switch</td><td><code>thread_launch()</code></td><td>0x08 (커널)</td><td>커널 스레드 간 전환, <code>out_iret</code> 레이블로 복귀</td></tr><tr><td>새 프로세스 시작</td><td><code>process_exec()</code> → <code>do_iret(&amp;_if)</code></td><td>0x23 (유저)</td><td>ELF의 e_entry로 유저 모드 진입</td></tr><tr><td>fork 자식 시작</td><td><code>__do_fork()</code> → <code>do_iret(&amp;if_)</code></td><td>0x23 (유저)</td><td>부모의 중단 지점으로 유저 모드 복귀 (RAX=0)</td></tr></tbody></table></div>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU TCG에서 <code>iretq</code>는 guest 코드의 <code>iretq</code> opcode(0x48 0xCF)를 만나면 Translation Block을 종료하고 <code>helper_iret_protected()</code> 헬퍼를 호출한다. 이 헬퍼가 하드웨어의 iretq 동작을 소프트웨어로 재현한다.</p>
+<p><strong>TCG iretq 처리 단계:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>TCG 함수/동작</th><th>CPUX86State 변경</th></tr></thead><tbody><tr><td>1</td><td><code>helper_iret_protected()</code> 진입</td><td>—</td></tr><tr><td>2</td><td>guest 스택에서 RIP 읽기 (<code>cpu_ldq_kernel</code>)</td><td><code>env->eip = new_rip</code></td></tr><tr><td>3</td><td>guest 스택에서 CS 읽기 + GDT lookup</td><td><code>env->segs[R_CS]</code> 갱신, <code>env->hflags</code>에 CPL 반영</td></tr><tr><td>4</td><td>guest 스택에서 RFLAGS 읽기</td><td><code>env->eflags = new_rflags</code> (IF, IOPL 등 마스크 적용)</td></tr><tr><td>5</td><td>CPL 변경 시 SS:RSP 읽기</td><td><code>env->regs[R_ESP] = new_rsp</code>, <code>env->segs[R_SS]</code> 갱신</td></tr><tr><td>6</td><td>segment descriptor cache 전체 갱신</td><td>DS, ES, FS, GS의 DPL 검사 → 위반 시 NULL로 리셋</td></tr><tr><td>7</td><td>TB lookup/생성</td><td>새 <code>env->eip</code>에서 다음 TB 시작</td></tr></tbody></table></div>
+<p>단계 6이 중요하다: 하드웨어 iretq는 CPL이 바뀌면 DS, ES 등의 DPL을 재검사하여, 현재 CPL보다 높은 권한의 세그먼트를 NULL selector로 리셋한다. TCG도 이를 재현한다.</p>
+<p><strong>RFLAGS 마스크 규칙:</strong> iretq가 복원하는 RFLAGS에서 VM, RF 비트는 조건부로 처리되고, CPL > 0이면 IOPL 필드는 변경하지 않는다. TCG의 <code>helper_iret_protected()</code>도 이 마스크를 정확히 적용한다.</p>
+<p><strong>iretq와 Translation Block 경계:</strong> iretq는 반드시 TB의 마지막 명령어다. iretq 후 새 RIP에서 새 TB가 시작되므로, 커널→유저 전환 시 TB chain이 끊기고 새로운 유저 코드 TB로 점프한다. 이것이 context switch 비용의 일부다.</p>
+<p><strong>GDB에서 do_iret 전체 흐름 관찰 (5단계):</strong></p>
+<pre><code>(gdb) b *do_iret+4
+(gdb) commands
+  printf &quot;=== do_iret 진입 ===\n&quot;
+  printf &quot;tf address: %p\n&quot;, $rdi
+  printf &quot;tf->rip: 0x%lx\n&quot;, *(uint64_t *)($rdi + 152)
+  printf &quot;tf->cs:  0x%x\n&quot;, *(uint16_t *)($rdi + 160)
+  printf &quot;tf->rsp: 0x%lx\n&quot;, *(uint64_t *)($rdi + 176)
+  continue
+end
+
+; iretq 직전 (addq $32 실행 후, RSP가 rip 필드를 가리키는 시점)
+(gdb) b *do_iret+87
+(gdb) commands
+  printf &quot;=== iretq 직전 ===\n&quot;
+  printf &quot;stack top (RIP): 0x%lx\n&quot;, *(uint64_t *)$rsp
+  printf &quot;stack +8  (CS):  0x%lx\n&quot;, *(uint64_t *)($rsp+8)
+  printf &quot;stack +16 (RFLAGS): 0x%lx\n&quot;, *(uint64_t *)($rsp+16)
+  printf &quot;stack +24 (RSP): 0x%lx\n&quot;, *(uint64_t *)($rsp+24)
+  printf &quot;stack +32 (SS):  0x%lx\n&quot;, *(uint64_t *)($rsp+32)
+  stepi
+  printf &quot;=== iretq 직후 ===\n&quot;
+  info registers rip cs rsp ss eflags
+end
+</code></pre>
+<p>이 breakpoint로 iretq 전후의 5개 레지스터 변화를 한 눈에 볼 수 있다. CS가 0x08→0x23으로 바뀌면 유저 모드 전환, 0x08→0x08이면 커널 스레드 간 전환이다.</p>
+<p><strong>sysretq와의 성능 차이 (QEMU TCG):</strong></p>
+<p>실제 하드웨어에서 두 명령의 비용은 CPU model과 복귀 조건에 따라 달라지므로 고정 cycle 수로 일반화하지 않는다. QEMU TCG에서도 helper와 최적화 경로는 version에 따라 달라질 수 있다. 현재 PintOS syscall fast return이 <code>sysretq</code>라는 사실과 <code>do_iret()</code> 경로가 <code>iretq</code>라는 사실을 분리해 측정해야 한다.</p>
+<h2 id="do_iret-레지스터-복원-값-추적">do_iret() 레지스터 복원 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#do_iret-레지스터-복원-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>계산</th></tr></thead><tbody><tr><td>gp_registers 크기</td><td>120 bytes</td><td>15 레지스터 × 8 bytes</td></tr><tr><td>es+ds+pad 영역</td><td>16 bytes</td><td>(2+6) + (2+6)</td></tr><tr><td>vec_no + error_code</td><td>16 bytes</td><td>8 + 8</td></tr><tr><td>iretq가 읽는 영역</td><td>같은 CPL 24 B, 바깥 CPL 전환 40 B</td><td>항상 RIP+CS+RFLAGS, CPL 전환 시 RSP+SS 추가</td></tr><tr><td>intr_frame 전체</td><td>192 bytes</td><td>120 + 16 + 16 + 40</td></tr><tr><td>addq $120 건너뛰기</td><td>120 bytes</td><td>gp_registers 영역 통과</td></tr><tr><td>addq $32 건너뛰기</td><td>32 bytes</td><td>es/ds(16) + vec_no(8) + error_code(8)</td></tr></tbody></table></div>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% do_iret() 복원 순서\nflowchart TD\n  call_node[\&quot;do_iret(tf) 호출\&quot;]\n  set_rsp[\&quot;RSP ← tf 시작 주소\&quot;]\n  gp[\&quot;r15~rax 15개 레지스터 복원&lt;br/>movq 0~112, addq $120\&quot;]\n  segment[\&quot;es, ds 세그먼트 복원&lt;br/>addq $32로 vec_no/error_code 건너뜀\&quot;]\n  iretq[\&quot;iretq 실행\&quot;]\n  kernel[\&quot;커널 모드로 복원&lt;br/>out_iret 레이블 실행\&quot;]\n  user[\&quot;유저 모드로 복원&lt;br/>유저 RIP에서 실행 재개\&quot;]\n  tss[\&quot;CPU 자동 동작&lt;br/>TSS.rsp0은 다음 커널 진입 시 사용\&quot;]\n  call_node --> set_rsp\n  set_rsp --> gp\n  gp --> segment\n  segment --> iretq\n  iretq -->|\&quot;CS RPL=0\&quot;| kernel\n  iretq -->|\&quot;CS RPL=3\&quot;| user\n  user --> tss&quot;">%% do_iret() 복원 순서
+flowchart TD
+  call_node[&quot;do_iret(tf) 호출&quot;]
+  set_rsp[&quot;RSP ← tf 시작 주소&quot;]
+  gp[&quot;r15~rax 15개 레지스터 복원&lt;br/>movq 0~112, addq $120&quot;]
+  segment[&quot;es, ds 세그먼트 복원&lt;br/>addq $32로 vec_no/error_code 건너뜀&quot;]
+  iretq[&quot;iretq 실행&quot;]
+  kernel[&quot;커널 모드로 복원&lt;br/>out_iret 레이블 실행&quot;]
+  user[&quot;유저 모드로 복원&lt;br/>유저 RIP에서 실행 재개&quot;]
+  tss[&quot;CPU 자동 동작&lt;br/>TSS.rsp0은 다음 커널 진입 시 사용&quot;]
+  call_node --> set_rsp
+  set_rsp --> gp
+  gp --> segment
+  segment --> iretq
+  iretq -->|&quot;CS RPL=0&quot;| kernel
+  iretq -->|&quot;CS RPL=3&quot;| user
+  user --> tss
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>threads/thread.c:572</td><td><code>do_iret()</code></td><td>intr_frame에서 레지스터 복원 + iretq</td></tr><tr><td>threads/thread.c:612</td><td><code>thread_launch()</code></td><td>현재 레지스터 저장 후 do_iret 호출</td></tr><tr><td>include/threads/interrupt.h:29</td><td><code>struct gp_registers</code></td><td>범용 레지스터 15개 (120 bytes)</td></tr><tr><td>include/threads/interrupt.h:47</td><td><code>struct intr_frame</code></td><td>전체 실행 스냅샷 (192 bytes)</td></tr><tr><td>userprog/process.c:423</td><td><code>process_exec()</code></td><td>do_iret(&amp;_if)로 유저 모드 첫 진입</td></tr><tr><td>userprog/process.c:357</td><td><code>__do_fork()</code></td><td>do_iret(&amp;if_)로 fork 자식 유저 복귀</td></tr></tbody></table></div>
+<h3 id="linux-iretqsysretq-선택-로직-상세">Linux iretq/sysretq 선택 로직 상세<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-iretqsysretq-선택-로직-상세" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux 커널의 syscall 복귀 경로(<code>entry_SYSCALL_64</code>)에서 iretq와 sysretq를 선택하는 조건:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Linux iretq와 sysretq 선택 조건\nflowchart TD\n  done[\&quot;syscall 핸들러 완료\&quot;]\n  notify[\&quot;TIF_NOTIFY_SIGNAL&lt;br/>or TIF_SINGLESTEP?\&quot;]\n  flags[\&quot;RFLAGS에 TF/AC/RF&lt;br/>특수 비트?\&quot;]\n  segments[\&quot;CS/SS가&lt;br/>표준 유저 값?\&quot;]\n  slow[\&quot;slow path: iretq\&quot;]\n  fast[\&quot;fast path: sysretq\&quot;]\n  sysret[\&quot;RCX ← RIP&lt;br/>R11 ← RFLAGS&lt;br/>sysretq\&quot;]\n  iret[\&quot;스택에 5개 값 push&lt;br/>iretq\&quot;]\n  done --> notify\n  notify -->|\&quot;Yes\&quot;| slow\n  notify -->|\&quot;No\&quot;| flags\n  flags -->|\&quot;Yes\&quot;| slow\n  flags -->|\&quot;No\&quot;| segments\n  segments -->|\&quot;No\&quot;| slow\n  segments -->|\&quot;Yes\&quot;| fast\n  fast --> sysret\n  slow --> iret&quot;">%% Linux iretq와 sysretq 선택 조건
+flowchart TD
+  done[&quot;syscall 핸들러 완료&quot;]
+  notify[&quot;TIF_NOTIFY_SIGNAL&lt;br/>or TIF_SINGLESTEP?&quot;]
+  flags[&quot;RFLAGS에 TF/AC/RF&lt;br/>특수 비트?&quot;]
+  segments[&quot;CS/SS가&lt;br/>표준 유저 값?&quot;]
+  slow[&quot;slow path: iretq&quot;]
+  fast[&quot;fast path: sysretq&quot;]
+  sysret[&quot;RCX ← RIP&lt;br/>R11 ← RFLAGS&lt;br/>sysretq&quot;]
+  iret[&quot;스택에 5개 값 push&lt;br/>iretq&quot;]
+  done --> notify
+  notify -->|&quot;Yes&quot;| slow
+  notify -->|&quot;No&quot;| flags
+  flags -->|&quot;Yes&quot;| slow
+  flags -->|&quot;No&quot;| segments
+  segments -->|&quot;No&quot;| slow
+  segments -->|&quot;Yes&quot;| fast
+  fast --> sysret
+  slow --> iret
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>sysretq의 제약: <code>sysretq</code>는 RCX에서 RIP를, R11에서 RFLAGS를 복원한다. RFLAGS의 RF(Resume Flag)를 복원하지 못하고, non-canonical RCX가 들어가면 <a href="../.././../tags/gp가" class="tag-link internal internal-link alias" data-slug="tags/gp가">gp가</a> ring 0에서 발생하는 보안 버그가 있었다 (CVE-2014-4699). 이 때문에 Linux는 <code>ptrace</code>로 RIP가 변경된 경우 반드시 iretq 경로를 사용한다.</p>
+<p>현재 로컬 PintOS도 경로를 구분한다. 이 Linux 조건표와 세부 조건은 다르지만, 정상 syscall 복귀는 <code>sysretq</code>, 초기 유저 진입·인터럽트/예외·스레드 상태 복원은 <code>do_iret()</code>의 <code>iretq</code>를 사용한다.</p>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/thread-launch-mechanism" class="internal internal-link alias" data-slug="wiki/os/thread-launch-mechanism">thread launch() 복원 경로</a></li>
+<li><a href="../../wiki/os/intr-frame-layout" class="internal internal-link alias" data-slug="wiki/os/intr-frame-layout">intr frame 레이아웃</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">컨텍스트 스위치 흐름</a></li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 권한 전환</a></li>
+<li><a href="../../wiki/os/cpu-register-execution" class="internal internal-link alias" data-slug="wiki/os/cpu-register-execution">CPU 레지스터 실행</a></li>
+<li><a href="../../wiki/os/rip-instruction-pointer" class="internal internal-link alias" data-slug="wiki/os/rip-instruction-pointer">RIP</a></li>
+<li><a href="../../wiki/os/eflags-register" class="internal internal-link alias" data-slug="wiki/os/eflags-register">RFLAGS</a></li>
+<li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal internal-link alias" data-slug="wiki/os/tss-rsp0-mechanism">TSS rsp0 전환</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/context-switch-trace" class="internal">컨텍스트 스위치 (Context Switch) Trace</a></li><li><a href="../../wiki/os/cpu-register-execution" class="internal">CPU 레지스터와 명령어 실행</a></li><li><a href="../../wiki/os/cpux86state-structure" class="internal">CPUX86State 구조체 — QEMU의 가상 CPU</a></li><li><a href="../../wiki/os/do-iret-user-mode-entry" class="internal">do_iret() → user mode 진입</a></li><li><a href="../../wiki/os/eflags-register" class="internal">EFLAGS (RFLAGS) 레지스터</a></li><li><a href="../../wiki/os/entry-point-rip" class="internal">e_entry와 RIP 설정</a></li><li><a href="../../wiki/os/fork-intr-frame-copy" class="internal">fork — intr_frame 복사와 rax=0</a></li><li><a href="../../wiki/os/interrupt-descriptor-table" class="internal">인터럽트 디스크립터 테이블 (Interrupt Descriptor Table)</a></li><li><a href="../../wiki/os/intr-frame-layout" class="internal">struct intr_frame 레이아웃</a></li><li><a href="../../wiki/os/intr-frame-register-snapshot" class="internal">인터럽트 프레임 레지스터 스냅샷 (Intr Frame Register Snapshot)</a></li><li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal">페이지 폴트 후 왜 같은 명령어를 다시 실행하나</a></li><li><a href="../../wiki/os/privileged-instructions" class="internal">특권 명령어 (Privileged Instructions)</a></li><li><a href="../../wiki/os/process-exec-address-space" class="internal">주소 공간 교체</a></li><li><a href="../../wiki/os/process-fork-initialization-handshake-trace" class="internal">fork는 왜 자식 초기화가 끝날 때까지 부모를 재우는가</a></li><li><a href="../../wiki/os/rax-return-syscall" class="internal">RAX의 syscall 번호와 반환값</a></li><li><a href="../../wiki/os/rip-instruction-pointer" class="internal">RIP — 다음 명령어 주소</a></li><li><a href="../../wiki/os/rsp-stack-pointer" class="internal">RSP 스택 포인터 (RSP Stack Pointer)</a></li><li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal">시스템 콜 진입의 스택 전환과 intr_frame</a></li><li><a href="../../wiki/os/syscall-return-path" class="internal">syscall 복귀 경로 — sysretq vs iretq</a></li><li><a href="../../wiki/os/thread-launch-mechanism" class="internal">thread_launch() — register 저장과 스레드 전환</a></li><li><a href="../../wiki/os/thread-yield" class="internal">thread_yield() 자발적 CPU 양보</a></li><li><a href="../../wiki/os/user-kernel-mode" class="internal">유저 모드 / 커널 모드</a></li><li><a href="../../wiki/os/user-kernel-stack-separation" class="internal">유저 스택 / 커널 스택 분리</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-447" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#do_iret-레지스터-복원" data-for="do_iret-레지스터-복원">do_iret() 레지스터 복원</a></li><li class="depth-1"><a href="#왜-레지스터-스냅샷을-통째로-복원하나" data-for="왜-레지스터-스냅샷을-통째로-복원하나">왜 레지스터 스냅샷을 통째로 복원하나</a></li><li class="depth-1"><a href="#iretq가-필요한-이유" data-for="iretq가-필요한-이유">iretq가 필요한 이유</a></li><li class="depth-2"><a href="#cpl-전환-규칙" data-for="cpl-전환-규칙">CPL 전환 규칙</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#호출-경로-3가지" data-for="호출-경로-3가지">호출 경로 3가지</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#do_iret-레지스터-복원-값-추적" data-for="do_iret-레지스터-복원-값-추적">do_iret() 레지스터 복원 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-2"><a href="#linux-iretqsysretq-선택-로직-상세" data-for="linux-iretqsysretq-선택-로직-상세">Linux iretq/sysretq 선택 로직 상세</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>유저 스택 / 커널 스택 분리 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="유저 스택 / 커널 스택 분리 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="유저 스택 / 커널 스택 분리 · 최우녕"/><meta name="twitter:description" content="각 스레드는 유저 스택과 커널 스택을 따로 갖는다."/><meta property="og:description" content="각 스레드는 유저 스택과 커널 스택을 따로 갖는다."/><meta property="og:image:alt" content="각 스레드는 유저 스택과 커널 스택을 따로 갖는다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/user-kernel-stack-separation"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/user-kernel-stack-separation"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="각 스레드는 유저 스택과 커널 스택을 따로 갖는다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/user-kernel-stack-separation" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-691" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-691" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>유저 스택 / 커널 스택 분리</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="유저-스택--커널-스택-분리">유저 스택 / 커널 스택 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-스택--커널-스택-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: 각 스레드는 유저 스택과 커널 스택을 따로 갖는다. CPL 3→0 전환 과정에서 커널 스택으로 교체하면, 유저가 조작한 RSP로 커널 메모리를 망가뜨리는 일을 막을 수 있다.</p>
+</blockquote>
+<h2 id="유저-스택--커널-스택-분리-상태">유저 스택 / 커널 스택 분리 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-스택--커널-스택-분리-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>x86-64에서 스레드는 유저 모드에서 사용하는 <strong>유저 스택</strong>과 커널 모드에서 사용하는 <strong>커널 스택</strong>을 따로 둔다. 두 스택을 분리하면 커널은 유저가 지정한 RSP를 그대로 사용하지 않고 별도의 커널 스택에서 실행할 수 있다. 따라서 유저 프로그램이 커널 스택의 데이터를 읽거나, 조작한 RSP를 통해 커널 메모리에 쓰는 위험을 차단할 수 있다.</p>
+<p>CPL 3에서 CPL 0으로 전환할 때 어떤 방식으로 커널 스택을 불러오는지는 진입 경로에 따라 달라진다. 인터럽트가 발생하면 CPU가 TSS의 <code>rsp0</code>을 읽어 스택을 자동으로 교체한다. <code>syscall</code> 명령어는 TSS를 이용한 자동 스택 전환을 지원하지 않는다. 따라서 PintOS에서는 뒤에서 살펴볼 <code>syscall_entry.S</code>가 커널 스택을 직접 불러온다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념--왜-스택을-분리하는가">추상 개념 — 왜 스택을 분리하는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념--왜-스택을-분리하는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>위험</th><th>단일 스택일 때</th><th>분리 스택일 때</th></tr></thead><tbody><tr><td>유저가 커널 데이터 읽기</td><td>스택 frame 탐색으로 커널 주소 노출</td><td>유저 스택에 커널 데이터 없음</td></tr><tr><td>유저가 RSP 조작</td><td>커널 진입 시 조작된 RSP 사용 → 임의 메모리 쓰기</td><td>CPU가 rsp0로 강제 교체</td></tr><tr><td>스택 오버플로우 전파</td><td>유저 overflow가 커널 데이터 덮어씀</td><td>각 스택이 독립 영역</td></tr></tbody></table></div>
+<h3 id="하드웨어-메커니즘--tss-rsp0">하드웨어 메커니즘 — TSS rsp0<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#하드웨어-메커니즘--tss-rsp0" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>인터럽트로 권한 레벨이 CPL 3에서 CPL 0으로 바뀌면 x86-64 CPU는 TSS의 <code>rsp0</code>을 읽고, 그 주소를 새 RSP로 사용한다. 이후 커널 진입에 필요한 상태를 새 커널 스택에 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: tss-rsp0-mechanism.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;tss rsp0 mechanism&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>이 인터럽트 전환 과정은 하드웨어가 수행하므로 유저 코드가 개입할 수 없다. 이 설명은 <code>syscall</code> 명령어의 진입 과정에는 그대로 적용되지 않는다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서는 <code>struct thread_info</code>와 커널 스택이 같은 페이지 블록에 위치한다 (전통적으로 8 KB 또는 16 KB). 최근 커널(4.9+)은 <code>CONFIG_VMAP_STACK</code>으로 가상 매핑된 커널 스택을 사용하여 overflow를 guard page로 잡아낸다.</p>
+<p>유저 스택은 프로세스의 가상 주소 공간 상단 근처에 위치하며, <code>RLIMIT_STACK</code> (기본 8 MB)까지 성장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: linux-user-kernel-stack.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;linux user kernel stack&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 두 스택의 위치와 크기:</p>
+<p><strong>커널 스택</strong>:</p>
+<p>각 스레드는 1 페이지(4 KB)를 할당받아 하단에 <code>struct thread</code>, 상단에 커널 스택을 배치한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: pintos-thread-page-layout.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;pintos thread page layout&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>크기 제약: <code>struct thread</code> + magic이 페이지 하단을 차지하므로 커널 스택은 약 3 KB 미만이다.</p>
+<p><strong>유저 스택</strong>:</p>
+<p>유저 프로그램 로드 시 <code>setup_stack()</code>이 유저 가상 주소 공간 최상위에 1 페이지를 할당한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// userprog/process.c — setup_stack()</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> USER_STACK</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">47480000</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// 스택 최상위에 1 페이지 매핑</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_alloc_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(VM_ANON </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> VM_MARKER_0, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)(USER_STACK </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PGSIZE), </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// RSP를 USER_STACK으로 설정</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">if_</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">rsp </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> USER_STACK;</span></span></code></pre></figure>
+<p>VM 활성화 시 stack growth로 추가 페이지를 할당할 수 있다 (최대 256 페이지 = 1 MB).</p>
+<p><strong>TSS rsp0 설정</strong> (userprog/tss.c:76):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> tss_update</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">next</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    tss->rsp0 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) next </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PGSIZE;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // thread page 최상위</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>context switch 시 <code>process_activate()</code> → <code>tss_update()</code>를 호출하여, 다음 스레드의 커널 스택 최상위 주소를 TSS에 기록한다.</p>
+<h3 id="syscall-진입-시-스택-전환-흐름">syscall 진입 시 스택 전환 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#syscall-진입-시-스택-전환-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: syscall-stack-switch.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;syscall stack switch&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p><strong>중요</strong>: <code>syscall</code> 명령어는 <code>int 0x80</code>과 달리 TSS 자동 스택 전환을 하지 않는다. 따라서 <code>syscall_entry.S</code>에서 수동으로 TSS의 rsp0을 읽어 RSP를 교체한다. 반면 인터럽트(<code>int N</code>)는 CPU가 TSS.rsp0을 자동으로 사용한다.</p>
+<h3 id="인터럽트-진입-시-스택-전환">인터럽트 진입 시 스택 전환<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#인터럽트-진입-시-스택-전환" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>유저 모드에서 인터럽트가 발생하면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: interrupt-stack-switch.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;interrupt stack switch&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<p>커널 모드(CPL 0)에서 인터럽트가 발생하면 스택 전환 없이 현재 커널 스택을 계속 사용한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU(TCG 모드)는 하드웨어 TSS 자동 스택 전환을 소프트웨어로 재현한다:</p>
+<ol>
+<li><strong>CPL 전환 감지</strong>: guest의 <code>syscall</code> 또는 <code>int N</code> 명령어를 번역할 때, TCG frontend가 <code>do_interrupt_64()</code> (target/i386/seg_helper.c)를 호출한다.</li>
+<li><strong>rsp0 읽기</strong>: <code>do_interrupt_64()</code>가 CPUX86State에서 TR 레지스터 → TSS 세그먼트 → rsp0 오프셋(+4)을 읽어 guest RSP를 교체한다.</li>
+<li><strong><code>syscall</code> 특수 경로</strong>: <code>syscall</code>은 하드웨어에서도 TSS 자동 전환을 하지 않으므로, QEMU도 rsp0 교체 없이 guest RSP를 그대로 둔다. PintOS의 <code>syscall_entry.S</code>가 수동으로 TSS.rsp0을 읽는 과정까지 TCG가 충실히 번역한다.</li>
+</ol>
+<p>GDB에서 확인하는 법:</p>
+<pre><code>(gdb) break syscall_entry
+(gdb) x/gx $gs_base+4       # TSS.rsp0 (PintOS는 gs_base가 TSS 시작)
+(gdb) info registers rsp     # syscall 진입 전 유저 RSP
+(gdb) si 4                   # movq 4(%r12), %rsp 실행 후
+(gdb) info registers rsp     # 커널 RSP로 교체됨을 확인
+</code></pre>
+<h2 id="유저-스택--커널-스택-분리-값-추적">유저 스택 / 커널 스택 분리 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-스택--커널-스택-분리-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>PintOS 커널 스택 크기</td><td>~3 KB (4 KB 페이지 - struct thread - magic)</td></tr><tr><td>PintOS 유저 스택 초기 크기</td><td>1 페이지 = 4 KB</td></tr><tr><td>PintOS USER_STACK</td><td>0x47480000</td></tr><tr><td>PintOS 유저 스택 최대 크기</td><td>256 페이지 = 1 MB (VM 활성화 시)</td></tr><tr><td>Linux 커널 스택 크기</td><td>16 KB (CONFIG_THREAD_SIZE)</td></tr><tr><td>Linux 유저 스택 최대 크기</td><td>8 MB (RLIMIT_STACK 기본값)</td></tr><tr><td>TSS rsp0 계산</td><td>(uint64_t)thread + PGSIZE = thread page 상단</td></tr><tr><td>syscall 시 TSS 자동 전환</td><td>안 함 (수동 로드 필요)</td></tr><tr><td>interrupt 시 TSS 자동 전환</td><td>함 (CPL 3→0일 때)</td></tr></tbody></table></div>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="syscall-vs-interrupt-스택-전환-비교">syscall vs interrupt 스택 전환 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#syscall-vs-interrupt-스택-전환-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    subgraph SYSCALL[\&quot;syscall 명령어 (수동 전환)\&quot;]\n        S1[\&quot;유저 모드 실행&lt;br/>RSP = 유저 스택\&quot;] --> S2[\&quot;syscall 실행&lt;br/>RCX ← RIP, R11 ← RFLAGS\&quot;]\n        S2 --> S3[\&quot;syscall_entry.S 진입&lt;br/>RSP 아직 유저 스택\&quot;]\n        S3 --> S4[\&quot;movq %rsp, %rbx&lt;br/>유저 RSP 백업\&quot;]\n        S4 --> S5[\&quot;movabs $tss, %r12&lt;br/>movq 4(%r12), %rsp&lt;br/>커널 RSP 수동 로드\&quot;]\n        S5 --> S6[\&quot;커널 스택에서&lt;br/>intr_frame push\&quot;]\n    end\n\n    subgraph INTR[\&quot;인터럽트 (자동 전환)\&quot;]\n        I1[\&quot;유저 모드 실행&lt;br/>RSP = 유저 스택\&quot;] --> I2[\&quot;Timer IRQ 발생&lt;br/>CPL 3→0 감지\&quot;]\n        I2 --> I3[\&quot;CPU가 TSS.rsp0 읽음&lt;br/>RSP ← 커널 스택 (자동)\&quot;]\n        I3 --> I4[\&quot;CPU가 SS/RSP/RFLAGS&lt;br/>/CS/RIP 자동 push\&quot;]\n        I4 --> I5[\&quot;intr_entry 진입&lt;br/>이미 커널 스택\&quot;]\n    end&quot;">flowchart LR
+    subgraph SYSCALL[&quot;syscall 명령어 (수동 전환)&quot;]
+        S1[&quot;유저 모드 실행&lt;br/>RSP = 유저 스택&quot;] --> S2[&quot;syscall 실행&lt;br/>RCX ← RIP, R11 ← RFLAGS&quot;]
+        S2 --> S3[&quot;syscall_entry.S 진입&lt;br/>RSP 아직 유저 스택&quot;]
+        S3 --> S4[&quot;movq %rsp, %rbx&lt;br/>유저 RSP 백업&quot;]
+        S4 --> S5[&quot;movabs $tss, %r12&lt;br/>movq 4(%r12), %rsp&lt;br/>커널 RSP 수동 로드&quot;]
+        S5 --> S6[&quot;커널 스택에서&lt;br/>intr_frame push&quot;]
+    end
+
+    subgraph INTR[&quot;인터럽트 (자동 전환)&quot;]
+        I1[&quot;유저 모드 실행&lt;br/>RSP = 유저 스택&quot;] --> I2[&quot;Timer IRQ 발생&lt;br/>CPL 3→0 감지&quot;]
+        I2 --> I3[&quot;CPU가 TSS.rsp0 읽음&lt;br/>RSP ← 커널 스택 (자동)&quot;]
+        I3 --> I4[&quot;CPU가 SS/RSP/RFLAGS&lt;br/>/CS/RIP 자동 push&quot;]
+        I4 --> I5[&quot;intr_entry 진입&lt;br/>이미 커널 스택&quot;]
+    end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="pintos-스레드-페이지-내부-레이아웃">PintOS 스레드 페이지 내부 레이아웃<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-스레드-페이지-내부-레이아웃" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li>4 KB page (palloc_get_page)</li>
+<li>← (uint64_t)thread + PGSIZE</li>
+<li>= TSS.rsp0 (커널 스택 시작)</li>
+<li>커널 스택 (↓ 성장) | 약 3 KB 사용 가능</li>
+<li>intr_frame | | syscall/인터럽트 시</li>
+<li>(192 bytes) | | 여기에 register 저장</li>
+<li>…</li>
+<li>← sizeof(struct thread) ≈ 1 KB</li>
+<li>struct thread</li>
+<li>tid, status, name</li>
+<li>priority, donation</li>
+<li>pml4, spt</li>
+<li>fd_table[]</li>
+<li>magic (0xcd6abf4b)</li>
+<li>← (uint64_t)thread</li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[다이어그램 예정: user-kernel-stack-layout.svg]</span></span>
+<span data-line><span>- 최종 그림에는 &quot;user kernel stack layout&quot; 구조 또는 흐름을 넣는다.</span></span>
+<span data-line><span>- 현재는 깨진 이미지 링크 대신 Mermaid 전환용 설계 메모를 남긴다.</span></span></code></pre></figure>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>userprog/tss.c:76</td><td>tss_update()</td><td><code>tss->rsp0 = (uint64_t)next + PGSIZE</code></td></tr><tr><td>userprog/process.c:730</td><td>process_activate()</td><td><code>pml4_activate()</code> + <code>tss_update(next)</code></td></tr><tr><td>userprog/syscall-entry.S:6</td><td>syscall_entry</td><td>수동으로 tss→rsp0 로드하여 커널 스택 전환</td></tr><tr><td>userprog/syscall-entry.S:9</td><td><code>movq %rsp, %rbx</code></td><td>유저 RSP를 rbx에 백업</td></tr><tr><td>userprog/syscall-entry.S:12</td><td><code>movq 4(%r12), %rsp</code></td><td>TSS offset +4에서 rsp0 읽어 RSP 교체</td></tr><tr><td>userprog/syscall-entry.S:14-38</td><td>push 시퀀스</td><td>커널 스택에 intr_frame 구성 (192 bytes)</td></tr><tr><td>userprog/syscall-entry.S:67</td><td><code>popq %rsp</code></td><td>sysretq 전 유저 RSP 복원</td></tr><tr><td>userprog/process.c</td><td>setup_stack()</td><td>USER_STACK에 유저 스택 1 페이지 할당</td></tr><tr><td>include/threads/thread.h</td><td>struct thread</td><td>4 KB 페이지 하단에 배치, magic=0xcd6abf4b</td></tr><tr><td>threads/thread.c</td><td>thread_create()</td><td>palloc_get_page(0)로 thread page 할당</td></tr><tr><td>include/threads/vaddr.h</td><td>USER_STACK</td><td>0x47480000</td></tr><tr><td>threads/intr-stubs.S</td><td>intr_entry</td><td>인터럽트 시 CPU 자동 전환 후 나머지 register push</td></tr><tr><td>userprog/process.c:370</td><td>schedule 내 process_activate</td><td>context switch마다 tss_update 호출</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal internal-link alias" data-slug="wiki/os/tss-rsp0-mechanism">TSS rsp0</a></li>
+<li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-task-state-segment-kernel-stack-knowledge">TSS와 커널 스택</a></li>
+<li><a href="../../wiki/os/syscall-instruction" class="internal internal-link alias" data-slug="wiki/os/syscall-instruction">syscall 명령</a></li>
+<li><a href="../../wiki/os/syscall-entry-stack-switch-trace" class="internal internal-link alias" data-slug="wiki/os/syscall-entry-stack-switch-trace">syscall 스택 전환</a></li>
+<li><a href="../../wiki/os/intr-frame-layout" class="internal internal-link alias" data-slug="wiki/os/intr-frame-layout">intr frame 레이아웃</a></li>
+<li><a href="../../wiki/os/cpl-privilege-switch" class="internal internal-link alias" data-slug="wiki/os/cpl-privilege-switch">CPL 권한 전환</a></li>
+<li><a href="../../wiki/os/stack-growth-page-fault-knowledge" class="internal internal-link alias" data-slug="wiki/os/stack-growth-page-fault-knowledge">stack growth fault</a></li>
+<li><a href="../../wiki/os/process-activate-tss" class="internal internal-link alias" data-slug="wiki/os/process-activate-tss">process activate()</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/do-iret-restore" class="internal internal-link alias" data-slug="wiki/os/do-iret-restore">do iret() 복원</a></li>
+<li><a href="../../wiki/os/kernel-address-space-layout" class="internal internal-link alias" data-slug="wiki/os/kernel-address-space-layout">커널 주소 공간</a></li>
+<li><a href="../../wiki/os/user-kernel-mode" class="internal internal-link alias" data-slug="wiki/os/user-kernel-mode">유저 모드와 커널 모드</a></li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a></li>
+<li><a href="../../wiki/os/thread-launch-mechanism" class="internal internal-link alias" data-slug="wiki/os/thread-launch-mechanism">thread launch()</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/process-activate-tss" class="internal">process_activate() — TSS rsp0 설정과 주소 공간 전환</a></li><li><a href="../../wiki/os/rsp-stack-pointer" class="internal">RSP 스택 포인터 (RSP Stack Pointer)</a></li><li><a href="../../wiki/os/stack-growth-rsp-check" class="internal">Stack Growth RSP 근처 Fault 판단</a></li><li><a href="../../wiki/os/syscall-end-to-end" class="internal">write(1, buffer, size) 전체 흐름 Trace</a></li><li><a href="../../wiki/os/tss-rsp0-mechanism" class="internal">TSS rsp0 커널 스택</a></li><li><a href="../../wiki/os/user-stack-limit" class="internal">USER_STACK 경계와 스택 크기 제한</a></li><li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal">x86-64 TSS 커널 스택 전환</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-689" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#유저-스택--커널-스택-분리" data-for="유저-스택--커널-스택-분리">유저 스택 / 커널 스택 분리</a></li><li class="depth-1"><a href="#유저-스택--커널-스택-분리-상태" data-for="유저-스택--커널-스택-분리-상태">유저 스택 / 커널 스택 분리 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념--왜-스택을-분리하는가" data-for="추상-개념--왜-스택을-분리하는가">추상 개념 — 왜 스택을 분리하는가</a></li><li class="depth-2"><a href="#하드웨어-메커니즘--tss-rsp0" data-for="하드웨어-메커니즘--tss-rsp0">하드웨어 메커니즘 — TSS rsp0</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#syscall-진입-시-스택-전환-흐름" data-for="syscall-진입-시-스택-전환-흐름">syscall 진입 시 스택 전환 흐름</a></li><li class="depth-2"><a href="#인터럽트-진입-시-스택-전환" data-for="인터럽트-진입-시-스택-전환">인터럽트 진입 시 스택 전환</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#유저-스택--커널-스택-분리-값-추적" data-for="유저-스택--커널-스택-분리-값-추적">유저 스택 / 커널 스택 분리 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#syscall-vs-interrupt-스택-전환-비교" data-for="syscall-vs-interrupt-스택-전환-비교">syscall vs interrupt 스택 전환 비교</a></li><li class="depth-2"><a href="#pintos-스레드-페이지-내부-레이아웃" data-for="pintos-스레드-페이지-내부-레이아웃">PintOS 스레드 페이지 내부 레이아웃</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

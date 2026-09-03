@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Timer Calibration: `loops_per_tick`은 왜 부팅 때 재는가 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Timer Calibration: `loops_per_tick`은 왜 부팅 때 재는가 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Timer Calibration: `loops_per_tick`은 왜 부팅 때 재는가 · 최우녕"/><meta name="twitter:description" content="이 문서에서는 PintOS가 부팅 중 loopspertick을 측정하는 이유를 살펴보고, 긴 sleep과 sub-tick busy-wait를 구분하는 기준을 코드 흐름 및 QEMU의 역할과 연결해 설명한다."/><meta property="og:description" content="이 문서에서는 PintOS가 부팅 중 loopspertick을 측정하는 이유를 살펴보고, 긴 sleep과 sub-tick busy-wait를 구분하는 기준을 코드 흐름 및 QEMU의 역할과 연결해 설명한다."/><meta property="og:image:alt" content="이 문서에서는 PintOS가 부팅 중 loopspertick을 측정하는 이유를 살펴보고, 긴 sleep과 sub-tick busy-wait를 구분하는 기준을 코드 흐름 및 QEMU의 역할과 연결해 설명한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/timer-calibration-busy-wait-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/timer-calibration-busy-wait-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="이 문서에서는 PintOS가 부팅 중 loopspertick을 측정하는 이유를 살펴보고, 긴 sleep과 sub-tick busy-wait를 구분하는 기준을 코드 흐름 및 QEMU의 역할과 연결해 설명한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/timer-calibration-busy-wait-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-680" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-680" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Timer Calibration: `loops_per_tick`은 왜 부팅 때 재는가</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="timer-calibration-loops_per_tick은-왜-부팅-때-재는가">Timer Calibration: <code>loops_per_tick</code>은 왜 부팅 때 재는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-loops_per_tick은-왜-부팅-때-재는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<h2 id="timer-calibration-시작">Timer Calibration 시작<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-시작" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 문서에서는 PintOS가 부팅 중 <code>loops_per_tick</code>을 측정하는 이유를 살펴보고, 긴 sleep과 sub-tick busy-wait를 구분하는 기준을 코드 흐름 및 QEMU의 역할과 연결해 설명한다.</p>
+<p>PintOS는 부팅할 때 다음과 같은 메시지를 출력한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>Calibrating timer...  49,152,000 loops/s.</span></span></code></pre></figure>
+<p>여기서 한 가지 의문이 생긴다.</p>
+<blockquote>
+<p>이미 8254 PIT가 1초에 100번 timer interrupt를 만들어 주는데, 왜 커널은 다시 <code>loops_per_tick</code>을 측정할까?</p>
+</blockquote>
+<p>핵심은 timer interrupt와 busy-wait가 서로 다른 시간 범위를 담당한다는 데 있다.</p>
+<ul>
+<li>timer interrupt는 <strong>tick 단위의 시간 기준</strong>을 만든다.</li>
+<li><code>timer_sleep()</code>은 <strong>1 tick 이상 기다릴 때</strong> 현재 스레드를 BLOCKED 상태로 전환한다.</li>
+<li><code>timer_usleep()</code>처럼 <strong>1 tick보다 짧은 시간</strong>은 스레드를 재우기 애매하므로 <code>busy_wait()</code>로 근사한다.</li>
+<li><code>timer_calibrate()</code>는 이 busy-wait에 필요한 기준값을 부팅할 때 한 번 측정한다.</li>
+</ul>
+<h2 id="timer-calibration이-필요한-이유">Timer Calibration이 필요한 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration이-필요한-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 기본 timer interrupt 주파수는 <code>TIMER_FREQ = 100</code>이다.</p>
+<p>따라서 PintOS가 timer interrupt만으로 구분하기 쉬운 시간 단위는 대략 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>TIMER_FREQ = 100 → 1 tick = 1,000,000 us / 100 = 10,000 us = 10 ms</span></span></code></pre></figure>
+<p><code>timer_sleep(10)</code> 같은 요청은 자연스럽게 처리할 수 있다. 현재 tick이 <code>100</code>이라면 <code>wake_tick = 110</code>에 깨우면 된다.</p>
+<p>하지만 <code>timer_usleep(500)</code>은 다르다. 500 us는 0.5 ms이고, 1 tick은 10 ms다. 즉 500 us는 한 tick보다 훨씬 짧다. 이 요청을 <code>sleep_list</code>에 넣어 기다리게 하면 다음 timer interrupt가 올 때까지 최대 10 ms 가까이 지연될 수 있다.</p>
+<p>그래서 PintOS는 대기 방식을 다음과 같이 나눈다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>요청 시간</th><th>PintOS 방식</th><th>이유</th></tr></thead><tbody><tr><td>1 tick 이상</td><td><code>timer_sleep()</code></td><td>CPU를 양보하고 BLOCKED 상태가 되는 편이 낫다</td></tr><tr><td>1 tick 미만</td><td><code>busy_wait()</code></td><td>다음 tick을 기다리기에는 시간 단위가 너무 거칠다</td></tr></tbody></table></div>
+<p>여기서 <code>busy_wait()</code>는 빈 루프를 반복할 뿐이다.</p>
+<p>따라서 커널은 다음 질문에 답할 수 있어야 한다.</p>
+<blockquote>
+<p>현재 QEMU guest 환경에서 “한 tick 동안” 빈 루프를 대략 몇 번 실행할 수 있을까?</p>
+</blockquote>
+<p>그 답이 <code>loops_per_tick</code>이다.</p>
+<h2 id="timer-calibration-구조">Timer Calibration 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>처음에는 다음 흐름으로 기억하면 된다.</p>
+<ul>
+<li>timer_calibrate() 실행</li>
+<li>interrupt가 켜진 상태에서 측정</li>
+<li>빈 루프를 실행하면서 ticks의 변화를 관찰</li>
+<li>결과: loops_per_tick = “한 tick 안에 실행되는 빈 루프 수”</li>
+</ul>
+<p><code>loops_per_tick</code>은 CPU의 절대 성능을 나타내는 값이 아니다.</p>
+<p>더 정확히는 <strong>현재 실행 환경에서 PintOS의 빈 루프가 timer tick 하나가 지나는 동안 대략 몇 번 실행되는지</strong>를 나타내는 값이다.</p>
+<h2 id="timer_usleep500을-호출하는-경우"><code>timer_usleep(500)</code>을 호출하는 경우<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer_usleep500을-호출하는-경우" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>timer_usleep(500)</code>을 호출하는 상황을 살펴보자.</p>
+<p>PintOS의 <code>real_time_sleep()</code>은 먼저 요청 시간을 tick 수로 환산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>ticks = num * TIMER_FREQ / denom</span></span>
+<span data-line><span>     = 500 * 100 / 1,000,000</span></span>
+<span data-line><span>     = 50,000 / 1,000,000</span></span>
+<span data-line><span>     = 0  (정수 나눗셈)</span></span></code></pre></figure>
+<p>정수 나눗셈 결과가 <code>0</code>이므로 이 요청은 1 tick보다 짧다고 판단한다.</p>
+<p>따라서 PintOS는 스레드를 BLOCKED 상태로 보내지 않고 <code>busy_wait()</code>를 사용한다. 500 us는 10,000 us, 즉 1 tick의 0.05배이므로 <code>loops_per_tick</code>의 0.05배만큼 빈 루프를 실행한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>500 us / 10,000 us(1 tick) = 0.05 tick</span></span>
+<span data-line><span>→ busy_wait(loops_per_tick × 0.05)</span></span></code></pre></figure>
+<p>반대로 <code>timer_msleep(25)</code>라면 계산 결과가 달라진다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>ticks = 25 * 100 / 1,000 = 2  (정수 나눗셈)</span></span></code></pre></figure>
+<p>1 tick 이상이므로 <code>timer_sleep(2)</code>로 내려간다. 이때 실제 벽시계 시간은 호출 시점이 tick 경계의 어디에 있었는지에 따라 달라질 수 있다. 중요한 점은 25 ms를 정확히 맞춘다는 뜻이 아니라 정수 tick 두 개를 기준으로 재운다는 것이다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>실제 OS도 긴 기다림과 매우 짧은 지연을 구분한다.</p>
+<p>Linux 커널에는 timer, hrtimer, scheduler sleep, delay loop처럼 시간을 처리하는 여러 경로가 있다. 일반적인 thread sleep은 CPU를 양보하는 방식으로 처리하지만, 장치 초기화나 매우 짧은 hardware timing에는 busy-wait 계열의 지연이 사용될 수 있다.</p>
+<p>Windows도 thread wait, waitable timer, high-resolution counter와 커널 내부의 짧은 spin/delay 경로를 구분한다.</p>
+<p>실제 OS가 PintOS보다 복잡한 이유는 다음과 같다.</p>
+<ul>
+<li>CPU frequency scaling</li>
+<li>multicore와 per-CPU timer</li>
+<li>high-resolution timer</li>
+<li>tickless idle</li>
+<li>전력 관리</li>
+<li>실시간성 요구</li>
+</ul>
+<p>그래도 핵심 판단 기준은 같다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[sleep 요청] --> B{요청 시간 ≥ 1 tick?}\n    B -- Yes --> C[스레드를 BLOCKED로&lt;br/>CPU 양보]\n    B -- No --> D[busy-wait로&lt;br/>짧게 루프]&quot;">flowchart TD
+    A[sleep 요청] --> B{요청 시간 ≥ 1 tick?}
+    B -- Yes --> C[스레드를 BLOCKED로&lt;br/>CPU 양보]
+    B -- No --> D[busy-wait로&lt;br/>짧게 루프]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>PintOS는 이 판단을 <code>ticks > 0</code>인지 아닌지로 단순화한다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 부팅 과정에서 timer 관련 초기화는 세 단계로 나뉜다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant Init as init.c main()\n    participant Timer as timer.c\n    participant Thread as thread.c\n    participant PIT as 8254 PIT\n\n    Init->>Timer: timer_init()\n    Timer->>PIT: count = 11932 → I/O port 0x40\n    Timer->>Timer: intr_register_ext(0x20, timer_interrupt)\n    Init->>Thread: thread_start()\n    Thread->>Thread: intr_enable() → interrupt ON\n    Init->>Timer: timer_calibrate()\n    Timer->>Timer: loops_per_tick = 1024\n    loop 대략 측정 (2배씩)\n        Timer->>Timer: too_many_loops(loops_per_tick &lt;&lt; 1)\n    end\n    loop 정밀 측정 (비트 시험)\n        Timer->>Timer: too_many_loops(high_bit | test_bit)\n    end\n    Timer->>Init: printf(\&quot;loops/s\&quot;)&quot;">sequenceDiagram
+    participant Init as init.c main()
+    participant Timer as timer.c
+    participant Thread as thread.c
+    participant PIT as 8254 PIT
+
+    Init->>Timer: timer_init()
+    Timer->>PIT: count = 11932 → I/O port 0x40
+    Timer->>Timer: intr_register_ext(0x20, timer_interrupt)
+    Init->>Thread: thread_start()
+    Thread->>Thread: intr_enable() → interrupt ON
+    Init->>Timer: timer_calibrate()
+    Timer->>Timer: loops_per_tick = 1024
+    loop 대략 측정 (2배씩)
+        Timer->>Timer: too_many_loops(loops_per_tick &lt;&lt; 1)
+    end
+    loop 정밀 측정 (비트 시험)
+        Timer->>Timer: too_many_loops(high_bit | test_bit)
+    end
+    Timer->>Init: printf(&quot;loops/s&quot;)
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>근거 파일은 다음과 같다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/init.c</code>
+<ul>
+<li><code>timer_init()</code></li>
+<li><code>thread_start()</code></li>
+<li><code>timer_calibrate()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/threads/thread.c</code>
+<ul>
+<li><code>thread_start()</code></li>
+<li><code>intr_enable()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/devices/timer.c</code>
+<ul>
+<li><code>timer_init()</code></li>
+<li><code>timer_calibrate()</code></li>
+<li><code>too_many_loops()</code></li>
+<li><code>busy_wait()</code></li>
+<li><code>real_time_sleep()</code></li>
+</ul>
+</li>
+</ul>
+<p><code>timer_calibrate()</code>는 interrupt가 켜진 상태에서만 동작한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_get_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> () </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> INTR_ON);</span></span></code></pre></figure>
+<p>그 이유는 <code>too_many_loops()</code>가 <code>ticks</code>의 변화, 즉 timer interrupt가 발생한 결과를 기준으로 판단하기 때문이다.</p>
+<p>핵심 흐름은 다음과 같다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[too_many_loops 진입] --> B[tick 경계 대기: while ticks == start]\n    B --> C[start = ticks 갱신]\n    C --> D[busy_wait loops 회]\n    D --> E{start != ticks?}\n    E -- Yes --> F[return true: 한 tick보다 길다]\n    E -- No --> G[return false: 한 tick 안에 끝남]&quot;">flowchart TD
+    A[too_many_loops 진입] --> B[tick 경계 대기: while ticks == start]
+    B --> C[start = ticks 갱신]
+    C --> D[busy_wait loops 회]
+    D --> E{start != ticks?}
+    E -- Yes --> F[return true: 한 tick보다 길다]
+    E -- No --> G[return false: 한 tick 안에 끝남]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><code>true</code>은 “이만큼의 loop는 한 tick 안에 끝내기에는 너무 많다”는 뜻이다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>loops_per_tick</code>을 알지 못한다.</p>
+<p>QEMU의 역할은 PintOS가 사용하는 8254 PIT와 interrupt line을 에뮬레이션하는 것이다.</p>
+<p>근거 파일은 다음과 같다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/include/hw/timer/i8254.h" class="external external-link">include/hw/timer/i8254.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>PIT_FREQ</code></li>
+<li><code>i8254_pit_init()</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/isa/piix.c" class="external external-link">hw/isa/piix.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>i8254_pit_init(isa_bus, 0x40, 0, NULL)</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/timer/i8254.c" class="external external-link">hw/timer/i8254.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>timer_new_ns(QEMU_CLOCK_VIRTUAL, pit_irq_timer, s)</code></li>
+<li><code>pit_irq_timer_update()</code></li>
+<li><code>qemu_set_irq()</code></li>
+</ul>
+</li>
+</ul>
+<p>각 층의 역할을 나누면 다음과 같다.</p>
+<ul>
+<li>PintOS (Guest OS)</li>
+<li>timer_calibrate() → loops_per_tick</li>
+<li>timer_sleep() → BLOCKED</li>
+<li>busy_wait() → 빈 루프</li>
+<li>QEMU (Emulator)</li>
+<li>i8254 PIT 에뮬레이션</li>
+<li>pit_irq_timer → IRQ0 → vector 0x20</li>
+<li>guest CPU 명령 실행 (TCG)</li>
+</ul>
+<p>따라서 QEMU가 “PintOS의 busy-wait를 보정한다”고 이해하면 안 된다.</p>
+<p>QEMU는 timer tick이 들어올 수 있는 하드웨어 환경을 제공하고, 보정은 guest OS인 PintOS가 자신의 코드로 수행한다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>긴 sleep</td><td>scheduler와 timer subsystem이 처리</td><td><code>timer_sleep()</code>과 <code>sleep_list</code></td><td>guest 정책 모름</td></tr><tr><td>짧은 지연</td><td>high-res timer 또는 busy-wait 계열 경로</td><td><code>busy_wait()</code></td><td>guest 루프를 CPU 명령으로 실행</td></tr><tr><td>보정값</td><td>CPU/플랫폼별 복잡한 시간 관리</td><td><code>loops_per_tick</code> 하나</td><td>보정 정책 없음</td></tr><tr><td>tick 공급</td><td>실제 하드웨어/가상화 timer</td><td><code>timer_interrupt()</code>에서 <code>ticks++</code></td><td>8254 PIT와 IRQ를 에뮬레이션</td></tr><tr><td>정확도</td><td>전력/스케줄링/하드웨어 정책 영향</td><td>교육용 근사값</td><td>host scheduling과 가상 시간 정책 영향</td></tr></tbody></table></div>
+<h2 id="timer-calibration-코드">Timer Calibration 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos는-pit를-100hz로-설정한다">1. PintOS는 PIT를 100Hz로 설정한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos는-pit를-100hz로-설정한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일은 다음과 같다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/devices/timer.h</code></li>
+<li><code>SW_AI-W11-pintos/pintos/devices/timer.c</code></li>
+</ul>
+<p>핵심 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> TIMER_FREQ</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 100</span></span></code></pre></figure>
+<p><code>timer_init()</code>은 PIT 입력 주파수를 <code>TIMER_FREQ</code>로 나눈 count를 I/O port에 기록한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint16_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1193180</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> +</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> TIMER_FREQ </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> TIMER_FREQ;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">outb</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">43</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">34</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">outb</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">40</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">ff</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">outb</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">40</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 8</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_register_ext</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">20</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, timer_interrupt, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;8254 Timer&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<h3 id="2-timer_calibrate는-한-tick-안에-실행되는-loop-수를-측정한다">2. <code>timer_calibrate()</code>는 한 tick 안에 실행되는 loop 수를 측정한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-timer_calibrate는-한-tick-안에-실행되는-loop-수를-측정한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일은 다음과 같다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/devices/timer.c</code></li>
+</ul>
+<p>먼저 대략적인 값을 측정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">loops_per_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">u</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &lt;&lt;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 10</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">too_many_loops</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (loops_per_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;&lt;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">))</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">  loops_per_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;&lt;=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p>그다음 8비트를 추가로 시험해 조금 더 정밀한 값을 구한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">high_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> loops_per_tick;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (test_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> high_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">; test_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> high_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 10</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">; test_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>>=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">  if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">too_many_loops</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (high_bit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> test_bit))</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    loops_per_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> test_bit;</span></span></code></pre></figure>
+<h3 id="3-too_many_loops는-ticks가-한-tick을-넘는지-판단한다">3. <code>too_many_loops()</code>는 <code>ticks</code>가 한 tick을 넘는지 판단한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-too_many_loops는-ticks가-한-tick을-넘는지-판단한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ticks;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (ticks </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> start)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  barrier</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ticks;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">busy_wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (loops);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ticks;</span></span></code></pre></figure>
+<p>즉 <code>busy_wait(loops)</code>를 실행하는 동안 timer interrupt가 발생해 <code>ticks</code>가 증가했다면, 해당 loop 수를 실행하는 데 한 tick보다 오래 걸린다고 판단한다.</p>
+<h3 id="4-sub-tick-sleep은-busy-wait로-내려간다">4. sub-tick sleep은 busy-wait로 내려간다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-sub-tick-sleep은-busy-wait로-내려간다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> ticks </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> num </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> TIMER_FREQ </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> denom;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (ticks </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  timer_sleep</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (ticks);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">else</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">  busy_wait</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (loops_per_tick </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> num </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1000</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> TIMER_FREQ </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (denom </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1000</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">));</span></span></code></pre></figure>
+<p>여기서 <code>ticks == 0</code>이면 요청 시간이 1 tick 미만이다.</p>
+<p>PintOS는 이 경우 scheduler에 맡기지 않고 현재 CPU에서 짧게 루프를 실행한다.</p>
+<h3 id="5-qemu는-pit-interrupt-line을-만든다">5. QEMU는 PIT interrupt line을 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-qemu는-pit-interrupt-line을-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>관련 파일은 다음과 같다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/timer/i8254.c" class="external external-link">hw/timer/i8254.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/include/hw/timer/i8254.h" class="external external-link">include/hw/timer/i8254.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PIT_FREQ</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1193182</span></span></code></pre></figure>
+<p>PIT channel 0에는 QEMU virtual clock timer가 연결된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">irq_timer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> timer_new_ns</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(QEMU_CLOCK_VIRTUAL, pit_irq_timer, s);</span></span></code></pre></figure>
+<p>timer transition이 발생하면 IRQ level을 변경한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">qemu_set_irq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(s</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">irq</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, irq_level);</span></span></code></pre></figure>
+<p>이 IRQ는 PintOS의 <code>timer_interrupt()</code>로 이어지고, 그 결과 <code>ticks</code>가 증가한다.</p>
+<h2 id="timer-calibration-값-추적">Timer Calibration 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pit-count-계산">1. PIT count 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pit-count-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 <code>TIMER_FREQ=100</code>을 목표로 PIT count를 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>count = (1,193,180 + 100/2) / 100</span></span>
+<span data-line><span>      = (1,193,180 + 50) / 100</span></span>
+<span data-line><span>      = 1,193,230 / 100</span></span>
+<span data-line><span>      = 11,932</span></span></code></pre></figure>
+<p>따라서 channel 0은 대략 11,932 input cycles마다 출력을 바꾸어 100 Hz tick에 가까운 interrupt를 만든다.</p>
+<p>QEMU의 <code>PIT_FREQ</code>는 <code>1,193,182</code>로 정의되어 있다. 두 값은 8254 PIT의 표준 입력 주파수를 각 코드에서 근사한 값이다. 이 문서의 핵심인 <code>1 tick ~= 10ms</code> 판단에서는 같은 모델로 이해해도 된다.</p>
+<h3 id="2-loopss-메시지는-어떻게-나오는가">2. <code>loops/s</code> 메시지는 어떻게 나오는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-loopss-메시지는-어떻게-나오는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>timer_calibrate()</code>의 출력은 다음 계산에서 나온다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>loops/s = loops_per_tick × TIMER_FREQ</span></span></code></pre></figure>
+<p>출력이 <code>49,152,000 loops/s</code>라고 가정하면 내부 값은 대략 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>loops_per_tick = 49,152,000 / 100 = 491,520</span></span></code></pre></figure>
+<p>이 값이 “CPU clock이 50 MHz다”라는 뜻은 아니다.</p>
+<p>현재 환경에서 빈 루프와 <code>barrier()</code>가 초당 그 정도 반복된다는 의미에 가깝다.</p>
+<h3 id="3-500-us-busy-wait-계산">3. 500 us busy-wait 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-500-us-busy-wait-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>timer_usleep(500)</code>은 0.05 tick에 해당한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>500 us / 10,000 us = 0.05 tick</span></span></code></pre></figure>
+<p><code>loops_per_tick = 500,000</code>이라고 가정하면 필요한 loop 수는 대략 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>loops = 500,000 × 0.05 = 25,000회</span></span></code></pre></figure>
+<p>실제 PintOS 코드는 overflow 가능성을 줄이기 위해 식을 나누어 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>loops = loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000)</span></span>
+<span data-line><span>      = 500,000 * 500 / 1000 * 100 / (1,000,000 / 1000)</span></span>
+<span data-line><span>      = 500,000 * 500 / 1000 * 100 / 1000</span></span>
+<span data-line><span>      = 250,000 * 100 / 1000</span></span>
+<span data-line><span>      = 25,000</span></span></code></pre></figure>
+<h3 id="4-ticks와-loops_per_tick은-서로-다른-역할을-한다">4. <code>ticks</code>와 <code>loops_per_tick</code>은 서로 다른 역할을 한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-ticks와-loops_per_tick은-서로-다른-역할을-한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th><code>ticks</code></th><th><code>loops_per_tick</code></th></tr></thead><tbody><tr><td>변경 시점</td><td>매 timer interrupt마다</td><td>부팅할 때 한 번</td></tr><tr><td>저장 형태</td><td><code>int64_t</code>, 단조 증가</td><td><code>unsigned</code>, 고정 상수</td></tr><tr><td>읽기 방법</td><td>interrupt OFF 상태에서 읽어야 안전</td><td>언제든 읽어도 안전</td></tr><tr><td>역할</td><td>wall-clock tick 카운터</td><td>sub-tick busy-wait 기준값</td></tr></tbody></table></div>
+<p><code>timer_ticks()</code>가 interrupt를 잠시 끄고 <code>ticks</code>를 읽는 이유도 이 차이에서 나온다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> intr_level old_level </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> intr_disable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> t </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ticks;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_set_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (old_level);</span></span></code></pre></figure>
+<p>64비트 <code>ticks</code>를 읽는 도중 timer interrupt가 끼어들어 값이 바뀌는 상황을 피하기 위한 것이다.</p>
+<h2 id="timer-calibration-gdb">Timer Calibration GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#timer-calibration-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos-gdb에서-보정-흐름-보기">1. PintOS GDB에서 보정 흐름 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos-gdb에서-보정-흐름-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS를 GDB stub과 함께 실행한 뒤 다음 breakpoint를 설정한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b timer_calibrate</span></span>
+<span data-line><span>b too_many_loops</span></span>
+<span data-line><span>b timer_interrupt</span></span></code></pre></figure>
+<p>확인할 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p ticks</span></span>
+<span data-line><span>p loops_per_tick</span></span>
+<span data-line><span>next</span></span>
+<span data-line><span>p ticks</span></span>
+<span data-line><span>p loops_per_tick</span></span></code></pre></figure>
+<p>관찰할 지점은 두 가지다.</p>
+<ul>
+<li><code>timer_calibrate()</code>에 진입하기 전에는 interrupt가 켜져 있어야 한다.</li>
+<li><code>too_many_loops()</code>는 <code>busy_wait()</code> 전후에 <code>ticks</code>가 바뀌었는지 확인한다.</li>
+</ul>
+<h3 id="2-real_time_sleep-분기-보기">2. <code>real_time_sleep()</code> 분기 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-real_time_sleep-분기-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b real_time_sleep</span></span></code></pre></figure>
+<p><code>timer_usleep(500)</code> 같은 호출에서는 다음 값을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p num</span></span>
+<span data-line><span>p denom</span></span>
+<span data-line><span>p ticks</span></span></code></pre></figure>
+<p><code>ticks == 0</code>이면 <code>busy_wait()</code>로 내려간다.</p>
+<p><code>timer_msleep(25)</code> 같은 호출에서는 다음 값을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p ticks</span></span></code></pre></figure>
+<p><code>ticks > 0</code>이면 <code>timer_sleep()</code>로 내려간다.</p>
+<h3 id="3-qemu-host-gdb와-pintos-gdb-stub-구분하기">3. QEMU host GDB와 PintOS GDB stub 구분하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-qemu-host-gdb와-pintos-gdb-stub-구분하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS GDB stub에서 <code>b timer_interrupt</code>를 설정하면 guest kernel 함수에서 멈춘다.</p>
+<p>반면 QEMU 자체를 host GDB로 실행해 <code>b pit_irq_timer_update</code>를 설정하면 QEMU host process의 함수에서 멈춘다.</p>
+<p>두 디버거는 같은 사건을 서로 다른 층에서 관찰한다.</p>
+<ul>
+<li>PintOS GDB stub (guest 관점)</li>
+<li>b timer_interrupt → guest kernel 함수</li>
+<li>p ticks → guest 전역변수</li>
+<li>p loops_per_tick → guest 전역변수</li>
+<li>Host GDB (QEMU process 관점)</li>
+<li>b pit_irq_timer_update → QEMU host 함수</li>
+<li>p s->channels[0].count → QEMU PIT 내부 상태</li>
+</ul>
+<p>이 구분은 <a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub은 어떤 상태를 보여주는가</a>와 함께 살펴보면 더 분명해진다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/상수</th><th>역할</th></tr></thead><tbody><tr><td><code>include/devices/timer.h</code></td><td><code>TIMER_FREQ</code></td><td>100Hz — PIT 목표 주파수</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_init()</code></td><td>PIT count 계산, I/O port 기록, IRQ 0x20 등록</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_calibrate()</code></td><td>loops_per_tick 측정 (대략 + 정밀 2단계)</td></tr><tr><td><code>devices/timer.c</code></td><td><code>too_many_loops()</code></td><td>ticks 변화 관찰로 “한 tick 초과 여부” 판단</td></tr><tr><td><code>devices/timer.c</code></td><td><code>busy_wait()</code></td><td>빈 루프 loops회 실행</td></tr><tr><td><code>devices/timer.c</code></td><td><code>real_time_sleep()</code></td><td>ticks > 0이면 timer_sleep(), 아니면 busy_wait()</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_sleep()</code></td><td>sleep_list에 넣고 BLOCKED</td></tr><tr><td><code>devices/timer.c</code></td><td><code>timer_interrupt()</code></td><td>ticks++, thread_tick() 호출</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_tick()</code></td><td>thread_ticks++, TIME_SLICE 초과 시 yield 예약</td></tr><tr><td><code>threads/init.c</code></td><td><code>main()</code></td><td>timer_init() → thread_start() → timer_calibrate() 순서</td></tr><tr><td>QEMU <code>include/hw/timer/i8254.h</code></td><td><code>PIT_FREQ</code></td><td>1,193,182 — PIT 입력 주파수</td></tr><tr><td>QEMU <code>hw/timer/i8254.c</code></td><td><code>pit_irq_timer</code></td><td>QEMU virtual clock → IRQ level 변경</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><code>TIMER_FREQ=100</code>이면 PintOS의 기본 timer tick은 약 10 ms다.</li>
+<li><code>timer_sleep()</code>은 1 tick 이상 기다릴 때 스레드를 BLOCKED 상태로 보내 CPU를 양보한다.</li>
+<li>1 tick보다 짧은 지연은 timer interrupt 단위로 표현하기 어려우므로 <code>busy_wait()</code>를 사용한다.</li>
+<li><code>timer_calibrate()</code>는 부팅 중 <code>ticks</code>의 변화를 관찰해 한 tick 안에 실행되는 loop 수를 <code>loops_per_tick</code>으로 저장한다.</li>
+<li>QEMU는 <code>loops_per_tick</code>을 알지 못한다. QEMU는 PIT와 IRQ의 하드웨어 효과를 에뮬레이션하고, PintOS는 그 tick을 이용해 자체 보정값을 만든다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">Timer Interrupt</a>
+<ul>
+<li>8254 PIT, IRQ0, vector 0x20이 timer interrupt로 이어지는 전체 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/loops-per-tick" class="internal internal-link alias" data-slug="wiki/os/loops-per-tick">loops per tick</a>
+<ul>
+<li><code>loops_per_tick</code> 변수의 의미와 측정 알고리즘 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/alarm-clock-sleep-list-lab" class="internal internal-link alias" data-slug="wiki/os/alarm-clock-sleep-list-lab">alarm clock sleep list Lab</a>
+<ul>
+<li>1 tick 이상 sleep을 <code>sleep_list</code>와 <code>BLOCKED</code> 상태로 구현하는 실험.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a>
+<ul>
+<li>timer tick이 scheduling 기회로 이어지는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/thread-tick-time-slice" class="internal internal-link alias" data-slug="wiki/os/thread-tick-time-slice">TIME SLICE</a>
+<ul>
+<li><code>TIME_SLICE</code> 검사와 <code>intr_yield_on_return()</code>.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/sleep-list-wake-tick" class="internal internal-link alias" data-slug="wiki/os/sleep-list-wake-tick">sleep list wake tick</a>
+<ul>
+<li>alarm clock의 <code>sleep_list</code>와 <code>wake_tick</code> 구조.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-device-model" class="internal internal-link alias" data-slug="wiki/os/qemu-device-model">QEMU device model</a>
+<ul>
+<li>PIT, PIC, IDE 장치 모델 에뮬레이션.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/qemu-gdb-stub-guest-state-knowledge" class="internal internal-link alias" data-slug="wiki/os/qemu-gdb-stub-guest-state-knowledge">QEMU GDB Stub</a>
+<ul>
+<li>guest PintOS GDB와 host QEMU GDB의 관점 구분.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/i8254-pit-model" class="internal internal-link alias" data-slug="wiki/os/i8254-pit-model">i8254 PIT</a>
+<ul>
+<li>PIT 가상 타이머 상세.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/fetch-decode-execute" class="internal internal-link alias" data-slug="wiki/os/fetch-decode-execute">Fetch Decode Execute</a>
+<ul>
+<li><code>busy_wait</code> 빈 루프가 실행되는 CPU 사이클.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/i8254-pit-model" class="internal">i8254 PIT 가상 타이머</a></li><li><a href="../../wiki/os/loops-per-tick" class="internal">loops_per_tick 보정</a></li><li><a href="../../wiki/os/qemu-tcg-translation-block" class="internal">QEMU TCG 번역 블록</a></li><li><a href="../../wiki/os/qemu-tcg-translation" class="internal">TCG 코드 번역</a></li><li><a href="../../wiki/os/sleep-list-wake-tick" class="internal">sleep_list와 wake_tick — Alarm Clock 구현의 핵심 자료구조</a></li><li><a href="../../wiki/os/thread-scheduler-trace" class="internal">스레드 스케줄러 (Thread Scheduler) Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-678" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#timer-calibration-loops_per_tick은-왜-부팅-때-재는가" data-for="timer-calibration-loops_per_tick은-왜-부팅-때-재는가">Timer Calibration: loops_per_tick은 왜 부팅 때 재는가</a></li><li class="depth-1"><a href="#timer-calibration-시작" data-for="timer-calibration-시작">Timer Calibration 시작</a></li><li class="depth-1"><a href="#timer-calibration이-필요한-이유" data-for="timer-calibration이-필요한-이유">Timer Calibration이 필요한 이유</a></li><li class="depth-1"><a href="#timer-calibration-구조" data-for="timer-calibration-구조">Timer Calibration 구조</a></li><li class="depth-1"><a href="#timer_usleep500을-호출하는-경우" data-for="timer_usleep500을-호출하는-경우">timer_usleep(500)을 호출하는 경우</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#timer-calibration-코드" data-for="timer-calibration-코드">Timer Calibration 코드</a></li><li class="depth-2"><a href="#1-pintos는-pit를-100hz로-설정한다" data-for="1-pintos는-pit를-100hz로-설정한다">1. PintOS는 PIT를 100Hz로 설정한다</a></li><li class="depth-2"><a href="#2-timer_calibrate는-한-tick-안에-실행되는-loop-수를-측정한다" data-for="2-timer_calibrate는-한-tick-안에-실행되는-loop-수를-측정한다">2. timer_calibrate()는 한 tick 안에 실행되는 loop 수를 측정한다</a></li><li class="depth-2"><a href="#3-too_many_loops는-ticks가-한-tick을-넘는지-판단한다" data-for="3-too_many_loops는-ticks가-한-tick을-넘는지-판단한다">3. too_many_loops()는 ticks가 한 tick을 넘는지 판단한다</a></li><li class="depth-2"><a href="#4-sub-tick-sleep은-busy-wait로-내려간다" data-for="4-sub-tick-sleep은-busy-wait로-내려간다">4. sub-tick sleep은 busy-wait로 내려간다</a></li><li class="depth-2"><a href="#5-qemu는-pit-interrupt-line을-만든다" data-for="5-qemu는-pit-interrupt-line을-만든다">5. QEMU는 PIT interrupt line을 만든다</a></li><li class="depth-1"><a href="#timer-calibration-값-추적" data-for="timer-calibration-값-추적">Timer Calibration 값 추적</a></li><li class="depth-2"><a href="#1-pit-count-계산" data-for="1-pit-count-계산">1. PIT count 계산</a></li><li class="depth-2"><a href="#2-loopss-메시지는-어떻게-나오는가" data-for="2-loopss-메시지는-어떻게-나오는가">2. loops/s 메시지는 어떻게 나오는가</a></li><li class="depth-2"><a href="#3-500-us-busy-wait-계산" data-for="3-500-us-busy-wait-계산">3. 500 us busy-wait 계산</a></li><li class="depth-2"><a href="#4-ticks와-loops_per_tick은-서로-다른-역할을-한다" data-for="4-ticks와-loops_per_tick은-서로-다른-역할을-한다">4. ticks와 loops_per_tick은 서로 다른 역할을 한다</a></li><li class="depth-1"><a href="#timer-calibration-gdb" data-for="timer-calibration-gdb">Timer Calibration GDB</a></li><li class="depth-2"><a href="#1-pintos-gdb에서-보정-흐름-보기" data-for="1-pintos-gdb에서-보정-흐름-보기">1. PintOS GDB에서 보정 흐름 보기</a></li><li class="depth-2"><a href="#2-real_time_sleep-분기-보기" data-for="2-real_time_sleep-분기-보기">2. real_time_sleep() 분기 보기</a></li><li class="depth-2"><a href="#3-qemu-host-gdb와-pintos-gdb-stub-구분하기" data-for="3-qemu-host-gdb와-pintos-gdb-stub-구분하기">3. QEMU host GDB와 PintOS GDB stub 구분하기</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

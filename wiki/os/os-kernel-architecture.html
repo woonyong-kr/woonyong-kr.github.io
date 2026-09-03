@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel · 최우녕"/><meta name="twitter:description" content="커널이 직접 하는 일의 범위로 갈리는 OS 설계 — Monolithic·Microkernel·Exokernel 비교."/><meta property="og:description" content="커널이 직접 하는 일의 범위로 갈리는 OS 설계 — Monolithic·Microkernel·Exokernel 비교."/><meta property="og:image:alt" content="커널이 직접 하는 일의 범위로 갈리는 OS 설계 — Monolithic·Microkernel·Exokernel 비교."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/os-kernel-architecture"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/os-kernel-architecture"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="커널이 직접 하는 일의 범위로 갈리는 OS 설계 — Monolithic·Microkernel·Exokernel 비교."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/os-kernel-architecture" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-547" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-547" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="os-커널-아키텍처--monolithic-microkernel-exokernel">OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#os-커널-아키텍처--monolithic-microkernel-exokernel" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 Monolithic·Microkernel·Exokernel의 책임 배치와 일반적인 장단점·선택 기준을 설명하며, 성능과 격리 효과는 구체적인 구현·구성·권한 모델과 동일 환경의 측정에 따라 달라진다. PintOS의 호출 경로와 장애 시나리오, Linux·seL4·MINIX 3 등의 코드 크기·이미지 크기·버전 관련 내용은 제시된 코드와 실제 실행 기록을 대조해야 하는 검증 대상이지, 이 문서만으로 확인된 구현 결과는 아니다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: 커널이 직접 하는 일의 범위로 갈리는 OS 설계 — Monolithic·Microkernel·Exokernel 비교.</p>
+</blockquote>
+<h2 id="핵심-질문">핵심 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#핵심-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>OS를 설계할 때는 파일 시스템, 디바이스 드라이버, 네트워크 스택, 프로세스 관리 가운데 어디까지 커널이 직접 맡을지 정해야 한다. 이 기능을 모두 커널 안에 둘 수도 있고, 커널에는 최소 기능만 남긴 채 나머지를 유저 프로세스로 분리할 수도 있다. 이 책임 범위와 배치 방식에 따라 성능, 안정성, 보안, 확장성의 특성이 달라진다.</p>
+<h2 id="monolithic-kernel">Monolithic Kernel<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#monolithic-kernel" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Monolithic Kernel은 OS의 거의 모든 기능을 하나의 커널에 둔다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 모놀리식 커널 — 파일시스템·드라이버·네트워크·IPC가 모두 커널 안에 있고 유저는 syscall로만 진입\nflowchart TD\n  app[\&quot;User applications\&quot;]\n  boundary[\&quot;syscall 경계\&quot;]\n  kernel[\&quot;하나의 kernel address space\&quot;]\n  fs[\&quot;파일시스템\&quot;]\n  sched[\&quot;스케줄러\&quot;]\n  mem[\&quot;메모리 관리\&quot;]\n  disk[\&quot;디스크 드라이버\&quot;]\n  net[\&quot;네트워크 스택\&quot;]\n  ipc[\&quot;IPC\&quot;]\n  hw[\&quot;Hardware\&quot;]\n  app --> boundary --> kernel\n  kernel --> fs\n  kernel --> sched\n  kernel --> mem\n  kernel --> net\n  kernel --> ipc\n  fs --> disk --> hw\n  sched --> hw\n  mem --> hw\n  net --> hw&quot;">%% 모놀리식 커널 — 파일시스템·드라이버·네트워크·IPC가 모두 커널 안에 있고 유저는 syscall로만 진입
+flowchart TD
+  app[&quot;User applications&quot;]
+  boundary[&quot;syscall 경계&quot;]
+  kernel[&quot;하나의 kernel address space&quot;]
+  fs[&quot;파일시스템&quot;]
+  sched[&quot;스케줄러&quot;]
+  mem[&quot;메모리 관리&quot;]
+  disk[&quot;디스크 드라이버&quot;]
+  net[&quot;네트워크 스택&quot;]
+  ipc[&quot;IPC&quot;]
+  hw[&quot;Hardware&quot;]
+  app --> boundary --> kernel
+  kernel --> fs
+  kernel --> sched
+  kernel --> mem
+  kernel --> net
+  kernel --> ipc
+  fs --> disk --> hw
+  sched --> hw
+  mem --> hw
+  net --> hw
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>파일 시스템과 디스크 드라이버가 같은 커널 주소 공간에 있으면, 파일 시스템은 디스크 드라이버를 함수로 호출하고 포인터를 직접 전달할 수 있다. 이 내부 호출 경로에는 서버 사이의 IPC에서 발생할 수 있는 컨텍스트 스위칭이나 메시지 복사가 필요하지 않다. 따라서 같은 조건의 IPC 경로와 비교하면 호출 비용을 줄일 수 있지만, 실제 성능은 호출 경로와 cache 상태를 측정해야 판단할 수 있다.</p>
+<p>같은 주소 공간을 공유하는 구조는 장애의 영향 범위도 넓힌다. 드라이버가 널 포인터를 역참조하는 등 오류를 일으키면 커널 전체가 패닉할 수 있다. 모든 코드가 ring 0에서 실행되므로 드라이버 문제를 커널과 분리된 장애로 격리하기 어렵다.</p>
+<p><strong>대표</strong>: Linux, PintOS, Unix (전통), FreeBSD, Windows NT (하이브리드지만 사실상 monolithic에 가까움)</p>
+<p>Linux에서 GPU 드라이버 버그가 커널 패닉으로 이어져 시스템 전체가 멈추는 상황은 이 구조의 장애 범위를 보여준다. 드라이버가 커널 안에 있으므로 드라이버의 문제가 커널의 문제로 이어질 수 있다.</p>
+<h3 id="모듈-loadable-kernel-module">모듈 (Loadable Kernel Module)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#모듈-loadable-kernel-module" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux는 순수 monolithic 구조의 단점을 완화하기 위해 <strong>커널 모듈</strong>을 지원한다. 드라이버를 <code>.ko</code> 파일로 만들어 런타임에 커널에 로드하거나 언로드할 수 있다. 그러나 로드된 모듈은 커널 주소 공간에서 ring 0으로 실행된다. 모듈은 빌드와 구성에 유연성을 주지만, 보호 경계를 기준으로 보면 런타임 격리를 제공하지 않는다.</p>
+<h2 id="microkernel">Microkernel<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#microkernel" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Microkernel은 커널에 <strong>IPC, 기본 스케줄링, 메모리 관리(주소 공간 생성/삭제)</strong> 같은 최소 기능만 남긴다. 파일 시스템과 디바이스 드라이버 같은 나머지 기능은 유저 공간의 별도 프로세스인 서버로 옮긴다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 마이크로커널 — FS 서버와 드라이버가 유저 공간으로 빠지고, 커널엔 IPC·스케줄링·주소 공간만 남는다\nflowchart TD\n  app[\&quot;User application\&quot;]\n  fss[\&quot;FS 서버\&quot;]\n  drv[\&quot;디스크 드라이버\&quot;]\n  kernel[\&quot;Microkernel\&quot;]\n  ipc[\&quot;IPC\&quot;]\n  sched[\&quot;기본 스케줄링\&quot;]\n  addr[\&quot;주소 공간 관리\&quot;]\n  hw[\&quot;Hardware\&quot;]\n  app -->|IPC send| kernel\n  kernel --> ipc\n  kernel --> sched\n  kernel --> addr\n  ipc -->|message delivery| fss\n  fss -->|disk request IPC| kernel\n  ipc --> drv\n  drv -->|권한이 부여된 I/O 또는 kernel 중개| hw\n  sched --> hw\n  addr --> hw&quot;">%% 마이크로커널 — FS 서버와 드라이버가 유저 공간으로 빠지고, 커널엔 IPC·스케줄링·주소 공간만 남는다
+flowchart TD
+  app[&quot;User application&quot;]
+  fss[&quot;FS 서버&quot;]
+  drv[&quot;디스크 드라이버&quot;]
+  kernel[&quot;Microkernel&quot;]
+  ipc[&quot;IPC&quot;]
+  sched[&quot;기본 스케줄링&quot;]
+  addr[&quot;주소 공간 관리&quot;]
+  hw[&quot;Hardware&quot;]
+  app -->|IPC send| kernel
+  kernel --> ipc
+  kernel --> sched
+  kernel --> addr
+  ipc -->|message delivery| fss
+  fss -->|disk request IPC| kernel
+  ipc --> drv
+  drv -->|권한이 부여된 I/O 또는 kernel 중개| hw
+  sched --> hw
+  addr --> hw
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>앱이 파일을 읽을 때는 커널 내부의 파일 시스템 함수를 바로 호출하는 대신, 커널이 중개하는 IPC를 통해 파일 서버에 요청한다. 파일 서버가 디스크 작업을 요청하면 다시 IPC를 거쳐 디스크 드라이버 서버에 전달할 수 있다.</p>
+<p>이 경로에서는 추가적인 유저↔커널 전환, scheduling, 데이터 전달 비용이 생길 수 있다. 실제 비용은 커널 설계, fast path, shared memory·capability 전달 방식에 따라 달라진다. 모든 IPC가 payload 복사를 요구하는 것은 아니다.</p>
+<p>서버를 커널과 분리하면 장애를 더 좁은 범위에 가둘 수 있다. 파일 서버가 죽어도 커널이 살아 있다면 파일 서버만 재시작할 수 있고, 유저 공간의 드라이버 버그도 커널 장애와 분리할 수 있다. 이 구조가 제공하는 안정성과 보안의 정도는 실제 서버 구성과 권한 모델에 따라 달라진다.</p>
+<p><strong>대표</strong>: MINIX 3, seL4, QNX, L4 계열, GNU Hurd</p>
+<p>QNX는 자동차, 의료기기, 원자력 시설처럼 <strong>안정성이 생명인 시스템</strong>에서 쓰인다. 이런 환경에서는 드라이버 하나의 장애가 시스템 전체의 장애로 이어지지 않도록 하는 것이 중요하다.</p>
+<h3 id="세대별-발전">세대별 발전<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#세대별-발전" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Mach 계열은 IPC와 server 구조의 비용이 비판받았고, L4 계열은 작은 IPC fast path를 핵심 목표로 삼았다. seL4는 명시된 모델·가정·구성에 대해 기능 정확성, capability enforcement 등 여러 정형 증명 결과를 제공한다. 다만 이 결과가 모든 응용·드라이버·하드웨어를 포함한 시스템 전체의 보안을 무조건 보장한다는 뜻은 아니다.</p>
+<h2 id="exokernel">Exokernel<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#exokernel" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Exokernel은 커널이 <strong>하드웨어 자원 보호(격리)만</strong> 담당하고, 자원 관리 정책은 애플리케이션에 맡기는 구조다. OS가 하나의 정책을 강제하는 대신 앱이 자기 상황에 맞는 정책을 선택하게 한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 엑소커널 — 커널은 자원 보호만, FS·네트워크·메모리 정책은 각 앱의 LibOS가 직접 담당\nflowchart TD\n  a[\&quot;App1 + LibOS-A&lt;br/>자체 FS · 자체 네트워크\&quot;]\n  b[\&quot;App2 + LibOS-B&lt;br/>자체 메모리 · 자체 디스크\&quot;]\n  ex[\&quot;자원 보호(격리)만 담당\&quot;]\n  hw[\&quot;Hardware\&quot;]\n  a -->|자원 요청| ex\n  b -->|자원 요청| ex\n  ex -->|권한을 검증한 자원 binding| hw&quot;">%% 엑소커널 — 커널은 자원 보호만, FS·네트워크·메모리 정책은 각 앱의 LibOS가 직접 담당
+flowchart TD
+  a[&quot;App1 + LibOS-A&lt;br/>자체 FS · 자체 네트워크&quot;]
+  b[&quot;App2 + LibOS-B&lt;br/>자체 메모리 · 자체 디스크&quot;]
+  ex[&quot;자원 보호(격리)만 담당&quot;]
+  hw[&quot;Hardware&quot;]
+  a -->|자원 요청| ex
+  b -->|자원 요청| ex
+  ex -->|권한을 검증한 자원 binding| hw
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>전통 OS에서는 파일 시스템의 동작 방식을 커널이 정한다. 데이터베이스가 자체 방식으로 디스크를 관리하려 해도 OS의 파일 시스템과 버퍼 캐시를 거쳐야 한다. Exokernel은 이런 제약을 줄이고 자원 관리 정책을 앱 쪽으로 옮긴다.</p>
+<p>각 앱은 <strong>LibOS</strong>(라이브러리 OS)를 링크해 자체 파일 시스템, 메모리 관리, 네트워크 스택을 구현한다. 커널은 특정 물리 페이지가 앱A에 할당됐다는 보호 관계만 관리하고, 앱A가 그 페이지를 어떻게 사용하는지는 관여하지 않는다.</p>
+<p><strong>장점</strong>: 앱이 하드웨어 자원을 직접 제어하므로 특수 목적에 맞춘 최적화가 가능하다. 웹 서버에 맞춘 네트워크 스택이나 DB에 맞춘 디스크 관리가 그 예다.</p>
+<p><strong>단점</strong>: 앱마다 필요한 OS 기능을 직접 구현해야 하므로 개발 난이도가 높고 범용 OS로 사용하기 어렵다.</p>
+<p><strong>대표</strong>: MIT Exokernel (연구용), Unikernel (현대적 변형)</p>
+<p>현대에는 Exokernel의 아이디어가 <strong>Unikernel</strong>로 이어졌다. 하나의 앱과 필요한 OS 기능만 합쳐 가상머신 위에 올리는 방식으로, 클라우드 환경에서 쓰인다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Monolithic</th><th>Microkernel</th><th>Exokernel</th></tr></thead><tbody><tr><td>커널에 있는 것</td><td>거의 전부</td><td>IPC, 스케줄링, 주소 공간</td><td>보호(격리)만</td></tr><tr><td>드라이버 위치</td><td>커널 안 (ring 0)</td><td>유저 공간 (서버)</td><td>유저 공간 (LibOS)</td></tr><tr><td>성능</td><td>빠름 (함수 호출)</td><td>IPC 오버헤드</td><td>잠재적으로 가장 빠름</td></tr><tr><td>안정성</td><td>드라이버 버그 = 커널 패닉</td><td>서버 재시작 가능</td><td>앱별 격리</td></tr><tr><td>개발 난이도</td><td>보통</td><td>높음 (IPC 설계)</td><td>매우 높음 (LibOS 구현)</td></tr><tr><td>실제 사용</td><td>Linux, Windows, PintOS</td><td>QNX, seL4, L4</td><td>연구용, Unikernel</td></tr></tbody></table></div>
+<h2 id="os-커널-아키텍처-값">OS 커널 아키텍처 값<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#os-커널-아키텍처-값" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="ipc-오버헤드-비교">IPC 오버헤드 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ipc-오버헤드-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Monolithic과 microkernel의 성능 차이를 살필 때는 커널 내부 함수 호출과 IPC 경로의 비용을 비교해야 한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Monolithic (함수 호출)</th><th>Microkernel (IPC)</th></tr></thead><tbody><tr><td>privilege 전환</td><td>kernel 내부 함수 호출에는 추가 전환 없음</td><td>IPC API·fast path·reply 방식에 따라 달라짐</td></tr><tr><td>데이터 전달</td><td>같은 주소 공간이면 포인터 전달 가능</td><td>copy, shared memory, grant/capability 등 구현에 따라 달라짐</td></tr><tr><td>scheduling</td><td>직접 함수 호출에는 server switch 없음</td><td>receiver 상태와 kernel 정책에 따라 switch가 생길 수 있음</td></tr><tr><td>비용 판단</td><td>호출 경로와 cache 상태를 측정</td><td>payload, 전환·switch 수와 IPC 구현을 같은 환경에서 측정</td></tr></tbody></table></div>
+<p>예를 들어 앱→파일 서버→디스크 드라이버→파일 서버→앱으로 동기 요청·응답을 설계하면 여러 IPC leg가 생긴다. 그러나 실제 횟수와 비용은 forwarding, asynchronous I/O, shared memory와 driver 권한 모델에 따라 달라진다. 따라서 고정 <code>4회 × 5,000 ns</code> 계산을 일반적인 사실로 사용해서는 안 된다.</p>
+<h3 id="코드-크기-비교">코드 크기 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-크기-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>커널</th><th>코드 줄 수 (대략)</th><th>커널 이미지 크기</th></tr></thead><tbody><tr><td>Linux 6.x</td><td>~30,000,000 줄</td><td>~10 MB (compressed)</td></tr><tr><td>seL4</td><td>~10,000 줄</td><td>~30 KB</td></tr><tr><td>MINIX 3</td><td>~6,000 줄 (커널만)</td><td>~100 KB</td></tr><tr><td>PintOS</td><td>~15,000 줄</td><td>~512 KB (kernel.o)</td></tr></tbody></table></div>
+<p>이 표의 범위에서는 seL4의 약 10,000줄 규모가 formal verification을 적용할 수 있는 조건으로 제시된다. 반면 Linux의 약 3,000만 줄 전체를 수학적으로 증명하는 일은 현실적으로 어렵다.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="파일-읽기-경로-비교">파일 읽기 경로 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#파일-읽기-경로-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant App as 유저 앱\n    participant K as 커널\n    participant FS as 파일 시스템\n    participant DD as 디스크 드라이버\n\n    Note over App,DD: Monolithic — 모두 ring 0\n    App->>K: read() syscall\n    K->>FS: 함수 호출\n    FS->>DD: 함수 호출\n    DD-->>FS: 데이터 반환\n    FS-->>K: 데이터 반환\n    K-->>App: 결과\n\n    Note over App,DD: Microkernel — FS, DD가 유저 서버\n    App->>K: read() syscall → IPC send\n    K->>FS: IPC deliver (필요 시 receiver로 switch)\n    FS->>K: disk_read IPC send\n    K->>DD: IPC deliver (필요 시 receiver로 switch)\n    DD-->>K: IPC reply\n    K-->>FS: IPC deliver\n    FS-->>K: IPC reply&quot;">sequenceDiagram
+    participant App as 유저 앱
+    participant K as 커널
+    participant FS as 파일 시스템
+    participant DD as 디스크 드라이버
+
+    Note over App,DD: Monolithic — 모두 ring 0
+    App->>K: read() syscall
+    K->>FS: 함수 호출
+    FS->>DD: 함수 호출
+    DD-->>FS: 데이터 반환
+    FS-->>K: 데이터 반환
+    K-->>App: 결과
+
+    Note over App,DD: Microkernel — FS, DD가 유저 서버
+    App->>K: read() syscall → IPC send
+    K->>FS: IPC deliver (필요 시 receiver로 switch)
+    FS->>K: disk_read IPC send
+    K->>DD: IPC deliver (필요 시 receiver로 switch)
+    DD-->>K: IPC reply
+    K-->>FS: IPC deliver
+    FS-->>K: IPC reply
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="커널-아키텍처-스펙트럼">커널 아키텍처 스펙트럼<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#커널-아키텍처-스펙트럼" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 커널 아키텍처 스펙트럼 — 모놀리식·마이크로커널·엑소커널이 커널 안에 두는 책임과 대표 구현\nflowchart LR\n  mono[\&quot;Monolithic&lt;br/>FS·driver·network·process·memory를 kernel에 배치&lt;br/>예: Linux, PintOS\&quot;]\n  micro[\&quot;Microkernel&lt;br/>IPC·scheduling·address-space만 kernel&lt;br/>나머지는 user server&lt;br/>예: QNX, seL4\&quot;]\n  exo[\&quot;Exokernel&lt;br/>kernel은 자원 보호·multiplexing&lt;br/>정책은 LibOS&lt;br/>예: MIT Exokernel\&quot;]\n  mono -->|\&quot;kernel 책임 감소·격리 경계 증가\&quot;| micro --> exo&quot;">%% 커널 아키텍처 스펙트럼 — 모놀리식·마이크로커널·엑소커널이 커널 안에 두는 책임과 대표 구현
+flowchart LR
+  mono[&quot;Monolithic&lt;br/>FS·driver·network·process·memory를 kernel에 배치&lt;br/>예: Linux, PintOS&quot;]
+  micro[&quot;Microkernel&lt;br/>IPC·scheduling·address-space만 kernel&lt;br/>나머지는 user server&lt;br/>예: QNX, seL4&quot;]
+  exo[&quot;Exokernel&lt;br/>kernel은 자원 보호·multiplexing&lt;br/>정책은 LibOS&lt;br/>예: MIT Exokernel&quot;]
+  mono -->|&quot;kernel 책임 감소·격리 경계 증가&quot;| micro --> exo
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="monolithic-특성-확인-syscall--커널-함수-직접">Monolithic 특성 확인: syscall → 커널 함수 직접<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#monolithic-특성-확인-syscall--커널-함수-직접" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b syscall_handler
+(gdb) commands
+  printf &quot;syscall #%d from thread=%s\n&quot;, (int)f->R.rax, thread_current()->name
+  c
+end
+</code></pre>
+<h3 id="함수-호출-체인-확인-ring-전환-없이-직접-호출">함수 호출 체인 확인 (ring 전환 없이 직접 호출)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#함수-호출-체인-확인-ring-전환-없이-직접-호출" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b file_read
+(gdb) commands
+  bt 5
+  c
+end
+</code></pre>
+<p>→ <code>syscall_handler → read → file_read → inode_read_at → disk_read</code> 전부 같은 ring 0 스택에서 실행됨을 확인</p>
+<h3 id="context-switch-없는-커널-내부-경로-확인">Context switch 없는 커널 내부 경로 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#context-switch-없는-커널-내부-경로-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b disk_read
+(gdb) commands
+  printf &quot;disk_read: sector=%d, caller=%s, same_thread=%d\n&quot;, \
+    (int)sec_no, thread_current()->name, 1
+  c
+end
+</code></pre>
+<p>→ Microkernel이었다면 disk_read 시점의 thread가 디스크 드라이버 서버 프로세스여야 하지만, PintOS에서는 원래 syscall을 호출한 스레드 그대로임</p>
+<h2 id="linux-vs-pintos-monolithic-특성-비교">Linux vs PintOS Monolithic 특성 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-monolithic-특성-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>커널 빌드</td><td>vmlinuz + .ko 모듈 (런타임 로드)</td><td>kernel.o 단일 바이너리</td></tr><tr><td>드라이버 격리</td><td>없음 (ring 0, 버그 = oops/panic)</td><td>없음 (ring 0, 버그 = PANIC)</td></tr><tr><td>파일시스템 위치</td><td>VFS + ext4/btrfs 커널 내부</td><td>filesys/ 커널 내부 (단순 flat FS)</td></tr><tr><td>네트워크 스택</td><td>TCP/IP 커널 내부</td><td>없음</td></tr><tr><td>메모리 관리</td><td>buddy + slab + VMM 커널 내부</td><td>palloc + SPT + frame table 커널 내부</td></tr><tr><td>syscall 디스패치</td><td>sys_call_table[nr] 함수 포인터 배열</td><td>syscall_handler() switch-case</td></tr><tr><td>선점</td><td>kernel version·build의 preemption model에 따라 NONE/VOLUNTARY/FULL 등으로 달라짐</td><td>비선점 (커널 내 yield만 자발적)</td></tr><tr><td>커널 모듈</td><td>.ko 런타임 로드/언로드</td><td>없음 (정적 빌드)</td></tr><tr><td>커널 디버깅</td><td>kgdb, ftrace, perf, eBPF</td><td>QEMU + GDB stub</td></tr><tr><td>커널 이미지 크기</td><td>~10 MB (compressed)</td><td>~512 KB (kernel.o)</td></tr><tr><td>코드 줄 수</td><td>~30M 줄 (드라이버 포함)</td><td>~15K 줄</td></tr></tbody></table></div>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-1-monolithic-함수-호출-체인-증명">시나리오 1: Monolithic 함수 호출 체인 증명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-1-monolithic-함수-호출-체인-증명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS에서 파일을 <code>filesys_open()</code>으로 열어 얻은 일반 파일 descriptor에 <code>write(fd, &quot;hello&quot;, 5)</code>를 호출하고 디스크까지 도달하는 경로를 추적한다. 이 관찰은 커널 내부 호출이 같은 ring 0 실행 흐름에 있는지 확인하기 위한 것이다. <code>fd=1</code>은 stdout 경로일 수 있으므로 이 실험에 쓰지 않는다.</p>
+<ol>
+<li><code>syscall_handler</code>에 bp → <code>f->R.rax = SYS_WRITE</code> 확인</li>
+<li><code>file_write_at</code>에 bp → <code>bt</code> → 스택이 <code>syscall_handler → write → file_write_at</code></li>
+<li><code>inode_write_at</code>에 bp → <code>bt</code> → <code>... → inode_write_at</code> (여전히 같은 thread)</li>
+<li><code>disk_write</code>에 bp → <code>bt</code> → <code>... → disk_write</code> (ring 0, 같은 RSP 범위)</li>
+<li>전체 경로에서 <code>thread_current()->name</code>이 변하지 않음 → context switch 없이 직접 호출 증명</li>
+</ol>
+<p>Microkernel 구조라면 step 2~4 사이에서 IPC send/receive와 context switch가 발생해 thread가 바뀌는 경로를 예상할 수 있다.</p>
+<h3 id="시나리오-2-커널-내-버그가-전체-시스템-crash를-유발하는지">시나리오 2: 커널 내 버그가 전체 시스템 crash를 유발하는지<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-2-커널-내-버그가-전체-시스템-crash를-유발하는지" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li>vm/vm.c에서 의도적으로 NULL 역참조 코드 삽입 (예: <code>*(int*)0 = 42;</code>)</li>
+<li>실행 → PANIC: <code>Kernel bug at ...</code> → 시스템 전체 정지</li>
+<li>Microkernel이었다면 해당 서버만 crash되고 커널은 살아있어 재시작 가능</li>
+</ol>
+<p>이 시나리오는 Monolithic 구조에서 커널 주소 공간을 공유할 때 fault isolation이 부족해질 수 있음을 관찰하려는 절차다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일 (PintOS)</th><th>함수/구조체</th><th>Monolithic 특성</th></tr></thead><tbody><tr><td>userprog/syscall.c</td><td><code>syscall_handler()</code></td><td>syscall에서 커널 함수 직접 호출</td></tr><tr><td>filesys/filesys.c</td><td><code>filesys_read()</code></td><td>파일 I/O가 커널 주소 공간 내 함수</td></tr><tr><td>devices/disk.c</td><td><code>disk_read()</code></td><td>디스크 드라이버도 커널 안</td></tr><tr><td>threads/thread.c</td><td><code>thread_create()</code></td><td>프로세스 관리도 커널 안</td></tr><tr><td>vm/vm.c</td><td><code>vm_do_claim_page()</code></td><td>메모리 관리도 커널 안</td></tr><tr><td>devices/timer.c</td><td><code>timer_interrupt()</code></td><td>인터럽트 핸들러도 커널 안</td></tr></tbody></table></div>
+<p>Microkernel 구조라면 <code>filesys_read()</code>, <code>disk_read()</code>는 별도 유저 프로세스에 있고 커널은 이들 사이의 IPC만 중개한다. PintOS에서는 <code>syscall_handler()</code> → <code>file_read()</code> → <code>inode_read_at()</code> → <code>disk_read()</code>가 모두 같은 ring 0 안에서 이어지는 함수 호출 체인이다.</p>
+<h3 id="qemu-에뮬레이션-관점">QEMU 에뮬레이션 관점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션-관점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 커널 아키텍처 자체를 인식하지 않는다. QEMU가 보는 것은 guest CPU의 명령어, 메모리 접근, I/O 포트 접근이다. 따라서 Monolithic과 microkernel 모두에 같은 하드웨어 에뮬레이션을 제공한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>관점</th><th>Monolithic (PintOS)</th><th>Microkernel (가상)</th></tr></thead><tbody><tr><td>syscall 처리</td><td>KAIST x86-64 구성에서는 QEMU가 <code>SYSCALL</code> 상태 전환을 재현하고 guest LSTAR 진입점으로 이동</td><td>같은 ISA·진입 방식을 쓴다면 하드웨어 동작은 동일하며 OS 정책은 다름</td></tr><tr><td>FS 접근</td><td>커널 내 함수 호출 → QEMU는 일반 guest 명령어로 봄</td><td>IPC → context switch → QEMU는 CR3 전환 + 추가 명령어로 봄</td></tr><tr><td>디스크 I/O</td><td>커널 내 <code>outb(0x1F7,...)</code> → QEMU IDE 에뮬레이션</td><td>user driver에 I/O 권한을 부여하거나 kernel이 중개한 뒤 같은 장치 모델에 도달</td></tr><tr><td>실행 차이</td><td>kernel 함수 호출 중심</td><td>IPC와 scheduling 때문에 추가 guest instruction·address-space switch가 생길 수 있음</td></tr></tbody></table></div>
+<p>PintOS의 <code>syscall_handler()</code> → <code>file_read()</code> → <code>disk_read()</code>는 같은 kernel address space의 함수 호출로 이어질 수 있다. Microkernel 설계는 IPC와 scheduling을 추가하고 경우에 따라 CR3 전환도 일으킨다. 다만 이것이 매번 QEMU의 번역 블록 캐시 전체를 무효화한다는 뜻은 아니다. 성능 차이는 실제 instruction 수, address-space switch, TLB 동작과 IPC 구현을 측정해야 판단할 수 있다.</p>
+<h2 id="pintos의-위치">PintOS의 위치<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-위치" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS는 전형적인 <strong>monolithic kernel</strong>이다. 파일 시스템, 디바이스 드라이버, 메모리 관리, 프로세스 관리가 모두 커널 주소 공간에 있고 함수 호출로 연결된다. <code>syscall_handler()</code>에서 <code>file_read()</code>를 호출하면 같은 ring 0 안에서 함수 호출이 이어진다.</p>
+<p>PintOS에서 다루는 <a href="../../wiki/os/kernel-user-memory-layout" class="internal internal-link alias" data-slug="wiki/os/kernel-user-memory-layout">커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가</a>도 monolithic kernel의 전형적인 패턴을 보여준다. 커널 1:1 매핑, 커널 풀/유저 풀 분리, syscall을 통한 유저↔커널 전환은 이 문서에서 설명한 monolithic 설계와 연결된다.</p>
+<h2 id="os-커널-아키텍처-관련-문서">OS 커널 아키텍처 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#os-커널-아키텍처-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/kernel-user-memory-layout" class="internal internal-link alias" data-slug="wiki/os/kernel-user-memory-layout">User 메모리</a>
+<ul>
+<li>monolithic kernel의 메모리 구조.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/kernel-user-protection" class="internal internal-link alias" data-slug="wiki/os/kernel-user-protection">User 보호</a>
+<ul>
+<li>ring 0/3 보호 메커니즘.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/ipc-message-passing" class="internal internal-link alias" data-slug="wiki/os/ipc-message-passing">IPC Message Passing</a>
+<ul>
+<li>microkernel의 핵심 통신 메커니즘.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/ipc-shared-memory" class="internal internal-link alias" data-slug="wiki/os/ipc-shared-memory">IPC Shared Memory</a>
+<ul>
+<li>프로세스 간 메모리 공유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-directory-structure" class="internal internal-link alias" data-slug="wiki/os/pintos-directory-structure">PintOS 디렉터리 구조</a>
+<ul>
+<li>PintOS 디렉터리 구조가 monolithic 설계를 반영하는 방식.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/real-os-pintos-qemu-differences" class="internal internal-link alias" data-slug="wiki/os/real-os-pintos-qemu-differences">QEMU</a>
+<ul>
+<li>실제 OS와 PintOS/QEMU의 차이 전체 비교.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/user-kernel-mode" class="internal internal-link alias" data-slug="wiki/os/user-kernel-mode">Kernel Mode</a>
+<ul>
+<li>ring 0/3 모드 전환이 monolithic에서 syscall에만 발생하는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-handler-dispatch" class="internal internal-link alias" data-slug="wiki/os/syscall-handler-dispatch">syscall handler() 분기</a>
+<ul>
+<li>monolithic 구조에서 syscall이 커널 함수로 직접 분기되는 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li><code>write(1, buf, size)</code> 전체 흐름이 ring 0에서 함수 호출 체인으로 이어지는 예.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/linux-windows-real-os" class="internal internal-link alias" data-slug="wiki/os/linux-windows-real-os">Windows 실제 OS</a>
+<ul>
+<li>Linux/Windows 실제 OS 비교.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/interrupt-descriptor-table" class="internal internal-link alias" data-slug="wiki/os/interrupt-descriptor-table">IDT</a>
+<ul>
+<li>IDT도 커널 안에서 관리되는 구조.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/os-responsibility-boundary" class="internal">OS 책임 경계</a></li><li><a href="../../wiki/os/os-definition" class="internal">OS의 정의 — 하드웨어와 프로그램 사이에 끼어드는 소프트웨어</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-545" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#os-커널-아키텍처--monolithic-microkernel-exokernel" data-for="os-커널-아키텍처--monolithic-microkernel-exokernel">OS 커널 아키텍처 — Monolithic, Microkernel, Exokernel</a></li><li class="depth-1"><a href="#핵심-질문" data-for="핵심-질문">핵심 질문</a></li><li class="depth-1"><a href="#monolithic-kernel" data-for="monolithic-kernel">Monolithic Kernel</a></li><li class="depth-2"><a href="#모듈-loadable-kernel-module" data-for="모듈-loadable-kernel-module">모듈 (Loadable Kernel Module)</a></li><li class="depth-1"><a href="#microkernel" data-for="microkernel">Microkernel</a></li><li class="depth-2"><a href="#세대별-발전" data-for="세대별-발전">세대별 발전</a></li><li class="depth-1"><a href="#exokernel" data-for="exokernel">Exokernel</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#os-커널-아키텍처-값" data-for="os-커널-아키텍처-값">OS 커널 아키텍처 값</a></li><li class="depth-2"><a href="#ipc-오버헤드-비교" data-for="ipc-오버헤드-비교">IPC 오버헤드 비교</a></li><li class="depth-2"><a href="#코드-크기-비교" data-for="코드-크기-비교">코드 크기 비교</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#파일-읽기-경로-비교" data-for="파일-읽기-경로-비교">파일 읽기 경로 비교</a></li><li class="depth-2"><a href="#커널-아키텍처-스펙트럼" data-for="커널-아키텍처-스펙트럼">커널 아키텍처 스펙트럼</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#monolithic-특성-확인-syscall--커널-함수-직접" data-for="monolithic-특성-확인-syscall--커널-함수-직접">Monolithic 특성 확인: syscall → 커널 함수 직접</a></li><li class="depth-2"><a href="#함수-호출-체인-확인-ring-전환-없이-직접-호출" data-for="함수-호출-체인-확인-ring-전환-없이-직접-호출">함수 호출 체인 확인 (ring 전환 없이 직접 호출)</a></li><li class="depth-2"><a href="#context-switch-없는-커널-내부-경로-확인" data-for="context-switch-없는-커널-내부-경로-확인">Context switch 없는 커널 내부 경로 확인</a></li><li class="depth-1"><a href="#linux-vs-pintos-monolithic-특성-비교" data-for="linux-vs-pintos-monolithic-특성-비교">Linux vs PintOS Monolithic 특성 비교</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-1-monolithic-함수-호출-체인-증명" data-for="시나리오-1-monolithic-함수-호출-체인-증명">시나리오 1: Monolithic 함수 호출 체인 증명</a></li><li class="depth-2"><a href="#시나리오-2-커널-내-버그가-전체-시스템-crash를-유발하는지" data-for="시나리오-2-커널-내-버그가-전체-시스템-crash를-유발하는지">시나리오 2: 커널 내 버그가 전체 시스템 crash를 유발하는지</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-2"><a href="#qemu-에뮬레이션-관점" data-for="qemu-에뮬레이션-관점">QEMU 에뮬레이션 관점</a></li><li class="depth-1"><a href="#pintos의-위치" data-for="pintos의-위치">PintOS의 위치</a></li><li class="depth-1"><a href="#os-커널-아키텍처-관련-문서" data-for="os-커널-아키텍처-관련-문서">OS 커널 아키텍처 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

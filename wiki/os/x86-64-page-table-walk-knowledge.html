@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>x86-64 페이지 테이블 워크 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="x86-64 페이지 테이블 워크 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="x86-64 페이지 테이블 워크 · 최우녕"/><meta name="twitter:description" content="0x8048123이라는 유저 가상 주소가 있다."/><meta property="og:description" content="0x8048123이라는 유저 가상 주소가 있다."/><meta property="og:image:alt" content="0x8048123이라는 유저 가상 주소가 있다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/x86-64-page-table-walk-knowledge"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/x86-64-page-table-walk-knowledge"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="0x8048123이라는 유저 가상 주소가 있다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/x86-64-page-table-walk-knowledge" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-710" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-710" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>x86-64 페이지 테이블 워크</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="x86-64-페이지-테이블-워크">x86-64 페이지 테이블 워크<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<h2 id="x86-64-페이지-테이블-워크-시작">x86-64 페이지 테이블 워크 시작<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-시작" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>0x8048123</code>이라는 유저 가상 주소가 있다.</p>
+<p><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환과 메모리</a>에서는 이 주소를 page base <code>0x8048000</code>과 offset <code>0x123</code>으로 나눴다. 그런데 x86-64 CPU는 page table에서 <code>0x8048000</code>이라는 key를 한 번에 찾지 않는다.</p>
+<p>CPU는 주소의 비트를 네 조각으로 더 나눠서 다음 표들을 차례로 걷는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4 -> PDPE -> PDE -> PTE -> frame + offset</span></span></code></pre></figure>
+<p>현대 x86-64에는 5단계 page table 옵션도 있다. 하지만 PintOS 학습에서는 <code>PML4 -> PDPE -> PDE -> PTE</code> 흐름을 먼저 정확히 잡는 것이 목적이다.</p>
+<p>먼저 가상 주소 하나가 page table을 통과하는 과정을 다음 질문에서 시작한다.</p>
+<blockquote>
+<p>가상 주소 한 개는 어떻게 4개의 page-table index와 1개의 offset으로 쪼개질까?</p>
+</blockquote>
+<p>이 과정을 따라가면 PintOS의 구현과 page table에 필요한 메모리에 관한 질문도 함께 설명할 수 있다.</p>
+<blockquote>
+<p>PintOS도 정말 4단계 page table을 쓰나?
+512개를 넘으면 linked list처럼 next pointer로 이어 붙이나?
+page table 자체를 담는 4KB 메모리는 누가 가져오나?</p>
+</blockquote>
+<h2 id="x86-64-페이지-테이블-워크-필요성">x86-64 페이지 테이블 워크 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>운영체제 책에서는 “page table이 VA를 PA로 바꾼다”고 짧게 말한다. 하지만 디버깅할 때는 그 말만으로 부족하다.</p>
+<p>실제로는 이런 질문을 해야 한다.</p>
+<ul>
+<li>현재 <code>CR3</code>가 가리키는 최상위 page table은 어디인가?</li>
+<li>이 VA의 PML4 index는 몇 번인가?</li>
+<li>중간 page table entry가 present가 아니면 어디서 page fault가 나는가?</li>
+<li>마지막 PTE에는 frame 주소와 permission bit가 어떻게 들어 있는가?</li>
+<li>QEMU는 이 walk를 OS 정책으로 처리하나, 하드웨어 효과로 재현하나?</li>
+</ul>
+<p>이 질문에 답할 수 있어야 <a href="../../wiki/os/page-fault-trace" class="internal internal-link alias" data-slug="wiki/os/page-fault-trace">page fault</a>가 어느 단계에서 발생했는지 추적할 수 있다.</p>
+<h2 id="x86-64-페이지-테이블-워크-흐름">x86-64 페이지 테이블 워크 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>x86-64 4KB page, 4단계 page table 기준에서 가상 주소는 다음처럼 나뉜다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>bits 63..48  sign extension</span></span>
+<span data-line><span>bits 47..39  PML4 index   9 bits</span></span>
+<span data-line><span>bits 38..30  PDPE index   9 bits</span></span>
+<span data-line><span>bits 29..21  PDE index    9 bits</span></span>
+<span data-line><span>bits 20..12  PTE index    9 bits</span></span>
+<span data-line><span>bits 11..0   page offset 12 bits</span></span></code></pre></figure>
+<p>여기서 <code>bits 63..48</code>은 새로운 table index가 아니다. 4단계 모드에서는 bit 47의 부호 확장(sign extension)처럼 맞아야 하는 canonical address 영역이다.</p>
+<p>9비트 index 하나는 <code>0..511</code> 중 하나를 고른다. entry 하나가 8바이트라서 page table 한 장은 다음 크기가 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>512 entries * 8 bytes = 4096 bytes = 1 page</span></span></code></pre></figure>
+<p>따라서 page table도 메모리 안에 있는 4KB짜리 배열이다. CPU는 VA의 비트 조각을 배열 index로 사용해 다음 table의 주소를 찾는다.</p>
+<p>이 과정을 “주소를 헤더처럼 4단계로 잘라서 찾아간다”고 설명하면 큰 방향은 맞다. 다만 정확히는 header가 아니라 <strong>주소 비트 필드</strong>다. VA 안의 특정 bit 구간이 각각 배열 index 역할을 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA bits</span></span>
+<span data-line> </span>
+<span data-line><span>[ PML4 index ][ PDPE index ][ PDE index ][ PTE index ][ offset ]</span></span>
+<span data-line><span>    9 bits       9 bits       9 bits      9 bits      12 bits</span></span></code></pre></figure>
+<p>이 구조는 linked list가 아니라 <strong>4단계 트리</strong>다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    CR3[\&quot;CR3 register\&quot;] --> PML4[\&quot;PML4 page&lt;br/>512 entries\&quot;]\n    PML4 -->|\&quot;bits 47..39&lt;br/>9-bit index\&quot;| PDPT[\&quot;PDPT page&lt;br/>512 entries\&quot;]\n    PDPT -->|\&quot;bits 38..30&lt;br/>9-bit index\&quot;| PD[\&quot;PD page&lt;br/>512 entries\&quot;]\n    PD -->|\&quot;bits 29..21&lt;br/>9-bit index\&quot;| PT[\&quot;PT page&lt;br/>512 entries\&quot;]\n    PT -->|\&quot;bits 20..12&lt;br/>9-bit index\&quot;| Frame[\&quot;Data Frame&lt;br/>4KB\&quot;]\n    Frame -->|\&quot;bits 11..0&lt;br/>12-bit offset\&quot;| Byte[\&quot;최종 byte\&quot;]&quot;">flowchart LR
+    CR3[&quot;CR3 register&quot;] --> PML4[&quot;PML4 page&lt;br/>512 entries&quot;]
+    PML4 -->|&quot;bits 47..39&lt;br/>9-bit index&quot;| PDPT[&quot;PDPT page&lt;br/>512 entries&quot;]
+    PDPT -->|&quot;bits 38..30&lt;br/>9-bit index&quot;| PD[&quot;PD page&lt;br/>512 entries&quot;]
+    PD -->|&quot;bits 29..21&lt;br/>9-bit index&quot;| PT[&quot;PT page&lt;br/>512 entries&quot;]
+    PT -->|&quot;bits 20..12&lt;br/>9-bit index&quot;| Frame[&quot;Data Frame&lt;br/>4KB&quot;]
+    Frame -->|&quot;bits 11..0&lt;br/>12-bit offset&quot;| Byte[&quot;최종 byte&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4 page</span></span>
+<span data-line><span>  entry 0  -> PDPT page</span></span>
+<span data-line><span>  entry 1  -> 다른 PDPT page</span></span>
+<span data-line><span>  ...</span></span>
+<span data-line><span>  entry 511</span></span>
+<span data-line> </span>
+<span data-line><span>PDPT page</span></span>
+<span data-line><span>  entry 0  -> PD page</span></span>
+<span data-line><span>  entry 1  -> 다른 PD page</span></span>
+<span data-line><span>  ...</span></span>
+<span data-line><span>  entry 511</span></span>
+<span data-line> </span>
+<span data-line><span>PD page</span></span>
+<span data-line><span>  entry 0  -> PT page</span></span>
+<span data-line><span>  ...</span></span>
+<span data-line> </span>
+<span data-line><span>PT page</span></span>
+<span data-line><span>  entry 0  -> data frame 4KB</span></span>
+<span data-line><span>  entry 1  -> data frame 4KB</span></span>
+<span data-line><span>  ...</span></span></code></pre></figure>
+<p>따라서 512개가 넘을 때 page header의 next 주소로 이어지는 것은 아니다. 상위 단계의 다른 entry를 거쳐 다른 table page로 내려간다.</p>
+<h2 id="범위-계산">범위 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#범위-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>각 단계는 512개 entry 가운데 하나를 고른다. offset 12비트는 마지막 data page 안의 바이트 위치를 나타낸다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>9비트 = 2^9 = 512</span></span>
+<span data-line><span>12비트 = 2^12 = 4096 bytes = 4KB</span></span></code></pre></figure>
+<p>그래서 4단계 page table이 표현할 수 있는 전체 가상주소 수는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>512 * 512 * 512 * 512 * 4KB</span></span>
+<span data-line><span>= 2^9 * 2^9 * 2^9 * 2^9 * 2^12</span></span>
+<span data-line><span>= 2^48 bytes</span></span>
+<span data-line><span>= 256 TiB</span></span></code></pre></figure>
+<p>이 계산은 실제 RAM이 256 TiB 있다는 뜻이 아니다. <strong>그만큼의 가상주소 번호를 표현할 수 있다</strong>는 뜻이다. 실제 frame은 page fault가 나거나 mapping을 설치할 때 필요한 만큼만 붙는다.</p>
+<p>각 table page가 담당하는 범위도 계산할 수 있다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단위</th><th>커버하는 범위</th><th>이유</th></tr></thead><tbody><tr><td>PTE entry 1개</td><td>4KB</td><td>data frame 하나</td></tr><tr><td>PT page 1개</td><td>2MB</td><td>512 * 4KB</td></tr><tr><td>PD entry 1개</td><td>2MB</td><td>PT page 하나가 맡는 범위</td></tr><tr><td>PD page 1개</td><td>1GB</td><td>512 * 2MB</td></tr><tr><td>PDPT entry 1개</td><td>1GB</td><td>PD page 하나가 맡는 범위</td></tr><tr><td>PDPT page 1개</td><td>512GB</td><td>512 * 1GB</td></tr><tr><td>PML4 entry 1개</td><td>512GB</td><td>PDPT page 하나가 맡는 범위</td></tr><tr><td>PML4 page 1개</td><td>256TiB</td><td>512 * 512GB</td></tr></tbody></table></div>
+<p>이 표에서 next pointer가 필요하지 않은 이유를 확인할 수 있다. page table page 하나가 꽉 차면 같은 레벨의 다음 page로 이어지는 것이 아니라, 상위 index가 바뀌면서 다른 하위 table page를 가리킨다.</p>
+<h2 id="가상-주소를-손으로-따라가기">가상 주소를 손으로 따라가기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#가상-주소를-손으로-따라가기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 가상 주소가 page table을 통과하는 과정을 손으로 따라가 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA = 0x0000000008048123</span></span></code></pre></figure>
+<p>비트 조각은 이렇게 나온다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4 index = 0x000 = 0</span></span>
+<span data-line><span>PDPE index = 0x000 = 0</span></span>
+<span data-line><span>PDE index  = 0x040 = 64</span></span>
+<span data-line><span>PTE index  = 0x048 = 72</span></span>
+<span data-line><span>offset     = 0x123 = 291</span></span></code></pre></figure>
+<p>각 table entry의 byte offset은 index에 8을 곱한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4E offset = 0   * 8 = 0x000</span></span>
+<span data-line><span>PDPE offset  = 0   * 8 = 0x000</span></span>
+<span data-line><span>PDE offset   = 64  * 8 = 0x200</span></span>
+<span data-line><span>PTE offset   = 72  * 8 = 0x240</span></span></code></pre></figure>
+<p>마지막 PTE가 frame base <code>0x12345000</code>을 가리키고 present라면 최종 주소는 다음처럼 계산된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PA = 0x12345000 + 0x123</span></span>
+<span data-line><span>   = 0x12345123</span></span></code></pre></figure>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant CPU as CPU/MMU\n    participant PML4 as PML4[0]\n    participant PDPT as PDPT[0]\n    participant PD as PD[64]\n    participant PT as PT[72]\n    participant MEM as Frame\n\n    CPU->>PML4: CR3 + 0*8 = offset 0x000\n    PML4-->>CPU: entry → PDPT base\n    CPU->>PDPT: PDPT_base + 0*8 = offset 0x000\n    PDPT-->>CPU: entry → PD base\n    CPU->>PD: PD_base + 64*8 = offset 0x200\n    PD-->>CPU: entry → PT base\n    CPU->>PT: PT_base + 72*8 = offset 0x240\n    PT-->>CPU: PTE → frame 0x12345000 | P|W|U\n    CPU->>MEM: 0x12345000 + 0x123 = 0x12345123&quot;">sequenceDiagram
+    participant CPU as CPU/MMU
+    participant PML4 as PML4[0]
+    participant PDPT as PDPT[0]
+    participant PD as PD[64]
+    participant PT as PT[72]
+    participant MEM as Frame
+
+    CPU->>PML4: CR3 + 0*8 = offset 0x000
+    PML4-->>CPU: entry → PDPT base
+    CPU->>PDPT: PDPT_base + 0*8 = offset 0x000
+    PDPT-->>CPU: entry → PD base
+    CPU->>PD: PD_base + 64*8 = offset 0x200
+    PD-->>CPU: entry → PT base
+    CPU->>PT: PT_base + 72*8 = offset 0x240
+    PT-->>CPU: PTE → frame 0x12345000 | P|W|U
+    CPU->>MEM: 0x12345000 + 0x123 = 0x12345123
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows도 x86-64 하드웨어 위에서는 같은 page-table walk 원리를 사용한다. CPU는 <code>CR3</code>에서 시작해 page table entry의 present, writable, user, accessed, dirty 같은 bit를 검사한다.</p>
+<p>다만 실제 하드웨어와 OS가 항상 4KB page만 쓰는 것은 아니다. huge page와 5단계 page table 같은 확장이 있을 수 있다.</p>
+<p>실제 OS는 page table 외의 상태도 함께 관리한다.</p>
+<ul>
+<li>Linux는 <code>mm_struct</code>, VMA, page cache, swap, copy-on-write, NUMA, huge page 같은 상태를 함께 관리한다.</li>
+<li>Windows도 process address space, VAD, section object, prototype PTE, working set, pagefile 같은 구조를 함께 쓴다.</li>
+</ul>
+<p>page-table walk는 하드웨어의 주소 번역 과정이다. 반면 fault를 처리해 실행을 계속할지 종료할지는 커널의 VM 정책이 결정한다.</p>
+<p>PintOS는 이 현실을 교육용으로 줄여서 page table, supplemental page table, frame, swap/file-backed page를 직접 구현하게 만든다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 4단계 index 매크로는 다음 파일에 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/pte.h</code></li>
+</ul>
+<p>관련 매크로는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PML4SHIFT</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 39</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">UL</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDPESHIFT</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 30</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">UL</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDXSHIFT</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">  21</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">UL</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTXSHIFT</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">  12</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">UL</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PML4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PML4SHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDPE</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PDPESHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PDX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PDXSHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">la</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)  ((((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) (la)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTXSHIFT) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1FF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p><code>0x1FF</code>는 9비트 mask다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x1FF = binary 1_1111_1111 = 511</span></span></code></pre></figure>
+<p>PintOS에서 실제 walk helper는 다음 파일에 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code>
+<ul>
+<li><code>pml4e_walk()</code></li>
+<li><code>pdpe_walk()</code></li>
+<li><code>pgdir_walk()</code></li>
+<li><code>pml4_get_page()</code></li>
+<li><code>pml4_set_page()</code></li>
+</ul>
+</li>
+</ul>
+<p><code>pml4e_walk(pml4, va, create)</code>는 최종 PTE의 주소를 돌려준다.</p>
+<ul>
+<li><code>create == false</code>: 중간 table이 없으면 <code>NULL</code>을 반환한다.</li>
+<li><code>create == true</code>: 중간 table이 없으면 새 4KB page table을 할당해 연결한다.</li>
+</ul>
+<p>따라서 <code>pml4_set_page()</code>가 새 mapping을 만들 때는 중간 table을 만들어도 되지만, <code>pml4_get_page()</code>가 단순 조회할 때는 없는 table을 만들면 안 된다.</p>
+<p>이 PintOS 코드는 x86-64용이므로 <strong>PML4 -> PDPT -> PD -> PT</strong>의 4단계 page table을 쓴다. 실제 코드 이름도 그 구조를 반영한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>PintOS 매크로/함수</th><th>의미</th></tr></thead><tbody><tr><td>PML4</td><td><code>PML4(va)</code>, <code>pml4e_walk()</code></td><td>최상위 512개 entry 중 하나</td></tr><tr><td>PDPT</td><td><code>PDPE(va)</code>, <code>pdpe_walk()</code></td><td>다음 512개 entry 중 하나</td></tr><tr><td>PD</td><td><code>PDX(va)</code>, <code>pgdir_walk()</code></td><td>다음 512개 entry 중 하나</td></tr><tr><td>PT</td><td><code>PTX(va)</code></td><td>최종 PTE 512개 중 하나</td></tr><tr><td>offset</td><td><code>pg_ofs(va)</code></td><td>4KB frame 안의 바이트 위치</td></tr></tbody></table></div>
+<p>page table 자체를 저장할 4KB는 PintOS의 <code>palloc_get_page()</code>로 확보된다. 이 흐름은 유저 데이터 frame을 가져올 때처럼 <code>PAL_USER</code>를 붙이는 흐름과 구분해서 봐야 한다.</p>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p>중간 table이 없고 <code>create == true</code>이면 새 page table page를 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">new_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> palloc_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (PAL_ZERO);</span></span></code></pre></figure>
+<p>반면 유저 데이터 frame은 VM 코드의 <code>vm_get_frame()</code>에서 보통 다음처럼 가져온다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">kva </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> palloc_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (PAL_USER);</span></span></code></pre></figure>
+<p>둘 다 4KB page를 얻지만 용도가 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>가져오는 4KB</th><th>대표 호출 위치</th><th>용도</th></tr></thead><tbody><tr><td>page table page</td><td><code>pml4e_walk(..., create=true)</code> 내부</td><td>PML4/PDPT/PD/PT 같은 하드웨어 page table 저장</td></tr><tr><td>user data frame</td><td><code>vm_get_frame()</code></td><td>유저 VA 뒤에 붙을 실제 데이터 page</td></tr></tbody></table></div>
+<p>page table과 user page는 모두 4KB 메모리 page이지만 역할은 다르다. 하나는 <strong>주소 번역 표</strong>이고, 다른 하나는 <strong>사용자 데이터가 들어가는 frame</strong>이다.</p>
+<h2 id="루트-pml4-포인터는-어디에-있나">루트 PML4 포인터는 어디에 있나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#루트-pml4-포인터는-어디에-있나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>4단계 page table도 시작점이 필요하다. CPU가 아무 곳에서나 page table walk를 시작할 수는 없다.</p>
+<p>PintOS에서 시작점은 <strong>PML4 page의 주소</strong>다. 각 유저 프로세스와 스레드의 <code>struct thread</code> 안에 그 주소를 가리키는 포인터가 저장된다.</p>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code></li>
+</ul>
+<p>관련 필드는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">pml4;</span></span></code></pre></figure>
+<p>이 포인터 자체는 <code>struct thread</code> 안에 들어 있는 8바이트짜리 필드다. 포인터가 가리키는 대상은 <code>pml4_create()</code>가 할당한 4KB짜리 PML4 page다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% struct thread의 pml4 포인터와 PML4 page\nflowchart LR\n  thread[\&quot;struct thread&lt;br/>pml4: uint64_t *&lt;br/>8-byte pointer field\&quot;]\n  pml4[\&quot;PML4 page&lt;br/>4KB page table&lt;br/>entry 0&lt;br/>entry 1&lt;br/>...&lt;br/>entry 511\&quot;]\n  thread --> pml4&quot;">%% struct thread의 pml4 포인터와 PML4 page
+flowchart LR
+  thread[&quot;struct thread&lt;br/>pml4: uint64_t *&lt;br/>8-byte pointer field&quot;]
+  pml4[&quot;PML4 page&lt;br/>4KB page table&lt;br/>entry 0&lt;br/>entry 1&lt;br/>...&lt;br/>entry 511&quot;]
+  thread --> pml4
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>프로세스가 새 주소 공간을 만들 때 PintOS는 다음 함수를 호출한다.</p>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> palloc_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pml4)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        memcpy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (pml4, base_pml4, PGSIZE);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> pml4;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 함수의 동작 순서는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. PML4 page로 쓸 4KB를 palloc_get_page(0)으로 얻는다.</span></span>
+<span data-line><span>2. 커널 기본 매핑인 base_pml4 내용을 복사한다.</span></span>
+<span data-line><span>3. 새 PML4 page의 kernel virtual address를 반환한다.</span></span>
+<span data-line><span>4. 그 반환값을 현재 thread의 curr->pml4에 저장한다.</span></span></code></pre></figure>
+<p>예를 들어 <code>process.c</code>에서는 새 프로세스 주소 공간을 만들 때 다음처럼 쓴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+<p>이 주소 공간이 실제 CPU의 기준이 되려면 CR3에 올라가야 한다. PintOS는 스케줄링으로 다음 스레드가 실행될 때 주소 공간을 활성화한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>schedule()</span></span>
+<span data-line><span>  -> process_activate(next)</span></span>
+<span data-line><span>      -> pml4_activate(next->pml4)</span></span>
+<span data-line><span>          -> lcr3(vtop(pml4))</span></span></code></pre></figure>
+<p><code>pml4_activate()</code>의 동작을 보여 주는 부분은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_activate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pml4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    lcr3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> base_pml4));</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>여기서 <code>lcr3()</code>는 CPU의 CR3 레지스터를 바꾼다. CR3는 현재 주소 변환의 루트, 즉 PML4 page의 물리 주소를 담는다.</p>
+<p>루트 포인터의 관계는 다음처럼 이어진다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread_current()->pml4</span></span>
+<span data-line><span>  -> PML4 page의 kernel virtual address</span></span>
+<span data-line><span>  -> vtop(pml4)</span></span>
+<span data-line><span>  -> CR3에 들어가는 PML4 page의 guest physical address</span></span></code></pre></figure>
+<p>이후 CPU는 현재 CR3에서 시작해서 <code>PML4 index -> PDPT index -> PD index -> PT index -> offset</code> 순서로 내려간다.</p>
+<p>루트에도 메모리가 필요하지만, 포인터와 table 자체는 서로 다른 곳에 저장된다. 루트의 <strong>포인터 값</strong>은 <code>struct thread</code> 안의 필드에 있고, 포인터가 가리키는 <strong>PML4 table 자체</strong>는 별도의 4KB page에 있다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 SPT, stack growth, mmap 정책을 모른다.</p>
+<p>QEMU가 재현하는 것은 guest CPU의 page-table walk다. TCG 경로에서는 현재 guest <code>CR3</code>와 guest VA를 기준으로 page table entry 주소를 계산하고, present/permission bit를 검사한다.</p>
+<p>대표 파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>mmu_translate()</code></li>
+</ul>
+</li>
+</ul>
+<p>QEMU 코드에도 같은 index 계산이 나온다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 39</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1ff</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 30</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1ff</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 21</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1ff</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">>></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 12</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1ff</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p>각 index는 <code>&lt;&lt; 3</code>으로 8바이트 entry offset이 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>entry address = table base + (index &lt;&lt; 3)</span></span></code></pre></figure>
+<p>entry가 present가 아니면 QEMU는 guest CPU의 page fault 효과를 만든다. 그 뒤 <code>page_fault()</code>에서 이 fault를 처리할지 결정하는 주체는 PintOS다.</p>
+<p>QEMU 코드에는 <code>PG_MODE_LA57</code> 분기도 있다. 이 분기는 5단계 page table이 켜진 guest를 위한 경로다. PintOS를 이해할 때는 그 분기보다 <code>addr >> 39</code>, <code>addr >> 30</code>, <code>addr >> 21</code>, <code>addr >> 12</code>로 내려가는 4단계 흐름을 먼저 보면 된다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>page-table walk</td><td>실제 CPU가 수행</td><td>PintOS가 guest page table을 만들고 관리</td><td>guest CPU 동작으로 에뮬레이션</td></tr><tr><td>최상위 기준</td><td>현재 CPU의 <code>CR3</code></td><td>현재 PintOS thread/process의 <code>pml4</code>가 <code>CR3</code>로 활성화됨</td><td>guest <code>CR3</code> state를 기준으로 계산</td></tr><tr><td>fault 정책</td><td>커널 VM subsystem</td><td><code>page_fault()</code>와 <code>vm_try_handle_fault()</code>에 과제 구현</td><td>정책 없음, <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 효과만 전달</td></tr><tr><td>missing table</td><td>OS 정책에 따라 demand allocation 가능</td><td><code>pml4e_walk(..., create)</code>가 만들 수도 있음</td><td>guest page table에 없으면 fault</td></tr><tr><td>중간 자료구조</td><td>VMA, working set, page cache 등</td><td>SPT, <code>struct page</code>, <code>struct frame</code></td><td>guest 구조체 의미를 모름</td></tr><tr><td>주소 폭</td><td>하드웨어/OS 설정에 따라 4단계 또는 확장 가능</td><td>4단계 canonical address 모델 중심</td><td>guest mode에 따라 4단계/5단계 경로를 에뮬레이션</td></tr></tbody></table></div>
+<h2 id="x86-64-페이지-테이블-워크-코드">x86-64 페이지 테이블 워크 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos는-va-bit-조각을-index로-만든다">1. PintOS는 VA bit 조각을 index로 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos는-va-bit-조각을-index로-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/pte.h</code></li>
+</ul>
+<p>shift와 mask를 적용하는 식은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4(va) = (va >> 39) &amp; 0x1FF</span></span>
+<span data-line><span>PDPE(va) = (va >> 30) &amp; 0x1FF</span></span>
+<span data-line><span>PDX(va)  = (va >> 21) &amp; 0x1FF</span></span>
+<span data-line><span>PTX(va)  = (va >> 12) &amp; 0x1FF</span></span></code></pre></figure>
+<h3 id="2-pintos는-중간-entry에서-다음-table을-찾는다">2. PintOS는 중간 entry에서 다음 table을 찾는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pintos는-중간-entry에서-다음-table을-찾는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p><code>pml4e_walk()</code>는 PML4 entry에서 다음 table의 물리 주소를 꺼내고, <code>ptov()</code>로 커널이 접근할 수 있는 주소로 바꾼 뒤 다음 단계로 내려간다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pdpe_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">ptov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">PTE_ADDR</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">pml4e</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[idx])), va, create);</span></span></code></pre></figure>
+<p><code>pgdir_walk()</code>의 마지막 단계는 최종 PTE 주소를 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">ptov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">PTE_ADDR</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">pdp</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[idx]) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 8</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTX</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (va));</span></span></code></pre></figure>
+<p>여기서 <code>8 * PTX(va)</code>는 page table 배열에서 몇 번째 8바이트 entry를 선택하는지 나타낸다.</p>
+<p>중간 table이 없는데 mapping을 새로 만들어야 하면 PintOS는 이 자리에서 table page를 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">new_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> palloc_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (PAL_ZERO);</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">pdpe</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[idx] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (new_page) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_U </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_P;</span></span></code></pre></figure>
+<p>이 코드는 다음 순서로 동작한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. 새 4KB page table page를 얻는다.</span></span>
+<span data-line><span>2. 그 page의 kernel virtual address를 vtop()으로 guest physical address로 바꾼다.</span></span>
+<span data-line><span>3. 상위 entry에 &quot;다음 table은 여기 있다&quot;는 주소와 PTE_P/PTE_W/PTE_U flag를 기록한다.</span></span></code></pre></figure>
+<p>다음 table로 내려가는 포인터는 C 구조체의 <code>next</code> 포인터가 아니라 page table entry의 주소 bit에 들어 있다.</p>
+<h3 id="3-pml4_get_page는-present인-최종-pte를-해석한다">3. pml4_get_page()는 present인 최종 PTE를 해석한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-pml4_get_page는-present인-최종-pte를-해석한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p>관련 코드는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_P))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> ptov</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">PTE_ADDR</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pte</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pg_ofs</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (uaddr);</span></span></code></pre></figure>
+<p>이 반환값은 유저 VA 자체가 아니다. PintOS 커널이 같은 guest physical frame을 직접 볼 수 있게 만든 kernel virtual address다.</p>
+<p>이 차이는 <a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page는 왜 커널 가상 주소를 돌려주나</a>에서 <code>uaddr = 0x8048123</code>, <code>PTE_ADDR = 0x12345000</code>, <code>KERN_BASE = 0x8004000000</code> 값을 넣어 계산한다.</p>
+<h3 id="4-pml4_set_page는-마지막-pte에-frame을-연결한다">4. pml4_set_page()는 마지막 PTE에 frame을 연결한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-pml4_set_page는-마지막-pte에-frame을-연결한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p>관련 코드는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p><code>vtop(kpage)</code>는 kernel virtual address가 가리키는 frame의 guest physical address를 얻는다. 거기에 present/writable/user bit를 합쳐 최종 PTE 한 칸을 만든다.</p>
+<h3 id="5-qemu도-같은-bit-위치를-하드웨어처럼-걷는다">5. QEMU도 같은 bit 위치를 하드웨어처럼 걷는다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-qemu도-같은-bit-위치를-하드웨어처럼-걷는다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>QEMU의 64비트 page walk도 level별 entry 주소를 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>level 4: (addr >> 39) &amp; 0x1ff</span></span>
+<span data-line><span>level 3: (addr >> 30) &amp; 0x1ff</span></span>
+<span data-line><span>level 2: (addr >> 21) &amp; 0x1ff</span></span>
+<span data-line><span>level 1: (addr >> 12) &amp; 0x1ff</span></span></code></pre></figure>
+<p>present bit가 없으면 fault로 간다. 접근이 성립하면 accessed bit를 세우고, store 접근이면 dirty bit도 세우는 흐름이 이어진다.</p>
+<p>최종 guest physical address는 page table entry의 주소 부분과 VA offset을 합쳐 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">paddr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PG_ADDRESS_MASK </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ~</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(page_size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page_size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">));</span></span></code></pre></figure>
+<p>이 주소는 host physical address가 아니다. <a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">Guest Physical Memory</a>에서 다룬 것처럼 QEMU가 host process 안에서 backing하는 guest physical address다.</p>
+<h2 id="x86-64-페이지-테이블-워크-값-추적">x86-64 페이지 테이블 워크 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-va를-index로-분해하기">1. VA를 index로 분해하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-va를-index로-분해하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>입력:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>VA = 0x0000000008048123</span></span></code></pre></figure>
+<p>계산:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4 = (VA >> 39) &amp; 0x1FF = 0x000 = 0</span></span>
+<span data-line><span>PDPE = (VA >> 30) &amp; 0x1FF = 0x000 = 0</span></span>
+<span data-line><span>PDX  = (VA >> 21) &amp; 0x1FF = 0x040 = 64</span></span>
+<span data-line><span>PTX  = (VA >> 12) &amp; 0x1FF = 0x048 = 72</span></span>
+<span data-line><span>ofs  =  VA        &amp; 0xFFF = 0x123 = 291</span></span></code></pre></figure>
+<p>같은 계산을 4단계 탐색 과정으로 풀면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. 현재 CR3가 가리키는 PML4 page를 본다.</span></span>
+<span data-line><span>2. PML4[0] entry를 읽는다.</span></span>
+<span data-line><span>3. 그 entry가 가리키는 PDPT page로 간다.</span></span>
+<span data-line><span>4. PDPT[0] entry를 읽는다.</span></span>
+<span data-line><span>5. 그 entry가 가리키는 PD page로 간다.</span></span>
+<span data-line><span>6. PD[64] entry를 읽는다.</span></span>
+<span data-line><span>7. 그 entry가 가리키는 PT page로 간다.</span></span>
+<span data-line><span>8. PT[72] entry를 읽는다.</span></span>
+<span data-line><span>9. 그 entry가 가리키는 frame base에 offset 0x123을 더한다.</span></span></code></pre></figure>
+<p>여기서 <code>PML4[0]</code>, <code>PDPT[0]</code>, <code>PD[64]</code>, <code>PT[72]</code>는 모두 8바이트 entry다.</p>
+<h3 id="2-index를-entry-주소-offset으로-바꾸기">2. index를 entry 주소 offset으로 바꾸기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-index를-entry-주소-offset으로-바꾸기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>entry 하나는 8바이트다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4E byte offset = 0  &lt;&lt; 3 = 0x000</span></span>
+<span data-line><span>PDPE byte offset  = 0  &lt;&lt; 3 = 0x000</span></span>
+<span data-line><span>PDE byte offset   = 64 &lt;&lt; 3 = 0x200</span></span>
+<span data-line><span>PTE byte offset   = 72 &lt;&lt; 3 = 0x240</span></span></code></pre></figure>
+<p>예를 들어 page table base가 <code>0x0000000000200000</code>이면 PTE 주소는 다음처럼 계산된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE address = 0x0000000000200000 + 0x240</span></span>
+<span data-line><span>            = 0x0000000000200240</span></span></code></pre></figure>
+<p>이번에는 가상의 table base를 넣어 전체 주소를 이어 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>CR3가 가리키는 PML4 base = 0x100000</span></span>
+<span data-line> </span>
+<span data-line><span>PML4E address = 0x100000 + (0  * 8) = 0x100000</span></span>
+<span data-line><span>PML4E value   = 0x200007</span></span>
+<span data-line><span>PDPT base     = 0x200000</span></span>
+<span data-line> </span>
+<span data-line><span>PDPE address  = 0x200000 + (0  * 8) = 0x200000</span></span>
+<span data-line><span>PDPE value    = 0x300007</span></span>
+<span data-line><span>PD base       = 0x300000</span></span>
+<span data-line> </span>
+<span data-line><span>PDE address   = 0x300000 + (64 * 8) = 0x300200</span></span>
+<span data-line><span>PDE value     = 0x400007</span></span>
+<span data-line><span>PT base       = 0x400000</span></span>
+<span data-line> </span>
+<span data-line><span>PTE address   = 0x400000 + (72 * 8) = 0x400240</span></span>
+<span data-line><span>PTE value     = 0x12345067</span></span>
+<span data-line><span>frame base    = 0x12345000</span></span>
+<span data-line> </span>
+<span data-line><span>final address = 0x12345000 + 0x123 = 0x12345123</span></span></code></pre></figure>
+<p>각 entry 값의 낮은 12비트는 flag다. 따라서 base 주소를 얻을 때는 <code>&amp; ~0xFFF</code> 또는 PintOS의 <code>PTE_ADDR()</code>로 이 부분을 잘라낸다.</p>
+<h3 id="3-최종-pte를-주소와-flag로-나누기">3. 최종 PTE를 주소와 flag로 나누기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-최종-pte를-주소와-flag로-나누기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>마지막 PTE 값이 다음과 같다고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE = 0x0000000012345067</span></span></code></pre></figure>
+<p>낮은 12비트는 flag다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame base = PTE &amp; ~0xFFF = 0x12345000</span></span>
+<span data-line><span>flags      = PTE &amp;  0xFFF = 0x067</span></span></code></pre></figure>
+<p>flag 해석:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x001 PTE_P present</span></span>
+<span data-line><span>0x002 PTE_W writable</span></span>
+<span data-line><span>0x004 PTE_U user</span></span>
+<span data-line><span>0x020 PTE_A accessed</span></span>
+<span data-line><span>0x040 PTE_D dirty</span></span></code></pre></figure>
+<p>최종 주소:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PA = frame base + offset</span></span>
+<span data-line><span>   = 0x12345000 + 0x123</span></span>
+<span data-line><span>   = 0x12345123</span></span></code></pre></figure>
+<h3 id="4-page-fault는-어느-단계에서도-날-수-있다">4. page fault는 어느 단계에서도 날 수 있다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-page-fault는-어느-단계에서도-날-수-있다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 중 하나라도 present가 아니면 CPU는 최종 PA를 만들 수 없다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PML4E not present -> #PF</span></span>
+<span data-line><span>PDPE  not present -> #PF</span></span>
+<span data-line><span>PDE   not present -> #PF</span></span>
+<span data-line><span>PTE   not present -> #PF</span></span></code></pre></figure>
+<p>PintOS는 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 받은 뒤 <a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT</a>를 보고 이 주소가 lazy load, stack growth, swapped-out page인지 판단한다.</p>
+<h2 id="x86-64-페이지-테이블-워크-gdb">x86-64 페이지 테이블 워크 GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#x86-64-페이지-테이블-워크-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos에서-index-계산-확인">1. PintOS에서 index 계산 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos에서-index-계산-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>GDB에서 <code>pml4e_walk</code>에 breakpoint를 걸고 같은 주소를 넣어 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b pml4e_walk</span></span>
+<span data-line><span>p/x va</span></span>
+<span data-line><span>p PML4(va)</span></span>
+<span data-line><span>p PDPE(va)</span></span>
+<span data-line><span>p PDX(va)</span></span>
+<span data-line><span>p PTX(va)</span></span></code></pre></figure>
+<p>macro 평가가 어렵다면 shift를 직접 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x ((uint64_t) va >> 39) &amp; 0x1ff</span></span>
+<span data-line><span>p/x ((uint64_t) va >> 30) &amp; 0x1ff</span></span>
+<span data-line><span>p/x ((uint64_t) va >> 21) &amp; 0x1ff</span></span>
+<span data-line><span>p/x ((uint64_t) va >> 12) &amp; 0x1ff</span></span>
+<span data-line><span>p/x ((uint64_t) va) &amp; 0xfff</span></span></code></pre></figure>
+<h3 id="2-최종-pte-값-보기">2. 최종 PTE 값 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-최종-pte-값-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b pml4_set_page</span></span>
+<span data-line><span>next</span></span>
+<span data-line><span>p/x *pte</span></span>
+<span data-line><span>p/x PTE_ADDR(*pte)</span></span>
+<span data-line><span>p/x *pte &amp; PTE_P</span></span>
+<span data-line><span>p/x *pte &amp; PTE_W</span></span>
+<span data-line><span>p/x *pte &amp; PTE_U</span></span></code></pre></figure>
+<p>다음 사항을 확인한다.</p>
+<ul>
+<li><code>upage</code>는 page aligned인가?</li>
+<li><code>kpage</code>도 page aligned인가?</li>
+<li><code>*pte</code>의 주소 부분은 <code>vtop(kpage)</code>와 맞는가?</li>
+<li>낮은 bit에는 permission이 들어갔는가?</li>
+</ul>
+<h3 id="3-page-fault-위치와-연결하기">3. page fault 위치와 연결하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-page-fault-위치와-연결하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b page_fault</span></span>
+<span data-line><span>b vm_try_handle_fault</span></span>
+<span data-line><span>b pml4e_walk</span></span></code></pre></figure>
+<p>다음 사항을 확인한다.</p>
+<ul>
+<li><code>fault_addr</code>의 PML4/PDPE/PDX/PTX index는 무엇인가?</li>
+<li><code>pml4e_walk(..., create=false)</code>가 <code>NULL</code>을 반환했는가?</li>
+<li>SPT에는 page base <code>pg_round_down(fault_addr)</code>가 있는가?</li>
+<li>fault를 살린 뒤 <code>pml4_set_page()</code>가 같은 page base에 PTE를 만들었는가?</li>
+</ul>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/매크로</th><th>역할</th></tr></thead><tbody><tr><td>include/threads/pte.h</td><td><code>PML4()</code>, <code>PDPE()</code>, <code>PDX()</code>, <code>PTX()</code></td><td>VA에서 9-bit index 추출</td></tr><tr><td>include/threads/pte.h</td><td><code>PTE_ADDR()</code>, <code>PTE_P</code>, <code>PTE_W</code>, <code>PTE_U</code></td><td>PTE에서 주소/플래그 분리</td></tr><tr><td>threads/mmu.c</td><td><code>pml4e_walk()</code></td><td>PML4→PDPT→PD→PT 4단계 순회, create 시 중간 table 할당</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_set_page()</code></td><td>최종 PTE에 frame PA + permission bit 기록</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_get_page()</code></td><td>최종 PTE에서 frame KVA + offset 반환</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_create()</code></td><td>새 PML4 page 할당 (프로세스 생성 시)</td></tr><tr><td>threads/mmu.c</td><td><code>pml4_activate()</code></td><td>CR3에 PML4 PA 로드</td></tr><tr><td>include/threads/vaddr.h</td><td><code>vtop()</code>, <code>ptov()</code></td><td>KVA ↔ GPA 변환</td></tr><tr><td>QEMU target/i386/tcg/system/excp_helper.c</td><td><code>mmu_translate()</code></td><td>guest CPU page-table walk 에뮬레이션</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>PintOS에서 보는 x86-64 4KB page 기준 VA는 9비트 index 네 개와 12비트 offset으로 나뉜다.</li>
+<li>각 page table은 512개의 8바이트 entry를 담는 4KB 배열이다.</li>
+<li>512개를 넘으면 linked list의 next로 이어지는 것이 아니라, 상위 단계의 다른 entry가 다른 하위 table page를 가리킨다.</li>
+<li>4단계 구조 전체는 <code>512 * 512 * 512 * 512 * 4KB = 256TiB</code>의 가상주소 번호를 표현할 수 있다.</li>
+<li>PintOS의 <code>PML4/PDPE/PDX/PTX</code> 매크로는 이 index를 직접 계산한다.</li>
+<li>PintOS도 x86-64용 4단계 page table을 쓴다.</li>
+<li>page table 자체를 담는 4KB page는 <code>pml4e_walk(..., create=true)</code> 흐름에서 <code>palloc_get_page(PAL_ZERO)</code>로 만들어질 수 있다.</li>
+<li>유저 데이터 frame은 VM의 <code>vm_get_frame()</code>에서 <code>palloc_get_page(PAL_USER)</code>로 가져오는 별도 자원이다.</li>
+<li><code>pml4e_walk()</code>는 중간 table을 따라 최종 PTE의 주소를 찾는다.</li>
+<li><code>pml4_set_page()</code>는 최종 PTE에 frame 주소와 permission bit를 기록한다.</li>
+<li>QEMU는 PintOS 정책을 모르고, guest CPU의 page-table walk와 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 효과를 재현한다.</li>
+<li>실제 OS와 최신 하드웨어에는 huge page, 5단계 page table 같은 확장이 있을 수 있으므로 이 문서의 계산은 PintOS 학습용 4단계 기본형에 해당한다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a></li>
+<li><a href="../../wiki/os/pml4-index" class="internal internal-link alias" data-slug="wiki/os/pml4-index">PML4 index 9비트 추출 상세</a></li>
+<li><a href="../../wiki/os/pdpt-index" class="internal internal-link alias" data-slug="wiki/os/pdpt-index">PDPT index 상세</a></li>
+<li><a href="../../wiki/os/pd-index" class="internal internal-link alias" data-slug="wiki/os/pd-index">PD index 상세</a></li>
+<li><a href="../../wiki/os/pt-index" class="internal internal-link alias" data-slug="wiki/os/pt-index">PT index 상세</a></li>
+<li><a href="../../wiki/os/page-offset-12bit" class="internal internal-link alias" data-slug="wiki/os/page-offset-12bit">12비트 offset 상세</a></li>
+<li><a href="../../wiki/os/pte-present-bit" class="internal internal-link alias" data-slug="wiki/os/pte-present-bit">PTE present 비트</a></li>
+<li><a href="../../wiki/os/pte-writable-bit" class="internal internal-link alias" data-slug="wiki/os/pte-writable-bit">PTE writable 비트</a></li>
+<li><a href="../../wiki/os/pte-user-bit" class="internal internal-link alias" data-slug="wiki/os/pte-user-bit">PTE user 비트</a></li>
+<li><a href="../../wiki/os/pte-accessed-bit" class="internal internal-link alias" data-slug="wiki/os/pte-accessed-bit">PTE accessed 비트</a></li>
+<li><a href="../../wiki/os/pte-dirty-bit" class="internal internal-link alias" data-slug="wiki/os/pte-dirty-bit">PTE dirty 비트</a></li>
+<li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-kernel-va-lab">pml4 get page() Lab</a></li>
+<li><a href="../../wiki/os/pml4-get-page-mapping" class="internal internal-link alias" data-slug="wiki/os/pml4-get-page-mapping">PML4 walk으로 매핑 확인</a></li>
+<li><a href="../../wiki/os/cr3-page-table-root" class="internal internal-link alias" data-slug="wiki/os/cr3-page-table-root">CR3 레지스터와 page table root</a></li>
+<li><a href="../../wiki/os/cr3-switch-flush" class="internal internal-link alias" data-slug="wiki/os/cr3-switch-flush">CR3 전환 시 TLB flush</a></li>
+<li><a href="../../wiki/os/tlb-cache-mechanism" class="internal internal-link alias" data-slug="wiki/os/tlb-cache-mechanism">TLB 캐시 메커니즘</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">page fault 처리 개관</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">guest physical memory</a></li>
+</ul>
+<p>연결 문서: <a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">페이지 테이블 엔트리 비트 — CPU가 주소 변환 중에 읽고 쓰는 플래그들</a></p></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/32bit-64bit-architecture" class="internal">32비트와 64비트 아키텍처</a></li><li><a href="../../wiki/os/address-translation-memory" class="internal">주소 변환과 메모리</a></li><li><a href="../../wiki/os/canonical-address-space-hole" class="internal">x86-64 Canonical Address와 비정규 홀</a></li><li><a href="../../wiki/os/clock-algorithm-victim" class="internal">시계 알고리즘 희생자 (Clock Algorithm Victim)</a></li><li><a href="../../wiki/os/cr3-page-table-root" class="internal">CR3 — 페이지 테이블 루트</a></li><li><a href="../../wiki/os/cr3-switch-flush" class="internal">CR3 전환과 TLB Flush</a></li><li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal">Guest Physical Memory</a></li><li><a href="../../wiki/os/guest-vs-host-address" class="internal">guest physical ≠ host physical ≠ host virtual</a></li><li><a href="../../wiki/os/hardware-abstraction" class="internal">추상화</a></li><li><a href="../../wiki/os/install-page-mapping" class="internal">install_page — 유저 가상 주소 매핑 설치</a></li><li><a href="../../wiki/os/kernel-user-memory-layout" class="internal">커널 영역과 유저 영역 — 가상 주소 공간은 어떻게 나뉘는가</a></li><li><a href="../../wiki/os/mmu-memory-management-unit" class="internal">MMU</a></li><li><a href="../../wiki/os/page-fault-handling" class="internal">페이지 폴트</a></li><li><a href="../../wiki/os/page-fault-trace" class="internal">CPU 메모리 접근에서 Page Fault 복구까지의 Trace</a></li><li><a href="../../wiki/os/page-offset-12bit" class="internal">페이지 오프셋 12비트</a></li><li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal">페이지 테이블 엔트리 비트 — CPU가 주소 변환 중에 읽고 쓰는 플래그들</a></li><li><a href="../../wiki/os/pd-index" class="internal">PD Index — 4단계 Page Table Walk의 세 번째 단계</a></li><li><a href="../../wiki/os/pdpt-index" class="internal">PDPT 인덱스</a></li><li><a href="../../wiki/os/pintos-directory-structure" class="internal">PintOS 디렉터리 구조</a></li><li><a href="../../wiki/os/pintos-e820-palloc-pool-trace" class="internal">E820 메모리 맵에서 palloc Pool까지의 Trace</a></li><li><a href="../../wiki/os/pintos-palloc-user-frame-address-alias-knowledge" class="internal">PintOS palloc과 User Frame 주소 별칭</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/pintos-vm-structure-flow" class="internal">PintOS VM 구조와 흐름</a></li><li><a href="../../wiki/os/pml4-clear-page" class="internal">pml4_clear_page — PTE에서 present 비트 제거</a></li><li><a href="../../wiki/os/pml4-create-setup-knowledge" class="internal">PML4 생성과 커널 영역 복사</a></li><li><a href="../../wiki/os/pml4-destroy-recursive-walk" class="internal">pml4_destroy() — 4-Level Page Table 재귀 해제</a></li><li><a href="../../wiki/os/pml4-get-page-kernel-va-lab" class="internal">pml4_get_page는 왜 커널 가상 주소를 돌려주나</a></li><li><a href="../../wiki/os/pml4-index" class="internal">PML4 Index</a></li><li><a href="../../wiki/os/spt-vs-pml4-separation" class="internal">SPT와 PML4를 둘 다 두는 이유</a></li><li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal">Supplemental Page Table은 왜 필요한가</a></li><li><a href="../../wiki/os/tlb-cache-mechanism" class="internal">TLB 캐시 메커니즘</a></li><li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal">TLB와 CR3 주소 공간 전환</a></li><li><a href="../../wiki/os/x86-64-task-state-segment-kernel-stack-knowledge" class="internal">x86-64 TSS 커널 스택 전환</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-708" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#x86-64-페이지-테이블-워크" data-for="x86-64-페이지-테이블-워크">x86-64 페이지 테이블 워크</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-시작" data-for="x86-64-페이지-테이블-워크-시작">x86-64 페이지 테이블 워크 시작</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-필요성" data-for="x86-64-페이지-테이블-워크-필요성">x86-64 페이지 테이블 워크 필요성</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-흐름" data-for="x86-64-페이지-테이블-워크-흐름">x86-64 페이지 테이블 워크 흐름</a></li><li class="depth-1"><a href="#범위-계산" data-for="범위-계산">범위 계산</a></li><li class="depth-1"><a href="#가상-주소를-손으로-따라가기" data-for="가상-주소를-손으로-따라가기">가상 주소를 손으로 따라가기</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#루트-pml4-포인터는-어디에-있나" data-for="루트-pml4-포인터는-어디에-있나">루트 PML4 포인터는 어디에 있나</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-코드" data-for="x86-64-페이지-테이블-워크-코드">x86-64 페이지 테이블 워크 코드</a></li><li class="depth-2"><a href="#1-pintos는-va-bit-조각을-index로-만든다" data-for="1-pintos는-va-bit-조각을-index로-만든다">1. PintOS는 VA bit 조각을 index로 만든다</a></li><li class="depth-2"><a href="#2-pintos는-중간-entry에서-다음-table을-찾는다" data-for="2-pintos는-중간-entry에서-다음-table을-찾는다">2. PintOS는 중간 entry에서 다음 table을 찾는다</a></li><li class="depth-2"><a href="#3-pml4_get_page는-present인-최종-pte를-해석한다" data-for="3-pml4_get_page는-present인-최종-pte를-해석한다">3. pml4_get_page()는 present인 최종 PTE를 해석한다</a></li><li class="depth-2"><a href="#4-pml4_set_page는-마지막-pte에-frame을-연결한다" data-for="4-pml4_set_page는-마지막-pte에-frame을-연결한다">4. pml4_set_page()는 마지막 PTE에 frame을 연결한다</a></li><li class="depth-2"><a href="#5-qemu도-같은-bit-위치를-하드웨어처럼-걷는다" data-for="5-qemu도-같은-bit-위치를-하드웨어처럼-걷는다">5. QEMU도 같은 bit 위치를 하드웨어처럼 걷는다</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-값-추적" data-for="x86-64-페이지-테이블-워크-값-추적">x86-64 페이지 테이블 워크 값 추적</a></li><li class="depth-2"><a href="#1-va를-index로-분해하기" data-for="1-va를-index로-분해하기">1. VA를 index로 분해하기</a></li><li class="depth-2"><a href="#2-index를-entry-주소-offset으로-바꾸기" data-for="2-index를-entry-주소-offset으로-바꾸기">2. index를 entry 주소 offset으로 바꾸기</a></li><li class="depth-2"><a href="#3-최종-pte를-주소와-flag로-나누기" data-for="3-최종-pte를-주소와-flag로-나누기">3. 최종 PTE를 주소와 flag로 나누기</a></li><li class="depth-2"><a href="#4-page-fault는-어느-단계에서도-날-수-있다" data-for="4-page-fault는-어느-단계에서도-날-수-있다">4. page fault는 어느 단계에서도 날 수 있다</a></li><li class="depth-1"><a href="#x86-64-페이지-테이블-워크-gdb" data-for="x86-64-페이지-테이블-워크-gdb">x86-64 페이지 테이블 워크 GDB</a></li><li class="depth-2"><a href="#1-pintos에서-index-계산-확인" data-for="1-pintos에서-index-계산-확인">1. PintOS에서 index 계산 확인</a></li><li class="depth-2"><a href="#2-최종-pte-값-보기" data-for="2-최종-pte-값-보기">2. 최종 PTE 값 보기</a></li><li class="depth-2"><a href="#3-page-fault-위치와-연결하기" data-for="3-page-fault-위치와-연결하기">3. page fault 위치와 연결하기</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

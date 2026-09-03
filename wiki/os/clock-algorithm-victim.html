@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>시계 알고리즘 희생자 (Clock Algorithm Victim) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="시계 알고리즘 희생자 (Clock Algorithm Victim) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="시계 알고리즘 희생자 (Clock Algorithm Victim) · 최우녕"/><meta name="twitter:description" content="정확한 LRU(Least Recently Used)를 구현하려면 모든 페이지 접근 시점을 계속 기록해야 한다."/><meta property="og:description" content="정확한 LRU(Least Recently Used)를 구현하려면 모든 페이지 접근 시점을 계속 기록해야 한다."/><meta property="og:image:alt" content="정확한 LRU(Least Recently Used)를 구현하려면 모든 페이지 접근 시점을 계속 기록해야 한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/clock-algorithm-victim"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/clock-algorithm-victim"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="정확한 LRU(Least Recently Used)를 구현하려면 모든 페이지 접근 시점을 계속 기록해야 한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/clock-algorithm-victim" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-429" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-429" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>시계 알고리즘 희생자 (Clock Algorithm Victim)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="시계-알고리즘-희생자-clock-algorithm-victim">시계 알고리즘 희생자 (Clock Algorithm Victim)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시계-알고리즘-희생자-clock-algorithm-victim" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 Clock algorithm의 일반 원리와 victim 선택 기준을 설명하고, 제시된 Linux·PintOS·QEMU 내용은 특정 구현을 이해하기 위한 사례로 다룬다. 코드 좌표, 버전별 동작, 실제 프레임 수·순회 횟수·I/O 비용·성능에 관한 판단은 해당 소스와 실행·측정 기록을 별도로 확인해야 하며, 본문만으로 특정 환경에서 검증된 결과로 간주하지 않는다.</p>
+</blockquote>
+<blockquote>
+<p>메모리가 꽉 찼을 때 OS는 어떤 프레임을 내보낼지 골라야 한다. Clock algorithm은 PTE의 accessed bit를 보며 최근에 쓰인 프레임에는 한 번 더 기회를 주고, 조용했던 프레임을 victim으로 고른다.</p>
+</blockquote>
+<h2 id="왜-최근-사용-여부를-대충-봐도-되는가">왜 최근 사용 여부를 대충 봐도 되는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#왜-최근-사용-여부를-대충-봐도-되는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>정확한 LRU(Least Recently Used)를 구현하려면 모든 페이지 접근 시점을 계속 기록해야 한다. 메모리 접근은 너무 자주 일어나기 때문에, 그 기록 자체가 큰 비용이 된다. Clock algorithm은 대신 하드웨어가 자동으로 세워 주는 <strong>accessed bit(A bit)</strong> 하나만 본다. “최근에 접근된 적이 있는가”만 알면 완벽한 순서는 몰라도 꽤 그럴듯한 victim을 고를 수 있다.</p>
+<p>물리 메모리가 가득 찼을 때 clock hand가 프레임 목록을 돌며 A bit를 확인한다. A bit가 1이면 최근에 쓰였다는 뜻이므로 bit를 0으로 내리고 지나간다. A bit가 0이면 지난 순회 이후 조용했던 프레임이므로 eviction victim이 된다.</p>
+<h2 id="a-bit와-d-bit가-알려주는-것">A bit와 D bit가 알려주는 것<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#a-bit와-d-bit가-알려주는-것" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>x86-64 MMU는 PTE의 <strong>accessed bit</strong>를 자동으로 설정한다:</p>
+<ul>
+<li>페이지에 읽기 또는 쓰기 접근이 발생하면 → A bit = 1 (하드웨어가 설정)</li>
+<li>OS가 명시적으로 A bit = 0으로 초기화할 수 있다 (소프트웨어가 클리어)</li>
+</ul>
+<p>**dirty bit(D bit)**도 함께 사용된다:</p>
+<ul>
+<li>페이지에 쓰기 접근이 발생하면 → D bit = 1</li>
+<li>eviction 시 D bit = 1이면 디스크에 write-back 필요</li>
+</ul>
+<p>이 두 비트가 eviction 정책의 전부다. CPU는 “언제” 접근했는지 기록하지 않는다. 오직 “접근했는가”만 알려준다.</p>
+<h2 id="clock-algorithm-동작">Clock Algorithm 동작<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-algorithm-동작" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>프레임들을 원형 리스트로 배치하고, clock hand(시계 바늘)가 순회한다:</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Clock algorithm victim 선택\nflowchart LR\n  hand[\&quot;clock hand\&quot;]\n  frame_a[\&quot;frame A&lt;br/>accessed bit = 1&lt;br/>second chance\&quot;]\n  frame_b[\&quot;frame B&lt;br/>accessed bit = 1&lt;br/>accessed bit = 0으로 클리어\&quot;]\n  frame_c[\&quot;frame C&lt;br/>accessed bit = 0&lt;br/>victim\&quot;]\n  frame_d[\&quot;frame D&lt;br/>accessed bit = 1&lt;br/>second chance\&quot;]\n  hand --> frame_a\n  frame_a --> frame_b\n  frame_b --> frame_c\n  frame_c --> frame_d\n  frame_d --> frame_a&quot;">%% Clock algorithm victim 선택
+flowchart LR
+  hand[&quot;clock hand&quot;]
+  frame_a[&quot;frame A&lt;br/>accessed bit = 1&lt;br/>second chance&quot;]
+  frame_b[&quot;frame B&lt;br/>accessed bit = 1&lt;br/>accessed bit = 0으로 클리어&quot;]
+  frame_c[&quot;frame C&lt;br/>accessed bit = 0&lt;br/>victim&quot;]
+  frame_d[&quot;frame D&lt;br/>accessed bit = 1&lt;br/>second chance&quot;]
+  hand --> frame_a
+  frame_a --> frame_b
+  frame_b --> frame_c
+  frame_c --> frame_d
+  frame_d --> frame_a
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>순회 규칙:</strong></p>
+<ol>
+<li>clock hand가 가리키는 프레임의 A bit를 확인한다.</li>
+<li>A bit = 1이면: “second chance”를 준다. A bit = 0으로 클리어하고 다음으로 전진한다.</li>
+<li>A bit = 0이면: 이 프레임이 victim이다. eviction 수행.</li>
+<li>한 바퀴를 돌아도 victim을 못 찾으면 (모든 프레임의 A bit가 1이었던 경우), 두 번째 순회에서는 모두 0으로 클리어된 상태이므로 반드시 victim을 찾는다.</li>
+</ol>
+<p><strong>최악의 경우</strong>: 프레임 N개일 때 최대 2N번 검사 (한 바퀴 클리어 + 한 바퀴 선택).</p>
+<h3 id="enhanced-clock-nru-변형">Enhanced Clock (NRU 변형)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#enhanced-clock-nru-변형" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>일부 OS는 (accessed, dirty) 쌍을 4등급으로 나눈다:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>등급</th><th>A</th><th>D</th><th>의미</th><th>eviction 우선순위</th></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>미참조, 깨끗</td><td>가장 먼저 내보냄</td></tr><tr><td>1</td><td>0</td><td>1</td><td>미참조, 더럽</td><td>두 번째</td></tr><tr><td>2</td><td>1</td><td>0</td><td>참조됨, 깨끗</td><td>세 번째</td></tr><tr><td>3</td><td>1</td><td>1</td><td>참조됨, 더럽</td><td>가장 나중에 내보냄</td></tr></tbody></table></div>
+<p>등급 0부터 순서대로 찾으면 불필요한 disk I/O를 줄인다 (dirty 페이지는 write-back 비용이 크다).</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux는 clock algorithm을 직접 쓰지 않고 <strong>LRU 이중 리스트</strong> (active list + inactive list) + <strong>kswapd</strong> 데몬을 사용한다:</p>
+<ul>
+<li>active list: 최근 참조된 페이지</li>
+<li>inactive list: 한동안 미참조된 페이지</li>
+<li>kswapd가 주기적으로 inactive list에서 victim을 선택</li>
+<li>A bit를 주기적으로 스캔하여 페이지를 active ↔ inactive 사이에서 이동</li>
+</ul>
+<p>원리는 동일하다: A bit로 “최근 사용 여부”를 판단하고, 미사용 페이지를 우선 evict한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 clock algorithm은 vm/vm.c에 전역 상태 3개로 구현되어 있다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// vm/vm.c:13-15 — 전역 변수</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list frame_table;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // 모든 할당된 프레임의 리스트</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock frame_lock;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // frame_table 보호 락</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> list_elem</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> clock_ptr;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // clock hand (NULL이면 리스트 시작)</span></span></code></pre></figure>
+<p>초기화는 <code>vm_init()</code>(:28-30)에서 수행한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">frame_table</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">lock_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">frame_lock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><strong>vm_get_victim()</strong> (vm/vm.c:284-311) — 실제 구현 코드:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_get_victim</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">victim </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_begin</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">frame_table);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_end</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">frame_table)) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">            clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_begin</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">frame_table);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            continue</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">        }</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">clock_frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(clock_ptr, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> frame, elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> accessed </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_frame_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(clock_frame);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">accessed) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">            clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_next</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(clock_ptr);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> clock_frame;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">        }</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        vm_frame_set_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(clock_frame, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">        clock_ptr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_next</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(clock_ptr);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> victim;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong>핵심 포인트:</strong></p>
+<ul>
+<li><code>list_end()</code> 도달 시 <code>list_begin()</code>으로 wrap → 원형 순회 구현</li>
+<li>victim을 반환하기 전에 clock_ptr을 다음으로 전진시켜, 다음 eviction은 victim 다음부터 탐색</li>
+<li>무한 루프지만, 최대 2N 반복 후 반드시 victim을 찾음 (첫 순회에서 모두 클리어하므로)</li>
+</ul>
+<p><strong>COW 대응: vm_frame_accessed()</strong> (vm/vm.c:151-164)</p>
+<p>PintOS는 COW를 지원하므로 하나의 frame을 여러 프로세스가 공유할 수 있다. <code>vm_frame_accessed()</code>는 <code>frame->owners</code> 리스트를 순회하여, 어느 하나라도 A bit가 1이면 true를 반환한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_frame_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> list_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_begin</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">frame->owners);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">         e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_end</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">frame->owners); e </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_next</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(e)) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame_owner </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">owner </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(e, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> frame_owner, elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (owner->thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> owner->thread->pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;&amp;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">            owner->page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;&amp;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">            pml4_is_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(owner->thread->pml4, owner->page->va))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>마찬가지로 <code>vm_frame_set_accessed()</code> (:167-178)는 모든 owner의 PTE에서 A bit를 클리어한다.</p>
+<p><strong>vm_evict_frame()</strong> (vm/vm.c:316-325):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_evict_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">victim </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_get_victim</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">swap_out</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(victim->page))</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    victim->owner_thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    victim->page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    victim->ref_count </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> victim;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>swap_out()</code>은 page의 <code>operations->swap_out</code>을 호출하여 anon이면 swap slot에, file-backed이면 dirty 시 파일에 write-back한다.</p>
+<h3 id="pintos에서-a-bit-조작-api">PintOS에서 A bit 조작 API<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서-a-bit-조작-api" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>함수</th><th>역할</th></tr></thead><tbody><tr><td><code>pml4_is_accessed(pml4, va)</code></td><td>해당 VA의 PTE에서 A bit 읽기</td></tr><tr><td><code>pml4_set_accessed(pml4, va, false)</code></td><td>A bit를 0으로 클리어</td></tr><tr><td><code>pml4_is_dirty(pml4, va)</code></td><td>D bit 읽기</td></tr><tr><td><code>pml4_set_dirty(pml4, va, false)</code></td><td>D bit 클리어</td></tr></tbody></table></div>
+<p>이 함수들은 <code>threads/mmu.c</code>에 정의되어 있으며, 4단계 page table walk를 수행하여 최종 PTE에 접근한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 어떤 frame을 victim으로 고를지 결정하지 않는다. <code>vm_get_victim()</code>은 guest인 PintOS의 소프트웨어 정책이고, QEMU는 그 명령을 실행하며 x86 페이지 테이블 walk와 A/D bit 설정 효과를 에뮬레이션한다. 이 책임 경계를 먼저 분리해야 한다.</p>
+<p><strong>A bit 자동 설정 경로:</strong></p>
+<ol>
+<li>guest가 가상 주소에 접근 → QEMU SoftMMU가 page table walk 수행</li>
+<li>walk 중 PTE를 찾으면, TCG 헬퍼가 해당 PTE의 bit 5(accessed)를 1로 설정</li>
+<li>SoftTLB에 캐시 → 이후 같은 페이지 접근은 TLB hit으로 PTE를 다시 건드리지 않음</li>
+</ol>
+<p><strong>A bit 클리어 시 TLB 무효화:</strong>
+<code>pml4_set_accessed(pml4, va, false)</code>가 PTE의 A bit를 클리어하면, TLB와 실제 PTE가 불일치할 수 있다. 현재 PintOS 구현은 <code>pml4_set_accessed()</code>에서 수정 대상 PML4가 현재 CR3에 올라온 주소 공간이면 <code>invlpg(va)</code>를 호출한다. 그래서 같은 VA의 다음 접근은 다시 page walk를 거치며 A bit를 새로 세울 수 있다.</p>
+<p><strong>GDB에서 clock algorithm 관찰법:</strong></p>
+<pre><code># 1. frame_table 전체 크기 확인
+(gdb) p list_size(&amp;frame_table)
+
+# 2. clock_ptr의 현재 위치
+(gdb) p clock_ptr
+(gdb) set $f = (struct frame *)((char *)clock_ptr - offsetof(struct frame, elem))
+(gdb) p/x $f->kva
+(gdb) p $f->page->va
+
+# 3. vm_get_victim에 breakpoint → victim 선택 관찰
+(gdb) b vm_get_victim
+(gdb) c
+# victim이 결정되는 순간까지 step
+(gdb) b vm.c:302  # return clock_frame 직전
+(gdb) c
+(gdb) p/x clock_frame->kva
+(gdb) p clock_frame->page->va
+
+# 4. A bit 상태 직접 확인
+(gdb) set $va = clock_frame->page->va
+(gdb) set $pml4 = clock_frame->owner_thread->pml4
+(gdb) p pml4_is_accessed($pml4, $va)
+
+# 5. eviction 전후 swap 상태
+(gdb) b vm_evict_frame
+(gdb) c
+(gdb) finish
+(gdb) p victim->page   # NULL이면 eviction 완료
+</code></pre>
+<h2 id="시계-알고리즘-희생자-값-추적">시계 알고리즘 희생자 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시계-알고리즘-희생자-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현재 user pool에 실제 등록된 frame 수를 <code>U</code>라고 할 때:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>총 유저 프레임 수</td><td><code>U</code> (<code>frame_table</code> 또는 user pool 초기화 결과로 측정)</td></tr><tr><td>clock 최악 순회</td><td>최대 약 <code>2U</code>번 (첫 바퀴에서 accessed clear, 둘째 바퀴에서 선택)</td></tr><tr><td>eviction 1회 비용 (ANON)</td><td>swap write: 8 sectors x 512 B = 4 KB</td></tr><tr><td>eviction 1회 비용 (FILE, clean)</td><td>0 (버리기만 하면 됨)</td></tr><tr><td>eviction 1회 비용 (FILE, dirty)</td><td>파일 write-back: 최대 4 KB</td></tr></tbody></table></div>
+<p>4 MB를 단순히 4 KB로 나눈 1024는 전체 물리 page의 이론적 개수일 뿐이다. 커널 예약 영역과 user/kernel pool 분할 뒤의 유저 프레임 수로 사용할 수 없다.</p>
+<p>ANON 페이지를 swap out할 때 PintOS의 swap disk는 IDE 채널 1:1에 연결되며, sector 크기는 512 B이므로 4 KB 페이지 = 8 sectors를 기록한다.</p>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% vm_get_victim에서 frame 재사용까지\nflowchart TD\n  palloc_fail[\&quot;vm_get_frame: palloc 실패\&quot;]\n  evict_call[\&quot;vm_evict_frame 호출\&quot;]\n  victim_call[\&quot;vm_get_victim 호출\&quot;]\n  clock_frame[\&quot;clock_hand가 가리키는 frame\&quot;]\n  accessed{\&quot;accessed bit == 1?\&quot;}\n  clear_accessed[\&quot;accessed bit = 0으로 클리어\&quot;]\n  advance_after_clear[\&quot;clock_hand 전진\&quot;]\n  victim[\&quot;이 frame이 victim\&quot;]\n  advance_after_victim[\&quot;clock_hand 전진\&quot;]\n  page_type[\&quot;victim page 타입?\&quot;]\n  anon[\&quot;swap_out: swap slot에 기록\&quot;]\n  file_dirty[\&quot;file write-back\&quot;]\n  file_clean[\&quot;그냥 버림\&quot;]\n  clear_present[\&quot;PTE present bit 해제\&quot;]\n  reuse[\&quot;reuse\&quot;]\n  palloc_fail --> evict_call\n  evict_call --> victim_call\n  victim_call --> clock_frame\n  clock_frame --> accessed\n  accessed -->|Yes| clear_accessed\n  clear_accessed --> advance_after_clear\n  advance_after_clear --> clock_frame\n  accessed -->|No| victim\n  victim --> advance_after_victim\n  advance_after_victim --> page_type\n  page_type --> anon\n  page_type --> file_dirty\n  page_type --> file_clean\n  anon --> clear_present\n  file_dirty --> clear_present\n  file_clean --> clear_present\n  clear_present --> reuse&quot;">%% vm_get_victim에서 frame 재사용까지
+flowchart TD
+  palloc_fail[&quot;vm_get_frame: palloc 실패&quot;]
+  evict_call[&quot;vm_evict_frame 호출&quot;]
+  victim_call[&quot;vm_get_victim 호출&quot;]
+  clock_frame[&quot;clock_hand가 가리키는 frame&quot;]
+  accessed{&quot;accessed bit == 1?&quot;}
+  clear_accessed[&quot;accessed bit = 0으로 클리어&quot;]
+  advance_after_clear[&quot;clock_hand 전진&quot;]
+  victim[&quot;이 frame이 victim&quot;]
+  advance_after_victim[&quot;clock_hand 전진&quot;]
+  page_type[&quot;victim page 타입?&quot;]
+  anon[&quot;swap_out: swap slot에 기록&quot;]
+  file_dirty[&quot;file write-back&quot;]
+  file_clean[&quot;그냥 버림&quot;]
+  clear_present[&quot;PTE present bit 해제&quot;]
+  reuse[&quot;reuse&quot;]
+  palloc_fail --> evict_call
+  evict_call --> victim_call
+  victim_call --> clock_frame
+  clock_frame --> accessed
+  accessed -->|Yes| clear_accessed
+  clear_accessed --> advance_after_clear
+  advance_after_clear --> clock_frame
+  accessed -->|No| victim
+  victim --> advance_after_victim
+  advance_after_victim --> page_type
+  page_type --> anon
+  page_type --> file_dirty
+  page_type --> file_clean
+  anon --> clear_present
+  file_dirty --> clear_present
+  file_clean --> clear_present
+  clear_present --> reuse
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄 번호</th><th>역할</th></tr></thead><tbody><tr><td>pintos/vm/vm.c</td><td>frame_table, frame_lock, clock_ptr</td><td>13-15</td><td>전역 상태 3개</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_init()</td><td>19</td><td>frame_table/lock/clock_ptr 초기화</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_frame_accessed()</td><td>151</td><td>owners 리스트 순회하여 A bit 확인 (COW 대응)</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_frame_set_accessed()</td><td>167</td><td>모든 owner PTE의 A bit 클리어</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_get_victim()</td><td>284</td><td>clock algorithm 원형 순회로 victim 선택</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_evict_frame()</td><td>316</td><td>victim swap_out + frame 초기화</td></tr><tr><td>pintos/vm/vm.c</td><td>vm_get_frame()</td><td>339</td><td>palloc 실패 시 vm_evict_frame 호출</td></tr><tr><td>pintos/include/vm/vm.h</td><td>struct frame</td><td>71</td><td>kva, page, elem, owners 리스트</td></tr><tr><td>pintos/include/vm/vm.h</td><td>struct frame_owner</td><td>64</td><td>page, thread, elem — COW 공유용</td></tr><tr><td>pintos/vm/anon.c</td><td>anon_swap_out()</td><td>134</td><td>ANON 페이지 → swap slot 기록</td></tr><tr><td>pintos/vm/file.c</td><td>file_backed_swap_out()</td><td>54</td><td>FILE 페이지 → 파일 write-back</td></tr><tr><td>pintos/threads/mmu.c</td><td>pml4_is_accessed()</td><td>320</td><td>PTE accessed bit 읽기</td></tr><tr><td>pintos/threads/mmu.c</td><td>pml4_set_accessed()</td><td>330</td><td>PTE accessed bit 설정/클리어, 활성 PML4면 invlpg</td></tr></tbody></table></div>
+<h2 id="시계-알고리즘-희생자-점검">시계 알고리즘 희생자 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시계-알고리즘-희생자-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Clock algorithm은 정확한 LRU가 아니라 A bit 하나로 최근 접근 여부를 근사한다.</li>
+<li>A bit가 1이면 victim으로 고르지 않고, 0으로 내린 뒤 다음 프레임을 본다.</li>
+<li>A bit가 0이면 최근 순회 이후 접근 흔적이 없다는 뜻이므로 victim 후보가 된다.</li>
+<li>COW 공유 frame에서는 owner 중 하나라도 A bit가 1이면 frame 전체가 최근 접근된 것으로 본다.</li>
+<li>dirty bit는 victim 선택의 핵심 기준은 아니지만, <code>swap_out()</code>이 swap/file write-back 비용을 판단할 때 중요하다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction</a></li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty bit</a></li>
+<li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">clock hand victim Lab</a></li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous swap slot</a></li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a></li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE bit</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">Copy on Write</a></li>
+<li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal internal-link alias" data-slug="wiki/os/x86-64-page-table-walk-knowledge">x86 64 page table walk</a></li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB와 CR3 주소 공간 전환</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal">accessed/dirty bit로 victim 판단</a></li><li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal">Anonymous Page와 Swap Slot</a></li><li><a href="../../wiki/os/bitmap-allocator-design" class="internal">Bitmap Allocator</a></li><li><a href="../../wiki/os/bitmap-swap-table" class="internal">비트맵 스왑 테이블 (Bitmap Swap Table)</a></li><li><a href="../../wiki/os/buffer-cache" class="internal">버퍼 캐시</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/page-operations-dispatch" class="internal">page_operations 분기</a></li><li><a href="../../wiki/os/page-replacement-algorithms" class="internal">페이지 교체 알고리즘 — Optimal, LRU, Clock</a></li><li><a href="../../wiki/os/pte-accessed-bit" class="internal">PTE 접근 Bit (PTE Accessed Bit)</a></li><li><a href="../../wiki/os/pte-dirty-bit" class="internal">PTE 더티 Bit (PTE Dirty Bit)</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-427" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#시계-알고리즘-희생자-clock-algorithm-victim" data-for="시계-알고리즘-희생자-clock-algorithm-victim">시계 알고리즘 희생자 (Clock Algorithm Victim)</a></li><li class="depth-1"><a href="#왜-최근-사용-여부를-대충-봐도-되는가" data-for="왜-최근-사용-여부를-대충-봐도-되는가">왜 최근 사용 여부를 대충 봐도 되는가</a></li><li class="depth-1"><a href="#a-bit와-d-bit가-알려주는-것" data-for="a-bit와-d-bit가-알려주는-것">A bit와 D bit가 알려주는 것</a></li><li class="depth-1"><a href="#clock-algorithm-동작" data-for="clock-algorithm-동작">Clock Algorithm 동작</a></li><li class="depth-2"><a href="#enhanced-clock-nru-변형" data-for="enhanced-clock-nru-변형">Enhanced Clock (NRU 변형)</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#pintos에서-a-bit-조작-api" data-for="pintos에서-a-bit-조작-api">PintOS에서 A bit 조작 API</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#시계-알고리즘-희생자-값-추적" data-for="시계-알고리즘-희생자-값-추적">시계 알고리즘 희생자 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#시계-알고리즘-희생자-점검" data-for="시계-알고리즘-희생자-점검">시계 알고리즘 희생자 점검</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

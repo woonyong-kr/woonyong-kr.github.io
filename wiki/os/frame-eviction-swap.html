@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Frame Eviction과 Swap · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Frame Eviction과 Swap · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Frame Eviction과 Swap · 최우녕"/><meta name="twitter:description" content="RAM이 부족하면 OS가 쓰지 않는 프레임을 빼앗아(evict) 재할당하고, 빼앗긴 페이지는 dirty bit에 따라 swap disk나 원본 파일에 보존했다가 이후 page fault로 복원한다."/><meta property="og:description" content="RAM이 부족하면 OS가 쓰지 않는 프레임을 빼앗아(evict) 재할당하고, 빼앗긴 페이지는 dirty bit에 따라 swap disk나 원본 파일에 보존했다가 이후 page fault로 복원한다."/><meta property="og:image:alt" content="RAM이 부족하면 OS가 쓰지 않는 프레임을 빼앗아(evict) 재할당하고, 빼앗긴 페이지는 dirty bit에 따라 swap disk나 원본 파일에 보존했다가 이후 page fault로 복원한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/frame-eviction-swap"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/frame-eviction-swap"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="RAM이 부족하면 OS가 쓰지 않는 프레임을 빼앗아(evict) 재할당하고, 빼앗긴 페이지는 dirty bit에 따라 swap disk나 원본 파일에 보존했다가 이후 page fault로 복원한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/frame-eviction-swap" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-477" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-477" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Frame Eviction과 Swap</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="frame-eviction과-swap">Frame Eviction과 Swap<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-eviction과-swap" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 frame eviction과 swap의 일반 원리와 선택 기준을 설명하고 Linux와 PintOS의 구조를 비교하되, 함수명·코드 좌표·COW 처리·QEMU I/O 등 구체적 내용은 본문에 전제된 특정 구현을 대상으로 한다. 제시된 수치와 GDB 절차는 계산 및 관찰 방법이며, 실제 코드·버전·실행 기록이나 성능 측정으로 검증된 결과를 뜻하지 않는다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: RAM이 부족하면 OS가 쓰지 않는 프레임을 빼앗아(evict) 재할당하고, 빼앗긴 페이지는 dirty bit에 따라 swap disk나 원본 파일에 보존했다가 이후 page fault로 복원한다.</p>
+</blockquote>
+<h2 id="frame-eviction과-swap-차이">Frame Eviction과 Swap 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-eviction과-swap-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>물리 메모리(RAM)는 유한하다. 모든 프로세스가 요청하는 페이지를 동시에 물리 프레임에 올릴 수 없으므로, OS는 <strong>사용하지 않는 프레임을 빼앗아(evict)</strong> 새 페이지에 재할당해야 한다. 빼앗긴 페이지의 내용은 종류에 따라 <strong>swap disk</strong>나 <strong>원본 파일</strong>에 보존되어, 나중에 다시 필요하면 page fault를 통해 복원된다. 이 메커니즘 덕분에 프로세스는 물리 메모리보다 큰 가상 주소 공간을 사용할 수 있다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>MMU는 eviction 자체를 수행하지 않는다. 하드웨어가 제공하는 것은 PTE의 <strong>accessed bit</strong>와 <strong>dirty bit</strong>뿐이다.</p>
+<ul>
+<li><strong>Accessed bit (A)</strong>: MMU가 해당 PTE로 주소 변환을 수행할 때마다 1로 설정한다. OS가 주기적으로 0으로 초기화하여 “최근 참조 여부”를 추적한다.</li>
+<li><strong>Dirty bit (D)</strong>: 해당 프레임에 쓰기가 발생하면 1로 설정된다. eviction 시 dirty page는 반드시 저장소에 write-back해야 한다.</li>
+</ul>
+<p>eviction 정책(어떤 프레임을 빼앗을지)은 전적으로 OS 소프트웨어의 책임이다.</p>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux는 <strong>kswapd</strong> 데몬과 <strong>direct reclaim</strong> 경로를 통해 프레임을 회수한다.</p>
+<ul>
+<li><strong>Active/Inactive LRU 계열</strong>: 페이지의 최근 참조 상태를 바탕으로 활성·비활성 목록 사이를 이동시키고, 회수 후보를 고르는 전통적인 접근이다.</li>
+<li><strong>Multi-Gen LRU</strong>: 최근 참조 시점이 비슷한 페이지를 세대별로 묶는 대안 구현이다. 사용 여부와 세부 정책은 kernel 버전·build·runtime 설정에 따라 달라지므로 <a href="https://docs.kernel.org/admin-guide/mm/multigen_lru.html" class="external external-link">Linux kernel Multi-Gen LRU 문서<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>와 실행 중인 설정을 함께 확인한다.</li>
+<li><strong>Anonymous page → swap partition/file</strong>: <code>swapfile</code>이나 <code>swap partition</code>에 4 KB 단위로 기록. swap 영역의 slot은 bitmap으로 관리한다.</li>
+<li><strong>File-backed page → write-back or discard</strong>: dirty이면 원본 파일에 write-back, clean이면 바로 버린다(원본에서 다시 읽으면 되므로).</li>
+</ul>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS의 eviction/swap 구조는 세 계층으로 나뉜다.</p>
+<p><strong>1계층: 프레임 할당과 eviction 진입</strong></p>
+<p><code>vm_get_frame()</code>이 <code>palloc_get_page(PAL_USER)</code>를 호출한다. 물리 메모리가 부족하면 NULL을 반환하고, 이때 <code>vm_evict_frame()</code>을 호출하여 victim 프레임을 확보한다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% 프레임 할당과 eviction 진입 흐름\nflowchart TD\n  vm_get_frame[\&quot;vm_get_frame()\&quot;]\n  palloc[\&quot;palloc_get_page(PAL_USER)\&quot;]\n  success[\&quot;성공&lt;br/>frame 반환\&quot;]\n  fail[\&quot;실패&lt;br/>vm_evict_frame()\&quot;]\n  victim[\&quot;vm_get_victim()&lt;br/>정책으로 victim 선택\&quot;]\n  swap_out[\&quot;swap_out(victim-&amp;gt;page)&lt;br/>victim 페이지를 저장소로 내보냄\&quot;]\n  return_victim[\&quot;victim 프레임 반환&lt;br/>이제 비어있는 프레임\&quot;]\n  vm_get_frame --> palloc\n  palloc --> success\n  palloc --> fail\n  fail --> victim\n  victim --> swap_out\n  swap_out --> return_victim&quot;">%% 프레임 할당과 eviction 진입 흐름
+flowchart TD
+  vm_get_frame[&quot;vm_get_frame()&quot;]
+  palloc[&quot;palloc_get_page(PAL_USER)&quot;]
+  success[&quot;성공&lt;br/>frame 반환&quot;]
+  fail[&quot;실패&lt;br/>vm_evict_frame()&quot;]
+  victim[&quot;vm_get_victim()&lt;br/>정책으로 victim 선택&quot;]
+  swap_out[&quot;swap_out(victim-&amp;gt;page)&lt;br/>victim 페이지를 저장소로 내보냄&quot;]
+  return_victim[&quot;victim 프레임 반환&lt;br/>이제 비어있는 프레임&quot;]
+  vm_get_frame --> palloc
+  palloc --> success
+  palloc --> fail
+  fail --> victim
+  victim --> swap_out
+  swap_out --> return_victim
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><strong>2계층: Victim 선택 — Clock Algorithm</strong></p>
+<p><code>vm_get_victim()</code>은 전역 frame 리스트를 순환하며 accessed bit = 0인 첫 프레임을 victim으로 선택한다. accessed bit = 1인 프레임은 0으로 초기화하고 다음으로 넘어간다(second chance).</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Clock Algorithm victim 선택 흐름\nflowchart LR\n  hand[\&quot;clock hand\&quot;]\n  f0[\&quot;F0&lt;br/>A=1&lt;br/>clear A=0\&quot;]\n  f1[\&quot;F1&lt;br/>A=0&lt;br/>victim\&quot;]\n  f2[\&quot;F2&lt;br/>A=1&lt;br/>다음 순회에서 clear A=0\&quot;]\n  more[\&quot;...\&quot;]\n  hand --> f0\n  f0 --> f1\n  f1 -.-> f2\n  f2 --> more&quot;">%% Clock Algorithm victim 선택 흐름
+flowchart LR
+  hand[&quot;clock hand&quot;]
+  f0[&quot;F0&lt;br/>A=1&lt;br/>clear A=0&quot;]
+  f1[&quot;F1&lt;br/>A=0&lt;br/>victim&quot;]
+  f2[&quot;F2&lt;br/>A=1&lt;br/>다음 순회에서 clear A=0&quot;]
+  more[&quot;...&quot;]
+  hand --> f0
+  f0 --> f1
+  f1 -.-> f2
+  f2 --> more
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>PintOS에서 accessed bit 확인은 <code>pml4_is_accessed()</code>, 초기화는 <code>pml4_set_accessed()</code>로 수행한다.</p>
+<p><strong>3계층: swap_out / swap_in — 페이지 타입별 분기</strong></p>
+<p><code>struct page_operations</code>의 vtable 패턴으로 타입별 동작이 분기된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>페이지 타입</th><th>swap_out 동작</th><th>swap_in 동작</th></tr></thead><tbody><tr><td>VM_ANON</td><td>swap disk에 8 sector 기록, slot 번호를 <code>anon_page</code>에 저장</td><td>slot에서 8 sector 읽기, bitmap 해제</td></tr><tr><td>VM_FILE</td><td>dirty이면 원본 파일에 write-back, clean이면 아무것도 안 함</td><td>원본 파일에서 다시 읽기</td></tr></tbody></table></div>
+<p>공통적으로 swap_out 후에는 PTE의 present bit을 0으로 만들어, 다음 접근 시 page fault가 발생하도록 한다.</p>
+<p><strong>COW 다중 소유자 처리 (anon_swap_out 상세):</strong></p>
+<p>실제 PintOS 구현에서 <code>anon_swap_out()</code>은 하나의 프레임을 여러 프로세스가 COW로 공유하는 경우를 처리한다. <code>frame->ref_count</code>가 1보다 크면 swap slot을 공유 소유자 수만큼 참조 카운트를 올린다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>anon_swap_out(page):</span></span>
+<span data-line><span>  1. swap_slot_alloc() → swap_idx</span></span>
+<span data-line><span>  2. disk_write × 8 (4 KB를 sector 단위로 기록)</span></span>
+<span data-line><span>  3. for i = 1..ref_count-1:  swap_slot_ref(swap_idx)  ← 공유자 수만큼 ref++</span></span>
+<span data-line><span>  4. frame->owners 리스트 순회:</span></span>
+<span data-line><span>     - 각 owner_page->anon.swap_idx = swap_idx</span></span>
+<span data-line><span>     - 각 owner_page->anon.swapped = true</span></span>
+<span data-line><span>     - pml4_clear_page(owner->pml4, page->va)  ← PTE present=0</span></span>
+<span data-line><span>     - free(owner)</span></span>
+<span data-line><span>  5. frame 초기화 (page=NULL, ref_count=0)</span></span></code></pre></figure>
+<p>이 설계 덕분에 COW로 공유하던 3개 프로세스의 동일 페이지가 evict되면, swap disk에는 한 번만 기록되고 swap slot 하나를 참조 카운트 3으로 관리한다.</p>
+<p><strong>swap_lock — sector 단위 락:</strong></p>
+<p><code>disk_read()</code>/<code>disk_write()</code> 호출마다 <code>swap_lock</code>을 acquire/release한다. 8번의 sector I/O에서 매번 lock을 잡고 놓는 이유는 다른 프로세스의 swap I/O와 interleaving을 허용하기 위함이다. 전체 page를 한 번에 잠그면 swap I/O 병렬성이 떨어진다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU의 역할은 swap disk를 에뮬레이션하는 것이다.</p>
+<ul>
+<li>PintOS에서 <code>disk_read()</code>/<code>disk_write()</code>를 호출하면 QEMU의 IDE controller model이 이를 받아 호스트 파일(<code>swap.dsk</code>)에 대한 실제 I/O로 변환한다.</li>
+<li>sector 번호 × 512 byte = 호스트 파일 내 byte offset. 4 KB page = 8 × 512 byte sector.</li>
+<li>QEMU는 어떤 sector가 swap인지, 데이터인지 구분하지 않는다. 바이트 블록을 전달할 뿐이다.</li>
+</ul>
+<h2 id="frame-eviction과-swap-값-추적">Frame Eviction과 Swap 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-eviction과-swap-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>계산</th></tr></thead><tbody><tr><td>페이지 크기</td><td>4,096 bytes</td><td>2^12</td></tr><tr><td>디스크 sector 크기</td><td>512 bytes</td><td>-</td></tr><tr><td>1 page = ? sectors</td><td>8 sectors</td><td>4096 / 512</td></tr><tr><td>swap slot N의 시작 sector</td><td>N × 8</td><td>slot 0 → sector 0, slot 1 → sector 8</td></tr><tr><td>swap disk 4 MB 시 최대 slot 수</td><td>512 slots</td><td>4 × 1024 × 1024 / 4096</td></tr><tr><td>swap bitmap 크기 (4 MB disk)</td><td>64 bytes</td><td>512 / 8</td></tr></tbody></table></div>
+<p>예: slot 3에 있는 anonymous page를 swap_in하려면:</p>
+<ul>
+<li>시작 sector = 3 × 8 = 24</li>
+<li><code>disk_read(swap_disk, 24 + i, kva + i*512)</code> for i = 0..7</li>
+<li>총 8번의 disk_read로 4 KB page 복원</li>
+</ul>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="eviction-전체-흐름">Eviction 전체 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#eviction-전체-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Eviction 전체 흐름\nflowchart TD\n  vm_get_frame[\&quot;vm_get_frame\&quot;]\n  palloc[\&quot;palloc 성공?\&quot;]\n  frame_return_early[\&quot;frame 반환\&quot;]\n  vm_evict_frame[\&quot;vm_evict_frame\&quot;]\n  vm_get_victim[\&quot;vm_get_victim&lt;br/>clock algo\&quot;]\n  page_type[\&quot;page type?\&quot;]\n  anon_write[\&quot;swap disk에 기록\&quot;]\n  anon_slot[\&quot;anon_page.swap_slot = N\&quot;]\n  dirty[\&quot;dirty?\&quot;]\n  file_writeback[\&quot;file write-back\&quot;]\n  skip[\&quot;skip\&quot;]\n  pte_clear[\&quot;PTE present=0\&quot;]\n  frame_return[\&quot;frame 반환\&quot;]\n  vm_get_frame --> palloc\n  palloc --> frame_return_early\n  palloc --> vm_evict_frame\n  vm_evict_frame --> vm_get_victim\n  vm_get_victim --> page_type\n  page_type --> anon_write\n  anon_write --> anon_slot\n  anon_slot --> pte_clear\n  page_type --> dirty\n  dirty --> file_writeback\n  dirty --> skip\n  file_writeback --> pte_clear\n  skip --> pte_clear\n  pte_clear --> frame_return&quot;">%% Eviction 전체 흐름
+flowchart TD
+  vm_get_frame[&quot;vm_get_frame&quot;]
+  palloc[&quot;palloc 성공?&quot;]
+  frame_return_early[&quot;frame 반환&quot;]
+  vm_evict_frame[&quot;vm_evict_frame&quot;]
+  vm_get_victim[&quot;vm_get_victim&lt;br/>clock algo&quot;]
+  page_type[&quot;page type?&quot;]
+  anon_write[&quot;swap disk에 기록&quot;]
+  anon_slot[&quot;anon_page.swap_slot = N&quot;]
+  dirty[&quot;dirty?&quot;]
+  file_writeback[&quot;file write-back&quot;]
+  skip[&quot;skip&quot;]
+  pte_clear[&quot;PTE present=0&quot;]
+  frame_return[&quot;frame 반환&quot;]
+  vm_get_frame --> palloc
+  palloc --> frame_return_early
+  palloc --> vm_evict_frame
+  vm_evict_frame --> vm_get_victim
+  vm_get_victim --> page_type
+  page_type --> anon_write
+  anon_write --> anon_slot
+  anon_slot --> pte_clear
+  page_type --> dirty
+  dirty --> file_writeback
+  dirty --> skip
+  file_writeback --> pte_clear
+  skip --> pte_clear
+  pte_clear --> frame_return
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="swap-slot-bitmap-구조">Swap slot bitmap 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-slot-bitmap-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Swap slot bitmap 구조\nflowchart TD\n  bitmap[\&quot;swap_bitmap (4 MB disk → 512 slots → 64 bytes)&lt;br/>byte 0: [1][1][0][1][0][0][0][0] = slot 0,1,3 사용&lt;br/>byte 1: slot 8~15 모두 0&lt;br/>byte 63: slot 504~511 모두 0&lt;br/>0=free, 1=allocated\&quot;]\n  alloc[\&quot;swap_slot_alloc()&lt;br/>bitmap_scan_and_flip(swap_bitmap, 0, 1, false)\&quot;]\n  layout[\&quot;swap disk 물리 레이아웃&lt;br/>sector 0~7 = slot 0&lt;br/>sector 8~15 = slot 1&lt;br/>sector N×8~N×8+7 = slot N\&quot;]\n  bitmap --> alloc\n  alloc --> layout&quot;">%% Swap slot bitmap 구조
+flowchart TD
+  bitmap[&quot;swap_bitmap (4 MB disk → 512 slots → 64 bytes)&lt;br/>byte 0: [1][1][0][1][0][0][0][0] = slot 0,1,3 사용&lt;br/>byte 1: slot 8~15 모두 0&lt;br/>byte 63: slot 504~511 모두 0&lt;br/>0=free, 1=allocated&quot;]
+  alloc[&quot;swap_slot_alloc()&lt;br/>bitmap_scan_and_flip(swap_bitmap, 0, 1, false)&quot;]
+  layout[&quot;swap disk 물리 레이아웃&lt;br/>sector 0~7 = slot 0&lt;br/>sector 8~15 = slot 1&lt;br/>sector N×8~N×8+7 = slot N&quot;]
+  bitmap --> alloc
+  alloc --> layout
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="swap-slot-참조-카운트-cow-지원">Swap slot 참조 카운트 (COW 지원)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-slot-참조-카운트-cow-지원" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Swap slot 참조 카운트와 COW slot 해제\nflowchart TD\n  refs[\&quot;swap_ref_count[] 배열 (slot 개수 크기)&lt;br/>slot 0 &amp;#124; ref=2 / 두 프로세스가 COW로 공유하던 page&lt;br/>slot 1 &amp;#124; ref=1 / 단독 소유&lt;br/>slot 2 &amp;#124; ref=0 / 빈 slot (bitmap도 0)\&quot;]\n  unref[\&quot;swap_slot_unref(idx)&lt;br/>swap_ref_count[idx]--\&quot;]\n  zero[\&quot;swap_ref_count[idx] == 0?\&quot;]\n  reset[\&quot;bitmap_reset(swap_bitmap, idx)&lt;br/>slot free\&quot;]\n  keep[\&quot;slot 유지\&quot;]\n  refs --> unref\n  unref --> zero\n  zero -->|Yes| reset\n  zero -->|No| keep&quot;">%% Swap slot 참조 카운트와 COW slot 해제
+flowchart TD
+  refs[&quot;swap_ref_count[] 배열 (slot 개수 크기)&lt;br/>slot 0 &amp;#124; ref=2 / 두 프로세스가 COW로 공유하던 page&lt;br/>slot 1 &amp;#124; ref=1 / 단독 소유&lt;br/>slot 2 &amp;#124; ref=0 / 빈 slot (bitmap도 0)&quot;]
+  unref[&quot;swap_slot_unref(idx)&lt;br/>swap_ref_count[idx]--&quot;]
+  zero[&quot;swap_ref_count[idx] == 0?&quot;]
+  reset[&quot;bitmap_reset(swap_bitmap, idx)&lt;br/>slot free&quot;]
+  keep[&quot;slot 유지&quot;]
+  refs --> unref
+  unref --> zero
+  zero -->|Yes| reset
+  zero -->|No| keep
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="linux-vs-pintos-eviction-비교">Linux vs PintOS Eviction 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-eviction-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>eviction 트리거</td><td>kswapd (watermark), direct reclaim (alloc 실패)</td><td><code>palloc_get_page(PAL_USER)</code> 실패 시 직접 호출</td></tr><tr><td>victim 리스트</td><td>Active/Inactive LRU 2-list, 파일/anon 분리</td><td>단일 전역 frame_table (doubly-linked list)</td></tr><tr><td>교체 알고리즘</td><td>Pseudo-LRU (Active↔Inactive 승격/강등)</td><td>Clock (second-chance)</td></tr><tr><td>accessed bit 처리</td><td>주기적 shrink_*_list()에서 검사+clear</td><td>clock hand 순회 시 pml4_is_accessed()로 검사+clear</td></tr><tr><td>dirty page 처리</td><td>kswapd가 미리 write-back (pdflush/writeback)</td><td>eviction 시점에 즉시 write-back</td></tr><tr><td>swap 영역</td><td>swap partition 또는 swapfile, 최대 32개</td><td>swap.dsk 단일 파일, bitmap 관리</td></tr><tr><td>swap 단위</td><td>4 KB page (연속 cluster swap 가능)</td><td>4 KB page = 8 × 512 B sector, 개별 I/O</td></tr><tr><td>COW 지원</td><td>PTE_W clear + refcount (struct page)</td><td>PTE_W clear + frame->ref_count + swap_ref_count[]</td></tr><tr><td>NUMA 인식</td><td>zone별 watermark, node별 kswapd</td><td>단일 메모리 pool, NUMA 없음</td></tr><tr><td>잠금 단위</td><td>zone->lru_lock + page lock</td><td>swap_lock (sector 단위), frame_table_lock</td></tr><tr><td>swap readahead</td><td>swapin_readahead()로 인접 slot 미리 읽기</td><td>없음 (요청 page만 읽기)</td></tr></tbody></table></div>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="eviction-전체-흐름-관찰">eviction 전체 흐름 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#eviction-전체-흐름-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b vm_evict_frame
+(gdb) commands
+  printf &quot;=== EVICT: palloc failed, entering eviction ===\n&quot;
+  c
+end
+(gdb) b vm_get_victim
+(gdb) commands
+  printf &quot;VICTIM SEARCH: clock_ptr=%p\n&quot;, clock_ptr
+  c
+end
+</code></pre>
+<h3 id="victim-선택과-accessed-bit-추적">victim 선택과 accessed bit 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#victim-선택과-accessed-bit-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b vm_get_victim
+(gdb) commands
+  set $count = 0
+  printf &quot;victim search start, frame_table size=%d\n&quot;, \
+    (int)list_size(&amp;frame_table)
+  c
+end
+(gdb) b *vm_get_victim+80
+(gdb) commands
+  set $count = $count + 1
+  printf &quot;  scan #%d: frame=%p, page->va=%p, accessed=%d\n&quot;, \
+    $count, victim, victim->page->va, \
+    (int)pml4_is_accessed(thread_current()->pml4, victim->page->va)
+  c
+end
+</code></pre>
+<p>→ clock hand가 몇 바퀴 도는지, 어떤 frame이 second chance를 받는지 추적</p>
+<h3 id="swap_out-타입별-분기-관찰">swap_out 타입별 분기 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap_out-타입별-분기-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b anon_swap_out
+(gdb) commands
+  printf &quot;SWAP_OUT(ANON): page->va=%p, frame->kva=%p, ref_count=%d\n&quot;, \
+    page->va, page->frame->kva, (int)page->frame->ref_count
+  c
+end
+(gdb) b file_backed_swap_out
+(gdb) commands
+  printf &quot;SWAP_OUT(FILE): page->va=%p, dirty=%d, ofs=%d\n&quot;, \
+    page->va, \
+    (int)pml4_is_dirty(thread_current()->pml4, page->va), \
+    (int)page->file.ofs
+  c
+end
+</code></pre>
+<h3 id="swap-slot-할당해제-추적">swap slot 할당/해제 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap-slot-할당해제-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b swap_slot_alloc
+(gdb) commands
+  printf &quot;SLOT_ALLOC: &quot;
+  finish
+  printf &quot;→ slot=%d\n&quot;, (int)$rax
+  c
+end
+(gdb) b swap_slot_unref
+(gdb) commands
+  printf &quot;SLOT_UNREF: slot=%d, swap_ref_count=%d→%d\n&quot;, \
+    (int)slot, (int)swap_ref_count[slot], (int)(swap_ref_count[slot]-1)
+  c
+end
+</code></pre>
+<h3 id="disk-io-sector-추적">disk I/O sector 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#disk-io-sector-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b disk_write
+(gdb) commands
+  printf &quot;DISK_WRITE: disk=%p, sector=%d, buf=%p\n&quot;, \
+    d, (int)sec_no, buffer
+  c
+end
+(gdb) b disk_read
+(gdb) commands
+  printf &quot;DISK_READ: disk=%p, sector=%d, buf=%p\n&quot;, \
+    d, (int)sec_no, buffer
+  c
+end
+</code></pre>
+<p>→ swap I/O가 8-sector burst인지, 어떤 sector 범위를 사용하는지 확인</p>
+<h3 id="eviction-후-재사용-확인">eviction 후 재사용 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#eviction-후-재사용-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b vm_do_claim_page
+(gdb) commands
+  printf &quot;CLAIM: page->va=%p, type=%d\n&quot;, \
+    page->va, (int)page_get_type(page)
+  c
+end
+</code></pre>
+<p>→ eviction으로 확보한 frame이 즉시 다른 page에 할당되는지 추적</p>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-1-메모리-고갈-시-eviction-cascade-추적">시나리오 1: 메모리 고갈 시 eviction cascade 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-1-메모리-고갈-시-eviction-cascade-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다수의 page를 할당하는 테스트(예: <code>swap-file</code>)를 실행하며, eviction이 처음 발생하는 시점과 그 후의 연쇄 eviction 패턴을 관찰한다.</p>
+<ol>
+<li><code>vm_evict_frame</code>에 bp → palloc 실패 시점 확인</li>
+<li><code>vm_get_victim</code>에서 clock hand가 리스트를 몇 바퀴 도는지 counting</li>
+<li><code>anon_swap_out</code>에서 swap slot 번호 순서 → 0, 1, 2, … 순차 할당 확인</li>
+<li><code>disk_write</code>에서 sector 번호 → slot 0은 sector 0-7, slot 1은 8-15, … 확인</li>
+<li>eviction 직후 <code>vm_do_claim_page</code>에서 새 page가 같은 frame을 받는지 확인</li>
+</ol>
+<h3 id="시나리오-2-cow-frame-eviction과-swap">시나리오 2: COW frame eviction과 swap<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-2-cow-frame-eviction과-swap" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>fork 후 COW 공유 frame이 eviction되는 경우:</p>
+<ol>
+<li>fork 실행 → frame->ref_count=2 확인</li>
+<li>메모리 압박 → <code>anon_swap_out</code> 진입 → ref_count=2에서 swap_slot_ref 호출 확인</li>
+<li>swap_ref_count[slot]=2 → 두 프로세스가 같은 slot 공유</li>
+<li>한쪽 프로세스가 swap_in → swap_slot_unref → swap_ref_count=1</li>
+<li>나머지 프로세스도 swap_in → swap_ref_count=0 → bitmap reset → slot 해제</li>
+</ol>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>pintos/vm/vm.c</td><td><code>vm_get_frame()</code></td><td>339</td><td>프레임 할당, 부족 시 eviction 진입</td></tr><tr><td>pintos/vm/vm.c</td><td><code>vm_evict_frame()</code></td><td>316</td><td>victim 선택 + swap_out 호출 + frame 초기화</td></tr><tr><td>pintos/vm/vm.c</td><td><code>vm_get_victim()</code></td><td>284</td><td>clock algorithm으로 victim 선택 (clock_ptr 순환)</td></tr><tr><td>pintos/vm/vm.c</td><td><code>vm_do_claim_page()</code></td><td>563</td><td>프레임 할당 + PTE 매핑 + swap_in</td></tr><tr><td>pintos/vm/anon.c</td><td><code>anon_swap_out()</code></td><td>134</td><td>anonymous page → swap disk 기록, COW owners 처리</td></tr><tr><td>pintos/vm/anon.c</td><td><code>anon_swap_in()</code></td><td>116</td><td>swap disk → anonymous page 복원, bitmap 해제</td></tr><tr><td>pintos/vm/anon.c</td><td><code>vm_anon_init()</code></td><td>39</td><td>swap disk 열기 + bitmap, <code>swap_ref_count</code> 초기화</td></tr><tr><td>pintos/vm/anon.c</td><td><code>swap_slot_alloc/ref/unref</code></td><td>60/73/85</td><td>swap slot 참조 카운트 관리</td></tr><tr><td>pintos/vm/file.c</td><td><code>file_backed_swap_out()</code></td><td>54</td><td>dirty file page → 원본 파일 write-back</td></tr><tr><td>pintos/vm/file.c</td><td><code>file_backed_swap_in()</code></td><td>43</td><td>원본 파일 → file page 재적재</td></tr><tr><td>pintos/include/vm/vm.h</td><td><code>struct page_operations</code></td><td>84</td><td>swap_in/swap_out/destroy vtable</td></tr><tr><td>pintos/include/vm/anon.h</td><td><code>struct anon_page</code></td><td>7</td><td>swap_idx, swapped 등 metadata</td></tr><tr><td>pintos/include/vm/vm.h</td><td><code>struct frame</code></td><td>71</td><td>kva, page, owner_thread, ref_count, owners list</td></tr><tr><td>pintos/devices/disk.c</td><td><code>disk_read()</code> / <code>disk_write()</code></td><td>207/230</td><td>sector 단위 디스크 I/O</td></tr><tr><td>pintos/lib/kernel/bitmap.c</td><td><code>bitmap_scan_and_flip()</code></td><td>293</td><td>빈 swap slot 탐색</td></tr></tbody></table></div>
+<h2 id="frame-eviction과-swap-점검">Frame Eviction과 Swap 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-eviction과-swap-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>eviction은 MMU가 직접 수행하는 일이 아니라, OS가 accessed/dirty bit을 참고해 선택하는 정책이다.</li>
+<li>anonymous page 1개는 4 KB이고 swap slot 하나는 512 B sector 8개다.</li>
+<li>COW 공유 frame을 evict할 때 <code>anon_swap_out()</code>은 frame 내용을 한 번만 쓰고 <code>swap_ref_count</code>를 owner 수에 맞춘다.</li>
+<li>각 owner page는 <code>anon.swapped=true</code>, 같은 <code>swap_idx</code>, <code>frame=NULL</code> 상태가 되고 PTE는 <code>pml4_clear_page()</code>로 제거된다.</li>
+<li>이후 각 owner가 page fault로 swap-in하면 <code>swap_slot_unref()</code>가 호출되고, 마지막 참조가 빠질 때 bitmap slot이 해제된다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty bit</a></li>
+<li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal internal-link alias" data-slug="wiki/os/anonymous-page-swap-slot-knowledge">anonymous swap slot</a></li>
+<li><a href="../../wiki/os/clock-algorithm-victim" class="internal internal-link alias" data-slug="wiki/os/clock-algorithm-victim">Clock Algorithm</a></li>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">Frame Eviction Trace</a></li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">swap Lab</a></li>
+<li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/swap-disk-ide-qemu-trace">swap disk IDE trace</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">Page Fault 처리</a></li>
+<li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-demand-paging">Lazy Loading</a></li>
+<li><a href="../../wiki/os/copy-on-write-mechanism" class="internal internal-link alias" data-slug="wiki/os/copy-on-write-mechanism">Copy on Write</a></li>
+<li><a href="../../wiki/os/cow-pte-writable-off" class="internal internal-link alias" data-slug="wiki/os/cow-pte-writable-off">COW PTE writable off</a></li>
+<li><a href="../../wiki/os/pte-accessed-bit" class="internal internal-link alias" data-slug="wiki/os/pte-accessed-bit">accessed bit</a></li>
+<li><a href="../../wiki/os/pte-dirty-bit" class="internal internal-link alias" data-slug="wiki/os/pte-dirty-bit">dirty bit</a></li>
+<li><a href="../../wiki/os/ide-controller-model" class="internal internal-link alias" data-slug="wiki/os/ide-controller-model">QEMU IDE 컨트롤러</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-hash" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-hash">SPT hash table</a></li>
+<li><a href="../../wiki/os/bitmap-swap-table" class="internal internal-link alias" data-slug="wiki/os/bitmap-swap-table">bitmap swap table</a></li>
+<li><a href="../../wiki/os/page-replacement-algorithms" class="internal internal-link alias" data-slug="wiki/os/page-replacement-algorithms">Page Replacement</a></li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal">accessed/dirty bit로 victim 판단</a></li><li><a href="../../wiki/os/anonymous-page-swap-slot-knowledge" class="internal">Anonymous Page와 Swap Slot</a></li><li><a href="../../wiki/os/bitmap-allocator-design" class="internal">Bitmap Allocator</a></li><li><a href="../../wiki/os/bitmap-swap-table" class="internal">비트맵 스왑 테이블 (Bitmap Swap Table)</a></li><li><a href="../../wiki/os/buffer-cache" class="internal">버퍼 캐시</a></li><li><a href="../../wiki/os/clock-algorithm-victim" class="internal">시계 알고리즘 희생자 (Clock Algorithm Victim)</a></li><li><a href="../../wiki/os/copy-on-write-mechanism" class="internal">Copy-on-Write — 쓰기 전까지 복사를 미루는 메모리 최적화</a></li><li><a href="../../wiki/os/cow-pte-writable-off" class="internal">COW — PTE Writable 비트 해제</a></li><li><a href="../../wiki/os/disk-sector-qemu-block-backend-knowledge" class="internal">Disk sector는 QEMU block backend에서 어떤 byte offset이 되나</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal">Guest Physical Memory</a></li><li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal">Lazy Loading과 Demand Paging — 필요할 때만 물리 메모리 할당</a></li><li><a href="../../wiki/os/lazy-loading-segment-trace" class="internal">Lazy Loading Segment 흐름</a></li><li><a href="../../wiki/os/linux-windows-real-os" class="internal">Linux/Windows 실제 운영체제</a></li><li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal">mmap file-backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li><li><a href="../../wiki/os/page-fault-handling" class="internal">페이지 폴트</a></li><li><a href="../../wiki/os/page-operations-dispatch" class="internal">page_operations 분기</a></li><li><a href="../../wiki/os/page-replacement-algorithms" class="internal">페이지 교체 알고리즘 — Optimal, LRU, Clock</a></li><li><a href="../../wiki/os/page-type-transition" class="internal">페이지 타입 Transition (Page Type Transition)</a></li><li><a href="../../wiki/os/pintos-vm-structure-flow" class="internal">PintOS VM 구조와 흐름</a></li><li><a href="../../wiki/os/pml4-clear-page" class="internal">pml4_clear_page — PTE에서 present 비트 제거</a></li><li><a href="../../wiki/os/process-exit-cleanup" class="internal">프로세스 종료 자원 회수</a></li><li><a href="../../wiki/os/process-resource-teardown" class="internal">프로세스 자원 정리</a></li><li><a href="../../wiki/os/pte-accessed-bit" class="internal">PTE 접근 Bit (PTE Accessed Bit)</a></li><li><a href="../../wiki/os/pte-dirty-bit" class="internal">PTE 더티 Bit (PTE Dirty Bit)</a></li><li><a href="../../wiki/os/pte-present-bit" class="internal">PTE present 비트</a></li><li><a href="../../wiki/os/spt-copy-file-backed-page" class="internal">File-backed Page 복사 (fork SPT copy)</a></li><li><a href="../../wiki/os/spt-copy-fork-trace" class="internal">fork 때 SPT는 왜 같이 복사해야 하나</a></li><li><a href="../../wiki/os/spt-vs-pml4-separation" class="internal">SPT와 PML4를 둘 다 두는 이유</a></li><li><a href="../../wiki/os/supplemental-page-table-hash" class="internal">SPT 해시 테이블</a></li><li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal">Supplemental Page Table은 왜 필요한가</a></li><li><a href="../../wiki/os/swap-4kb-8sectors" class="internal">4KB 페이지와 8개 섹터</a></li><li><a href="../../wiki/os/swap-disk-ide-qemu-trace" class="internal">Swap Slot 쓰기는 어떻게 PintOS IDE와 QEMU BlockBackend까지 내려가는가</a></li><li><a href="../../wiki/os/swapped-anon-fork-snapshot-trace" class="internal">swapped anonymous page fork snapshot 흐름</a></li><li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal">vm_do_claim_page는 fault를 실제 frame mapping으로 바꾼다</a></li><li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal">process cleanup은 SPT page들을 어떤 순서로 해제하나</a></li><li><a href="../../wiki/os/vm-try-handle-fault-decision-trace" class="internal">vm_try_handle_fault 판단 흐름 Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-475" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#frame-eviction과-swap" data-for="frame-eviction과-swap">Frame Eviction과 Swap</a></li><li class="depth-1"><a href="#frame-eviction과-swap-차이" data-for="frame-eviction과-swap-차이">Frame Eviction과 Swap 차이</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#frame-eviction과-swap-값-추적" data-for="frame-eviction과-swap-값-추적">Frame Eviction과 Swap 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#eviction-전체-흐름" data-for="eviction-전체-흐름">Eviction 전체 흐름</a></li><li class="depth-2"><a href="#swap-slot-bitmap-구조" data-for="swap-slot-bitmap-구조">Swap slot bitmap 구조</a></li><li class="depth-2"><a href="#swap-slot-참조-카운트-cow-지원" data-for="swap-slot-참조-카운트-cow-지원">Swap slot 참조 카운트 (COW 지원)</a></li><li class="depth-1"><a href="#linux-vs-pintos-eviction-비교" data-for="linux-vs-pintos-eviction-비교">Linux vs PintOS Eviction 비교</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#eviction-전체-흐름-관찰" data-for="eviction-전체-흐름-관찰">eviction 전체 흐름 관찰</a></li><li class="depth-2"><a href="#victim-선택과-accessed-bit-추적" data-for="victim-선택과-accessed-bit-추적">victim 선택과 accessed bit 추적</a></li><li class="depth-2"><a href="#swap_out-타입별-분기-관찰" data-for="swap_out-타입별-분기-관찰">swap_out 타입별 분기 관찰</a></li><li class="depth-2"><a href="#swap-slot-할당해제-추적" data-for="swap-slot-할당해제-추적">swap slot 할당/해제 추적</a></li><li class="depth-2"><a href="#disk-io-sector-추적" data-for="disk-io-sector-추적">disk I/O sector 추적</a></li><li class="depth-2"><a href="#eviction-후-재사용-확인" data-for="eviction-후-재사용-확인">eviction 후 재사용 확인</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-1-메모리-고갈-시-eviction-cascade-추적" data-for="시나리오-1-메모리-고갈-시-eviction-cascade-추적">시나리오 1: 메모리 고갈 시 eviction cascade 추적</a></li><li class="depth-2"><a href="#시나리오-2-cow-frame-eviction과-swap" data-for="시나리오-2-cow-frame-eviction과-swap">시나리오 2: COW frame eviction과 swap</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#frame-eviction과-swap-점검" data-for="frame-eviction과-swap-점검">Frame Eviction과 Swap 점검</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

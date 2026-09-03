@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>AWS S3 정적 웹 호스팅 실습 재도전 가이드 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="AWS S3 정적 웹 호스팅 실습 재도전 가이드 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="AWS S3 정적 웹 호스팅 실습 재도전 가이드 · 최우녕"/><meta name="twitter:description" content="S3는 파일을 객체로 저장하는 서비스다."/><meta property="og:description" content="S3는 파일을 객체로 저장하는 서비스다."/><meta property="og:image:alt" content="S3는 파일을 객체로 저장하는 서비스다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/backend/aws-s3-static-hosting-lab-retry-guide"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/backend/aws-s3-static-hosting-lab-retry-guide"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="S3는 파일을 객체로 저장하는 서비스다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/backend/aws-s3-static-hosting-lab-retry-guide" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-330" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-330" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/backend/">백엔드</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>AWS S3 정적 웹 호스팅 실습 재도전 가이드</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="aws-s3-정적-웹-호스팅-실습-재도전-가이드">AWS S3 정적 웹 호스팅 실습 재도전 가이드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aws-s3-정적-웹-호스팅-실습-재도전-가이드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>S3 정적 호스팅 실습은 서버를 직접 띄우지 않고도 HTML과 이미지를 웹으로 공개해 보고, 그 페이지를 ALB 기반 웹 앱으로 이어 붙이는 연습이다.</p>
+</blockquote>
+<p>S3는 파일을 객체로 저장하는 서비스다. 이번 실습에서는 이미지와 <code>index.html</code>을 S3 bucket에 올리고, 정적 웹 사이트 호스팅을 켜서 ALB 기반 웹 앱으로 이동하는 작은 프런트 페이지를 만든다.</p>
+<p>이 문서의 핵심은 S3가 서버가 아니라 “객체 저장소”라는 점이다. 정적 호스팅은 HTML, 이미지, CSS처럼 실행 없이 내려줄 수 있는 파일에 적합하다.</p>
+<h2 id="aws-s3-정적-웹-호스팅-실습-구분">AWS S3 정적 웹 호스팅 실습 구분<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aws-s3-정적-웹-호스팅-실습-구분" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>S3를 알면
+<ul>
+<li>서버 없이 정적 파일을 배포할 수 있다.</li>
+<li>웹 앱이 쓰는 이미지, 다운로드 파일, 정적 프런트 파일을 분리할 수 있다.</li>
+</ul>
+</li>
+<li>정적 웹 호스팅을 알면
+<ul>
+<li>bucket endpoint와 object URL, 퍼블릭 접근 정책의 차이를 구분할 수 있다.</li>
+</ul>
+</li>
+<li>versioning을 알면
+<ul>
+<li>같은 object key를 다시 올렸을 때 이전 버전을 보존할 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="aws-s3-정적-웹-호스팅-실습-흐름">AWS S3 정적 웹 호스팅 실습 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aws-s3-정적-웹-호스팅-실습-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>사용자 브라우저</span></span>
+<span data-line><span>  -> S3 static website endpoint</span></span>
+<span data-line><span>    -> index.html</span></span>
+<span data-line><span>      -> 이미지 object URL로 aws.png 표시</span></span>
+<span data-line><span>      -> 버튼 또는 링크로 ALB DNS 이동</span></span></code></pre></figure>
+<p>S3의 기본 단위는 bucket과 object다.</p>
+<ul>
+<li>bucket
+<ul>
+<li>객체를 담는 최상위 컨테이너다.</li>
+<li>이름은 전 세계에서 고유해야 한다.</li>
+</ul>
+</li>
+<li>object
+<ul>
+<li>key와 content로 저장되는 파일이다.</li>
+<li>예: <code>index.html</code>, <code>aws.png</code></li>
+</ul>
+</li>
+<li>static website hosting
+<ul>
+<li>S3가 <code>index.html</code>을 웹 페이지처럼 응답하게 한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="1단계-bucket-만들기">1단계: Bucket 만들기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1단계-bucket-만들기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Bucket name
+<ul>
+<li>예: <code>immersion-day-user-name</code></li>
+<li>전 세계 고유 이름이어야 하므로 자신의 식별자를 붙인다.</li>
+</ul>
+</li>
+<li>Object Ownership
+<ul>
+<li>실습 안내에 맞춰 ACL 옵션을 설정한다.</li>
+<li>개인 계정에서는 public access를 열기 전에 정책을 다시 확인한다.</li>
+</ul>
+</li>
+<li>Block Public Access
+<ul>
+<li>실습에서는 정적 웹 접근을 위해 일부 설정이 필요할 수 있다.</li>
+<li>공개 bucket은 비용보다 보안 위험이 더 크므로, 실습 후 반드시 닫거나 삭제한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="2단계-object-업로드">2단계: Object 업로드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2단계-object-업로드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>업로드 파일
+<ul>
+<li><code>aws.png</code></li>
+<li><code>index.html</code></li>
+</ul>
+</li>
+<li><code>index.html</code>이 하는 일
+<ul>
+<li>S3 object URL의 이미지를 보여준다.</li>
+<li>ALB DNS 주소로 이동하는 동작을 넣는다.</li>
+</ul>
+</li>
+</ul>
+<p>ALB DNS는 EC2/ALB/Auto Scaling 실습이 끝난 뒤 얻는다. 아직 ALB가 없다면 <code>index.html</code>은 나중에 수정해 다시 업로드하면 된다.</p>
+<h2 id="3단계-static-website-hosting-켜기">3단계: Static Website Hosting 켜기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3단계-static-website-hosting-켜기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>bucket properties
+<ul>
+<li>Static website hosting: enabled</li>
+<li>index document: <code>index.html</code></li>
+</ul>
+</li>
+<li>확인
+<ul>
+<li>website endpoint를 브라우저에 붙인다.</li>
+<li>HTML이 열리고 이미지가 보이는지 확인한다.</li>
+<li>ALB로 이동하는 링크나 버튼이 맞는지 확인한다.</li>
+</ul>
+</li>
+</ul>
+<p>object URL과 website endpoint는 다르다.</p>
+<ul>
+<li>object URL
+<ul>
+<li>특정 object 하나를 직접 가리킨다.</li>
+<li>예: 이미지 파일 하나.</li>
+</ul>
+</li>
+<li>website endpoint
+<ul>
+<li>bucket을 웹 사이트처럼 열고, index document를 기본 응답으로 쓴다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="4단계-versioning-켜기">4단계: Versioning 켜기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4단계-versioning-켜기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Versioning
+<ul>
+<li>bucket versioning을 enabled로 바꾼다.</li>
+<li>수정한 <code>index.html</code>을 다시 업로드한다.</li>
+</ul>
+</li>
+<li>의미
+<ul>
+<li>같은 key라도 이전 버전이 남는다.</li>
+<li>실수로 덮어쓴 파일을 되돌릴 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="aws-s3-정적-웹-호스팅-실습-콘솔">AWS S3 정적 웹 호스팅 실습 콘솔<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aws-s3-정적-웹-호스팅-실습-콘솔" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>S3
+<ul>
+<li>bucket에 <code>index.html</code>과 <code>aws.png</code>가 있는가</li>
+<li>object 권한이나 bucket policy 때문에 403이 나지 않는가</li>
+<li>website endpoint가 <code>index.html</code>을 반환하는가</li>
+</ul>
+</li>
+<li>ALB 연결
+<ul>
+<li>HTML 안의 ALB DNS가 최신 값인가</li>
+<li>ALB target group이 healthy인가</li>
+</ul>
+</li>
+<li>Versioning
+<ul>
+<li>업로드 후 object versions가 보이는가</li>
+</ul>
+</li>
+</ul>
+<h2 id="자주-막히는-지점">자주 막히는 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#자주-막히는-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>“S3 object는 보이는데 website endpoint가 안 열린다”
+<ul>
+<li>static website hosting이 꺼져 있거나 index document 이름이 다를 수 있다.</li>
+</ul>
+</li>
+<li>“403 AccessDenied가 뜬다”
+<ul>
+<li>public access block, bucket policy, object ACL을 함께 확인한다.</li>
+<li>실습 후에는 공개 설정을 반드시 되돌리거나 bucket을 삭제한다.</li>
+</ul>
+</li>
+<li>“ALB로 이동이 안 된다”
+<ul>
+<li><code>index.html</code> 안의 ALB DNS가 이전 값일 수 있다.</li>
+<li>ALB 자체가 삭제되었거나 target이 unhealthy일 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="연결해서-읽기">연결해서 읽기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#연결해서-읽기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>선행 문서
+<ul>
+<li><a href="../../wiki/backend/aws-ec2-alb-autoscaling-lab-retry-guide" class="internal internal-link alias" data-slug="wiki/backend/aws-ec2-alb-autoscaling-lab-retry-guide">EC2·ALB·Auto Scaling 실습</a></li>
+<li><a href="../../wiki/common/aws-cost-cleanup-guardrails" class="internal internal-link alias" data-slug="wiki/common/aws-cost-cleanup-guardrails">AWS 비용 안전장치</a></li>
+<li><a href="../../wiki/hubs/aws-immersion-day" class="internal internal-link alias" data-slug="wiki/hubs/aws-immersion-day">AWS Immersion Day 재실습</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="aws-s3-정적-웹-호스팅-실습-점검">AWS S3 정적 웹 호스팅 실습 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#aws-s3-정적-웹-호스팅-실습-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>bucket, object, website endpoint의 차이를 설명할 수 있는가?</li>
+<li>정적 웹 호스팅과 EC2 웹 서버의 역할 차이를 말할 수 있는가?</li>
+<li>공개 bucket을 실습 후 왜 삭제하거나 닫아야 하는지 설명할 수 있는가?</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/backend/aws-ec2-alb-autoscaling-lab-retry-guide" class="internal">AWS EC2, ALB, Auto Scaling 실습 재도전 가이드</a></li><li><a href="../../wiki/common/aws-immersion-day-retry-roadmap" class="internal">AWS Immersion Day 재실습 로드맵</a></li><li><a href="../../wiki/database/aws-aurora-rds-lab-retry-guide" class="internal">AWS Aurora RDS 실습 재도전 가이드</a></li><li><a href="../../wiki/hubs/aws-immersion-day" class="internal">AWS Immersion Day 재실습</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-329" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#aws-s3-정적-웹-호스팅-실습-재도전-가이드" data-for="aws-s3-정적-웹-호스팅-실습-재도전-가이드">AWS S3 정적 웹 호스팅 실습 재도전 가이드</a></li><li class="depth-1"><a href="#aws-s3-정적-웹-호스팅-실습-구분" data-for="aws-s3-정적-웹-호스팅-실습-구분">AWS S3 정적 웹 호스팅 실습 구분</a></li><li class="depth-1"><a href="#aws-s3-정적-웹-호스팅-실습-흐름" data-for="aws-s3-정적-웹-호스팅-실습-흐름">AWS S3 정적 웹 호스팅 실습 흐름</a></li><li class="depth-1"><a href="#1단계-bucket-만들기" data-for="1단계-bucket-만들기">1단계: Bucket 만들기</a></li><li class="depth-1"><a href="#2단계-object-업로드" data-for="2단계-object-업로드">2단계: Object 업로드</a></li><li class="depth-1"><a href="#3단계-static-website-hosting-켜기" data-for="3단계-static-website-hosting-켜기">3단계: Static Website Hosting 켜기</a></li><li class="depth-1"><a href="#4단계-versioning-켜기" data-for="4단계-versioning-켜기">4단계: Versioning 켜기</a></li><li class="depth-1"><a href="#aws-s3-정적-웹-호스팅-실습-콘솔" data-for="aws-s3-정적-웹-호스팅-실습-콘솔">AWS S3 정적 웹 호스팅 실습 콘솔</a></li><li class="depth-1"><a href="#자주-막히는-지점" data-for="자주-막히는-지점">자주 막히는 지점</a></li><li class="depth-1"><a href="#연결해서-읽기" data-for="연결해서-읽기">연결해서 읽기</a></li><li class="depth-1"><a href="#aws-s3-정적-웹-호스팅-실습-점검" data-for="aws-s3-정적-웹-호스팅-실습-점검">AWS S3 정적 웹 호스팅 실습 점검</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

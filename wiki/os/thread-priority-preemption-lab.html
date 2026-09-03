@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간 · 최우녕"/><meta name="twitter:description" content="threadcreate로 만든 스레드는 곧장 실행되지 않고 readylist에 READY 상태로 들어간다."/><meta property="og:description" content="threadcreate로 만든 스레드는 곧장 실행되지 않고 readylist에 READY 상태로 들어간다."/><meta property="og:image:alt" content="threadcreate로 만든 스레드는 곧장 실행되지 않고 readylist에 READY 상태로 들어간다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/thread-priority-preemption-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/thread-priority-preemption-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="threadcreate로 만든 스레드는 곧장 실행되지 않고 readylist에 READY 상태로 들어간다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/thread-priority-preemption-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-671" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-671" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="priority-preemption-실험-높은-우선순위-스레드가-ready가-되는-순간">Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-실험-높은-우선순위-스레드가-ready가-되는-순간" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: <code>thread_create</code>로 만든 스레드는 곧장 실행되지 않고 <code>ready_list</code>에 READY 상태로 들어간다. 새 스레드의 우선순위가 현재 스레드보다 높으면(예: 32 > 31) 그 순간 선점이 일어나야 한다.</p>
+</blockquote>
+<h2 id="스레드를-만들었다--바로-실행된다">스레드를 만들었다 = 바로 실행된다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#스레드를-만들었다--바로-실행된다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>thread_create(&quot;high-priority&quot;, PRI_DEFAULT + 1, ...)</code>를 호출하면 새 스레드는 언제 실행될까?</p>
+<p>처음에는 스레드를 만드는 즉시 그 스레드가 실행된다고 생각하기 쉽다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>스레드를 만들었다 = 바로 실행된다?</span></span></code></pre></figure>
+<p>그러나 정확히는 그렇지 않다. 스레드를 만들면 새 <code>struct thread</code>가 생기고, 해당 스레드가 <code>READY</code> 상태로 <code>ready_list</code>에 들어간다. 그 뒤 실제로 CPU를 받을지는 스케줄러가 결정한다.</p>
+<p>다만 우선순위 스케줄링에서는 한 가지 동작을 기대할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 스레드 priority = 31</span></span>
+<span data-line><span>새 스레드 priority = 32</span></span>
+<span data-line> </span>
+<span data-line><span>새 스레드가 READY가 되었다면,</span></span>
+<span data-line><span>현재 스레드는 다음 timer tick까지 버티지 말고 즉시 CPU를 양보해야 한다.</span></span></code></pre></figure>
+<p>이 문서에서는 관련 PintOS 코드와 테스트를 따라가며 이러한 “즉시 양보”가 어느 지점에서 일어나도록 구현되어 있는지 확인한다.</p>
+<h2 id="priority-preemption-필요성">Priority Preemption 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>priority scheduling의 핵심 약속은 “더 급한 일을 먼저 실행한다”는 것이다.</p>
+<p>그런데 높은 우선순위 스레드가 READY 상태가 되었는데도 현재의 낮은 우선순위 스레드가 남은 time slice를 계속 사용한다면, priority는 사실상 “다음 스케줄링 때 참고하는 힌트”에 가까워진다.</p>
+<p>이 차이는 테스트에서 바로 드러난다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_create</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;high-priority&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, PRI_DEFAULT </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, simple_thread_func, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">msg</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;The high-priority thread should have already completed.&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p><code>priority-preempt</code> 테스트는 main thread가 위 메시지를 출력하기 전에 high-priority thread가 이미 실행을 마쳤어야 한다고 기대한다.</p>
+<p>즉, 높은 priority 스레드가 READY 상태가 되는 사건 자체가 선점(preemption)의 기회가 되어야 한다.</p>
+<h2 id="priority-preemption-흐름">Priority Preemption 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 priority preemption은 네 단계로 나누어 보면 이해하기 쉽다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>단계</th><th>의미</th><th>대표 코드</th></tr></thead><tbody><tr><td><code>priority</code></td><td>스케줄러가 현재 비교하는 유효 우선순위</td><td><code>struct thread.priority</code></td></tr><tr><td><code>ready_list</code></td><td>READY 스레드를 priority 내림차순으로 보관</td><td><code>list_insert_ordered()</code></td></tr><tr><td><code>check_preemption()</code></td><td>ready list 맨 앞의 우선순위가 현재 스레드보다 높으면 양보</td><td><code>threads/thread.c</code></td></tr><tr><td><code>thread_yield()</code></td><td>현재 스레드를 READY 상태로 되돌리고 스케줄링</td><td><code>threads/thread.c</code></td></tr></tbody></table></div>
+<p>전체 흐름은 다음과 같이 이해하면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>높은 priority 스레드가 READY가 됨</span></span>
+<span data-line><span>  -> ready_list 맨 앞에 들어감</span></span>
+<span data-line><span>  -> 현재 스레드보다 priority가 높은지 비교</span></span>
+<span data-line><span>  -> 높으면 현재 스레드가 thread_yield()</span></span>
+<span data-line><span>  -> next_thread_to_run()이 ready_list 맨 앞을 pop</span></span></code></pre></figure>
+<p>여기서 중요한 점은 <code>thread_unblock()</code> 자체가 언제나 선점을 일으키지는 않는다는 것이다.</p>
+<p>이 코드베이스의 <code>thread_unblock()</code> 주석에는 “현재 실행 중인 스레드를 선점하지 않는다”고 명시되어 있다. 따라서 호출한 쪽에서 상황에 맞게 <code>thread_yield()</code> 또는 <code>check_preemption()</code>을 호출한다.</p>
+<h2 id="priority-preemption-예시">Priority Preemption 예시<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-예시" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS 테스트 <code>priority-preempt.c</code>의 핵심 상황을 숫자로 바꾸어 살펴보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main thread priority = PRI_DEFAULT = 31</span></span>
+<span data-line><span>new thread priority  = PRI_DEFAULT + 1 = 32</span></span></code></pre></figure>
+<p>실행은 다음 순서로 진행되어야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main: thread_create(&quot;high-priority&quot;, 32, ...)</span></span>
+<span data-line><span>  -> high-priority thread가 ready_list에 들어감</span></span>
+<span data-line><span>  -> 32 > 31 이므로 main이 thread_yield()</span></span>
+<span data-line><span>  -> scheduler가 high-priority thread를 선택</span></span>
+<span data-line><span>  -> high-priority thread가 5번 yield하며 실행</span></span>
+<span data-line><span>  -> high-priority thread 종료</span></span>
+<span data-line><span>main: &quot;already completed&quot; 메시지 출력</span></span></code></pre></figure>
+<p>즉시 선점이 일어나지 않으면 main이 아래 메시지를 먼저 출력할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>The high-priority thread should have already completed.</span></span></code></pre></figure>
+<p>그러면 테스트의 의도와 어긋난다. 이 메시지는 “이 줄에 도착했을 때 high-priority thread가 이미 실행을 마쳤어야 한다”는 의미이기 때문이다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>실제 OS도 “높은 우선순위 작업이 runnable 상태가 되었을 때 현재 실행 흐름을 계속 유지할 것인가”를 판단해야 한다.</p>
+<p>Linux는 단순한 전역 <code>ready_list</code> 하나만으로 이를 결정하지 않는다. CPU별 run queue, scheduler class, wakeup preemption, realtime policy, fairness, SMP load balancing 같은 요소가 함께 작용한다. 따라서 높은 우선순위 또는 더 유리한 runnable task가 생긴 모든 상황을 PintOS처럼 한 번의 비교만으로 처리한다고 이해해서는 안 된다.</p>
+<p>Windows 역시 priority와 quantum을 사용하지만, process priority class, thread priority, dynamic boost, dispatcher wait, interrupt/DPC 같은 정책이 함께 작동한다.</p>
+<p>현실의 OS에서 공통으로 찾을 수 있는 생각은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>스레드가 READY가 되는 순간은 스케줄링 판단을 다시 할 수 있는 중요한 사건이다.</span></span></code></pre></figure>
+<p>PintOS는 이 큰 개념을 교육용으로 단순화하여 <code>ready_list</code>와 <code>priority</code>의 비교로 보여준다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 코드베이스에서 priority preemption이 드러나는 지점은 세 곳이다.</p>
+<h3 id="1-새-스레드가-만들어질-때">1) 새 스레드가 만들어질 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-새-스레드가-만들어질-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/thread.c</code></p>
+<p><code>thread_create()</code>는 새 스레드를 초기화한 뒤 <code>thread_unblock(t)</code>를 통해 READY 상태로 만든다. 이어서 새 스레드의 priority가 현재 스레드보다 높으면 <code>thread_yield()</code>를 호출한다.</p>
+<p>핵심 흐름만 정리하면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_unblock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (t);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ()</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">priority) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_yield</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>priority-preempt</code> 테스트는 바로 이 지점을 검사한다.</p>
+<h3 id="2-세마포어에서-스레드가-깨어날-때">2) 세마포어에서 스레드가 깨어날 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-세마포어에서-스레드가-깨어날-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/synch.c</code></p>
+<p><code>sema_down()</code>은 기다리는 스레드를 <code>sema->waiters</code>에 priority 순서로 넣는다. <code>sema_up()</code>은 waiter가 있으면 priority가 가장 높은 스레드를 깨우고, 마지막에 <code>check_preemption()</code>을 호출한다.</p>
+<p>이 흐름을 바탕으로 <code>priority-sema</code> 테스트는 semaphore에서 스레드가 priority 순서대로 깨어나는지 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>sema_up()</span></span>
+<span data-line><span>  -> waiters에서 가장 높은 priority thread pop</span></span>
+<span data-line><span>  -> thread_unblock()</span></span>
+<span data-line><span>  -> check_preemption()</span></span></code></pre></figure>
+<h3 id="3-현재-스레드의-priority가-낮아질-때">3) 현재 스레드의 priority가 낮아질 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-현재-스레드의-priority가-낮아질-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/thread.c</code></p>
+<p><code>thread_set_priority()</code>는 현재 스레드의 <code>base_priority</code>를 변경하고 donation을 반영한 뒤 <code>check_preemption()</code>을 호출한다.</p>
+<p>이 흐름을 바탕으로 <code>priority-change</code> 테스트는 thread 2가 자신의 priority를 낮추었을 때 main thread가 다시 실행되는 상황을 검사한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread_set_priority(new_priority)</span></span>
+<span data-line><span>  -> base_priority 갱신</span></span>
+<span data-line><span>  -> refresh_priority()</span></span>
+<span data-line><span>  -> check_preemption()</span></span></code></pre></figure>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 priority 숫자가 지닌 의미를 해석하지 않는다.</p>
+<p>QEMU가 관찰하는 것은 다음과 같다.</p>
+<ul>
+<li>guest CPU가 <code>thread_create()</code>, <code>thread_yield()</code>, <code>schedule()</code> 같은 PintOS 커널 코드를 실행한다.</li>
+<li>guest memory 안의 <code>struct thread.priority</code>, <code>struct list_elem</code> 바이트가 바뀐다.</li>
+<li>timer 장치나 interrupt controller가 guest CPU에 interrupt pending 상태를 만든다.</li>
+</ul>
+<p>예를 들어 timer preemption 경로에서는 QEMU의 가상 PIT/APIC가 “timer interrupt가 발생한 것처럼” guest에 사건을 전달한다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/timer/i8254.c" class="external external-link">hw/timer/i8254.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>pit_irq_timer_update()</code>가 <code>qemu_set_irq(s->irq, irq_level)</code>를 통해 PIT 출력선을 바꾼다.</li>
+<li><code>pit_realizefn()</code>이 channel 0에 <code>timer_new_ns(QEMU_CLOCK_VIRTUAL, pit_irq_timer, s)</code>를 만든다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/intc/apic.c" class="external external-link">hw/intc/apic.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>apic_timer()</code>가 local APIC timer interrupt를 전달한다.</li>
+<li><code>apic_update_irq()</code>가 pending interrupt를 발견하면 <code>cpu_interrupt(cpu, CPU_INTERRUPT_HARD)</code>를 호출한다.</li>
+</ul>
+</li>
+</ul>
+<p>그러나 <code>priority=32</code>가 <code>priority=31</code>보다 더 급하다는 판단은 QEMU가 내리지 않는다. 이는 PintOS guest OS 내부의 정책에 따른 판단이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>priority preemption을 보는 관점</th><th>이 문서에서 확인할 핵심</th></tr></thead><tbody><tr><td>Linux / Windows</td><td>실제 커널 scheduler의 runnable/wakeup 판단</td><td>priority 외에도 fairness, class, SMP, quantum이 얽힘</td></tr><tr><td>PintOS</td><td>READY list와 priority 비교</td><td><code>thread_create()</code>, <code>sema_up()</code>, <code>thread_set_priority()</code></td></tr><tr><td>QEMU</td><td>guest CPU와 interrupt/device 동작 에뮬레이션</td><td>priority의 의미는 해석하지 않고 guest code 실행만 재현</td></tr></tbody></table></div>
+<h2 id="priority-preemption-코드">Priority Preemption 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-priority-숫자-범위">1) priority 숫자 범위<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-priority-숫자-범위" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PRI_MIN</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PRI_DEFAULT</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 31</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PRI_MAX</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 63</span></span></code></pre></figure>
+<p>따라서 <code>PRI_DEFAULT + 1</code>은 <code>32</code>다.</p>
+<h3 id="2-ready_list-정렬">2) ready_list 정렬<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-ready_list-정렬" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/thread.c</code></p>
+<p><code>thread_unblock()</code>과 <code>thread_yield()</code>는 <code>ready_list</code>에 스레드를 넣을 때 <code>thread_priority</code> 비교 함수를 사용한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">ready_list</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">elem</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, thread_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p>이 비교 함수는 priority가 큰 스레드를 앞쪽에 둔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (a, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem)</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">       list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (b, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem)</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">priority;</span></span></code></pre></figure>
+<p>따라서 <code>next_thread_to_run()</code>이 <code>list_pop_front(&amp;ready_list)</code>를 호출하면 priority가 가장 높은 스레드가 선택된다.</p>
+<h3 id="3-선점-판단">3) 선점 판단<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-선점-판단" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS: <code>SW_AI-W11-pintos/pintos/threads/thread.c</code></p>
+<p><code>check_preemption()</code>은 <code>ready_list</code> 맨 앞의 스레드와 현재 스레드를 비교한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">front </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> list_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_begin</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">ready_list</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">), </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> thread</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ()</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">priority </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> front</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">priority)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_yield</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ();</span></span></code></pre></figure>
+<p>단, interrupt context에서는 곧바로 <code>thread_yield()</code>를 실행하지 않는다. 이 코드베이스의 <code>check_preemption()</code>은 <code>intr_context()</code>이면 그대로 반환한다.</p>
+<p>timer interrupt에서 time slice를 기준으로 선점하는 과정은 별도 경로를 따른다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>timer_interrupt()</span></span>
+<span data-line><span>  -> thread_tick()</span></span>
+<span data-line><span>     -> thread_ticks >= TIME_SLICE</span></span>
+<span data-line><span>        -> intr_yield_on_return()</span></span></code></pre></figure>
+<h2 id="priority-preemption-값-추적">Priority Preemption 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="priority-비교">priority 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PRI_DEFAULT = 31</span></span>
+<span data-line><span>high        = 32</span></span>
+<span data-line> </span>
+<span data-line><span>32 > 31 이므로 high-priority thread가 더 먼저 실행되어야 한다.</span></span></code></pre></figure>
+<p><code>ready_list</code>가 priority 내림차순으로 정렬되어 있다면 상태는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>ready_list front</span></span>
+<span data-line><span>  -> high-priority(priority=32)</span></span>
+<span data-line><span>  -> main(priority=31)     // main이 yield 후 다시 READY가 된 경우</span></span></code></pre></figure>
+<p><code>next_thread_to_run()</code>은 맨 앞의 원소를 pop하므로 high-priority thread가 선택된다.</p>
+<h3 id="time-slice와-즉시-선점의-차이">time slice와 즉시 선점의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#time-slice와-즉시-선점의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS timer 설정은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>TIMER_FREQ = 100</span></span>
+<span data-line><span>TIME_SLICE = 4</span></span></code></pre></figure>
+<p>이를 계산하면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1 tick      = 1 / 100초 = 10ms</span></span>
+<span data-line><span>4 ticks     = 40ms</span></span></code></pre></figure>
+<p>즉시 선점이 없다면 높은 priority 스레드는 최악의 경우 현재 스레드에 남은 time slice만큼 기다려야 한다. PintOS 테스트는 이러한 지연을 허용하지 않고, high-priority thread가 READY 상태가 되는 즉시 실행되는지를 확인한다.</p>
+<h3 id="ready_list가-들고-있는-주소">ready_list가 들고 있는 주소<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ready_list가-들고-있는-주소" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>ready_list</code>는 <code>struct thread *</code>를 직접 담지 않는다. 대신 <code>struct thread</code> 안에 있는 <code>elem</code>의 주소를 연결한다.</p>
+<p>예시는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct thread *high = 0x8000000012340000</span></span>
+<span data-line><span>offsetof(struct thread, elem) = 0x120  // 예시 값</span></span>
+<span data-line> </span>
+<span data-line><span>&amp;high->elem = 0x8000000012340120</span></span></code></pre></figure>
+<p><code>ready_list</code>에 들어가는 값은 <code>0x8000000012340120</code> 같은 <code>list_elem</code> 주소다. 디버깅할 때는 <a href="../../wiki/os/pintos-intrusive-list-lab" class="internal internal-link" data-slug="wiki/os/pintos-intrusive-list-lab">PintOS intrusive list 실험: <code>list elem</code> 주소에서 <code>struct thread</code> 복원하기</a>처럼 <code>list_entry(elem, struct thread, elem)</code>를 사용해 바깥의 <code>struct thread</code>를 복원해야 한다.</p>
+<h2 id="priority-preemption-gdb">Priority Preemption GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-테스트로-확인">1) 테스트로 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-테스트로-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 코드 디렉터리에서는 다음 테스트가 이 동작과 직접 연결된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>threads/priority-preempt</span></span>
+<span data-line><span>threads/priority-change</span></span>
+<span data-line><span>threads/priority-sema</span></span></code></pre></figure>
+<p>각 테스트에서 관찰할 지점은 서로 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>테스트</th><th>확인하는 질문</th></tr></thead><tbody><tr><td><code>priority-preempt</code></td><td>새 high-priority thread가 생성 직후 main을 선점하는가</td></tr><tr><td><code>priority-change</code></td><td>현재 thread가 priority를 낮추면 더 높은 READY thread에 양보하는가</td></tr><tr><td><code>priority-sema</code></td><td>semaphore waiter 가운데 priority가 가장 높은 thread가 먼저 깨어나는가</td></tr></tbody></table></div>
+<h3 id="2-gdb-breakpoint">2) GDB breakpoint<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-gdb-breakpoint" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>가장 작은 확인 루프는 <code>priority-preempt</code>를 기준으로 잡는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b thread_create</span></span>
+<span data-line><span>b thread_unblock</span></span>
+<span data-line><span>b thread_yield</span></span>
+<span data-line><span>b next_thread_to_run</span></span>
+<span data-line><span>b schedule</span></span></code></pre></figure>
+<p>확인할 값은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p thread_current()->name</span></span>
+<span data-line><span>p thread_current()->priority</span></span>
+<span data-line><span>p list_empty(&amp;ready_list)</span></span>
+<span data-line><span>p list_entry(list_begin(&amp;ready_list), struct thread, elem)->name</span></span>
+<span data-line><span>p list_entry(list_begin(&amp;ready_list), struct thread, elem)->priority</span></span></code></pre></figure>
+<p><code>sema_up()</code> 경로를 살펴볼 때는 다음 breakpoint를 추가한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b sema_down</span></span>
+<span data-line><span>b sema_up</span></span>
+<span data-line><span>b check_preemption</span></span></code></pre></figure>
+<p>이때 <code>sema->waiters</code>의 맨 앞에 priority가 가장 높은 스레드가 있는지 확인하면 된다.</p>
+<h2 id="순서도-priority-preemption-판단-흐름">순서도: Priority Preemption 판단 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도-priority-preemption-판단-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[새 스레드가 READY가 됨] --> B{어디서 READY가 되었나?}\n    B -- thread_create --> C[thread_unblock 후 priority 비교]\n    B -- sema_up --> D[waiter unblock 후 check_preemption]\n    B -- thread_set_priority --> E[priority 갱신 후 check_preemption]\n\n    C --> F{new.priority > current.priority?}\n    D --> G[check_preemption 진입]\n    E --> G\n\n    F -- Yes --> H[thread_yield]\n    F -- No --> I[계속 실행]\n\n    G --> J{intr_context?}\n    J -- Yes --> K[return 즉시 양보 불가]\n    J -- No --> L{ready_list front > current?}\n    L -- Yes --> H\n    L -- No --> I\n\n    H --> M[현재 스레드 → READY, ready_list에 삽입]\n    M --> N[schedule → next_thread_to_run]\n    N --> O[list_pop_front → 최고 priority 스레드 실행]&quot;">flowchart TD
+    A[새 스레드가 READY가 됨] --> B{어디서 READY가 되었나?}
+    B -- thread_create --> C[thread_unblock 후 priority 비교]
+    B -- sema_up --> D[waiter unblock 후 check_preemption]
+    B -- thread_set_priority --> E[priority 갱신 후 check_preemption]
+
+    C --> F{new.priority > current.priority?}
+    D --> G[check_preemption 진입]
+    E --> G
+
+    F -- Yes --> H[thread_yield]
+    F -- No --> I[계속 실행]
+
+    G --> J{intr_context?}
+    J -- Yes --> K[return 즉시 양보 불가]
+    J -- No --> L{ready_list front > current?}
+    L -- Yes --> H
+    L -- No --> I
+
+    H --> M[현재 스레드 → READY, ready_list에 삽입]
+    M --> N[schedule → next_thread_to_run]
+    N --> O[list_pop_front → 최고 priority 스레드 실행]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant Main as main (pri=31)\n    participant TC as thread_create()\n    participant High as high-priority (pri=32)\n    participant Sched as scheduler\n\n    Main->>TC: thread_create(\&quot;high\&quot;, 32, func, NULL)\n    TC->>TC: init_thread(t, \&quot;high\&quot;, 32)\n    TC->>TC: thread_unblock(t) → ready_list에 삽입\n    Note over TC: ready_list: [high(32)]\n    TC->>TC: 32 > 31 → thread_yield()\n    Main->>Sched: schedule()\n    Sched->>Sched: next = list_pop_front(ready_list) = high\n    Sched->>High: context switch → high 실행\n    Note over High: 5번 yield하며 msg 출력\n    High->>Sched: thread_exit()\n    Sched->>Main: context switch → main 복귀\n    Main->>Main: \&quot;already completed\&quot; 출력&quot;">sequenceDiagram
+    participant Main as main (pri=31)
+    participant TC as thread_create()
+    participant High as high-priority (pri=32)
+    participant Sched as scheduler
+
+    Main->>TC: thread_create(&quot;high&quot;, 32, func, NULL)
+    TC->>TC: init_thread(t, &quot;high&quot;, 32)
+    TC->>TC: thread_unblock(t) → ready_list에 삽입
+    Note over TC: ready_list: [high(32)]
+    TC->>TC: 32 > 31 → thread_yield()
+    Main->>Sched: schedule()
+    Sched->>Sched: next = list_pop_front(ready_list) = high
+    Sched->>High: context switch → high 실행
+    Note over High: 5번 yield하며 msg 출력
+    High->>Sched: thread_exit()
+    Sched->>Main: context switch → main 복귀
+    Main->>Main: &quot;already completed&quot; 출력
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>threads/thread.c</code></td><td><code>thread_create()</code></td><td>새 스레드 생성 후 unblock + priority 비교 yield</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_unblock()</code></td><td>BLOCKED→READY, ready_list에 priority 순서로 삽입</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_yield()</code></td><td>현재 스레드를 READY 상태로 되돌리고 schedule 호출</td></tr><tr><td><code>threads/thread.c</code></td><td><code>check_preemption()</code></td><td>ready_list front와 current priority 비교 (line 804)</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_priority()</code></td><td>list_insert_ordered 비교 함수 (내림차순, line 832)</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_set_priority()</code></td><td>base_priority 갱신 + refresh_priority + check_preemption</td></tr><tr><td><code>threads/thread.c</code></td><td><code>next_thread_to_run()</code></td><td>ready_list가 비었으면 idle, 그렇지 않으면 pop_front</td></tr><tr><td><code>threads/thread.c</code></td><td><code>schedule()</code></td><td>context switch 실행부</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_up()</code></td><td>priority가 가장 높은 waiter unblock + check_preemption</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_down()</code></td><td>waiters에 priority 순서로 삽입</td></tr><tr><td><code>include/threads/thread.h</code></td><td><code>PRI_MIN</code>, <code>PRI_DEFAULT</code>, <code>PRI_MAX</code></td><td>0, 31, 63 우선순위 범위</td></tr><tr><td><code>tests/threads/priority-preempt.c</code></td><td>테스트 본체</td><td>PRI_DEFAULT+1 스레드가 즉시 선점하는지 확인</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>priority preemption은 높은 priority 스레드가 READY 상태가 되는 순간 현재의 낮은 priority 스레드가 CPU를 양보하도록 하는 정책이다.</li>
+<li>PintOS에서는 <code>ready_list</code>를 priority 내림차순으로 유지하고, <code>thread_create()</code>, <code>sema_up()</code>, <code>thread_set_priority()</code> 같은 지점에서 선점 여부를 다시 확인한다.</li>
+<li><code>thread_unblock()</code> 자체가 언제나 선점을 일으키는 것은 아니다. 호출한 쪽에서 atomic update 범위를 마친 뒤 적절한 시점에 양보 여부를 결정한다.</li>
+<li>QEMU는 priority의 의미를 해석하지 않는다. QEMU는 PintOS가 사용하는 CPU, 메모리, timer/interrupt 장치를 에뮬레이션할 뿐이다.</li>
+</ul>
+<h2 id="priority-preemption-관련-문서">Priority Preemption 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-preemption-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a>
+<ul>
+<li><code>ready_list</code>에서 선택된 스레드가 실제로 <code>schedule()</code>로 이어지는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">priority donation</a>
+<ul>
+<li>lock holder의 effective priority가 바뀌는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal internal-link alias" data-slug="wiki/os/semaphore-lock-condition-knowledge">condition</a>
+<ul>
+<li><code>sema_up()</code>이 waiter를 깨우는 구조</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/pintos-intrusive-list-lab" class="internal internal-link alias" data-slug="wiki/os/pintos-intrusive-list-lab">intrusive list Lab</a>
+<ul>
+<li><code>ready_list</code>의 <code>list_elem</code> 주소를 <code>struct thread</code>로 복원하는 방법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a>
+<ul>
+<li>time slice 선점과 QEMU timer interrupt의 연결</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/pintos-threads-scheduling-execution-model" class="internal">PintOS Threads와 Scheduling</a></li><li><a href="../../wiki/os/priority-donation-chain-lab" class="internal">Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기</a></li><li><a href="../../wiki/os/priority-donation-knowledge" class="internal">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a></li><li><a href="../../wiki/os/ready-list-priority" class="internal">ready_list — 우선순위 정렬</a></li><li><a href="../../wiki/os/thread-create-yield" class="internal">thread_create() 후 yield와 우선순위 선점</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-669" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#priority-preemption-실험-높은-우선순위-스레드가-ready가-되는-순간" data-for="priority-preemption-실험-높은-우선순위-스레드가-ready가-되는-순간">Priority Preemption 실험: 높은 우선순위 스레드가 READY가 되는 순간</a></li><li class="depth-1"><a href="#스레드를-만들었다--바로-실행된다" data-for="스레드를-만들었다--바로-실행된다">스레드를 만들었다 = 바로 실행된다</a></li><li class="depth-1"><a href="#priority-preemption-필요성" data-for="priority-preemption-필요성">Priority Preemption 필요성</a></li><li class="depth-1"><a href="#priority-preemption-흐름" data-for="priority-preemption-흐름">Priority Preemption 흐름</a></li><li class="depth-1"><a href="#priority-preemption-예시" data-for="priority-preemption-예시">Priority Preemption 예시</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-2"><a href="#1-새-스레드가-만들어질-때" data-for="1-새-스레드가-만들어질-때">1) 새 스레드가 만들어질 때</a></li><li class="depth-2"><a href="#2-세마포어에서-스레드가-깨어날-때" data-for="2-세마포어에서-스레드가-깨어날-때">2) 세마포어에서 스레드가 깨어날 때</a></li><li class="depth-2"><a href="#3-현재-스레드의-priority가-낮아질-때" data-for="3-현재-스레드의-priority가-낮아질-때">3) 현재 스레드의 priority가 낮아질 때</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#priority-preemption-코드" data-for="priority-preemption-코드">Priority Preemption 코드</a></li><li class="depth-2"><a href="#1-priority-숫자-범위" data-for="1-priority-숫자-범위">1) priority 숫자 범위</a></li><li class="depth-2"><a href="#2-ready_list-정렬" data-for="2-ready_list-정렬">2) ready_list 정렬</a></li><li class="depth-2"><a href="#3-선점-판단" data-for="3-선점-판단">3) 선점 판단</a></li><li class="depth-1"><a href="#priority-preemption-값-추적" data-for="priority-preemption-값-추적">Priority Preemption 값 추적</a></li><li class="depth-2"><a href="#priority-비교" data-for="priority-비교">priority 비교</a></li><li class="depth-2"><a href="#time-slice와-즉시-선점의-차이" data-for="time-slice와-즉시-선점의-차이">time slice와 즉시 선점의 차이</a></li><li class="depth-2"><a href="#ready_list가-들고-있는-주소" data-for="ready_list가-들고-있는-주소">ready_list가 들고 있는 주소</a></li><li class="depth-1"><a href="#priority-preemption-gdb" data-for="priority-preemption-gdb">Priority Preemption GDB</a></li><li class="depth-2"><a href="#1-테스트로-확인" data-for="1-테스트로-확인">1) 테스트로 확인</a></li><li class="depth-2"><a href="#2-gdb-breakpoint" data-for="2-gdb-breakpoint">2) GDB breakpoint</a></li><li class="depth-1"><a href="#순서도-priority-preemption-판단-흐름" data-for="순서도-priority-preemption-판단-흐름">순서도: Priority Preemption 판단 흐름</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#priority-preemption-관련-문서" data-for="priority-preemption-관련-문서">Priority Preemption 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

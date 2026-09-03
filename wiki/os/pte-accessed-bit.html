@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>PTE 접근 Bit (PTE Accessed Bit) · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="PTE 접근 Bit (PTE Accessed Bit) · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="PTE 접근 Bit (PTE Accessed Bit) · 최우녕"/><meta name="twitter:description" content="PTE의 accessed bit(bit 5)는 하드웨어(MMU)가 접근 시 자동으로 1로 켜고 소프트웨어(OS)만 0으로 지울 수 있어, 이 비대칭이 clock 같은 페이지 교체 정책의 &quot;최근 참조&quot; 판별 근거가 된다."/><meta property="og:description" content="PTE의 accessed bit(bit 5)는 하드웨어(MMU)가 접근 시 자동으로 1로 켜고 소프트웨어(OS)만 0으로 지울 수 있어, 이 비대칭이 clock 같은 페이지 교체 정책의 &quot;최근 참조&quot; 판별 근거가 된다."/><meta property="og:image:alt" content="PTE의 accessed bit(bit 5)는 하드웨어(MMU)가 접근 시 자동으로 1로 켜고 소프트웨어(OS)만 0으로 지울 수 있어, 이 비대칭이 clock 같은 페이지 교체 정책의 &quot;최근 참조&quot; 판별 근거가 된다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/pte-accessed-bit"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/pte-accessed-bit"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PTE의 accessed bit(bit 5)는 하드웨어(MMU)가 접근 시 자동으로 1로 켜고 소프트웨어(OS)만 0으로 지울 수 있어, 이 비대칭이 clock 같은 페이지 교체 정책의 &quot;최근 참조&quot; 판별 근거가 된다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/pte-accessed-bit" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-603" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-603" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>PTE 접근 Bit (PTE Accessed Bit)</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pte-접근-bit-pte-accessed-bit">PTE 접근 Bit (PTE Accessed Bit)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-접근-bit-pte-accessed-bit" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 PTE accessed bit의 일반 동작 원리와 페이지 교체 정책에서의 활용 기준을 설명하고, Linux·Windows·PintOS·QEMU 관련 내용과 GDB 시나리오는 특정 구현을 이해하고 검증하기 위한 예시로 다룬다. 코드 위치·버전별 동작·실행 결과·주기와 비용 같은 수치는 해당 소스와 실제 실행 환경에서 별도로 확인해야 하며, 본문의 예상 결과는 검증 기록 자체가 아니다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: PTE의 accessed bit(bit 5)는 하드웨어(MMU)가 접근 시 자동으로 1로 켜고 소프트웨어(OS)만 0으로 지울 수 있어, 이 비대칭이 clock 같은 페이지 교체 정책의 “최근 참조” 판별 근거가 된다.</p>
+</blockquote>
+<h2 id="pte-접근-bit-상태">PTE 접근 Bit 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-접근-bit-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PTE의 **accessed bit(A bit, bit 5)**는 해당 페이지가 최근에 접근(읽기 또는 쓰기)되었는지를 나타내는 1-bit 플래그다. <strong>하드웨어(MMU)가 자동으로 1로 설정</strong>하고, <strong>소프트웨어(OS)만이 0으로 클리어</strong>할 수 있다. 이 비대칭적 제어 덕분에 OS는 “일정 기간 동안 접근이 있었는가?”를 판별할 수 있으며, 이것이 clock algorithm 등 페이지 교체 정책의 근간이 된다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64 PTE 64비트 중 bit 5가 accessed bit이다.</p>
+<pre><code>63    12 11  9  8  7  6  5  4  3  2  1  0
++------+-----+--+--+--+--+--+--+--+--+--+
+| ADDR | AVL |G |  |D |A |  |  |U |W |P |
++------+-----+--+--+--+--+--+--+--+--+--+
+                       ^
+                       A bit (0x20)
+</code></pre>
+<p>동작 규칙:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>이벤트</th><th>A bit 변화</th><th>주체</th></tr></thead><tbody><tr><td>페이지 읽기 접근</td><td>0 → 1</td><td>MMU 하드웨어</td></tr><tr><td>페이지 쓰기 접근</td><td>0 → 1</td><td>MMU 하드웨어</td></tr><tr><td>이미 A=1인 상태에서 재접근</td><td>변화 없음</td><td>—</td></tr><tr><td>페이지 교체 정책이 클리어</td><td>1 → 0</td><td>OS 소프트웨어</td></tr></tbody></table></div>
+<p>핵심 특성:</p>
+<ul>
+<li><strong>읽기와 쓰기 모두</strong> A bit를 설정한다 (dirty bit는 쓰기만).</li>
+<li>MMU가 page table walk 중 PTE를 읽을 때, present=1이고 A=0이면 A=1로 갱신한 뒤 메모리에 다시 쓴다.</li>
+<li>TLB에 캐시된 동안에는 PTE 갱신이 일어나지 않을 수 있다. 따라서 A bit를 정확히 읽으려면 <strong>TLB flush</strong>가 필요할 수 있다.</li>
+</ul>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>Linux</strong>에서 accessed bit는 두 가지 주요 용도로 쓰인다:</p>
+<ul>
+<li><strong>페이지 회수(page reclaim)</strong>: kswapd 데몬이 LRU 리스트를 순회하면서 A bit를 검사한다. A=1이면 active list로 승격, A=0이면 inactive list로 강등하여 회수 후보로 만든다.</li>
+<li><strong>NUMA balancing</strong>: 페이지가 어느 노드에서 접근되는지 추적할 때 A bit를 클리어하고, 다음 접근 시 page fault를 유도하여 접근 노드를 파악한다.</li>
+</ul>
+<p><strong>Windows</strong>에서는 Working Set Manager가 유사하게 A bit를 주기적으로 클리어하고, 다음 검사 시점에 A=0인 페이지를 working set에서 제거한다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 <code>include/threads/pte.h</code>에서 accessed bit를 정의한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> PTE_A</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> 0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">20</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   /* 1이면 접근됨, 0이면 접근되지 않음 */</span></span></code></pre></figure>
+<p><code>threads/mmu.c</code>에 읽기/쓰기 API가 있다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4_is_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pml4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">vpage</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pml4, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) vpage, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_A) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4_set_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pml4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">vpage</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pml4, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) vpage, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (accessed)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">            *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_A;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        else</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">            *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ~</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint32_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) PTE_A;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">rcr3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">() </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pml4))</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">            invlpg</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) vpage);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  /* TLB 무효화 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong><code>pml4_set_accessed</code>에서 <code>invlpg</code> 호출이 핵심이다.</strong> A bit를 소프트웨어로 클리어한 뒤, TLB에 남아있는 이전 매핑(A=1)을 무효화해야 다음 접근 시 MMU가 PTE를 다시 읽고 A bit를 정확히 재설정한다.</p>
+<p>Clock algorithm에서의 사용 흐름:</p>
+<pre><code>clock hand가 frame을 가리킴
+  → pml4_is_accessed(owner->pml4, page->va) 검사
+     → A=1: &quot;second chance&quot; — pml4_set_accessed(..., false)로 클리어, 다음으로 이동
+     → A=0: victim으로 선택, 이 frame을 evict
+</code></pre>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU TCG 모드에서는 실제 MMU 하드웨어 없이 소프트웨어로 page table walk를 에뮬레이트한다. guest가 메모리에 접근하면:</p>
+<ol>
+<li>QEMU의 softmmu가 guest PTE를 읽는다 (RAMBlock 내 guest physical memory에 저장된 PTE).</li>
+<li>present=1이고 A=0이면, <strong>QEMU가 PTE의 A bit를 1로 갱신</strong>하고 guest physical memory에 다시 쓴다.</li>
+<li>쓰기 접근이면 D bit도 동시에 설정한다.</li>
+</ol>
+<p>이 동작은 <code>x86_cpu_tlb_fill()</code> → <code>mmu_translate()</code> 경로에서 일어나며, 실제 x86 하드웨어의 동작을 충실히 재현한다. QEMU의 TLB 캐시(softmmu TLB)에 매핑이 있는 동안에는 PTE 갱신을 건너뛰는데, 이것도 하드웨어 TLB와 동일한 의미다.</p>
+<p>GDB로 guest PTE를 직접 검사할 수 있다:</p>
+<pre><code>(gdb) x/gx $cr3_base + pml4_index*8    # PML4 entry
+(gdb) # ... walk하여 최종 PTE 주소 계산
+(gdb) x/gx &lt;pte_addr>                   # PTE 값 확인
+(gdb) p/x &lt;pte_val> &amp; 0x20              # A bit 추출
+</code></pre>
+<h3 id="linux-vs-pintos-비교">Linux vs PintOS 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>비교 항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>A bit 검사 주기</td><td>kswapd 주기적 스캔 (<del>100ms</del>수초)</td><td>clock hand가 eviction 필요 시 순회</td></tr><tr><td>페이지 교체 알고리즘</td><td>2-list LRU (active/inactive list)</td><td>Clock algorithm (단일 순환)</td></tr><tr><td>A bit 클리어 후 TLB</td><td><code>ptep_clear_flush()</code> + IPI로 다른 코어도 flush</td><td><code>invlpg()</code> 단일 코어 (PintOS는 단일 CPU)</td></tr><tr><td>NUMA 활용</td><td>A bit 클리어 → fault → 노드 파악</td><td>N/A (NUMA 미지원)</td></tr><tr><td>Working set 추적</td><td>Active/Inactive list 승격/강등</td><td>frame_table 전체 순회</td></tr><tr><td>검사 단위</td><td>struct page (folio) 단위</td><td>struct frame 단위</td></tr></tbody></table></div>
+<h2 id="pte-접근-bit-값-추적">PTE 접근 Bit 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-접근-bit-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>A bit 위치</td><td>PTE bit 5 (0x20)</td></tr><tr><td>PTE 크기</td><td>8 bytes (64-bit)</td></tr><tr><td>A bit 갱신 비용</td><td>MMU가 PTE를 메모리에 write-back (8-byte atomic write)</td></tr><tr><td><code>invlpg</code> 비용</td><td>~100 cycles (단일 TLB entry flush)</td></tr><tr><td>clock 순회당 A bit 검사</td><td>frame_table 크기만큼 (최대 user pool 프레임 수)</td></tr><tr><td>PintOS user pool</td><td>약 367개 프레임 (기본 QEMU 메모리 설정)</td></tr></tbody></table></div>
+<p>예: PTE 값이 <code>0x0000000012345067</code>이면:</p>
+<ul>
+<li>bit 5 = 1 → A=1 (접근됨)</li>
+<li>bit 6 = 1 → D=1 (수정됨)</li>
+<li>bit 0 = 1 → P=1 (존재)</li>
+<li>bit 1 = 1 → W=1 (쓰기 가능)</li>
+<li>bit 2 = 1 → U=1 (유저 접근 가능)</li>
+</ul>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[프로세스가 VA 접근] --> B{TLB hit?}\n    B -->|Yes| C[TLB 캐시 사용 - A bit 갱신 없음]\n    B -->|No| D[MMU page table walk]\n    D --> E{PTE present?}\n    E -->|No| F[#PF Page Fault]\n    E -->|Yes| G{A bit = 1?}\n    G -->|Yes| H[그대로 접근 허용]\n    G -->|No| I[MMU가 A bit = 1로 설정]\n    I --> J[PTE를 메모리에 write-back]\n    J --> K[TLB에 캐시]\n    K --> H&quot;">flowchart TD
+    A[프로세스가 VA 접근] --> B{TLB hit?}
+    B -->|Yes| C[TLB 캐시 사용 - A bit 갱신 없음]
+    B -->|No| D[MMU page table walk]
+    D --> E{PTE present?}
+    E -->|No| F[#PF Page Fault]
+    E -->|Yes| G{A bit = 1?}
+    G -->|Yes| H[그대로 접근 허용]
+    G -->|No| I[MMU가 A bit = 1로 설정]
+    I --> J[PTE를 메모리에 write-back]
+    J --> K[TLB에 캐시]
+    K --> H
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pml4_is_accessed-호출-결과-추적">1. pml4_is_accessed 호출 결과 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pml4_is_accessed-호출-결과-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># clock algorithm이 A bit를 검사하는 순간의 frame/page/결과 확인</span></span>
+<span data-line><span>b mmu.c:320</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $pte_ptr = pml4e_walk(pml4, (uint64_t)vpage, 0)</span></span>
+<span data-line><span>  if $pte_ptr != 0</span></span>
+<span data-line><span>    set $pte_val = *(uint64_t *)$pte_ptr</span></span>
+<span data-line><span>    printf &quot;[A-bit] is_accessed: va=%p PTE=0x%lx A=%d\n&quot;, \</span></span>
+<span data-line><span>      vpage, $pte_val, ($pte_val >> 5) &amp; 1</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;[A-bit] is_accessed: va=%p PTE=NULL\n&quot;, vpage</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  c</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="2-pml4_set_accessedfalse--a-bit">2. pml4_set_accessed(false) — A bit<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pml4_set_accessedfalse--a-bit" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># second chance 부여 시 A bit 클리어와 TLB flush 관찰</span></span>
+<span data-line><span>b mmu.c:330</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  if !accessed</span></span>
+<span data-line><span>    set $pte_ptr = pml4e_walk(pml4, (uint64_t)vpage, 0)</span></span>
+<span data-line><span>    if $pte_ptr != 0</span></span>
+<span data-line><span>      set $before = *(uint64_t *)$pte_ptr</span></span>
+<span data-line><span>      printf &quot;[A-bit] clear: va=%p PTE_before=0x%lx &quot;, vpage, $before</span></span>
+<span data-line><span>      finish</span></span>
+<span data-line><span>      set $after = *(uint64_t *)$pte_ptr</span></span>
+<span data-line><span>      printf &quot;PTE_after=0x%lx invlpg=%d\n&quot;, $after, (rcr3() == vtop(pml4))</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  c</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="3-vm_frame_accessed--owner-순회-중">3. vm_frame_accessed — owner 순회 중<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-vm_frame_accessed--owner-순회-중" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># frame의 모든 owner를 순회하면서 A=1을 찾는 과정 관찰</span></span>
+<span data-line><span>b vm.c:151</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  set $n = 0</span></span>
+<span data-line><span>  set $found = 0</span></span>
+<span data-line><span>  set $e = frame->owners.head.next</span></span>
+<span data-line><span>  while $e != &amp;frame->owners.tail</span></span>
+<span data-line><span>    set $o = (struct frame_owner *)((char *)$e - 0)</span></span>
+<span data-line><span>    if $o->thread != 0 &amp;&amp; $o->page != 0</span></span>
+<span data-line><span>      set $a = pml4_is_accessed($o->thread->pml4, $o->page->va)</span></span>
+<span data-line><span>      printf &quot;[A-bit] owner[%d] thread=%s va=%p accessed=%d\n&quot;, \</span></span>
+<span data-line><span>        $n, $o->thread->name, $o->page->va, $a</span></span>
+<span data-line><span>      if $a</span></span>
+<span data-line><span>        set $found = 1</span></span>
+<span data-line><span>      end</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    set $e = $e->next</span></span>
+<span data-line><span>    set $n = $n + 1</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  printf &quot;[A-bit] frame %p: %d owners, accessed=%d\n&quot;, frame, $n, $found</span></span>
+<span data-line><span>  c</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="4-vm_frame_set_accessed--전체-owner">4. vm_frame_set_accessed — 전체 owner<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-vm_frame_set_accessed--전체-owner" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># clock hand가 second chance를 줄 때 모든 owner의 A bit를 클리어하는 과정</span></span>
+<span data-line><span>b vm.c:167</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  if !accessed</span></span>
+<span data-line><span>    set $cnt = 0</span></span>
+<span data-line><span>    set $e = frame->owners.head.next</span></span>
+<span data-line><span>    while $e != &amp;frame->owners.tail</span></span>
+<span data-line><span>      set $cnt = $cnt + 1</span></span>
+<span data-line><span>      set $e = $e->next</span></span>
+<span data-line><span>    end</span></span>
+<span data-line><span>    printf &quot;[A-bit] set_accessed(false): frame=%p owners=%d\n&quot;, frame, $cnt</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  c</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="5-invlpg-실행-확인">5. invlpg 실행 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-invlpg-실행-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># invlpg가 실행되는 시점과 대상 VA 추적</span></span>
+<span data-line><span>b mmu.c:339</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;[A-bit] invlpg: va=0x%lx (CR3 match → TLB flush)\n&quot;, (uint64_t)vpage</span></span>
+<span data-line><span>  c</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h3 id="6-define-a-bit-상태-원샷-덤프">6. define: A bit 상태 원샷 덤프<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-define-a-bit-상태-원샷-덤프" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>define dump_abit</span></span>
+<span data-line><span>  # 사용법: dump_abit &lt;pml4> &lt;va></span></span>
+<span data-line><span>  # 지정 VA의 PTE에서 A/D/P/W/U bit를 한 번에 확인</span></span>
+<span data-line><span>  set $pml4 = (uint64_t *)$arg0</span></span>
+<span data-line><span>  set $va = (uint64_t)$arg1</span></span>
+<span data-line><span>  set $pte_ptr = pml4e_walk($pml4, $va, 0)</span></span>
+<span data-line><span>  if $pte_ptr != 0</span></span>
+<span data-line><span>    set $pte = *(uint64_t *)$pte_ptr</span></span>
+<span data-line><span>    printf &quot;PTE for va=0x%lx: 0x%lx\n&quot;, $va, $pte</span></span>
+<span data-line><span>    printf &quot;  P=%d W=%d U=%d A=%d D=%d\n&quot;, \</span></span>
+<span data-line><span>      $pte &amp; 1, ($pte >> 1) &amp; 1, ($pte >> 2) &amp; 1, \</span></span>
+<span data-line><span>      ($pte >> 5) &amp; 1, ($pte >> 6) &amp; 1</span></span>
+<span data-line><span>    printf &quot;  frame PA = 0x%lx\n&quot;, $pte &amp; 0xFFFFFFFFF000</span></span>
+<span data-line><span>  else</span></span>
+<span data-line><span>    printf &quot;PTE for va=0x%lx: not present\n&quot;, $va</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-1-clock-algorithm의-second">시나리오 1: clock algorithm의 second<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-1-clock-algorithm의-second" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>목표:</strong> eviction 시 A=1인 frame에 second chance가 부여되고, A=0으로 클리어된 뒤 다음 순회에서 victim으로 선택되는 과정을 관찰한다.</p>
+<p><strong>절차:</strong></p>
+<ol>
+<li>메모리를 고갈시키는 프로그램(mmap-multiple 등)을 실행하여 eviction을 유발</li>
+<li>GDB 스크립트 1, 2를 설정하고 <code>vm_frame_accessed</code> / <code>vm_frame_set_accessed</code> 호출을 추적</li>
+<li>같은 frame이 첫 순회에서 A=1 → 클리어, 두 번째 순회에서 A=0 → victim 선택되는 것을 확인</li>
+</ol>
+<p><strong>예상 결과:</strong></p>
+<pre><code>[A-bit] is_accessed: va=0x40001000 PTE=0x...67 A=1     ← 첫 순회: 접근됨
+[A-bit] clear: va=0x40001000 PTE_before=0x...67 PTE_after=0x...47 invlpg=1
+   ... (clock hand가 한 바퀴 돌고 다시 도착)
+[A-bit] is_accessed: va=0x40001000 PTE=0x...47 A=0     ← 두 번째 순회: victim
+</code></pre>
+<h3 id="시나리오-2-cow-frame의-다중-owner-a-bit-검사">시나리오 2: COW frame의 다중 owner A bit 검사<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-2-cow-frame의-다중-owner-a-bit-검사" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>목표:</strong> fork 후 COW 공유 frame은 여러 owner가 있다. 부모만 접근하고 자식은 접근하지 않았을 때, 부모의 A=1 하나만으로 frame 전체가 accessed로 판정되는 것을 확인한다.</p>
+<p><strong>절차:</strong></p>
+<ol>
+<li>fork 후 부모만 해당 페이지를 읽는 테스트 실행</li>
+<li>GDB 스크립트 3으로 owner 순회 관찰</li>
+<li>부모의 PTE는 A=1, 자식의 PTE는 A=0이지만, <code>vm_frame_accessed</code>가 true를 반환하는 것을 확인</li>
+</ol>
+<p><strong>예상 결과:</strong></p>
+<pre><code>[A-bit] owner[0] thread=main va=0x40002000 accessed=1    ← 부모: 접근됨
+[A-bit] owner[1] thread=child va=0x40002000 accessed=0   ← 자식: 미접근
+[A-bit] frame 0x...: 2 owners, accessed=1                ← 하나라도 1이면 true
+</code></pre>
+<h2 id="linux-vs-pintos-a-bit-관리-상세-비교">Linux vs PintOS A bit 관리 상세 비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-vs-pintos-a-bit-관리-상세-비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>PintOS</th></tr></thead><tbody><tr><td>A bit 검사 함수</td><td><code>ptep_test_and_clear_young()</code> (atomic test-and-clear)</td><td><code>pml4_is_accessed()</code> (읽기) + <code>pml4_set_accessed()</code> (쓰기 분리)</td></tr><tr><td>검사 주기</td><td>kswapd 주기적 스캔 (<del>100ms</del>수초, watermark 기반)</td><td>eviction 필요 시 clock hand 즉시 순회</td></tr><tr><td>클리어 방식</td><td><code>ptep_clear_flush_young()</code> — PTE 원자적 수정 + TLB flush</td><td><code>*pte &amp;= ~PTE_A</code> + <code>invlpg(vpage)</code></td></tr><tr><td>TLB 무효화</td><td>IPI로 모든 코어에 TLB shootdown (SMP)</td><td><code>invlpg</code> 단일 코어 (PintOS 단일 CPU)</td></tr><tr><td>TLB flush 조건</td><td>항상 (SMP에서 다른 코어 TLB에 stale 남을 수 있음)</td><td><code>rcr3() == vtop(pml4)</code>일 때만 (현재 프로세스인 경우)</td></tr><tr><td>COW 공유 frame</td><td>rmap으로 모든 매핑의 A bit를 개별 검사</td><td><code>frame->owners</code> 리스트 순회로 전체 검사</td></tr><tr><td>page 교체 판단</td><td>A=1 → active list 승격, A=0 → inactive → 회수 후보</td><td>A=1 → second chance (클리어 후 건너뜀), A=0 → victim</td></tr><tr><td>NUMA 활용</td><td>A bit 클리어 → fault → 노드 파악 → migration</td><td>N/A (NUMA 미지원)</td></tr><tr><td>접근 빈도 추정</td><td>generation counter (refault distance)</td><td>없음 — 단순 binary (접근/미접근)</td></tr><tr><td>대량 클리어</td><td><code>madvise(MADV_FREE)</code> / <code>mprotect</code> 기반 batch</td><td>frame_table 순회 시 개별 클리어</td></tr><tr><td>디버깅 지원</td><td><code>/proc/PID/pagemap</code>에서 A/D 확인 가능</td><td>GDB 직접 PTE 검사만 가능</td></tr><tr><td>A bit 없는 아키텍처</td><td>software bit walking (e.g., MIPS)</td><td>N/A (x86-64 전용)</td></tr></tbody></table></div>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>pintos/include/threads/pte.h:64</td><td><code>PTE_A</code></td><td>accessed bit 상수 정의</td></tr><tr><td>pintos/threads/mmu.c:320</td><td><code>pml4_is_accessed()</code></td><td>PTE에서 A bit 읽기</td></tr><tr><td>pintos/threads/mmu.c:330</td><td><code>pml4_set_accessed()</code></td><td>A bit 설정/해제 + 활성 PML4면 <code>invlpg()</code></td></tr><tr><td>pintos/threads/mmu.c:291</td><td><code>pml4_is_dirty()</code></td><td>D bit와 비교해 A bit의 역할을 구분할 때 함께 확인</td></tr><tr><td>pintos/vm/vm.c:151</td><td><code>vm_frame_accessed()</code></td><td>frame의 모든 owner에서 A bit 검사 (하나라도 1이면 true)</td></tr><tr><td>pintos/vm/vm.c:167</td><td><code>vm_frame_set_accessed()</code></td><td>frame의 모든 owner의 A bit를 일괄 설정/클리어</td></tr><tr><td>pintos/vm/vm.c:284</td><td><code>vm_get_victim()</code></td><td>clock hand가 A bit를 보고 second chance 또는 victim을 결정</td></tr><tr><td>pintos/vm/vm.c:316</td><td><code>vm_evict_frame()</code></td><td>victim 선택 뒤 type별 <code>swap_out()</code>으로 이어지는 진입점</td></tr></tbody></table></div>
+<h2 id="pte-접근-bit-점검">PTE 접근 Bit 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-접근-bit-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>A bit는 읽기와 쓰기 접근 모두에서 CPU/MMU가 1로 세우는 “최근 접근” 신호다.</li>
+<li>OS가 A bit를 0으로 내린 뒤 TLB entry를 무효화해야 다음 접근이 다시 page table walk를 거쳐 A bit를 세울 수 있다.</li>
+<li>현재 PintOS는 <code>vm_frame_accessed()</code>에서 COW owner들의 PTE를 모두 보며, 하나라도 A=1이면 frame 전체를 최근 접근된 것으로 본다.</li>
+<li><code>vm_frame_set_accessed(frame, false)</code>는 owner들의 A bit를 같이 내려 clock algorithm의 second chance를 구현한다.</li>
+<li>D bit는 쓰기 여부를 알려주는 별도 신호라서, victim 선택보다는 swap/file write-back 판단과 함께 읽는다.</li>
+</ul>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE 구조 전체</a></li>
+<li><a href="../../wiki/os/pte-dirty-bit" class="internal internal-link alias" data-slug="wiki/os/pte-dirty-bit">쓰기 접근만 추적하는 D bit</a></li>
+<li><a href="../../wiki/os/pte-present-bit" class="internal internal-link alias" data-slug="wiki/os/pte-present-bit">존재 여부 P bit</a></li>
+<li><a href="../../wiki/os/clock-algorithm-victim" class="internal internal-link alias" data-slug="wiki/os/clock-algorithm-victim">A bit를 사용하는 eviction 정책</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">eviction 전체 흐름</a></li>
+<li><a href="../../wiki/os/tlb-cache-mechanism" class="internal internal-link alias" data-slug="wiki/os/tlb-cache-mechanism">TLB와 A bit의 관계</a></li>
+<li><a href="../../wiki/os/cr3-switch-flush" class="internal internal-link alias" data-slug="wiki/os/cr3-switch-flush">CR3 전환 시 TLB flush</a></li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">D bit 기반 eviction 판단</a></li>
+<li><a href="../../wiki/os/clock-hand-victim-selection-lab" class="internal internal-link alias" data-slug="wiki/os/clock-hand-victim-selection-lab">frame owner 순회와 clock hand 관찰</a></li>
+<li><a href="../../wiki/os/guest-physical-memory-qemu-knowledge" class="internal internal-link alias" data-slug="wiki/os/guest-physical-memory-qemu-knowledge">QEMU softmmu에서 PTE 접근</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal">accessed/dirty bit로 victim 판단</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li><a href="../../wiki/os/pt-index" class="internal">PT Index — 4단계 Page Table Walk의 네 번째(마지막) 단계</a></li><li><a href="../../wiki/os/pte-dirty-bit" class="internal">PTE 더티 Bit (PTE Dirty Bit)</a></li><li><a href="../../wiki/os/x86-64-page-table-walk-knowledge" class="internal">x86-64 페이지 테이블 워크</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-601" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pte-접근-bit-pte-accessed-bit" data-for="pte-접근-bit-pte-accessed-bit">PTE 접근 Bit (PTE Accessed Bit)</a></li><li class="depth-1"><a href="#pte-접근-bit-상태" data-for="pte-접근-bit-상태">PTE 접근 Bit 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-2"><a href="#linux-vs-pintos-비교" data-for="linux-vs-pintos-비교">Linux vs PintOS 비교</a></li><li class="depth-1"><a href="#pte-접근-bit-값-추적" data-for="pte-접근-bit-값-추적">PTE 접근 Bit 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#1-pml4_is_accessed-호출-결과-추적" data-for="1-pml4_is_accessed-호출-결과-추적">1. pml4_is_accessed 호출 결과 추적</a></li><li class="depth-2"><a href="#2-pml4_set_accessedfalse--a-bit" data-for="2-pml4_set_accessedfalse--a-bit">2. pml4_set_accessed(false) — A bit</a></li><li class="depth-2"><a href="#3-vm_frame_accessed--owner-순회-중" data-for="3-vm_frame_accessed--owner-순회-중">3. vm_frame_accessed — owner 순회 중</a></li><li class="depth-2"><a href="#4-vm_frame_set_accessed--전체-owner" data-for="4-vm_frame_set_accessed--전체-owner">4. vm_frame_set_accessed — 전체 owner</a></li><li class="depth-2"><a href="#5-invlpg-실행-확인" data-for="5-invlpg-실행-확인">5. invlpg 실행 확인</a></li><li class="depth-2"><a href="#6-define-a-bit-상태-원샷-덤프" data-for="6-define-a-bit-상태-원샷-덤프">6. define: A bit 상태 원샷 덤프</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-1-clock-algorithm의-second" data-for="시나리오-1-clock-algorithm의-second">시나리오 1: clock algorithm의 second</a></li><li class="depth-2"><a href="#시나리오-2-cow-frame의-다중-owner-a-bit-검사" data-for="시나리오-2-cow-frame의-다중-owner-a-bit-검사">시나리오 2: COW frame의 다중 owner A bit 검사</a></li><li class="depth-1"><a href="#linux-vs-pintos-a-bit-관리-상세-비교" data-for="linux-vs-pintos-a-bit-관리-상세-비교">Linux vs PintOS A bit 관리 상세 비교</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#pte-접근-bit-점검" data-for="pte-접근-bit-점검">PTE 접근 Bit 점검</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

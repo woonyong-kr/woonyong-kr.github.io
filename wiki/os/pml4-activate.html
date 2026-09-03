@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>pml4_activate — CR3 전환으로 주소 공간 교체 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="pml4_activate — CR3 전환으로 주소 공간 교체 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="pml4_activate — CR3 전환으로 주소 공간 교체 · 최우녕"/><meta name="twitter:description" content="pml4activate()는 CR3에 새 PML4 물리 주소를 로드해 주소 공간을 통째로 교체하는 함수로, TLB를 자동 flush해 프로세스 간 메모리 격리를 실현한다."/><meta property="og:description" content="pml4activate()는 CR3에 새 PML4 물리 주소를 로드해 주소 공간을 통째로 교체하는 함수로, TLB를 자동 flush해 프로세스 간 메모리 격리를 실현한다."/><meta property="og:image:alt" content="pml4activate()는 CR3에 새 PML4 물리 주소를 로드해 주소 공간을 통째로 교체하는 함수로, TLB를 자동 flush해 프로세스 간 메모리 격리를 실현한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/pml4-activate"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/pml4-activate"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="pml4activate()는 CR3에 새 PML4 물리 주소를 로드해 주소 공간을 통째로 교체하는 함수로, TLB를 자동 flush해 프로세스 간 메모리 격리를 실현한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/pml4-activate" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-577" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-577" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>pml4_activate — CR3 전환으로 주소 공간 교체</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pml4_activate--cr3-전환으로-주소-공간-교체">pml4_activate — CR3 전환으로 주소 공간 교체<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_activate--cr3-전환으로-주소-공간-교체" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 CR3 전환과 TLB 처리의 일반 원리 및 구현 선택 기준을 설명하며, Linux·PintOS·QEMU의 코드 경로, 호출 위치, 버전별 동작과 실행 결과는 해당 소스와 환경에서 별도로 검증해야 한다. 제시된 주소·비용·엔트리 수와 장애 양상은 예시 또는 특정 조건의 값이므로 실제 시스템에 적용하려면 대상 버전의 코드, 실행 기록과 성능 측정으로 확인해야 한다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: pml4_activate()는 CR3에 새 PML4 물리 주소를 로드해 주소 공간을 통째로 교체하는 함수로, TLB를 자동 flush해 프로세스 간 메모리 격리를 실현한다.</p>
+</blockquote>
+<h2 id="pml4_activate-상태">pml4_activate 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_activate-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>pml4_activate()</code>는 CPU의 CR3 레지스터에 새 PML4의 물리 주소를 로드하는 함수다. CR3가 바뀌는 순간 CPU는 이전 프로세스의 가상 주소 매핑을 버리고 새 프로세스의 매핑을 사용한다. 이 단 한 줄이 <strong>프로세스 간 메모리 격리</strong>를 실현하는 핵심 동작이다. CR3 교체는 TLB(Translation Lookaside Buffer)를 자동으로 flush하여 이전 주소 변환 캐시가 새 프로세스에 영향을 주지 않도록 보장한다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-cpummu-하드웨어-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>x86-64에서 CR3는 현재 활성 PML4 테이블의 <strong>물리 주소</strong>를 담는다. <code>mov %rax, %cr3</code> 명령어를 실행하면 두 가지 일이 동시에 일어난다:</p>
+<ol>
+<li><strong>주소 변환 루트 교체</strong>: 이후 모든 메모리 접근의 page table walk가 새 PML4에서 시작된다.</li>
+<li><strong>TLB flush</strong>: CR3에 새 값을 쓰면 CPU는 기존 TLB 엔트리를 모두 무효화한다(Global bit가 설정된 엔트리 제외).</li>
+</ol>
+<p>이 동작이 특권 명령인 이유: CR3는 주소 공간 전체를 결정하므로 유저 모드에서 변경할 수 있다면 다른 프로세스의 메모리에 접근할 수 있다. 따라서 CR3 쓰기는 CPL 0(커널 모드)에서만 허용된다.</p>
+<p><strong>CR3 포맷</strong> (4-level paging, non-PCID 모드):</p>
+<ul>
+<li>bit 63:12 — PML4 물리 주소 (4 KB 정렬이므로 하위 12비트는 항상 0)</li>
+<li>bit 4 (PCD) — page-level cache disable</li>
+<li>bit 3 (PWT) — page-level write-through</li>
+</ul>
+<h3 id="실제-os-linux">실제 OS (Linux)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linux" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Linux에서 CR3 전환은 <code>switch_mm_irqs_off()</code> 함수에서 이루어진다:</p>
+<ol>
+<li><code>load_new_mm_cr3()</code> 호출 → 내부에서 <code>write_cr3()</code> 실행</li>
+<li><strong>PCID(Process Context ID)</strong> 지원 시: CR3의 하위 12비트에 PCID를 설정하고 bit 63(NOFLUSH)을 세팅하면 TLB flush를 건너뛸 수 있다. 같은 PCID의 캐시만 유효하므로 격리는 유지된다.</li>
+<li><strong>KPTI(Kernel Page Table Isolation)</strong> 활성 시: 유저 PGD와 커널 PGD가 분리되어 있으므로, 커널 진입/복귀 시에도 CR3 전환이 필요하다 (성능 비용 발생).</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux (PCID)</th><th>Linux (no PCID)</th><th>PintOS</th></tr></thead><tbody><tr><td>CR3 쓰기 시 TLB flush</td><td>선택적 (NOFLUSH bit)</td><td>전체 flush</td><td>전체 flush</td></tr><tr><td>동시 캐시 가능 ASID 수</td><td>최대 4096</td><td>1</td><td>1</td></tr><tr><td>KPTI 지원</td><td>있음</td><td>있음</td><td>없음</td></tr><tr><td>전환 비용</td><td>~100 ns (PCID hit)</td><td>~300 ns (full flush)</td><td>~300 ns (full flush)</td></tr></tbody></table></div>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong><code>pml4_activate()</code> — threads/mmu.c:221-223</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_activate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pml4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    lcr3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> base_pml4));</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>3줄이지만 분해하면:</p>
+<ol>
+<li><code>pml4 ? pml4 : base_pml4</code> — NULL이면 커널 기본 테이블(base_pml4)을 사용한다. 커널 스레드는 <code>thread->pml4 == NULL</code>이다.</li>
+<li><code>vtop(...)</code> — 커널 가상 주소를 물리 주소로 변환한다 (VA - KERN_BASE). CR3에는 반드시 물리 주소가 들어가야 한다.</li>
+<li><code>lcr3(...)</code> — 인라인 어셈블리 <code>movq %0, %%cr3</code>로 CR3를 쓴다.</li>
+</ol>
+<p><strong><code>lcr3()</code> — include/intrinsic.h:10-12</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> __inline </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> lcr3</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> val</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    __asm </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">__volatile</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;movq </span><span style="--shiki-light:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic;" data-token-type="error">%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">0, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">%%</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">cr3&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> : : </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;r&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (val));</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><strong>호출되는 3가지 시점:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>시점</th><th>호출 위치</th><th>인자</th><th>목적</th></tr></thead><tbody><tr><td>부팅</td><td><code>paging_init()</code> (init.c:199)</td><td>0 → base_pml4 사용</td><td>최초 페이지 테이블 활성화</td></tr><tr><td>컨텍스트 스위치</td><td><code>process_activate()</code> (process.c:731)</td><td><code>next->pml4</code></td><td>다음 스레드의 주소 공간으로 전환</td></tr><tr><td>프로세스 종료</td><td><code>process_cleanup()</code> (process.c:720)</td><td>NULL → base_pml4 사용</td><td>PML4 파괴 전 안전한 테이블로 복귀</td></tr></tbody></table></div>
+<p><strong><code>process_cleanup()</code>에서의 순서가 중요하다:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// userprog/process.c:719-721</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">           // (1) thread 구조체에서 PML4 제거</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_activate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">         // (2) CR3를 base_pml4로 전환</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pml4);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">          // (3) 이전 PML4와 하위 테이블 해제</span></span></code></pre></figure>
+<p>(2)를 건너뛰고 (3)을 실행하면, 현재 CPU가 사용 중인 PML4를 해제하게 된다. 이후 메모리 접근 시 해제된 페이지를 page table로 읽게 되어 <strong>정의되지 않은 동작</strong>(보통 triple fault → 리부트)이 발생한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU TCG 모드에서 <code>mov %rax, %cr3</code>를 만나면:</p>
+<ol>
+<li><strong>helper 호출</strong>: guest <code>movq</code>가 <code>helper_write_crN()</code> (target/i386/tcg/sysemu/misc_helper.c)로 디스패치된다.</li>
+<li><strong><code>env->cr[3]</code> 갱신</strong>: <code>CPUX86State.cr[3]</code>에 새 값을 저장한다.</li>
+<li><strong>SoftTLB flush</strong>: <code>tlb_flush(cs)</code> 호출 → QEMU 내부 TLB 엔트리를 모두 무효화한다.</li>
+<li><strong>TB 체인 끊기</strong>: 현재 Translation Block 실행 중단, 새 CR3 기준으로 재번역 시작.</li>
+</ol>
+<p>GDB에서 CR3 전환 관찰:</p>
+<pre><code>(gdb) watch $cr3
+(gdb) c
+# → CR3 변경 시 정지
+(gdb) p/x $cr3          # 새 PML4 물리 주소
+(gdb) x/512gx $cr3      # PML4 엔트리 전체 (QEMU monitor에서)
+</code></pre>
+<h2 id="pml4_activate-값-추적">pml4_activate 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_activate-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>비고</th></tr></thead><tbody><tr><td>CR3 레지스터 크기</td><td>64 bits</td><td>물리 주소 + 제어 비트</td></tr><tr><td>PML4 정렬</td><td>4 KB (bit 11:0 = 0)</td><td>물리 주소는 page-aligned</td></tr><tr><td>TLB flush 비용 (실제 하드웨어)</td><td>~200-400 cycles</td><td>Skylake 기준</td></tr><tr><td>TLB 엔트리 수 (L1 DTLB)</td><td>64-72</td><td>4 KB pages, Skylake</td></tr><tr><td>TLB 엔트리 수 (L2 STLB)</td><td>1536</td><td>unified, Skylake</td></tr><tr><td>Global page (TLB flush 면제)</td><td>PTE bit 8</td><td>커널 매핑에 사용 (PintOS는 미사용)</td></tr></tbody></table></div>
+<p><strong>PintOS에서의 물리 주소 계산 예시:</strong></p>
+<pre><code>base_pml4 커널 VA: 0x80_0410_5000
+vtop(base_pml4):   0x80_0410_5000 - 0x80_0400_0000 = 0x10_5000
+
+pml4_activate(NULL) → lcr3(0x10_5000)
+→ CR3 = 0x0000_0000_0010_5000
+</code></pre>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant S as schedule()\n    participant PA as process_activate()\n    participant PML4 as pml4_activate()\n    participant CPU as CPU (CR3/TLB)\n\n    S->>PA: next thread 전달\n    PA->>PML4: pml4_activate(next->pml4)\n\n    alt next->pml4 != NULL (유저 프로세스)\n        PML4->>PML4: vtop(next->pml4)&lt;br/>커널VA → 물리주소\n    else next->pml4 == NULL (커널 스레드)\n        PML4->>PML4: vtop(base_pml4)&lt;br/>기본 테이블 사용\n    end\n\n    PML4->>CPU: lcr3(물리주소)&lt;br/>movq %rax, %cr3\n    CPU->>CPU: CR3 갱신\n    CPU->>CPU: TLB 전체 flush\n    Note over CPU: 이후 모든 VA→PA 변환이&lt;br/>새 PML4 기준으로 동작\n\n    PA->>PA: tss_update(next)&lt;br/>rsp0 갱신&quot;">sequenceDiagram
+    participant S as schedule()
+    participant PA as process_activate()
+    participant PML4 as pml4_activate()
+    participant CPU as CPU (CR3/TLB)
+
+    S->>PA: next thread 전달
+    PA->>PML4: pml4_activate(next->pml4)
+
+    alt next->pml4 != NULL (유저 프로세스)
+        PML4->>PML4: vtop(next->pml4)&lt;br/>커널VA → 물리주소
+    else next->pml4 == NULL (커널 스레드)
+        PML4->>PML4: vtop(base_pml4)&lt;br/>기본 테이블 사용
+    end
+
+    PML4->>CPU: lcr3(물리주소)&lt;br/>movq %rax, %cr3
+    CPU->>CPU: CR3 갱신
+    CPU->>CPU: TLB 전체 flush
+    Note over CPU: 이후 모든 VA→PA 변환이&lt;br/>새 PML4 기준으로 동작
+
+    PA->>PA: tss_update(next)&lt;br/>rsp0 갱신
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;graph TD\n    subgraph \&quot;process_cleanup 순서 (안전한 파괴)\&quot;\n        C1[\&quot;curr->pml4 = NULL\&quot;] --> C2[\&quot;pml4_activate(NULL)&lt;br/>CR3 → base_pml4\&quot;]\n        C2 --> C3[\&quot;pml4_destroy(pml4)&lt;br/>유저 테이블 해제\&quot;]\n    end\n\n    subgraph \&quot;만약 순서를 어기면\&quot;\n        D1[\&quot;pml4_destroy(pml4) 먼저\&quot;] --> D2[\&quot;CR3가 해제된 PML4 가리킴\&quot;]\n        D2 --> D3[\&quot;다음 메모리 접근 → #PF or triple fault\&quot;]\n    end&quot;">graph TD
+    subgraph &quot;process_cleanup 순서 (안전한 파괴)&quot;
+        C1[&quot;curr->pml4 = NULL&quot;] --> C2[&quot;pml4_activate(NULL)&lt;br/>CR3 → base_pml4&quot;]
+        C2 --> C3[&quot;pml4_destroy(pml4)&lt;br/>유저 테이블 해제&quot;]
+    end
+
+    subgraph &quot;만약 순서를 어기면&quot;
+        D1[&quot;pml4_destroy(pml4) 먼저&quot;] --> D2[&quot;CR3가 해제된 PML4 가리킴&quot;]
+        D2 --> D3[&quot;다음 메모리 접근 → #PF or triple fault&quot;]
+    end
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄 번호</th><th>역할</th></tr></thead><tbody><tr><td>threads/mmu.c</td><td>pml4_activate()</td><td>L221-223</td><td>CR3에 PML4 물리 주소 로드</td></tr><tr><td>include/intrinsic.h</td><td>lcr3()</td><td>L10-12</td><td><code>movq %0, %%cr3</code> 인라인 어셈블리</td></tr><tr><td>threads/init.c</td><td>paging_init()</td><td>L199</td><td>부팅 시 최초 pml4_activate(0) 호출</td></tr><tr><td>userprog/process.c</td><td>process_activate()</td><td>L730-733</td><td>컨텍스트 스위치 시 PML4 + TSS 전환</td></tr><tr><td>userprog/process.c</td><td>process_cleanup()</td><td>L719-721</td><td>종료 시 NULL 전환 후 PML4 파괴</td></tr><tr><td>threads/mmu.c</td><td>base_pml4 (전역)</td><td>초기화: init.c:177</td><td>커널 기본 PML4, NULL 인자 시 사용</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/pml4-create-setup-knowledge" class="internal internal-link alias" data-slug="wiki/os/pml4-create-setup-knowledge">PML4 생성과 커널 영역 복사</a></li>
+<li><a href="../../wiki/os/cr3-page-table-root" class="internal internal-link alias" data-slug="wiki/os/cr3-page-table-root">CR3</a></li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB와 CR3 주소 공간 전환</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/process-activate-tss" class="internal internal-link alias" data-slug="wiki/os/process-activate-tss">process activate()</a></li>
+<li><a href="../../wiki/os/process-exit-cleanup" class="internal internal-link alias" data-slug="wiki/os/process-exit-cleanup">process cleanup()</a></li>
+<li><a href="../../wiki/os/virtual-address-space" class="internal internal-link alias" data-slug="wiki/os/virtual-address-space">가상 주소 공간</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/fetch-decode-execute" class="internal">fetch → decode → execute</a></li><li><a href="../../wiki/os/process-exit-cleanup" class="internal">프로세스 종료 자원 회수</a></li><li><a href="../../wiki/os/virtual-address-space" class="internal">가상 주소 공간 (Virtual Address Space)</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-575" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pml4_activate--cr3-전환으로-주소-공간-교체" data-for="pml4_activate--cr3-전환으로-주소-공간-교체">pml4_activate — CR3 전환으로 주소 공간 교체</a></li><li class="depth-1"><a href="#pml4_activate-상태" data-for="pml4_activate-상태">pml4_activate 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-cpummu-하드웨어-규칙" data-for="추상-개념-cpummu-하드웨어-규칙">추상 개념 (CPU/MMU 하드웨어 규칙)</a></li><li class="depth-2"><a href="#실제-os-linux" data-for="실제-os-linux">실제 OS (Linux)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#pml4_activate-값-추적" data-for="pml4_activate-값-추적">pml4_activate 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

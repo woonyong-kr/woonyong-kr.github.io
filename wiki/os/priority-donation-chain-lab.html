@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기 · 최우녕"/><meta name="twitter:description" content="nested priority donation은 waitinglock 포인터를 따라 holder의 holder까지 우선순위를 전파하는 문제로, priority-donate-chain 테스트는 main priority가 0→3→6→…→21로 올라가 가장 아래 holder가 먼저 실행되고 lock 0이 풀리기를 기대한다."/><meta property="og:description" content="nested priority donation은 waitinglock 포인터를 따라 holder의 holder까지 우선순위를 전파하는 문제로, priority-donate-chain 테스트는 main priority가 0→3→6→…→21로 올라가 가장 아래 holder가 먼저 실행되고 lock 0이 풀리기를 기대한다."/><meta property="og:image:alt" content="nested priority donation은 waitinglock 포인터를 따라 holder의 holder까지 우선순위를 전파하는 문제로, priority-donate-chain 테스트는 main priority가 0→3→6→…→21로 올라가 가장 아래 holder가 먼저 실행되고 lock 0이 풀리기를 기대한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/priority-donation-chain-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/priority-donation-chain-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="nested priority donation은 waitinglock 포인터를 따라 holder의 holder까지 우선순위를 전파하는 문제로, priority-donate-chain 테스트는 main priority가 0→3→6→…→21로 올라가 가장 아래 holder가 먼저 실행되고 lock 0이 풀리기를 기대한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/priority-donation-chain-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-585" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-585" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="priority-donation-chain-실험-높은-우선순위가-lock-줄을-타고-전파되는지-보기">Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-실험-높은-우선순위가-lock-줄을-타고-전파되는지-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: nested priority donation은 <code>waiting_lock</code> 포인터를 따라 holder의 holder까지 우선순위를 전파하는 문제로, <code>priority-donate-chain</code> 테스트는 main priority가 <code>0→3→6→…→21</code>로 올라가 가장 아래 holder가 먼저 실행되고 lock 0이 풀리기를 기대한다.</p>
+</blockquote>
+<h2 id="그런데-holder도-다른-lock을-기다리고-있다면-어떻게-될까">그런데 holder도 다른 lock을 기다리고 있다면 어떻게 될까<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#그런데-holder도-다른-lock을-기다리고-있다면-어떻게-될까" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>높은 우선순위 스레드가 lock 하나를 기다리면 holder에게 우선순위를 기부한다.</p>
+<p>그런데 holder도 다른 lock을 기다리고 있다면 어떻게 될까?</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread 7 -> lock 6 기다림</span></span>
+<span data-line><span>thread 6 -> lock 5 기다림</span></span>
+<span data-line><span>thread 5 -> lock 4 기다림</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>thread 1 -> lock 0 기다림</span></span>
+<span data-line><span>main     -> lock 0 보유</span></span></code></pre></figure>
+<p>이 상황에서는 thread 7의 높은 우선순위가 thread 6에서 멈추면 안 된다. thread 6이 기다리는 thread 5, 다시 thread 4, 결국 main까지 전파되어야 lock 0이 빨리 풀린다.</p>
+<p>이 실험의 질문은 이것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>priority donation은 한 단계에서 끝나는가,</span></span>
+<span data-line><span>아니면 waiting_lock을 따라 여러 holder에게 전파되는가?</span></span></code></pre></figure>
+<h2 id="priority-donation-chain-필요성">Priority Donation Chain 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>priority inversion은 lock 하나에서만 생기지 않는다. 실제 커널 코드에서는 lock을 잡은 스레드가 또 다른 lock이나 이벤트를 기다리는 일이 생긴다.</p>
+<p>이때 donation이 한 단계에서 끊기면 높은 우선순위 작업은 여전히 낮은 우선순위 chain 뒤에 막힌다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>H priority = 21</span></span>
+<span data-line><span>T6 priority = 18, lock 6 보유, lock 5 대기</span></span>
+<span data-line><span>T5 priority = 15, lock 5 보유, lock 4 대기</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>main priority = 0, lock 0 보유</span></span></code></pre></figure>
+<p>H가 T6에게만 기부하고 끝나면, main은 여전히 priority 0이다. main이 실행되지 않으면 lock 0은 풀리지 않고, 전체 chain은 앞으로 가지 못한다.</p>
+<p>이 말은 즉, nested donation은 “가장 급한 스레드가 실제로 막혀 있는 가장 아래 holder를 빨리 실행시키는 장치”다.</p>
+<h2 id="priority-donation-chain-흐름">Priority Donation Chain 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Priority donation chain은 <code>waiting_lock</code> 포인터를 따라간다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>donor = current thread</span></span>
+<span data-line><span>holder = lock->holder</span></span>
+<span data-line> </span>
+<span data-line><span>holder.priority = max(holder.priority, donor.priority)</span></span>
+<span data-line> </span>
+<span data-line><span>while holder.waiting_lock != NULL:</span></span>
+<span data-line><span>  next_holder = holder.waiting_lock->holder</span></span>
+<span data-line><span>  next_holder.priority = max(next_holder.priority, donor.priority)</span></span>
+<span data-line><span>  holder = next_holder</span></span></code></pre></figure>
+<p>PintOS 구조체로 번역하면 이렇게 된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th>질문</th><th>의미</th></tr></thead><tbody><tr><td><code>thread.priority</code></td><td>스케줄러가 지금 보는 값은?</td><td>effective priority</td></tr><tr><td><code>thread.base_priority</code></td><td>원래 우선순위는?</td><td>donation 제거 뒤 돌아갈 값</td></tr><tr><td><code>thread.waiting_lock</code></td><td>이 스레드는 무엇을 기다리는가?</td><td>donation을 위로 전파할 다음 lock</td></tr><tr><td><code>thread.donation_list</code></td><td>누가 나에게 기부했는가?</td><td>release 때 제거할 donor 목록</td></tr><tr><td><code>thread.donation_elem</code></td><td>donor가 holder list에 들어갈 때 쓰는 주소는?</td><td>intrusive list node</td></tr></tbody></table></div>
+<h2 id="priority-donation-chain-사례">Priority Donation Chain 사례<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-사례" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS 테스트 <code>priority-donate-chain.c</code>는 숫자를 작게 만들어 chain을 보여준다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>NESTING_DEPTH = 8</span></span>
+<span data-line> </span>
+<span data-line><span>main priority = PRI_MIN = 0</span></span>
+<span data-line><span>thread 1 priority = 3</span></span>
+<span data-line><span>thread 2 priority = 6</span></span>
+<span data-line><span>thread 3 priority = 9</span></span>
+<span data-line><span>thread 4 priority = 12</span></span>
+<span data-line><span>thread 5 priority = 15</span></span>
+<span data-line><span>thread 6 priority = 18</span></span>
+<span data-line><span>thread 7 priority = 21</span></span></code></pre></figure>
+<p>각 thread는 자기 lock을 먼저 잡고, 그 다음 바로 앞 thread가 들고 있는 lock을 얻으려 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main holds lock 0</span></span>
+<span data-line><span>thread 1 holds lock 1, waits lock 0</span></span>
+<span data-line><span>thread 2 holds lock 2, waits lock 1</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>thread 6 holds lock 6, waits lock 5</span></span>
+<span data-line><span>thread 7 waits lock 6</span></span></code></pre></figure>
+<p>정상이라면 thread 7이 만들어진 뒤 main의 effective priority는 <code>21</code>까지 올라간다.</p>
+<p>테스트가 기대하는 핵심 관찰은 다음이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main should have priority 3.  Actual priority: 3.</span></span>
+<span data-line><span>main should have priority 6.  Actual priority: 6.</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>main should have priority 21. Actual priority: 21.</span></span></code></pre></figure>
+<h2 id="꼬리-질문">꼬리 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#꼬리-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>왜 필요한가?
+<ul>
+<li>높은 우선순위 thread가 lock chain의 맨 아래 holder 때문에 막힐 수 있기 때문이다.</li>
+</ul>
+</li>
+<li>실제 OS는 어떻게 하나?
+<ul>
+<li>priority inheritance가 필요한 동기화 객체에서 wait chain, scheduler class, realtime 정책을 함께 다룬다.</li>
+</ul>
+</li>
+<li>PintOS는 어디서 단순화했나?
+<ul>
+<li><code>struct thread</code>에 <code>waiting_lock</code>과 <code>donation_list</code>를 직접 넣고, 과제 테스트 깊이에 맞춘 작은 chain을 본다.</li>
+</ul>
+</li>
+<li>QEMU는 무엇을 흉내 내나?
+<ul>
+<li>donation 의미가 아니라 guest CPU 실행, guest memory, interrupt, GDB 관찰 경로를 흉내 낸다.</li>
+</ul>
+</li>
+<li>숫자를 넣으면 무엇이 계산되나?
+<ul>
+<li><code>0 -> 3 -> 6 -> ... -> 21</code>처럼 holder의 effective priority가 올라간다.</li>
+</ul>
+</li>
+<li>GDB로 어디를 보면 확인되나?
+<ul>
+<li><code>lock_acquire()</code>, <code>refresh_priority()</code>, <code>lock_release()</code>에서 <code>priority</code>, <code>waiting_lock</code>, <code>donation_elem</code> 주소를 본다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>실제 OS에도 priority inversion 문제는 있다. 다만 모든 lock을 PintOS처럼 단순한 <code>donation_list</code>로 처리한다고 보면 안 된다.</p>
+<p>Linux는 realtime mutex나 priority inheritance futex 같은 경로에서 priority inheritance를 다룬다. 일반 mutex, spinlock, scheduler class, CPU별 run queue, preemption model이 모두 얽히므로 “항상 PintOS식 donation이 일어난다”라고 단정하면 안 된다.</p>
+<p>Windows도 thread priority, wait object, dispatcher, priority boost 같은 정책이 함께 작동한다. handle/object 모델과 scheduler 정책이 분리되어 있고, SMP 환경에서 여러 CPU가 동시에 실행된다.</p>
+<p>현실 OS의 핵심은 이것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>높은 우선순위 작업이 어떤 wait chain에 막혀 있는지 추적하고,</span></span>
+<span data-line><span>그 chain을 풀 수 있는 실행 주체에게 scheduler 상 이점을 줄 수 있어야 한다.</span></span></code></pre></figure>
+<p>PintOS는 이 큰 문제를 lock, semaphore, list, priority 숫자만으로 관찰 가능하게 줄인다.</p>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이 저장소의 donation chain은 다음 파일에서 확인한다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code>
+<ul>
+<li><code>struct thread</code></li>
+<li><code>priority</code></li>
+<li><code>base_priority</code></li>
+<li><code>donation_list</code></li>
+<li><code>donation_elem</code></li>
+<li><code>waiting_lock</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/threads/synch.c</code>
+<ul>
+<li><code>lock_acquire()</code></li>
+<li><code>lock_release()</code></li>
+<li><code>sema_down()</code></li>
+<li><code>sema_up()</code></li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/threads/thread.c</code>
+<ul>
+<li><code>refresh_priority()</code></li>
+<li><code>check_preemption()</code></li>
+<li><code>thread_priority()</code></li>
+</ul>
+</li>
+</ul>
+<p><code>lock_acquire()</code>에서 holder가 있으면 현재 스레드는 holder의 <code>donation_list</code>에 들어간다. 그 다음 현재 스레드가 기다리는 lock을 <code>waiting_lock</code>에 기록한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">holder</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">donation_list</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">donation_elem</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">                    thread_priority_donation_elem, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">waiting_lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock;</span></span></code></pre></figure>
+<p>chain 전파는 holder가 또 다른 lock을 기다리는지 보는 방식이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>holder = lock->holder</span></span>
+<span data-line><span>while holder->waiting_lock != NULL:</span></span>
+<span data-line><span>  holder = holder->waiting_lock->holder</span></span>
+<span data-line><span>  holder->priority = curr->priority</span></span></code></pre></figure>
+<p>이 코드베이스는 <code>while (idx &lt; 7)</code>로 최대 7단계까지 따라간다. 이것은 범용 OS 설계라기보다 PintOS <code>priority-donate-chain</code> 테스트가 만드는 깊이에 맞춘 교육용 구현으로 읽어야 한다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 priority donation을 이해하지 않는다.</p>
+<p>QEMU 입장에서는 다음만 보인다.</p>
+<ul>
+<li>guest CPU가 PintOS 커널 코드를 실행한다.</li>
+<li>guest memory 안의 <code>struct thread</code> 필드 바이트가 바뀐다.</li>
+<li><code>thread_yield()</code>나 <code>schedule()</code>이 실행되면 guest register와 guest stack 흐름이 바뀐다.</li>
+<li>GDB stub이 guest register와 guest memory를 GDB에 보여준다.</li>
+</ul>
+<p>확인할 QEMU 경계:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/gdbstub.c" class="external external-link">target/i386/gdbstub.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>x86_cpu_gdb_read_register()</code>가 <code>env->regs[...]</code>, <code>env->eip</code>, <code>env->eflags</code> 같은 guest CPU state를 읽는다.</li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/hw/intc/apic.c" class="external external-link">hw/intc/apic.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>cpu_interrupt(..., CPU_INTERRUPT_HARD)</code>가 guest CPU에 interrupt pending 상태를 전달하는 경로에 나온다.</li>
+</ul>
+</li>
+</ul>
+<p>따라서 GDB에서 <code>thread_current()->priority</code>를 볼 수 있는 이유는 QEMU가 PintOS scheduler를 해석해서가 아니다. QEMU가 guest memory를 읽을 수 있게 해 주기 때문이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>구분</th><th>nested priority inversion을 보는 관점</th><th>주의할 점</th></tr></thead><tbody><tr><td>Linux / Windows</td><td>wait chain과 scheduler 정책이 실제 커널 객체에 얽힘</td><td>PintOS처럼 단일 list와 숫자만으로 설명하면 부족</td></tr><tr><td>PintOS</td><td><code>waiting_lock</code>을 따라 holder priority를 전파</td><td>교육용 단순화이며 chain 깊이도 코드로 제한될 수 있음</td></tr><tr><td>QEMU</td><td>guest CPU와 guest memory를 실행/관찰</td><td>donation 의미를 처리하지 않음</td></tr></tbody></table></div>
+<h2 id="priority-donation-chain-코드">Priority Donation Chain 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-테스트가-만드는-chain">1. 테스트가 만드는 chain<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-테스트가-만드는-chain" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS 테스트:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/tests/threads/priority-donate-chain.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/tests/threads/priority-donate-chain.ck</code></li>
+</ul>
+<p>테스트는 <code>NESTING_DEPTH = 8</code>로 두고, main과 thread 1..7이 lock chain을 만든다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread i priority = PRI_MIN + i * 3</span></span>
+<span data-line><span>interloper i priority = thread i priority - 1</span></span></code></pre></figure>
+<p>interloper는 lock chain과 무관한 중간 우선순위 스레드다. donation이 제대로 전파되면 interloper는 해당 donor thread가 끝나기 전까지 끼어들지 못한다.</p>
+<h3 id="2-donation-저장-필드">2. donation 저장 필드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-donation-저장-필드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/thread.h</code></li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> priority;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">int</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> base_priority;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list donation_list;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem donation_elem;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lock </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">waiting_lock;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem elem;</span></span></code></pre></figure>
+<p>여기서 <code>elem</code>과 <code>donation_elem</code>을 구분해야 한다.</p>
+<ul>
+<li><code>elem</code>: <code>ready_list</code> 또는 semaphore waiters에 들어갈 때 사용</li>
+<li><code>donation_elem</code>: 다른 스레드의 <code>donation_list</code>에 들어갈 때 사용</li>
+</ul>
+<p>이 구분은 <a href="../../wiki/os/pintos-intrusive-list-lab" class="internal internal-link" data-slug="wiki/os/pintos-intrusive-list-lab">PintOS intrusive list 실험: <code>list elem</code> 주소에서 <code>struct thread</code> 복원하기</a>의 핵심이다. intrusive list는 노드를 구조체 밖에 따로 만들지 않기 때문에, 어떤 리스트에 어떤 <code>list_elem</code> 필드를 넣었는지가 곧 자료구조의 의미가 된다.</p>
+<h3 id="3-donation-전파">3. donation 전파<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-donation-전파" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/synch.c</code></li>
+</ul>
+<p><code>lock_acquire()</code>의 중요한 흐름은 다음 세 줄이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>holder->donation_list에 curr->donation_elem 삽입</span></span>
+<span data-line><span>curr->waiting_lock = lock</span></span>
+<span data-line><span>holder chain을 따라 curr->priority를 전파</span></span></code></pre></figure>
+<p>여기서 <code>curr</code>는 “지금 lock을 얻지 못해서 막히려는 donor”다.</p>
+<h3 id="4-lock-release-후-priority-회복">4. lock release 후 priority 회복<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-lock-release-후-priority-회복" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/synch.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/threads/thread.c</code></li>
+</ul>
+<p><code>lock_release()</code>는 현재 lock 때문에 들어온 donor만 제거한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>for donor in current.donation_list:</span></span>
+<span data-line><span>  if donor.waiting_lock == lock:</span></span>
+<span data-line><span>    remove donor.donation_elem</span></span>
+<span data-line><span>refresh_priority(current)</span></span></code></pre></figure>
+<p>그 뒤 <code>refresh_priority()</code>는 현재 thread의 effective priority를 다시 계산한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>priority = base_priority</span></span>
+<span data-line><span>if donation_list not empty:</span></span>
+<span data-line><span>  priority = max(priority, highest donor priority)</span></span></code></pre></figure>
+<p>이 말은 즉, lock 하나를 풀었다고 모든 donation을 지우면 안 된다. 다른 lock 때문에 아직 남아 있는 donor가 있으면 그 priority는 유지되어야 한다.</p>
+<h2 id="priority-donation-chain-값-추적">Priority Donation Chain 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-priority-숫자-변화">1. priority 숫자 변화<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-priority-숫자-변화" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>priority-donate-chain</code>의 main thread는 처음에 priority 0으로 낮아진다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main.base_priority = 0</span></span>
+<span data-line><span>main.priority      = 0</span></span></code></pre></figure>
+<p>thread가 하나씩 만들어지며 chain이 길어지면 main의 effective priority는 이렇게 바뀐다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>thread 1 priority = 3   -> main.priority = 3</span></span>
+<span data-line><span>thread 2 priority = 6   -> main.priority = 6</span></span>
+<span data-line><span>thread 3 priority = 9   -> main.priority = 9</span></span>
+<span data-line><span>thread 4 priority = 12  -> main.priority = 12</span></span>
+<span data-line><span>thread 5 priority = 15  -> main.priority = 15</span></span>
+<span data-line><span>thread 6 priority = 18  -> main.priority = 18</span></span>
+<span data-line><span>thread 7 priority = 21  -> main.priority = 21</span></span></code></pre></figure>
+<p>중간에 <code>interloper 6</code>의 priority가 17이어도 main이 18 또는 21로 올라가 있으면 interloper가 먼저 실행될 수 없다.</p>
+<h3 id="2-struct-thread-안의-주소-계산">2. <code>struct thread</code> 안의 주소 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-struct-thread-안의-주소-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 저장소의 <code>struct thread</code> 앞부분은 64비트 환경에서 다음 크기 감각으로 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct list_elem = prev 8B + next 8B = 16B</span></span>
+<span data-line><span>struct list      = head 16B + tail 16B = 32B</span></span></code></pre></figure>
+<p><code>struct thread</code> 앞부분 offset은 다음처럼 계산된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>필드</th><th style="text-align:right;">offset</th></tr></thead><tbody><tr><td><code>tid</code></td><td style="text-align:right;"><code>0x00</code></td></tr><tr><td><code>status</code></td><td style="text-align:right;"><code>0x04</code></td></tr><tr><td><code>priority</code></td><td style="text-align:right;"><code>0x08</code></td></tr><tr><td><code>base_priority</code></td><td style="text-align:right;"><code>0x0c</code></td></tr><tr><td><code>wake_tick</code></td><td style="text-align:right;"><code>0x10</code></td></tr><tr><td><code>name</code></td><td style="text-align:right;"><code>0x18</code></td></tr><tr><td><code>donation_list</code></td><td style="text-align:right;"><code>0x28</code></td></tr><tr><td><code>donation_elem</code></td><td style="text-align:right;"><code>0x48</code></td></tr><tr><td><code>waiting_lock</code></td><td style="text-align:right;"><code>0x58</code></td></tr><tr><td><code>elem</code></td><td style="text-align:right;"><code>0x60</code></td></tr></tbody></table></div>
+<p>예를 들어 thread 7의 <code>struct thread *</code>가 <code>0x80005000</code>이라고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>&amp;thread7->donation_elem = 0x80005000 + 0x48 = 0x80005048</span></span>
+<span data-line><span>&amp;thread7->elem          = 0x80005000 + 0x60 = 0x80005060</span></span></code></pre></figure>
+<p>holder의 <code>donation_list</code>에 들어가는 것은 <code>0x80005000</code>이 아니라 <code>0x80005048</code>이다. semaphore waiters나 ready list에 들어가는 것은 <code>0x80005060</code>이다.</p>
+<p>이 차이가 보이면 GDB에서 list를 볼 때 “이 원소가 donor list의 원소인가, ready/waiter list의 원소인가”를 구분할 수 있다.</p>
+<h3 id="3-list_entry가-되돌리는-주소">3. <code>list_entry()</code>가 되돌리는 주소<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-list_entry가-되돌리는-주소" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>list_entry(e, struct thread, donation_elem)</code>는 <code>e</code>에서 thread 시작 주소를 복원한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>e = &amp;thread7->donation_elem = 0x80005048</span></span>
+<span data-line><span>&amp;e->next = 0x80005050</span></span>
+<span data-line><span>offsetof(struct thread, donation_elem.next) = 0x50</span></span>
+<span data-line> </span>
+<span data-line><span>thread7 = 0x80005050 - 0x50 = 0x80005000</span></span></code></pre></figure>
+<p>같은 thread라도 <code>elem</code> 기준으로 복원할 때는 offset이 다르다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>e = &amp;thread7->elem = 0x80005060</span></span>
+<span data-line><span>&amp;e->next = 0x80005068</span></span>
+<span data-line><span>offsetof(struct thread, elem.next) = 0x68</span></span>
+<span data-line> </span>
+<span data-line><span>thread7 = 0x80005068 - 0x68 = 0x80005000</span></span></code></pre></figure>
+<h2 id="priority-donation-chain-gdb">Priority Donation Chain GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-테스트-출력으로-확인">1. 테스트 출력으로 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-테스트-출력으로-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>Threads 빌드 디렉터리에서 donation chain 테스트를 실행하면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="sh" data-theme="github-light github-dark"><code data-language="sh" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="function">cd</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> SW_AI-W11-pintos/pintos/threads</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">make</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> check</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> TESTS=priority-donate-chain</span></span></code></pre></figure>
+<p>확인할 줄은 main의 priority가 단계적으로 올라가는 부분이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>main should have priority 3.  Actual priority: 3.</span></span>
+<span data-line><span>main should have priority 6.  Actual priority: 6.</span></span>
+<span data-line><span>...</span></span>
+<span data-line><span>main should have priority 21. Actual priority: 21.</span></span></code></pre></figure>
+<p>현재 자동화에서는 PintOS 코드 디렉터리에 빌드 산출물을 쓰지 않기 위해 이 테스트를 직접 실행하지 않았다. 대신 테스트 소스와 기대 출력 파일을 근거로 삼았다.</p>
+<h3 id="2-gdb에서-donation이-들어가는-순간-보기">2. GDB에서 donation이 들어가는 순간 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-gdb에서-donation이-들어가는-순간-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>lock_acquire()</code>에서 holder가 있는 경우를 잡는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b lock_acquire</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  if lock->holder != 0</span></span>
+<span data-line><span>    printf &quot;donor=%s donor_pri=%d holder=%s holder_pri=%d\n&quot;, thread_current()->name, thread_current()->priority, lock->holder->name, lock->holder->priority</span></span>
+<span data-line><span>    p/x lock</span></span>
+<span data-line><span>    p/x lock->holder</span></span>
+<span data-line><span>    p/x thread_current()->waiting_lock</span></span>
+<span data-line><span>    p/x &amp;thread_current()->donation_elem</span></span>
+<span data-line><span>  end</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>멈춘 순간에는 <code>curr->waiting_lock</code>이 아직 설정되기 전일 수 있다. 한두 줄 진행한 뒤 다시 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>n</span></span>
+<span data-line><span>n</span></span>
+<span data-line><span>p/x thread_current()->waiting_lock</span></span>
+<span data-line><span>p/x lock->holder->donation_list</span></span></code></pre></figure>
+<h3 id="3-chain을-따라가기">3. chain을 따라가기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-chain을-따라가기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>holder가 다시 다른 lock을 기다리는지 본다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p lock->holder->name</span></span>
+<span data-line><span>p lock->holder->priority</span></span>
+<span data-line><span>p/x lock->holder->waiting_lock</span></span>
+<span data-line><span>p lock->holder->waiting_lock ? lock->holder->waiting_lock->holder->name : 0</span></span>
+<span data-line><span>p lock->holder->waiting_lock ? lock->holder->waiting_lock->holder->priority : 0</span></span></code></pre></figure>
+<p>이 값이 이어져 있으면 donation은 한 단계가 아니라 wait chain을 따라 전파되어야 한다.</p>
+<h3 id="4-offset을-직접-확인하기">4. offset을 직접 확인하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-offset을-직접-확인하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>GDB에서 실제 offset이 문서 계산과 맞는지 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x (size_t) &amp;((struct thread *)0)->priority</span></span>
+<span data-line><span>p/x (size_t) &amp;((struct thread *)0)->base_priority</span></span>
+<span data-line><span>p/x (size_t) &amp;((struct thread *)0)->donation_elem</span></span>
+<span data-line><span>p/x (size_t) &amp;((struct thread *)0)->donation_elem.next</span></span>
+<span data-line><span>p/x (size_t) &amp;((struct thread *)0)->elem</span></span>
+<span data-line><span>p/x (size_t) &amp;((struct thread *)0)->elem.next</span></span></code></pre></figure>
+<p>기대 감각:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>priority           -> 0x08</span></span>
+<span data-line><span>base_priority      -> 0x0c</span></span>
+<span data-line><span>donation_elem      -> 0x48</span></span>
+<span data-line><span>donation_elem.next -> 0x50</span></span>
+<span data-line><span>elem               -> 0x60</span></span>
+<span data-line><span>elem.next          -> 0x68</span></span></code></pre></figure>
+<h3 id="5-release-뒤-priority가-내려가는지-보기">5. release 뒤 priority가 내려가는지 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-release-뒤-priority가-내려가는지-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>lock_release()</code>에서 donation 제거와 <code>refresh_priority()</code> 이후 값을 비교한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b lock_release</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;release holder=%s base=%d effective=%d lock=%p\n&quot;, thread_current()->name, thread_current()->base_priority, thread_current()->priority, lock</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>좀 더 세밀하게 보려면 <code>refresh_priority()</code>에 멈춘다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b refresh_priority</span></span>
+<span data-line><span>commands</span></span>
+<span data-line><span>  silent</span></span>
+<span data-line><span>  printf &quot;refresh %s base=%d before=%d donations_empty=%d\n&quot;, t->name, t->base_priority, t->priority, list_empty(&amp;t->donation_list)</span></span>
+<span data-line><span>  continue</span></span>
+<span data-line><span>end</span></span></code></pre></figure>
+<p>확인해야 할 결론은 “release한 lock 때문에 들어온 donation만 제거되고, 남은 donation이 있으면 effective priority가 그만큼 유지된다”는 것이다.</p>
+<h2 id="순서도-donation-chain-전파-흐름">순서도: Donation Chain 전파 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도-donation-chain-전파-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;sequenceDiagram\n    participant T7 as thread 7 (pri=21)\n    participant T6 as thread 6 (pri=18)\n    participant T5 as thread 5 (pri=15)\n    participant M as main (pri=0)\n    participant RL as ready_list\n\n    Note over M: main holds lock[0], base_priority=0\n    Note over T5: holds lock[5], waits lock[4]...\n    Note over T6: holds lock[6], waits lock[5]\n\n    T7->>T6: lock_acquire(lock[6]) → holder=T6\n    T7->>T6: donation_list에 T7 삽입\n    T7->>T7: waiting_lock = lock[6]\n    Note over T7,T6: T6.priority = max(18, 21) = 21\n\n    T7->>T5: chain: T6.waiting_lock→lock[5]→holder=T5\n    Note over T5: T5.priority = max(15, 21) = 21\n\n    T7->>M: chain 끝: ...→lock[0]→holder=main\n    Note over M: main.priority = max(0, 21) = 21\n\n    T7->>T7: sema_down(lock[6].semaphore) → BLOCKED\n\n    Note over M: main이 effective priority 21로 실행\n    M->>M: lock_release(lock[0])\n    M->>M: donation_list에서 lock[0] donor 제거\n    M->>M: refresh_priority() → priority = base(0)\n    M->>RL: check_preemption() → yield&quot;">sequenceDiagram
+    participant T7 as thread 7 (pri=21)
+    participant T6 as thread 6 (pri=18)
+    participant T5 as thread 5 (pri=15)
+    participant M as main (pri=0)
+    participant RL as ready_list
+
+    Note over M: main holds lock[0], base_priority=0
+    Note over T5: holds lock[5], waits lock[4]...
+    Note over T6: holds lock[6], waits lock[5]
+
+    T7->>T6: lock_acquire(lock[6]) → holder=T6
+    T7->>T6: donation_list에 T7 삽입
+    T7->>T7: waiting_lock = lock[6]
+    Note over T7,T6: T6.priority = max(18, 21) = 21
+
+    T7->>T5: chain: T6.waiting_lock→lock[5]→holder=T5
+    Note over T5: T5.priority = max(15, 21) = 21
+
+    T7->>M: chain 끝: ...→lock[0]→holder=main
+    Note over M: main.priority = max(0, 21) = 21
+
+    T7->>T7: sema_down(lock[6].semaphore) → BLOCKED
+
+    Note over M: main이 effective priority 21로 실행
+    M->>M: lock_release(lock[0])
+    M->>M: donation_list에서 lock[0] donor 제거
+    M->>M: refresh_priority() → priority = base(0)
+    M->>RL: check_preemption() → yield
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[lock_acquire 진입] --> B{lock->holder 존재?}\n    B -- No --> C[sema_down으로 바로 획득]\n    B -- Yes --> D[holder->donation_list에 curr 삽입]\n    D --> E[curr->waiting_lock = lock]\n    E --> F[holder = lock->holder]\n    F --> G{holder->waiting_lock != NULL?}\n    G -- Yes --> H[holder = waiting_lock->holder]\n    H --> I[holder->priority = max existing, donor priority]\n    I --> J{depth &lt; 7?}\n    J -- Yes --> G\n    J -- No --> K[chain 전파 종료]\n    G -- No --> K\n    K --> L[sema_down → BLOCKED]&quot;">flowchart TD
+    A[lock_acquire 진입] --> B{lock->holder 존재?}
+    B -- No --> C[sema_down으로 바로 획득]
+    B -- Yes --> D[holder->donation_list에 curr 삽입]
+    D --> E[curr->waiting_lock = lock]
+    E --> F[holder = lock->holder]
+    F --> G{holder->waiting_lock != NULL?}
+    G -- Yes --> H[holder = waiting_lock->holder]
+    H --> I[holder->priority = max existing, donor priority]
+    I --> J{depth &lt; 7?}
+    J -- Yes --> G
+    J -- No --> K[chain 전파 종료]
+    G -- No --> K
+    K --> L[sema_down → BLOCKED]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>include/threads/thread.h</code></td><td><code>struct thread</code></td><td>priority, base_priority, donation_list, donation_elem, waiting_lock 정의</td></tr><tr><td><code>threads/synch.c</code></td><td><code>lock_acquire()</code></td><td>donation 삽입 + chain 전파 + sema_down</td></tr><tr><td><code>threads/synch.c</code></td><td><code>lock_release()</code></td><td>donation 제거 + refresh_priority + sema_up</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_down()</code></td><td>waiter를 priority 순서로 삽입, BLOCKED 전환</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_up()</code></td><td>최고 priority waiter unblock + check_preemption</td></tr><tr><td><code>threads/thread.c</code></td><td><code>refresh_priority()</code></td><td>donation_list에서 최대 priority 구해 effective priority 갱신</td></tr><tr><td><code>threads/thread.c</code></td><td><code>check_preemption()</code></td><td>ready_list front > current이면 yield</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_priority()</code></td><td>list_insert_ordered용 비교 함수 (내림차순)</td></tr><tr><td><code>include/threads/synch.h</code></td><td><code>struct lock</code></td><td>holder + semaphore 정의</td></tr><tr><td><code>include/lib/kernel/list.h</code></td><td><code>list_entry()</code></td><td>list_elem에서 바깥 구조체 복원 매크로</td></tr><tr><td><code>tests/threads/priority-donate-chain.c</code></td><td>테스트 본체</td><td>NESTING_DEPTH=8, main→T1→…→T7 chain 구성</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>nested priority donation은 <code>waiting_lock</code>을 따라 holder의 holder에게 priority를 전파하는 문제다.</li>
+<li><code>priority-donate-chain</code> 테스트는 main priority가 <code>0 -> 3 -> 6 -> ... -> 21</code>로 올라가야 함을 기대한다.</li>
+<li>PintOS에서는 <code>priority</code>, <code>base_priority</code>, <code>waiting_lock</code>, <code>donation_list</code>, <code>donation_elem</code>이 핵심 필드다.</li>
+<li><code>donation_elem</code>과 <code>elem</code>은 주소가 다르다. GDB에서 list를 볼 때 어떤 list node인지 구분해야 한다.</li>
+<li>QEMU는 donation을 처리하지 않는다. QEMU는 PintOS guest memory와 guest CPU state를 관찰 가능하게 해 주는 에뮬레이터다.</li>
+</ul>
+<h2 id="priority-donation-chain-관련-문서">Priority Donation Chain 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#priority-donation-chain-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/priority-donation-knowledge" class="internal internal-link alias" data-slug="wiki/os/priority-donation-knowledge">priority donation</a></li>
+<li><a href="../../wiki/os/thread-priority-preemption-lab" class="internal internal-link alias" data-slug="wiki/os/thread-priority-preemption-lab">priority preemption Lab</a></li>
+<li><a href="../../wiki/os/pintos-intrusive-list-lab" class="internal internal-link alias" data-slug="wiki/os/pintos-intrusive-list-lab">intrusive list Lab</a></li>
+<li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal internal-link alias" data-slug="wiki/os/semaphore-lock-condition-knowledge">동기화 프리미티브</a></li>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/priority-donation-knowledge" class="internal">우선순위 기부: lock을 기다리는 스레드가 holder를 밀어 올리는 이유</a></li><li><a href="../../wiki/os/priority-inversion-problem" class="internal">Priority Inversion</a></li><li><a href="../../wiki/os/waiting-lock-chain" class="internal">waiting_lock → holder 체인</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-583" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#priority-donation-chain-실험-높은-우선순위가-lock-줄을-타고-전파되는지-보기" data-for="priority-donation-chain-실험-높은-우선순위가-lock-줄을-타고-전파되는지-보기">Priority Donation Chain 실험: 높은 우선순위가 lock 줄을 타고 전파되는지 보기</a></li><li class="depth-1"><a href="#그런데-holder도-다른-lock을-기다리고-있다면-어떻게-될까" data-for="그런데-holder도-다른-lock을-기다리고-있다면-어떻게-될까">그런데 holder도 다른 lock을 기다리고 있다면 어떻게 될까</a></li><li class="depth-1"><a href="#priority-donation-chain-필요성" data-for="priority-donation-chain-필요성">Priority Donation Chain 필요성</a></li><li class="depth-1"><a href="#priority-donation-chain-흐름" data-for="priority-donation-chain-흐름">Priority Donation Chain 흐름</a></li><li class="depth-1"><a href="#priority-donation-chain-사례" data-for="priority-donation-chain-사례">Priority Donation Chain 사례</a></li><li class="depth-1"><a href="#꼬리-질문" data-for="꼬리-질문">꼬리 질문</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#priority-donation-chain-코드" data-for="priority-donation-chain-코드">Priority Donation Chain 코드</a></li><li class="depth-2"><a href="#1-테스트가-만드는-chain" data-for="1-테스트가-만드는-chain">1. 테스트가 만드는 chain</a></li><li class="depth-2"><a href="#2-donation-저장-필드" data-for="2-donation-저장-필드">2. donation 저장 필드</a></li><li class="depth-2"><a href="#3-donation-전파" data-for="3-donation-전파">3. donation 전파</a></li><li class="depth-2"><a href="#4-lock-release-후-priority-회복" data-for="4-lock-release-후-priority-회복">4. lock release 후 priority 회복</a></li><li class="depth-1"><a href="#priority-donation-chain-값-추적" data-for="priority-donation-chain-값-추적">Priority Donation Chain 값 추적</a></li><li class="depth-2"><a href="#1-priority-숫자-변화" data-for="1-priority-숫자-변화">1. priority 숫자 변화</a></li><li class="depth-2"><a href="#2-struct-thread-안의-주소-계산" data-for="2-struct-thread-안의-주소-계산">2. struct thread 안의 주소 계산</a></li><li class="depth-2"><a href="#3-list_entry가-되돌리는-주소" data-for="3-list_entry가-되돌리는-주소">3. list_entry()가 되돌리는 주소</a></li><li class="depth-1"><a href="#priority-donation-chain-gdb" data-for="priority-donation-chain-gdb">Priority Donation Chain GDB</a></li><li class="depth-2"><a href="#1-테스트-출력으로-확인" data-for="1-테스트-출력으로-확인">1. 테스트 출력으로 확인</a></li><li class="depth-2"><a href="#2-gdb에서-donation이-들어가는-순간-보기" data-for="2-gdb에서-donation이-들어가는-순간-보기">2. GDB에서 donation이 들어가는 순간 보기</a></li><li class="depth-2"><a href="#3-chain을-따라가기" data-for="3-chain을-따라가기">3. chain을 따라가기</a></li><li class="depth-2"><a href="#4-offset을-직접-확인하기" data-for="4-offset을-직접-확인하기">4. offset을 직접 확인하기</a></li><li class="depth-2"><a href="#5-release-뒤-priority가-내려가는지-보기" data-for="5-release-뒤-priority가-내려가는지-보기">5. release 뒤 priority가 내려가는지 보기</a></li><li class="depth-1"><a href="#순서도-donation-chain-전파-흐름" data-for="순서도-donation-chain-전파-흐름">순서도: Donation Chain 전파 흐름</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#priority-donation-chain-관련-문서" data-for="priority-donation-chain-관련-문서">Priority Donation Chain 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

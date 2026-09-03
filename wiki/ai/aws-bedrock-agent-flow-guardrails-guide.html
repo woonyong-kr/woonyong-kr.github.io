@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Amazon Bedrock Agent, Flow, Guardrails 실습 가이드 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Amazon Bedrock Agent, Flow, Guardrails 실습 가이드 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Amazon Bedrock Agent, Flow, Guardrails 실습 가이드 · 최우녕"/><meta name="twitter:description" content="Bedrock에서 Agent가 무엇을 판단하고 Lambda가 무엇을 실행하며 Flow와 Guardrail이 어디에 붙는지를 기준으로, 문서 검색을 넘어 도구 호출과 실행 순서 고정, 안전 경계까지 묶는 구조를 정리한다."/><meta property="og:description" content="Bedrock에서 Agent가 무엇을 판단하고 Lambda가 무엇을 실행하며 Flow와 Guardrail이 어디에 붙는지를 기준으로, 문서 검색을 넘어 도구 호출과 실행 순서 고정, 안전 경계까지 묶는 구조를 정리한다."/><meta property="og:image:alt" content="Bedrock에서 Agent가 무엇을 판단하고 Lambda가 무엇을 실행하며 Flow와 Guardrail이 어디에 붙는지를 기준으로, 문서 검색을 넘어 도구 호출과 실행 순서 고정, 안전 경계까지 묶는 구조를 정리한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/ai/aws-bedrock-agent-flow-guardrails-guide"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/ai/aws-bedrock-agent-flow-guardrails-guide"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="Bedrock에서 Agent가 무엇을 판단하고 Lambda가 무엇을 실행하며 Flow와 Guardrail이 어디에 붙는지를 기준으로, 문서 검색을 넘어 도구 호출과 실행 순서 고정, 안전 경계까지 묶는 구조를 정리한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/ai/aws-bedrock-agent-flow-guardrails-guide" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-45" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-45" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/ai/">AI</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Amazon Bedrock Agent, Flow, Guardrails 실습 가이드</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="amazon-bedrock-agent-flow-guardrails-실습-가이드">Amazon Bedrock Agent, Flow, Guardrails 실습 가이드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#amazon-bedrock-agent-flow-guardrails-실습-가이드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: Bedrock에서 Agent가 무엇을 판단하고 Lambda가 무엇을 실행하며 Flow와 Guardrail이 어디에 붙는지를 기준으로, 문서 검색을 넘어 도구 호출과 실행 순서 고정, 안전 경계까지 묶는 구조를 정리한다.</p>
+</blockquote>
+<p>Bedrock Agent 실습은 Knowledge Base로 답변 근거를 찾는 단계를 넘어, LLM이 도구를 호출해 계산하거나 외부 데이터를 조회하게 만드는 과정이다. Flow는 여러 노드를 명시적으로 연결해 실행 순서를 고정하고, Guardrails는 모델 입출력의 안전 경계를 둔다.</p>
+<p>이 문서는 Bedrock 실습 후반부의 판단 구조를 정리한다. 세부 콘솔 화면보다 “Agent가 무엇을 판단하고, Lambda가 무엇을 실행하고, Flow와 Guardrail이 어디에 붙는가”를 기준으로 읽는다.</p>
+<h2 id="amazon-bedrock-agent-필요성">Amazon Bedrock Agent 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#amazon-bedrock-agent-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>RAG만으로는 문서를 찾아 답할 수 있지만, 계산이나 업무 처리는 어렵다.</li>
+<li>Agent는 질문을 보고 Knowledge Base를 조회할지, Lambda action을 호출할지 선택한다.</li>
+<li>Flow는 Agent에게 모든 판단을 맡기지 않고, 입력과 조건, 프롬프트, Lambda, Agent 호출 순서를 그래프로 고정한다.</li>
+<li>Guardrails는 금지 주제, 민감정보, 부적절한 내용, 근거 부족 답변을 제어하는 운영 안전장치다.</li>
+</ul>
+<h2 id="amazon-bedrock-agent-흐름">Amazon Bedrock Agent 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#amazon-bedrock-agent-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>사용자 질문</span></span>
+<span data-line><span>  -> Bedrock Agent</span></span>
+<span data-line><span>    -> Instruction으로 역할 판단</span></span>
+<span data-line><span>    -> Knowledge Base에서 정책/FAQ 검색</span></span>
+<span data-line><span>    -> Action Group으로 Lambda 호출</span></span>
+<span data-line><span>      -> API schema가 도구 입력/출력 형식을 설명</span></span>
+<span data-line><span>    -> Trace로 reasoning, retrieval, tool call 확인</span></span>
+<span data-line><span>  -> Guardrail이 입력/출력 경계 검사</span></span></code></pre></figure>
+<p>Agent를 만들었다고 끝이 아니다. 수정한 뒤에는 Prepare를 다시 해야 테스트 런타임에 반영된다.</p>
+<h2 id="1단계-agent-만들기">1단계: Agent 만들기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1단계-agent-만들기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Agent
+<ul>
+<li>이름: <code>mortgage-processing-agent</code></li>
+<li>service role: 새로 만들거나 workshop 제공 role 사용</li>
+<li>model provider: Anthropic</li>
+<li>model: Claude 3 Sonnet 계열</li>
+</ul>
+</li>
+<li>Instruction
+<ul>
+<li>역할을 명확히 쓴다.</li>
+<li>예: 모기지 신청 처리, 대출 가능성 판단, 주택 정보 조회, Fannie Mae 관련 지침 참고.</li>
+</ul>
+</li>
+<li>저장
+<ul>
+<li>콘솔에서 Agent instruction을 입력한 뒤 반드시 Save를 누른다.</li>
+<li>Save 없이 다음 단계로 가면 action group 추가나 prepare에서 설정이 빠질 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="2단계-action-group-붙이기">2단계: Action Group 붙이기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2단계-action-group-붙이기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Action group은 Agent가 호출할 수 있는 도구 묶음이다. Bedrock은 API schema를 보고 어떤 입력을 Lambda에 넘겨야 하는지 이해한다.</p>
+<ul>
+<li>대출 계산 action group
+<ul>
+<li>이름: <code>loan-calculation</code></li>
+<li>Lambda: workshop이 만든 loan calculator 함수</li>
+<li>API schema: S3의 <code>loan_calculator.json</code></li>
+</ul>
+</li>
+<li>부동산 정보 조회 action group
+<ul>
+<li>이름: <code>mls-lookup</code></li>
+<li>Lambda: workshop이 만든 MLS lookup 함수</li>
+<li>API schema: S3의 <code>mls_lookup.json</code></li>
+</ul>
+</li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>Agent</span></span>
+<span data-line><span>  -> action group 선택</span></span>
+<span data-line><span>  -> API schema로 필요한 파라미터 결정</span></span>
+<span data-line><span>  -> Lambda 호출</span></span>
+<span data-line><span>  -> Lambda 결과를 다시 모델 문맥에 넣음</span></span>
+<span data-line><span>  -> 사용자에게 최종 답변</span></span></code></pre></figure>
+<h2 id="3단계-knowledge-base-연결">3단계: Knowledge Base 연결<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3단계-knowledge-base-연결" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Agent에 앞서 만든 Knowledge Base를 연결한다.</li>
+<li>instruction에는 “정책, FAQ, 가이드라인은 Knowledge Base를 근거로 답하라”는 식의 기준을 둔다.</li>
+<li>Knowledge Base만으로 답할 질문과 action group이 필요한 질문을 나눠 테스트한다.</li>
+</ul>
+<p>예시:</p>
+<ul>
+<li>Knowledge Base 중심
+<ul>
+<li><code>What are the specific eligibility criteria for Fannie Mae-backed loans for single-family homes?</code></li>
+</ul>
+</li>
+<li>Knowledge Base와 도구 호출 결합
+<ul>
+<li><code>I make 70K per year. Can I afford to buy the property listed under MLS-5678. Do I qualify for any special programs for Fannie Mae backed loans?</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="4단계-prepare와-trace-확인">4단계: Prepare와 Trace 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4단계-prepare와-trace-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Agent 수정 후 Prepare를 누른다.</li>
+<li>테스트 창에서 질문을 던진다.</li>
+<li>Show trace를 열어 확인한다.</li>
+</ul>
+<p>Trace에서 봐야 할 것:</p>
+<ul>
+<li>Agent가 Knowledge Base를 조회했는가</li>
+<li>어떤 action group을 골랐는가</li>
+<li>Lambda 입력 파라미터가 맞는가</li>
+<li>Lambda 결과를 최종 답변에 어떻게 사용했는가</li>
+<li>실패했다면 retrieval 실패인지 Lambda 실패인지 권한 실패인지 나뉘는가</li>
+</ul>
+<h2 id="5단계-flow-만들기">5단계: Flow 만들기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5단계-flow-만들기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Flow는 Agent의 자율 판단을 보완해 실행 그래프를 직접 만든다.</p>
+<ul>
+<li>Flow
+<ul>
+<li>이름: <code>process-mortgage-application-flow</code></li>
+<li>role: workshop이 제공한 Prompt Flow role 또는 새 role</li>
+<li>encryption: 기본 AWS 관리형 key 사용</li>
+</ul>
+</li>
+<li>기본 선 제거
+<ul>
+<li>기본 Flow input에서 Flow output으로 바로 이어지는 선을 제거한다.</li>
+</ul>
+</li>
+<li>input type
+<ul>
+<li>Flow input의 output type을 Object로 맞춘다.</li>
+</ul>
+</li>
+<li>노드
+<ul>
+<li>Lambda node</li>
+<li>Condition node</li>
+<li>Prompt node</li>
+<li>Agent node</li>
+</ul>
+</li>
+</ul>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>Flow input</span></span>
+<span data-line><span>  -> 조건 확인</span></span>
+<span data-line><span>    -> Lambda로 필요한 데이터 조회</span></span>
+<span data-line><span>    -> Prompt node로 문장 구성</span></span>
+<span data-line><span>    -> Agent node로 정책/도구 결합 판단</span></span>
+<span data-line><span>  -> Flow output</span></span></code></pre></figure>
+<p>Flow는 “모델에게 알아서 해”보다 재현성이 높다. 업무 프로세스가 정해져 있으면 Flow가 유리하고, 사용자의 요청이 다양하면 Agent가 유리하다.</p>
+<h2 id="6단계-guardrails-만들기">6단계: Guardrails 만들기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6단계-guardrails-만들기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Guardrail
+<ul>
+<li>이름: <code>bedrock-ws-guardrails</code></li>
+<li>기본 차단 메시지: 모델이 답할 수 없음을 사용자에게 알려 주는 문장</li>
+<li>encryption: 기본 AWS 관리형 key</li>
+</ul>
+</li>
+<li>설정 영역
+<ul>
+<li>content filters</li>
+<li>denied topics</li>
+<li>word filters</li>
+<li>sensitive information filters</li>
+<li>contextual grounding</li>
+</ul>
+</li>
+<li>연결
+<ul>
+<li>Agent나 테스트 대상 모델에 guardrail을 붙인다.</li>
+<li>차단되는 입력과 허용되는 입력을 둘 다 테스트한다.</li>
+</ul>
+</li>
+</ul>
+<p>Guardrail은 답변 품질을 높이는 장치가 아니라 운영 경계를 세우는 장치다. 금지 주제, 민감정보, 정책 위반 가능성을 줄이는 용도로 본다.</p>
+<h2 id="7단계-multi-agent-collaboration">7단계: Multi-Agent Collaboration<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#7단계-multi-agent-collaboration" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>워크숍 후반부의 multi-agent는 역할 분담을 이해하는 데 초점을 둔다.</p>
+<ul>
+<li>intent classification agent
+<ul>
+<li>사용자 요청의 종류를 분류한다.</li>
+</ul>
+</li>
+<li>technical specialist
+<ul>
+<li>기술적 세부 질문을 맡는다.</li>
+</ul>
+</li>
+<li>policy specialist
+<ul>
+<li>정책과 가이드라인 해석을 맡는다.</li>
+</ul>
+</li>
+<li>supervisor
+<ul>
+<li>하위 agent를 조율하고 최종 응답을 만든다.</li>
+</ul>
+</li>
+</ul>
+<p>단일 Agent가 모든 역할을 갖는 것보다, 책임을 나누면 trace와 테스트가 쉬워진다. 대신 orchestration 비용과 복잡도는 늘어난다.</p>
+<h2 id="자주-막히는-지점">자주 막히는 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#자주-막히는-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Agent가 수정한 내용을 반영하지 않는다
+<ul>
+<li>Save와 Prepare를 모두 했는지 확인한다.</li>
+</ul>
+</li>
+<li>Lambda action이 호출되지 않는다
+<ul>
+<li>instruction이 도구 사용 조건을 충분히 명확히 했는지 본다.</li>
+<li>API schema S3 경로와 Lambda 권한을 확인한다.</li>
+</ul>
+</li>
+<li>Knowledge Base를 안 쓴다
+<ul>
+<li>Agent의 KB instruction이 약할 수 있다.</li>
+<li>질문이 문서 검색이 필요한 형태인지 확인한다.</li>
+</ul>
+</li>
+<li>Guardrail이 너무 많이 막는다
+<ul>
+<li>denied topic과 word filter가 과하게 넓은지 확인한다.</li>
+<li>차단 테스트와 정상 테스트를 분리한다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="연결해서-읽기">연결해서 읽기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#연결해서-읽기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>선행 문서
+<ul>
+<li><a href="../../wiki/ai/aws-bedrock-rag-knowledge-base-guide" class="internal internal-link alias" data-slug="wiki/ai/aws-bedrock-rag-knowledge-base-guide">Bedrock Knowledge Base</a></li>
+</ul>
+</li>
+<li>AI 기본기
+<ul>
+<li><a href="../../wiki/ai/agent-framework-architecture" class="internal internal-link alias" data-slug="wiki/ai/agent-framework-architecture">AI Agent</a></li>
+<li><a href="../../wiki/ai/tool-use-function-calling" class="internal internal-link alias" data-slug="wiki/ai/tool-use-function-calling">Tool Use Function Calling</a></li>
+<li><a href="../../wiki/ai/prompt-engineering-techniques" class="internal internal-link alias" data-slug="wiki/ai/prompt-engineering-techniques">프롬프트 엔지니어링</a></li>
+</ul>
+</li>
+<li>전체
+<ul>
+<li><a href="../../wiki/hubs/aws-immersion-day" class="internal internal-link alias" data-slug="wiki/hubs/aws-immersion-day">AWS Immersion Day 재실습</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="amazon-bedrock-agent-점검">Amazon Bedrock Agent 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#amazon-bedrock-agent-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>Agent, Action Group, Lambda, API schema의 관계를 설명할 수 있는가?</li>
+<li>Agent를 수정한 뒤 Save와 Prepare가 왜 필요한지 말할 수 있는가?</li>
+<li>Flow와 Agent를 언제 나눠 쓰는지 판단할 수 있는가?</li>
+<li>Guardrail이 품질 개선 도구가 아니라 운영 경계 도구라는 점을 설명할 수 있는가?</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/ai/aws-bedrock-rag-knowledge-base-guide" class="internal">Amazon Bedrock Knowledge Base와 RAG 실습 가이드</a></li><li><a href="../../wiki/common/aws-immersion-day-retry-roadmap" class="internal">AWS Immersion Day 재실습 로드맵</a></li><li><a href="../../wiki/hubs/aws-immersion-day" class="internal">AWS Immersion Day 재실습</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-44" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#amazon-bedrock-agent-flow-guardrails-실습-가이드" data-for="amazon-bedrock-agent-flow-guardrails-실습-가이드">Amazon Bedrock Agent, Flow, Guardrails 실습 가이드</a></li><li class="depth-1"><a href="#amazon-bedrock-agent-필요성" data-for="amazon-bedrock-agent-필요성">Amazon Bedrock Agent 필요성</a></li><li class="depth-1"><a href="#amazon-bedrock-agent-흐름" data-for="amazon-bedrock-agent-흐름">Amazon Bedrock Agent 흐름</a></li><li class="depth-1"><a href="#1단계-agent-만들기" data-for="1단계-agent-만들기">1단계: Agent 만들기</a></li><li class="depth-1"><a href="#2단계-action-group-붙이기" data-for="2단계-action-group-붙이기">2단계: Action Group 붙이기</a></li><li class="depth-1"><a href="#3단계-knowledge-base-연결" data-for="3단계-knowledge-base-연결">3단계: Knowledge Base 연결</a></li><li class="depth-1"><a href="#4단계-prepare와-trace-확인" data-for="4단계-prepare와-trace-확인">4단계: Prepare와 Trace 확인</a></li><li class="depth-1"><a href="#5단계-flow-만들기" data-for="5단계-flow-만들기">5단계: Flow 만들기</a></li><li class="depth-1"><a href="#6단계-guardrails-만들기" data-for="6단계-guardrails-만들기">6단계: Guardrails 만들기</a></li><li class="depth-1"><a href="#7단계-multi-agent-collaboration" data-for="7단계-multi-agent-collaboration">7단계: Multi-Agent Collaboration</a></li><li class="depth-1"><a href="#자주-막히는-지점" data-for="자주-막히는-지점">자주 막히는 지점</a></li><li class="depth-1"><a href="#연결해서-읽기" data-for="연결해서-읽기">연결해서 읽기</a></li><li class="depth-1"><a href="#amazon-bedrock-agent-점검" data-for="amazon-bedrock-agent-점검">Amazon Bedrock Agent 점검</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

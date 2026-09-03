@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING · 최우녕"/><meta name="twitter:description" content="스레드가 실행되지 않는다면 먼저 CPU를 기다리는지, 특정 사건을 기다리는지 구분해야 한다."/><meta property="og:description" content="스레드가 실행되지 않는다면 먼저 CPU를 기다리는지, 특정 사건을 기다리는지 구분해야 한다."/><meta property="og:image:alt" content="스레드가 실행되지 않는다면 먼저 CPU를 기다리는지, 특정 사건을 기다리는지 구분해야 한다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/thread-state-transition"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/thread-state-transition"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="스레드가 실행되지 않는다면 먼저 CPU를 기다리는지, 특정 사건을 기다리는지 구분해야 한다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/thread-state-transition" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-674" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-674" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="thread-상태-전이--ready--running--blocked--dying">Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#thread-상태-전이--ready--running--blocked--dying" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>스레드가 왜 실행되지 않는지 보려면 먼저 READY, RUNNING, BLOCKED, DYING 중 어디에 머무는지와 그 상태를 바꾼 이벤트를 따라가야 한다.</p>
+</blockquote>
+<h2 id="스레드가-멈춘-이유를-상태로-읽기">스레드가 멈춘 이유를 상태로 읽기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#스레드가-멈춘-이유를-상태로-읽기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>스레드가 실행되지 않는다면 먼저 CPU를 기다리는지, 특정 사건을 기다리는지 구분해야 한다. READY인 스레드는 실행할 수 있지만 CPU를 아직 할당받지 못했다. BLOCKED인 스레드는 세마포어·락·타이머 같은 조건이 충족되기를 기다린다. 스케줄러는 READY인 스레드만 선택하므로, 현재 상태와 전이를 일으킨 주체를 함께 보면 어떤 코드가 스레드를 다시 움직일지 좁힐 수 있다.</p>
+<h2 id="상태-전이의-기본-규칙">상태 전이의 기본 규칙<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상태-전이의-기본-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="pintos를-설명하는-네-가지-상태">PintOS를 설명하는 네 가지 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos를-설명하는-네-가지-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>이 문서에서는 PintOS의 스레드 상태를 READY, RUNNING, BLOCKED, DYING으로 나누어 설명한다. READY, RUNNING, BLOCKED는 실행 가능 여부와 대기 이유를 나타내고, DYING은 종료된 스레드의 자원을 다음 스케줄링 과정에서 회수하기 위한 상태다. 전이를 추적할 때는 상태 이름만 보는 대신 어떤 주체와 이벤트가 상태를 바꾸는지 함께 본다.</p>
+<ul>
+<li><strong>READY → RUNNING</strong>: 스케줄러가 READY인 스레드를 선택해 CPU를 할당한다. 스레드가 스스로 이 전이를 일으킬 수는 없다.</li>
+<li><strong>RUNNING → READY</strong>: 선점(preemption)되거나 스레드가 자발적으로 CPU를 양보(yield)할 때 일어난다. timer interrupt는 이 문서에서 다루는 대표적인 선점 원인이다.</li>
+<li><strong>RUNNING → BLOCKED</strong>: 실행 중인 스레드가 조건이 충족될 때까지 기다리기로 할 때 일어난다. lock 획득 실패, <code>sema_down()</code>, <code>timer_sleep()</code>이 여기에 해당한다.</li>
+<li><strong>BLOCKED → READY</strong>: 다른 스레드나 인터럽트 핸들러가 대기 조건을 충족할 때 일어난다. <code>sema_up()</code>, <code>lock_release()</code>, wake 시간에 도달한 timer tick이 이 전이를 일으킬 수 있다.</li>
+<li><strong>RUNNING → DYING</strong>: <code>thread_exit()</code>가 호출되면 일어난다. 자원은 다음 <code>schedule()</code>에서 회수된다.</li>
+</ul>
+<p>이 상태 모델에서는 BLOCKED에서 RUNNING으로 바로 전이하지 않고 READY를 거친다. CPU를 할당할 스레드는 스케줄러가 READY 상태에서 선택하기 때문이다.</p>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>Linux</strong>의 task_struct 상태:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>상태</th><th>매크로</th><th>의미</th></tr></thead><tbody><tr><td>RUNNING</td><td><code>TASK_RUNNING</code></td><td>READY와 RUNNING을 하나로 합침</td></tr><tr><td>INTERRUPTIBLE</td><td><code>TASK_INTERRUPTIBLE</code></td><td>signal로 깨울 수 있는 BLOCKED</td></tr><tr><td>UNINTERRUPTIBLE</td><td><code>TASK_UNINTERRUPTIBLE</code></td><td>signal 무시, I/O 완료만 대기</td></tr><tr><td>STOPPED</td><td><code>TASK_STOPPED</code></td><td>SIGSTOP, ptrace에 의한 정지</td></tr><tr><td>ZOMBIE</td><td><code>EXIT_ZOMBIE</code></td><td>종료했지만 parent가 wait() 안 함</td></tr></tbody></table></div>
+<p>Linux는 READY와 RUNNING을 <code>TASK_RUNNING</code>으로 합친다. run queue에서 CPU 할당을 기다리는 경우와 실제 CPU에서 실행 중인 경우를 커널 코드에서는 같은 상태값으로 나타낸다. SMP에서는 여러 CPU가 각각 <code>TASK_RUNNING</code> 스레드를 실행할 수 있다.</p>
+<p>Linux의 BLOCKED에 대응하는 상태는 둘로 나뉜다. <code>TASK_INTERRUPTIBLE</code>은 signal을 받으면 READY에 해당하는 상태로 돌아가며, 시스템 콜은 <code>EINTR</code>을 반환한다. <code>TASK_UNINTERRUPTIBLE</code>은 I/O가 끝날 때까지 기다리는 상태로, <code>ps</code>에서는 <code>D</code> state로 볼 수 있다.</p>
+<p><strong>Windows</strong>의 스레드 상태:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>상태</th><th>의미</th></tr></thead><tbody><tr><td>Ready</td><td>실행 가능, dispatcher queue에 대기</td></tr><tr><td>Running</td><td>CPU에서 실행 중</td></tr><tr><td>Waiting</td><td>WaitForSingleObject 등으로 대기</td></tr><tr><td>Standby</td><td>특정 CPU에 배정되었지만 아직 미실행</td></tr><tr><td>Terminated</td><td>종료 완료</td></tr></tbody></table></div>
+<p>Windows는 Ready와 Running 사이에 <strong>Standby</strong> 상태를 둔다. dispatcher가 스레드를 특정 CPU에 할당하면 Standby가 되고, 해당 CPU가 실제로 context switch하면 Running으로 바뀐다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>PintOS는 <code>threads/thread.h</code>에서 상태를 다음과 같이 정의한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> thread_status {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    THREAD_RUNNING,</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">     // 현재 CPU에서 실행 중</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    THREAD_READY,</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">       // ready_list에 대기</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    THREAD_BLOCKED,</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">     // 어떤 이벤트를 기다리는 중</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    THREAD_DYING</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // 다음 schedule()에서 자원 회수 예정</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>각 전이를 일으키는 함수는 다음과 같다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>전이</th><th>함수</th><th>파일</th></tr></thead><tbody><tr><td>READY → RUNNING</td><td><code>schedule()</code> → <code>next_thread_to_run()</code></td><td><code>threads/thread.c</code></td></tr><tr><td>RUNNING → READY</td><td><code>thread_yield()</code></td><td><code>threads/thread.c</code></td></tr><tr><td>RUNNING → BLOCKED</td><td><code>thread_block()</code></td><td><code>threads/thread.c</code></td></tr><tr><td>BLOCKED → READY</td><td><code>thread_unblock()</code></td><td><code>threads/thread.c</code></td></tr><tr><td>RUNNING → DYING</td><td><code>thread_exit()</code></td><td><code>threads/thread.c</code></td></tr></tbody></table></div>
+<p><strong><code>thread_yield()</code> — RUNNING → READY:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_yield</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> intr_level old_level </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> intr_disable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (curr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> idle_thread)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">ready_list, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">curr->elem,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">                           thread_compare_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    do_schedule</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(THREAD_READY);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // curr->status = READY, schedule() 호출</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    intr_set_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(old_level);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>thread_yield()</code>는 <code>intr_disable()</code>로 인터럽트를 끈 뒤 현재 스레드를 ready_list에 삽입한다. 인터럽트를 끄지 않으면 list를 조작하는 도중 timer interrupt가 발생해 같은 list를 건드릴 수 있다.</p>
+<p><strong><code>thread_block()</code> — RUNNING → BLOCKED:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_block</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">intr_get_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">() </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> INTR_OFF);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">()->status </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> THREAD_BLOCKED;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    schedule</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 다른 스레드로 전환</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>thread_block()</code>은 현재 스레드를 대기 큐에 직접 넣지 않는다. <code>sema_down()</code>과 같은 호출자가 먼저 스레드를 대기 큐에 넣은 뒤 <code>thread_block()</code>을 호출한다. 따라서 <code>thread_block()</code>은 현재 스레드를 멈추는 역할만 맡고, 어떤 조건과 대기 큐에서 깨울지는 호출자가 결정한다.</p>
+<p><strong><code>thread_unblock()</code> — BLOCKED → READY:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_unblock</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    enum</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> intr_level old_level </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> intr_disable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    ASSERT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(t->status </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> THREAD_BLOCKED);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    list_insert_ordered</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">ready_list, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">t->elem,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">                       thread_compare_priority, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    t->status </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> THREAD_READY;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    intr_set_level</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(old_level);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>sema_up()</code>, <code>lock_release()</code>, timer interrupt의 wake 로직 등은 <code>thread_unblock()</code>을 호출해 BLOCKED인 스레드를 READY로 바꾼다.</p>
+<p><strong>선점(preemption) 경로:</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>timer interrupt</span></span>
+<span data-line><span>  -> thread_tick()</span></span>
+<span data-line><span>  -> TIME_SLICE 초과 확인</span></span>
+<span data-line><span>  -> intr_yield_on_return()</span></span>
+<span data-line><span>  -> interrupt return 직전 schedule()</span></span></code></pre></figure>
+<p><code>intr_yield_on_return()</code>은 즉시 yield하지 않고 플래그만 세운다. 인터럽트 핸들러 안에서 <code>schedule()</code>을 호출하지 않고, interrupt return 직전에 스케줄링하기 위해서다(<a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU 타이머 인터럽트</a>).</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 guest의 스레드 상태를 알지 못한다. QEMU에서 스레드 전환은 guest가 메모리의 다른 위치에 있는 명령어를 실행하기 시작한 것으로 보일 뿐이다.</p>
+<p>GDB에서는 다음과 같이 PintOS 스레드 상태를 확인할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span># 현재 실행 중인 스레드</span></span>
+<span data-line><span>p thread_current()->status     # THREAD_RUNNING이어야 함</span></span>
+<span data-line> </span>
+<span data-line><span># ready_list의 스레드 수</span></span>
+<span data-line><span>p list_size(&amp;ready_list)</span></span>
+<span data-line> </span>
+<span data-line><span># 특정 스레드의 상태</span></span>
+<span data-line><span>p some_thread->status</span></span></code></pre></figure>
+<p>QEMU는 timer interrupt 전달에 관여한다. QEMU의 i8254 PIT 모델이 100Hz로 IRQ0을 발생시키면 guest CPU에 인터럽트가 주입된다. 이어 PintOS의 <code>timer_interrupt()</code>가 실행되면서 상태 전이가 시작된다.</p>
+<h2 id="thread-상태-전이-값-추적">Thread 상태 전이 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#thread-상태-전이-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS 상태 전이와 관련된 상수는 다음과 같다.</p>
+<pre><code>TIME_SLICE        = 4 ticks
+PIT frequency     = 100 Hz
+1 tick            = 10 ms
+최대 연속 실행    = 4 × 10ms = 40ms
+
+thread_status enum:
+  THREAD_RUNNING  = 0
+  THREAD_READY    = 1
+  THREAD_BLOCKED  = 2
+  THREAD_DYING    = 3
+</code></pre>
+<p><code>timer_sleep(100)</code>을 호출하면 상태는 다음 순서로 바뀐다.</p>
+<pre><code>tick 0:   RUNNING → BLOCKED (sleep_list에 삽입, wake_tick = current + 100)
+tick 1~99: BLOCKED 유지 (timer_interrupt가 매 tick 확인)
+tick 100:  BLOCKED → READY (thread_unblock)
+tick ???:  READY → RUNNING (scheduler가 선택할 때)
+</code></pre>
+<p>스레드는 100 ticks 동안 BLOCKED에 머문 뒤 READY가 된다. 그다음 실제로 다시 실행되기까지 READY에서 더 기다릴 수 있으므로, READY → RUNNING이 즉시 일어난다고 보장할 수는 없다.</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;stateDiagram-v2\n    [*] --> READY: thread_create()\n    READY --> RUNNING: schedule() / next_thread_to_run()\n    RUNNING --> READY: thread_yield() / preemption\n    RUNNING --> BLOCKED: thread_block()\n    BLOCKED --> READY: thread_unblock()\n    RUNNING --> DYING: thread_exit()\n    DYING --> [*]: schedule()에서 자원 회수\n\n    note right of RUNNING\n        CPU가 이 스레드의\n        명령어를 실행 중\n    end note\n\n    note right of BLOCKED\n        sema_down, lock_acquire,\n        timer_sleep 등으로 대기\n    end note\n\n    note right of READY\n        ready_list에서\n        scheduler 선택 대기\n    end note&quot;">stateDiagram-v2
+    [*] --> READY: thread_create()
+    READY --> RUNNING: schedule() / next_thread_to_run()
+    RUNNING --> READY: thread_yield() / preemption
+    RUNNING --> BLOCKED: thread_block()
+    BLOCKED --> READY: thread_unblock()
+    RUNNING --> DYING: thread_exit()
+    DYING --> [*]: schedule()에서 자원 회수
+
+    note right of RUNNING
+        CPU가 이 스레드의
+        명령어를 실행 중
+    end note
+
+    note right of BLOCKED
+        sema_down, lock_acquire,
+        timer_sleep 등으로 대기
+    end note
+
+    note right of READY
+        ready_list에서
+        scheduler 선택 대기
+    end note
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>threads/thread.h</code></td><td><code>enum thread_status</code></td><td>4가지 상태 정의</td></tr><tr><td><code>threads/thread.h</code></td><td><code>struct thread</code></td><td><code>status</code> 필드로 현재 상태 보관</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_yield()</code></td><td>RUNNING → READY + schedule()</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_block()</code></td><td>RUNNING → BLOCKED + schedule()</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_unblock()</code></td><td>BLOCKED → READY (ready_list 삽입)</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_exit()</code></td><td>RUNNING → DYING + schedule()</td></tr><tr><td><code>threads/thread.c</code></td><td><code>schedule()</code></td><td>READY → RUNNING (next_thread_to_run)</td></tr><tr><td><code>threads/thread.c</code></td><td><code>do_schedule()</code></td><td>status 변경 후 schedule() 호출 wrapper</td></tr><tr><td><code>threads/thread.c</code></td><td><code>thread_tick()</code></td><td>TIME_SLICE 초과 검사 → preemption 트리거</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_down()</code></td><td>waiters에 삽입 후 thread_block()</td></tr><tr><td><code>threads/synch.c</code></td><td><code>sema_up()</code></td><td>waiters에서 꺼내 thread_unblock()</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/hubs/threads-execution-model" class="internal internal-link alias" data-slug="wiki/hubs/threads-execution-model">Threads 실행 모델</a></li>
+<li><a href="../../wiki/os/pintos-threads-scheduling-execution-model" class="internal internal-link alias" data-slug="wiki/os/pintos-threads-scheduling-execution-model">PintOS 스케줄링</a></li>
+<li><a href="../../wiki/os/interrupt-timer-qemu" class="internal internal-link alias" data-slug="wiki/os/interrupt-timer-qemu">QEMU timer interrupt</a></li>
+<li><a href="../../wiki/os/context-switch-trace" class="internal internal-link alias" data-slug="wiki/os/context-switch-trace">context switch</a></li>
+<li><a href="../../wiki/os/semaphore-lock-condition-knowledge" class="internal internal-link alias" data-slug="wiki/os/semaphore-lock-condition-knowledge">동기화 프리미티브</a></li>
+<li><a href="../../wiki/os/alarm-clock-sleep-list-lab" class="internal internal-link alias" data-slug="wiki/os/alarm-clock-sleep-list-lab">alarm clock sleep list Lab</a></li>
+<li><a href="../../wiki/os/thread-scheduler-trace" class="internal internal-link alias" data-slug="wiki/os/thread-scheduler-trace">thread scheduler</a></li>
+<li><a href="../../wiki/os/cpu-execution-cycle" class="internal internal-link alias" data-slug="wiki/os/cpu-execution-cycle">CPU execution cycle</a></li>
+<li><a href="../../wiki/os/thread-init-sequence" class="internal internal-link alias" data-slug="wiki/os/thread-init-sequence">thread init()</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/process-lifecycle" class="internal">프로세스 생명주기</a></li><li><a href="../../wiki/os/check-preemption" class="internal">check_preemption() 선점 판단</a></li><li><a href="../../wiki/os/condition-wait-signal-trace" class="internal">cond_wait() / cond_signal()</a></li><li><a href="../../wiki/os/fork-semaphore-sync" class="internal">fork 세마포어 동기화</a></li><li><a href="../../wiki/os/interrupt-descriptor-table" class="internal">인터럽트 디스크립터 테이블 (Interrupt Descriptor Table)</a></li><li><a href="../../wiki/os/list-elem-structure" class="internal">list_elem 구조</a></li><li><a href="../../wiki/os/lock-mechanism" class="internal">락 메커니즘 (Lock Mechanism)</a></li><li><a href="../../wiki/os/pintos-initial-main-thread-kernel-address-space-knowledge" class="internal">PintOS 초기 main thread와 커널 주소 공간</a></li><li><a href="../../wiki/os/pintos-threads-scheduling-execution-model" class="internal">PintOS Threads와 Scheduling</a></li><li><a href="../../wiki/os/priority-inversion-problem" class="internal">Priority Inversion</a></li><li><a href="../../wiki/os/process-thread-abstraction" class="internal">프로세스와 스레드 추상화</a></li><li><a href="../../wiki/os/ready-list-priority" class="internal">ready_list — 우선순위 정렬</a></li><li><a href="../../wiki/os/sema-down-block" class="internal">세마포어 down 블록 (Sema Down Block)</a></li><li><a href="../../wiki/os/sema-up-unblock" class="internal">세마포어 up unblock (Sema Up Unblock)</a></li><li><a href="../../wiki/os/semaphore-mechanism" class="internal">세마포어 메커니즘 (Semaphore Mechanism)</a></li><li><a href="../../wiki/os/sleep-list-wake-tick" class="internal">sleep_list와 wake_tick — Alarm Clock 구현의 핵심 자료구조</a></li><li><a href="../../wiki/os/thread-block" class="internal">thread_block — 현재 스레드를 BLOCKED 상태로 전환</a></li><li><a href="../../wiki/os/thread-create-yield" class="internal">thread_create() 후 yield와 우선순위 선점</a></li><li><a href="../../wiki/os/thread-current-mechanism" class="internal">thread_current() — RSP로 현재 스레드 찾기</a></li><li><a href="../../wiki/os/thread-init-sequence" class="internal">thread_init() — 스레딩 시스템 초기화</a></li><li><a href="../../wiki/os/thread-launch-mechanism" class="internal">thread_launch() — register 저장과 스레드 전환</a></li><li><a href="../../wiki/os/thread-scheduler-trace" class="internal">스레드 스케줄러 (Thread Scheduler) Trace</a></li><li><a href="../../wiki/os/thread-start-idle" class="internal">thread_start() — idle 스레드 생성과 선점형 스케줄링 시작</a></li><li><a href="../../wiki/os/thread-tick-time-slice" class="internal">thread_tick()와 TIME_SLICE 검사</a></li><li><a href="../../wiki/os/thread-unblock-yield" class="internal">thread_unblock() 후 yield — Priority Preemption의 첫 번째 지점</a></li><li><a href="../../wiki/os/thread-yield" class="internal">thread_yield() 자발적 CPU 양보</a></li><li><a href="../../wiki/os/timer-sleep-implementation" class="internal">timer_sleep 구현</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-672" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#thread-상태-전이--ready--running--blocked--dying" data-for="thread-상태-전이--ready--running--blocked--dying">Thread 상태 전이 — READY / RUNNING / BLOCKED / DYING</a></li><li class="depth-1"><a href="#스레드가-멈춘-이유를-상태로-읽기" data-for="스레드가-멈춘-이유를-상태로-읽기">스레드가 멈춘 이유를 상태로 읽기</a></li><li class="depth-1"><a href="#상태-전이의-기본-규칙" data-for="상태-전이의-기본-규칙">상태 전이의 기본 규칙</a></li><li class="depth-2"><a href="#pintos를-설명하는-네-가지-상태" data-for="pintos를-설명하는-네-가지-상태">PintOS를 설명하는 네 가지 상태</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#thread-상태-전이-값-추적" data-for="thread-상태-전이-값-추적">Thread 상태 전이 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>공유 파일 오프셋 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="공유 파일 오프셋 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="공유 파일 오프셋 · 최우녕"/><meta name="twitter:description" content="fork 후 부모·자식이 같은 struct file을 공유하느냐에 따라 파일 offset 공유 여부가 갈리는 문제 — Linux는 refcount로 공유."/><meta property="og:description" content="fork 후 부모·자식이 같은 struct file을 공유하느냐에 따라 파일 offset 공유 여부가 갈리는 문제 — Linux는 refcount로 공유."/><meta property="og:image:alt" content="fork 후 부모·자식이 같은 struct file을 공유하느냐에 따라 파일 offset 공유 여부가 갈리는 문제 — Linux는 refcount로 공유."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/shared-file-offset"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/shared-file-offset"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="fork 후 부모·자식이 같은 struct file을 공유하느냐에 따라 파일 offset 공유 여부가 갈리는 문제 — Linux는 refcount로 공유."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/shared-file-offset" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-636" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-636" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>공유 파일 오프셋</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="공유-파일-오프셋">공유 파일 오프셋<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#공유-파일-오프셋" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: fork 후 부모·자식이 같은 struct file을 공유하느냐에 따라 파일 offset 공유 여부가 갈리는 문제 — Linux는 refcount로 공유.</p>
+</blockquote>
+<h2 id="fork-뒤-파일-offset은-어떻게-달라지는가">fork 뒤 파일 offset은 어떻게 달라지는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-뒤-파일-offset은-어떻게-달라지는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>부모 프로세스와 자식 프로세스가 같은 파일을 가리키더라도 offset까지 반드시 공유하는 것은 아니다. fork 뒤 두 프로세스가 같은 <strong>struct file 객체</strong>를 참조하면 한쪽의 <code>read()</code>나 <code>write()</code>가 offset을 바꾸고, 다른 쪽도 바뀐 값을 보게 된다. 각 프로세스가 별도의 struct file 객체를 가지면 inode가 같아도 offset은 독립적으로 움직인다.</p>
+<p>이 차이는 Linux와 PintOS의 구현에서 드러난다. Linux는 참조 카운트(refcount)를 늘려 같은 struct file을 공유한다. PintOS는 <code>file_duplicate()</code>로 struct file의 독립 사본을 만들고 복제 시점의 offset만 복사한다.</p>
+<h2 id="file-descriptor와-open-file-description">File Descriptor와 Open File Description<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#file-descriptor와-open-file-description" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>POSIX의 동작을 이해하려면 프로세스가 가진 fd와 커널의 File Description을 구분해야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd (File Descriptor)      : 프로세스별 정수 인덱스 (0, 1, 2, ...)</span></span>
+<span data-line><span>File Description (Open File): 커널 객체 — inode 포인터 + offset + flags</span></span>
+<span data-line><span>                              여러 fd가 같은 File Description을 가리킬 수 있음</span></span></code></pre></figure>
+<p>fork가 일어나면 자식은 부모의 fd 테이블을 복사하지만, 각 fd는 부모와 같은 File Description을 가리킨다. 이때 참조 카운트가 1 증가한다. 부모가 <code>read()</code>하여 File Description의 offset을 전진시키면 자식도 그 offset을 본다.</p>
+<p>이 문서에서는 이러한 공유가 파이프, 리다이렉션, 셸 스크립트의 동작과 연결된다고 설명한다. 다만 아래 셸 예시는 offset 공유의 필요성을 설명하기 위한 예시이며, 해당 동작을 직접 검증한 실행 결과는 제시하지 않는다.</p>
+<h2 id="linux-같은-struct-file-공유">Linux: 같은 struct file 공유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux-같은-struct-file-공유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서는 부모와 자식의 fd가 같은 struct file을 참조한다. struct file의 <code>f_pos</code>가 공유 offset이고, <code>f_count</code>가 참조 수를 나타낸다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% Linux의 공유 struct file 구조\nflowchart TD\n  parent[\&quot;프로세스 A&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file\&quot;]\n  child[\&quot;프로세스 B&lt;br/>fork된 자식&lt;br/>[3] -&amp;gt; struct file\&quot;]\n  file[\&quot;struct file&lt;br/>refcount = 2&lt;br/>f_pos = 100&lt;br/>f_inode -&amp;gt; struct inode\&quot;]\n  inode[\&quot;struct inode&lt;br/>파일의 실제 메타데이터\&quot;]\n  parent -->|fd 3| file\n  child -->|fd 3| file\n  file -->|f_inode| inode&quot;">%% Linux의 공유 struct file 구조
+flowchart TD
+  parent[&quot;프로세스 A&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file&quot;]
+  child[&quot;프로세스 B&lt;br/>fork된 자식&lt;br/>[3] -&amp;gt; struct file&quot;]
+  file[&quot;struct file&lt;br/>refcount = 2&lt;br/>f_pos = 100&lt;br/>f_inode -&amp;gt; struct inode&quot;]
+  inode[&quot;struct inode&lt;br/>파일의 실제 메타데이터&quot;]
+  parent -->|fd 3| file
+  child -->|fd 3| file
+  file -->|f_inode| inode
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>연산</th><th>Linux struct file 동작</th></tr></thead><tbody><tr><td>fork()</td><td>f_count++ (같은 객체 참조)</td></tr><tr><td>dup()/dup2()</td><td>f_count++ (같은 프로세스 내 공유)</td></tr><tr><td>open() (같은 파일)</td><td>새 struct file 생성 (독립 offset)</td></tr><tr><td>close()</td><td>f_count— (0이면 해제)</td></tr><tr><td>read()/write()</td><td>f_pos 갱신 → 모든 공유자에게 영향</td></tr></tbody></table></div>
+<p>셸에서 리다이렉션된 파일을 여러 자식이 이어서 쓴다고 생각하면 공유 offset이 하는 역할을 볼 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment"># 셸이 fork → exec하여 자식이 stdout에 쓴다</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="function">echo</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> &quot;hello&quot;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ></span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> output.txt</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   # 자식이 fd 1로 write</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="function">echo</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> &quot;world&quot;</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> >></span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> output.txt</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  # 다음 자식도 같은 fd 1</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment"># offset을 공유하지 않으면 &quot;world&quot;가 &quot;hello&quot;를 덮어쓸 수 있다</span></span></code></pre></figure>
+<h2 id="pintos-struct-file을-복사해-offset-분리">PintOS: struct file을 복사해 offset 분리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-struct-file을-복사해-offset-분리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS의 <code>file_duplicate()</code>는 같은 inode를 다시 열어 새 struct file을 만들고, 기존 <code>pos</code>를 새 객체에 복사한다. 복제 직후 두 객체의 offset 값은 같지만 이후에는 각각 갱신된다.</p>
+<p><strong>filesys/file.c:45 — file_duplicate():</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">file_duplicate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">file</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">nfile </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> file_open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">inode_reopen</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(file->inode));</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (nfile) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        nfile->pos </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> file->pos;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // 복사 시점의 offset을 복사</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (file->deny_write)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">            file_deny_write</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(nfile);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> nfile;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>fork 과정의 <code>duplicate_fd_table()</code>은 부모의 fd를 순회하면서 각 파일에 <code>file_duplicate()</code>를 호출한다.</p>
+<p><strong>userprog/process.c:274 — duplicate_fd_table():</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> duplicate_fd_table</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">curr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">parent</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->fd_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> palloc_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(PAL_ZERO);</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    // ...</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">; fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> parent->next_fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> FD_MAX; fd</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (parent->fd_table[fd] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">            continue</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">        curr->fd_table[fd] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> file_duplicate</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(parent->fd_table[fd]);</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // → 새 struct file 생성, 같은 inode지만 독립 pos</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    curr->next_fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> parent->next_fd;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>따라서 부모와 자식의 struct file은 서로 다르지만 두 객체가 가리키는 inode는 같다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% PintOS의 복사된 struct file 구조\nflowchart TD\n  parent[\&quot;부모&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file\&quot;]\n  child[\&quot;자식&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file\&quot;]\n  parent_file[\&quot;struct file&lt;br/>pos = 100&lt;br/>inode -&amp;gt; 같은 inode\&quot;]\n  child_file[\&quot;struct file&lt;br/>pos = 100&lt;br/>복사 뒤 독립 pos\&quot;]\n  inode[\&quot;struct inode&lt;br/>inode_reopen()&lt;br/>open_cnt++\&quot;]\n  parent -->|fd 3| parent_file\n  child -->|fd 3| child_file\n  parent_file -->|inode| inode\n  child_file -->|inode| inode&quot;">%% PintOS의 복사된 struct file 구조
+flowchart TD
+  parent[&quot;부모&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file&quot;]
+  child[&quot;자식&lt;br/>fd_table&lt;br/>[3] -&amp;gt; struct file&quot;]
+  parent_file[&quot;struct file&lt;br/>pos = 100&lt;br/>inode -&amp;gt; 같은 inode&quot;]
+  child_file[&quot;struct file&lt;br/>pos = 100&lt;br/>복사 뒤 독립 pos&quot;]
+  inode[&quot;struct inode&lt;br/>inode_reopen()&lt;br/>open_cnt++&quot;]
+  parent -->|fd 3| parent_file
+  child -->|fd 3| child_file
+  parent_file -->|inode| inode
+  child_file -->|inode| inode
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="linux와-pintos의-차이">Linux와 PintOS의 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#linux와-pintos의-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux (POSIX)</th><th>PintOS</th></tr></thead><tbody><tr><td>fork 후 struct file</td><td>같은 객체 공유 (refcount++)</td><td>독립 복사본 (file_duplicate)</td></tr><tr><td>offset 공유</td><td>공유됨</td><td>독립</td></tr><tr><td>inode 공유</td><td>공유 (i_count++)</td><td>공유 (open_cnt++)</td></tr><tr><td>dup() 시맨틱</td><td>같은 struct file 공유</td><td>N/A (미구현)</td></tr><tr><td>메모리 비용/fd</td><td>참조 카운트 1 증가</td><td>struct file 1개 새 할당 (~24B)</td></tr><tr><td>POSIX 호환</td><td>완전 호환</td><td>비호환 (offset 독립)</td></tr></tbody></table></div>
+<p>PintOS의 선택은 문서에 제시된 구현 구조로 설명할 수 있다. PintOS의 struct file에는 refcount 필드가 없으므로 객체를 공유하려면 구조체와 <code>close()</code>의 참조 관리 로직을 확장해야 한다. 현재 구현은 fd 번호와 같은 inode 접근을 유지하면서 struct file을 복사해 offset을 분리한다. 또한 파일 시스템 접근은 <code>filesys_lock</code> 하나로 직렬화된다. 이 문서에서는 이를 동기화 복잡성을 줄인 교육용 구현으로 해석하지만, 그 설계 의도를 별도 자료로 확인한 것은 아니다.</p>
+<h2 id="fork-후-read에서-보이는-차이">fork 후 <code>read()</code>에서 보이는 차이<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fork-후-read에서-보이는-차이" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서는 부모와 자식이 같은 struct file의 <code>f_pos</code>를 사용한다. 부모의 <code>read()</code>가 <code>f_pos</code>를 바꾸면 자식의 다음 <code>read()</code>는 바뀐 위치에서 시작한다. PintOS에서는 복제 시점의 <code>pos</code>만 같고 이후 객체가 분리되므로, 부모의 <code>read()</code>가 자식의 <code>pos</code>를 바꾸지 않는다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% fork 후 read 시 offset 변화\nflowchart TD\n  linux_result[\&quot;결과&lt;br/>부모 read가 자식 offset에 영향\&quot;]\n  pintos_copy[\&quot;pos = 0 복사&lt;br/>이후 struct file 독립\&quot;]\n  pintos_result[\&quot;결과&lt;br/>부모와 자식 offset 독립\&quot;]\n  start_linux[\&quot;start_linux\&quot;]\n  linux_parent_read[\&quot;linux_parent_read\&quot;]\n  linux_child_read[\&quot;linux_child_read\&quot;]\n  start_pintos[\&quot;start_pintos\&quot;]\n  pintos_parent_read[\&quot;pintos_parent_read\&quot;]\n  pintos_child_read[\&quot;pintos_child_read\&quot;]\n  start_linux --> linux_parent_read\n  linux_parent_read --> linux_child_read\n  linux_child_read --> linux_result\n  start_pintos --> pintos_copy\n  pintos_copy --> pintos_parent_read\n  pintos_copy --> pintos_child_read\n  pintos_parent_read --> pintos_result\n  pintos_child_read --> pintos_result&quot;">%% fork 후 read 시 offset 변화
+flowchart TD
+  linux_result[&quot;결과&lt;br/>부모 read가 자식 offset에 영향&quot;]
+  pintos_copy[&quot;pos = 0 복사&lt;br/>이후 struct file 독립&quot;]
+  pintos_result[&quot;결과&lt;br/>부모와 자식 offset 독립&quot;]
+  start_linux[&quot;start_linux&quot;]
+  linux_parent_read[&quot;linux_parent_read&quot;]
+  linux_child_read[&quot;linux_child_read&quot;]
+  start_pintos[&quot;start_pintos&quot;]
+  pintos_parent_read[&quot;pintos_parent_read&quot;]
+  pintos_child_read[&quot;pintos_child_read&quot;]
+  start_linux --> linux_parent_read
+  linux_parent_read --> linux_child_read
+  linux_child_read --> linux_result
+  start_pintos --> pintos_copy
+  pintos_copy --> pintos_parent_read
+  pintos_copy --> pintos_child_read
+  pintos_parent_read --> pintos_result
+  pintos_child_read --> pintos_result
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="pintos-복제-비용을-따라가기">PintOS 복제 비용을 따라가기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-복제-비용을-따라가기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>문서에 제시된 구조와 크기 가정을 적용하면 다음과 같이 계산된다. struct file 크기와 연산 비용은 근삿값이며, 실제 측정 결과로 제시된 값은 아니다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>struct file 크기</td><td>8B (inode*) + 4B (pos) + 4B (deny_write+padding) ≈ 16~24B</td></tr><tr><td>FD_MAX</td><td>PGSIZE / sizeof(struct file*) = 4096 / 8 = 512</td></tr><tr><td>fork 시 fd_table 페이지</td><td>1 page = 4096B (palloc_get_page)</td></tr><tr><td>inode refcount (open_cnt)</td><td>fork마다 +1 (inode_reopen)</td></tr><tr><td>file_duplicate 비용</td><td>calloc(1, sizeof file) + inode_reopen = ~수십 사이클</td></tr></tbody></table></div>
+<p>fd 3개가 열린 상태를 가정하면 자식은 fd_table용 페이지 하나와 각 fd의 새 struct file을 할당한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>부모: fd_table = [NULL, NULL, file_A, file_B, file_C]</span></span>
+<span data-line><span>                  stdin  stdout   fd=2     fd=3     fd=4</span></span>
+<span data-line> </span>
+<span data-line><span>fork 후 자식:</span></span>
+<span data-line><span>  palloc_get_page(PAL_ZERO)           → 4096B 할당</span></span>
+<span data-line><span>  file_duplicate(file_A)              → 새 struct file + inode_reopen</span></span>
+<span data-line><span>  file_duplicate(file_B)              → 새 struct file + inode_reopen</span></span>
+<span data-line><span>  file_duplicate(file_C)              → 새 struct file + inode_reopen</span></span>
+<span data-line> </span>
+<span data-line><span>비용: 4096B + 3 × ~24B = ~4168B</span></span>
+<span data-line><span>inode open_cnt: 각 inode에 +1</span></span></code></pre></figure>
+<p>이 계산은 표에 적힌 크기를 사용한 추정이며, 실행 환경에서 측정한 메모리 사용량이나 사이클 수는 아니다.</p>
+<h2 id="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현을-다시-찾기-위한-코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td>filesys/file.c:7</td><td>struct file</td><td>inode*, pos, deny_write</td></tr><tr><td>filesys/file.c:45</td><td>file_duplicate()</td><td>pos까지 복사한 독립 사본 생성</td></tr><tr><td>filesys/file.c:36</td><td>file_reopen()</td><td>같은 inode의 새 file (pos=0)</td></tr><tr><td>userprog/process.c:274</td><td>duplicate_fd_table()</td><td>fork 시 fd별 file_duplicate 루프</td></tr><tr><td>userprog/process.c:320</td><td>duplicate_running_file()</td><td>실행 파일도 복제</td></tr><tr><td>filesys/inode.c</td><td>inode_reopen()</td><td>open_cnt++</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/fd-table-fork-duplication-knowledge" class="internal internal-link alias" data-slug="wiki/os/fd-table-fork-duplication-knowledge">fork 시 fd 복제</a></li>
+<li><a href="../../wiki/os/struct-file-inode" class="internal internal-link alias" data-slug="wiki/os/struct-file-inode">struct file → inode 관계</a></li>
+<li><a href="../../wiki/os/fd-table-per-process" class="internal internal-link alias" data-slug="wiki/os/fd-table-per-process">프로세스별 fd table 배열 구조</a></li>
+<li><a href="../../wiki/os/process-fork-mechanism" class="internal internal-link alias" data-slug="wiki/os/process-fork-mechanism">fork 전체 흐름</a></li>
+<li><a href="../../wiki/os/fd-number-meaning" class="internal internal-link alias" data-slug="wiki/os/fd-number-meaning">fd 숫자의 의미</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/file-system-storage" class="internal">파일시스템과 저장소</a></li><li><a href="../../wiki/os/executable-deny-write-lab" class="internal">실행 파일 쓰기 금지</a></li><li><a href="../../wiki/os/fd-table-per-process" class="internal">프로세스별 fd_table 배열</a></li><li><a href="../../wiki/os/file-descriptor-knowledge" class="internal">파일 디스크립터</a></li><li><a href="../../wiki/os/stdin-stdout-fd" class="internal">표준 입출력 fd</a></li><li><a href="../../wiki/os/struct-file-inode" class="internal">struct file → inode</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-634" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#공유-파일-오프셋" data-for="공유-파일-오프셋">공유 파일 오프셋</a></li><li class="depth-1"><a href="#fork-뒤-파일-offset은-어떻게-달라지는가" data-for="fork-뒤-파일-offset은-어떻게-달라지는가">fork 뒤 파일 offset은 어떻게 달라지는가</a></li><li class="depth-1"><a href="#file-descriptor와-open-file-description" data-for="file-descriptor와-open-file-description">File Descriptor와 Open File Description</a></li><li class="depth-1"><a href="#linux-같은-struct-file-공유" data-for="linux-같은-struct-file-공유">Linux: 같은 struct file 공유</a></li><li class="depth-1"><a href="#pintos-struct-file을-복사해-offset-분리" data-for="pintos-struct-file을-복사해-offset-분리">PintOS: struct file을 복사해 offset 분리</a></li><li class="depth-1"><a href="#linux와-pintos의-차이" data-for="linux와-pintos의-차이">Linux와 PintOS의 차이</a></li><li class="depth-1"><a href="#fork-후-read에서-보이는-차이" data-for="fork-후-read에서-보이는-차이">fork 후 read()에서 보이는 차이</a></li><li class="depth-1"><a href="#pintos-복제-비용을-따라가기" data-for="pintos-복제-비용을-따라가기">PintOS 복제 비용을 따라가기</a></li><li class="depth-1"><a href="#구현을-다시-찾기-위한-코드-좌표" data-for="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

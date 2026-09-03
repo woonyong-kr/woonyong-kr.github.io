@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>Clock hand로 victim frame 고르기 Lab · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="Clock hand로 victim frame 고르기 Lab · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Clock hand로 victim frame 고르기 Lab · 최우녕"/><meta name="twitter:description" content="pallocgetpage(PALUSER)가 NULL을 줄 때 vmgetvictim()이 frame table을 clock hand로 순회하며 accessed bit가 1이면 0으로 내리고 건너뛰어 덜 최근에 쓴 frame을 victim으로 고르는 과정으로, frame table·hand 위치·frame lock·victim의 owner pml4 상태가 함께 필요하다."/><meta property="og:description" content="pallocgetpage(PALUSER)가 NULL을 줄 때 vmgetvictim()이 frame table을 clock hand로 순회하며 accessed bit가 1이면 0으로 내리고 건너뛰어 덜 최근에 쓴 frame을 victim으로 고르는 과정으로, frame table·hand 위치·frame lock·victim의 owner pml4 상태가 함께 필요하다."/><meta property="og:image:alt" content="pallocgetpage(PALUSER)가 NULL을 줄 때 vmgetvictim()이 frame table을 clock hand로 순회하며 accessed bit가 1이면 0으로 내리고 건너뛰어 덜 최근에 쓴 frame을 victim으로 고르는 과정으로, frame table·hand 위치·frame lock·victim의 owner pml4 상태가 함께 필요하다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/clock-hand-victim-selection-lab"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/clock-hand-victim-selection-lab"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="pallocgetpage(PALUSER)가 NULL을 줄 때 vmgetvictim()이 frame table을 clock hand로 순회하며 accessed bit가 1이면 0으로 내리고 건너뛰어 덜 최근에 쓴 frame을 victim으로 고르는 과정으로, frame table·hand 위치·frame lock·victim의 owner pml4 상태가 함께 필요하다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/clock-hand-victim-selection-lab" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-430" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-430" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>Clock hand로 victim frame 고르기 Lab</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="clock-hand로-victim-frame-고르기-lab">Clock hand로 victim frame 고르기 Lab<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand로-victim-frame-고르기-lab" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>범위: 이 문서는 clock hand 기반 victim frame 선택의 일반 원리와 PintOS에서의 설계·관찰 기준을 설명한다. 코드 좌표와 필드 구성, 실행 흐름, 테스트·GDB 항목은 특정 구현의 실제 코드·버전·실행 기록으로 별도 검증해야 하며, 성능 측정 결과는 다루지 않는다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: <code>palloc_get_page(PAL_USER)</code>가 <code>NULL</code>을 줄 때 <code>vm_get_victim()</code>이 frame table을 clock hand로 순회하며 accessed bit가 1이면 0으로 내리고 건너뛰어 덜 최근에 쓴 frame을 victim으로 고르는 과정으로, frame table·hand 위치·frame lock·victim의 owner pml4 상태가 함께 필요하다.</p>
+</blockquote>
+<h2 id="왜-frame-table이-필요한가">왜 frame table이 필요한가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#왜-frame-table이-필요한가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>vm_get_frame()</code>이 <code>palloc_get_page(PAL_USER)</code>로 새 프레임을 얻으려 했는데 <code>NULL</code>을 받았다고 하자.</p>
+<p>이때 바로 실패하면 가상 메모리 과제의 핵심을 놓친다. 운영체제는 보통 이렇게 묻는다.</p>
+<blockquote>
+<p>이미 RAM에 올라와 있는 frame 중 하나를 골라 내보내고, 그 자리를 새 page가 쓰게 할 수 있을까?</p>
+</blockquote>
+<p>이번 Lab의 꼬리 질문은 다음 순서다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>왜 frame table이 필요한가?</span></span>
+<span data-line><span>-> clock hand는 무엇을 기억하는가?</span></span>
+<span data-line><span>-> accessed bit가 1이면 왜 바로 victim으로 고르지 않는가?</span></span>
+<span data-line><span>-> dirty page는 왜 swap/file backing으로 내려가야 하는가?</span></span>
+<span data-line><span>-> PintOS의 현재 struct page/frame에는 어떤 필드가 부족한가?</span></span>
+<span data-line><span>-> QEMU는 이 정책을 어디까지 도와주는가?</span></span>
+<span data-line><span>-> GDB로 무엇을 보면 clock hand가 움직였다고 말할 수 있는가?</span></span></code></pre></figure>
+<h2 id="clock-hand-victim-필요성">Clock hand victim 필요성<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-필요성" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">프레임 교체 (Frame Eviction) Trace</a>는 빈 frame이 없을 때 <code>vm_evict_frame()</code>으로 가야 한다고 설명한다. 하지만 실제 구현에는 한 단계가 더 필요하다.</p>
+<p>커널이 victim을 고르려면 “지금 어떤 frame들이 사용 중인가”를 한눈에 볼 수 있어야 한다. 이 목록이 frame table이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame table</span></span>
+<span data-line><span>  -> frame F0: page A를 담고 있음</span></span>
+<span data-line><span>  -> frame F1: page B를 담고 있음</span></span>
+<span data-line><span>  -> frame F2: page C를 담고 있음</span></span></code></pre></figure>
+<p>frame table이 없으면 <code>vm_get_victim()</code>은 후보를 순회할 출발점 자체가 없다. <code>struct frame</code> 안에 <code>page</code> 포인터가 있어도, 그 <code>struct frame</code>들을 모아 둔 전역 목록이 없으면 “전체 frame 중 하나”를 고를 수 없다.</p>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="vm_get_victim-clock-algorithm-전체">vm_get_victim() clock algorithm 전체<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#vm_get_victim-clock-algorithm-전체" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    START[palloc_get_page PAL_USER == NULL] --> EVICT[vm_evict_frame 호출]\n    EVICT --> GETVICTIM[vm_get_victim 호출]\n    GETVICTIM --> INITHAND{clock_ptr == NULL?}\n    INITHAND -->|yes| SETBEGIN[clock_ptr = list_begin frame_table]\n    INITHAND -->|no| CHECK\n    SETBEGIN --> CHECK{clock_ptr == list_end?}\n    CHECK -->|yes| WRAP[clock_ptr = list_begin 원형 순회]\n    WRAP --> CHECK\n    CHECK -->|no| GETFRAME[frame = list_entry clock_ptr]\n    GETFRAME --> ACCESSED{pml4_is_accessed&lt;br/>owner->pml4, page->va?}\n    ACCESSED -->|yes: accessed=1| CLEAR[pml4_set_accessed false&lt;br/>두 번째 기회 부여]\n    CLEAR --> ADVANCE1[clock_ptr = list_next]\n    ADVANCE1 --> CHECK\n    ACCESSED -->|no: accessed=0| FOUND[victim = 현재 frame]\n    FOUND --> ADVANCE2[clock_ptr = list_next&lt;br/>다음 검색 시작점 기억]\n    ADVANCE2 --> RETURN[return victim]\n    RETURN --> SWAPOUT{swap_out victim->page 성공?}\n    SWAPOUT -->|yes| CLEANUP[victim->page->frame = NULL&lt;br/>victim->page = NULL&lt;br/>victim->owner_thread = NULL]\n    CLEANUP --> REUSE[evicted frame 반환&lt;br/>새 page에 재사용]\n    SWAPOUT -->|no| FAIL[return NULL]&quot;">flowchart TD
+    START[palloc_get_page PAL_USER == NULL] --> EVICT[vm_evict_frame 호출]
+    EVICT --> GETVICTIM[vm_get_victim 호출]
+    GETVICTIM --> INITHAND{clock_ptr == NULL?}
+    INITHAND -->|yes| SETBEGIN[clock_ptr = list_begin frame_table]
+    INITHAND -->|no| CHECK
+    SETBEGIN --> CHECK{clock_ptr == list_end?}
+    CHECK -->|yes| WRAP[clock_ptr = list_begin 원형 순회]
+    WRAP --> CHECK
+    CHECK -->|no| GETFRAME[frame = list_entry clock_ptr]
+    GETFRAME --> ACCESSED{pml4_is_accessed&lt;br/>owner->pml4, page->va?}
+    ACCESSED -->|yes: accessed=1| CLEAR[pml4_set_accessed false&lt;br/>두 번째 기회 부여]
+    CLEAR --> ADVANCE1[clock_ptr = list_next]
+    ADVANCE1 --> CHECK
+    ACCESSED -->|no: accessed=0| FOUND[victim = 현재 frame]
+    FOUND --> ADVANCE2[clock_ptr = list_next&lt;br/>다음 검색 시작점 기억]
+    ADVANCE2 --> RETURN[return victim]
+    RETURN --> SWAPOUT{swap_out victim->page 성공?}
+    SWAPOUT -->|yes| CLEANUP[victim->page->frame = NULL&lt;br/>victim->page = NULL&lt;br/>victim->owner_thread = NULL]
+    CLEANUP --> REUSE[evicted frame 반환&lt;br/>새 page에 재사용]
+    SWAPOUT -->|no| FAIL[return NULL]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="victim-dirty-판단과-swap_out-분기">victim dirty 판단과 swap_out 분기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#victim-dirty-판단과-swap_out-분기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    VICTIM[victim frame 선정] --> DIRTY{pml4_is_dirty&lt;br/>owner->pml4, page->va?}\n    DIRTY -->|dirty=1| TYPE{page type?}\n    TYPE -->|VM_ANON| SWAP[anon_swap_out&lt;br/>disk_write x 8 sectors]\n    TYPE -->|VM_FILE| WRITEBACK[file_backed_swap_out&lt;br/>file_write_at]\n    DIRTY -->|dirty=0| DISCARD[frame 내용 버림&lt;br/>원본과 동일]\n    SWAP --> CLEAR_PTE[pml4_clear_page&lt;br/>invlpg TLB flush]\n    WRITEBACK --> CLEAR_PTE\n    DISCARD --> CLEAR_PTE&quot;">flowchart LR
+    VICTIM[victim frame 선정] --> DIRTY{pml4_is_dirty&lt;br/>owner->pml4, page->va?}
+    DIRTY -->|dirty=1| TYPE{page type?}
+    TYPE -->|VM_ANON| SWAP[anon_swap_out&lt;br/>disk_write x 8 sectors]
+    TYPE -->|VM_FILE| WRITEBACK[file_backed_swap_out&lt;br/>file_write_at]
+    DIRTY -->|dirty=0| DISCARD[frame 내용 버림&lt;br/>원본과 동일]
+    SWAP --> CLEAR_PTE[pml4_clear_page&lt;br/>invlpg TLB flush]
+    WRITEBACK --> CLEAR_PTE
+    DISCARD --> CLEAR_PTE
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="clock-hand-victim-흐름">Clock hand victim 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>처음에는 clock hand를 원형 리스트 위를 도는 손가락으로 생각하면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>          hand</span></span>
+<span data-line><span>           |</span></span>
+<span data-line><span>           v</span></span>
+<span data-line><span>frame table: F0 -> F1 -> F2 -> F3 -> 다시 F0</span></span></code></pre></figure>
+<p>각 frame이 담고 있는 page의 PTE에서 accessed bit를 본다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th style="text-align:right;">accessed bit</th><th>판단</th></tr></thead><tbody><tr><td style="text-align:right;">1</td><td>최근에 쓰였으니 bit를 0으로 내리고 한 번 기회를 준다</td></tr><tr><td style="text-align:right;">0</td><td>최근 관찰 구간에서 쓰이지 않았으니 victim 후보로 고른다</td></tr></tbody></table></div>
+<p>이 방식이 clock인 이유는 매번 리스트 처음부터 다시 보지 않고, 마지막에 멈춘 위치 다음부터 계속 돌기 때문이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>vm_get_victim()</span></span>
+<span data-line><span>  -> clock hand가 가리키는 frame 확인</span></span>
+<span data-line><span>  -> accessed=1이면 clear하고 hand 이동</span></span>
+<span data-line><span>  -> accessed=0이면 victim으로 반환</span></span></code></pre></figure>
+<p>여기서 dirty bit는 victim 선택 뒤의 질문에 답한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>victim이 dirty인가?</span></span>
+<span data-line><span>  -> yes: page type에 맞는 backing으로 4096B 보존</span></span>
+<span data-line><span>  -> no : 원본과 달라진 byte가 없으므로 덮어써도 됨</span></span></code></pre></figure>
+<p>accessed/dirty bit 자체는 <a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty bit로 victim 판단</a>에서 더 자세히 다룬다. 이번 Lab은 그 bit를 <code>vm_get_victim()</code>의 순회 상태와 연결한다.</p>
+<h2 id="유저-풀에-frame-네-개만-있다고-가정하자">유저 풀에 frame 네 개만 있다고 가정하자<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#유저-풀에-frame-네-개만-있다고-가정하자" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>유저 풀에 frame 네 개만 있다고 가정하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>F0 -> page A, accessed=1, dirty=0</span></span>
+<span data-line><span>F1 -> page B, accessed=1, dirty=1</span></span>
+<span data-line><span>F2 -> page C, accessed=0, dirty=0</span></span>
+<span data-line><span>F3 -> page D, accessed=0, dirty=1</span></span>
+<span data-line> </span>
+<span data-line><span>clock hand = F0</span></span></code></pre></figure>
+<p>새 page E가 필요하지만 빈 frame이 없다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. F0를 본다.</span></span>
+<span data-line><span>   A.accessed=1</span></span>
+<span data-line><span>   -> A.accessed를 0으로 clear</span></span>
+<span data-line><span>   -> hand를 F1로 이동</span></span>
+<span data-line> </span>
+<span data-line><span>2. F1을 본다.</span></span>
+<span data-line><span>   B.accessed=1</span></span>
+<span data-line><span>   -> B.accessed를 0으로 clear</span></span>
+<span data-line><span>   -> hand를 F2로 이동</span></span>
+<span data-line> </span>
+<span data-line><span>3. F2를 본다.</span></span>
+<span data-line><span>   C.accessed=0</span></span>
+<span data-line><span>   -> F2를 victim으로 선택</span></span>
+<span data-line><span>   -> hand는 다음 후보인 F3 근처로 이동</span></span></code></pre></figure>
+<p>이 결과는 “최근에 접근된 A/B는 한 번 더 기회를 받고, 최근 관찰되지 않은 C가 먼저 나간다”는 뜻이다.</p>
+<p>만약 F2 대신 F3을 골랐다면 <code>dirty=1</code> 때문에 <code>swap_out(page D)</code> 또는 file write-back 같은 추가 작업이 필요하다. 따라서 clock hand는 victim을 고르는 기준이고, dirty bit는 victim을 고른 뒤 데이터를 보존할지 판단하는 기준이다.</p>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux와 Windows도 resident page를 계속 추적하고, 접근 기록과 dirty 상태를 메모리 회수 정책에 사용한다.</p>
+<p>Linux는 active/inactive LRU 계열 리스트, page cache, anonymous page, writeback, cgroup, NUMA 같은 요소를 함께 본다. Windows도 working set, standby list, modified page list, pagefile 같은 상태를 함께 다룬다.</p>
+<p>현실 OS의 정책은 PintOS의 단순 clock보다 훨씬 복잡하지만, 초보자가 먼저 잡을 공통 질문은 같다.</p>
+<blockquote>
+<p>최근에 다시 쓸 가능성이 낮고, 내보내도 복원 가능한 page는 무엇인가?</p>
+</blockquote>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS KAIST 스켈레톤의 핵심 위치는 다음이다.</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/vm.c</code>
+<ul>
+<li><code>vm_init()</code></li>
+<li><code>vm_get_frame()</code></li>
+<li><code>vm_get_victim()</code></li>
+<li><code>vm_evict_frame()</code></li>
+<li><code>vm_do_claim_page()</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/vm/vm.h</code>
+<ul>
+<li><code>struct page</code></li>
+<li><code>struct frame</code></li>
+</ul>
+</li>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/mmu.c</code>
+<ul>
+<li><code>pml4_is_accessed()</code></li>
+<li><code>pml4_set_accessed()</code></li>
+<li><code>pml4_is_dirty()</code></li>
+<li><code>pml4_clear_page()</code></li>
+</ul>
+</li>
+</ul>
+<p>현재 저장소의 <code>struct frame</code>은 매우 작다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>이 구조만으로는 frame table에 넣을 수 없다. PintOS의 intrusive list를 쓰려면 보통 <code>struct list_elem</code> 같은 연결 필드가 필요하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">page;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list_elem elem;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment"> /* frame table 연결용 */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>또 하나 중요한 설계점이 있다. <code>pml4_is_accessed()</code>는 어떤 page table root, 즉 어떤 <code>pml4</code>에서 해당 VA를 볼지 받아야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_is_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(pml4, page</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">va</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span></code></pre></figure>
+<p>victim page가 항상 현재 thread의 page라고 가정하면 <code>thread_current()->pml4</code>로도 돌아가는 것처럼 보일 수 있다. 하지만 frame table은 전역 목록이고, victim은 다른 process의 page일 수 있다. 그런 설계에서는 page나 frame 쪽에 owner thread 또는 owner pml4를 추적해야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct page 또는 struct frame에 필요한 대표 추가 정보</span></span>
+<span data-line><span>  -> frame table용 list_elem</span></span>
+<span data-line><span>  -> 이 page의 PTE를 볼 owner pml4 또는 owner thread</span></span>
+<span data-line><span>  -> eviction 중 중복 선택을 막을 pin/busy 상태</span></span></code></pre></figure>
+<p>중요한 것은 <code>vm_get_victim()</code>이 후보 목록, 현재 hand 위치, PTE를 볼 주소 공간 기준을 모두 알아야 한다는 점이다.</p>
+<p>W09 코드 기준으로 읽으면 빈칸은 더 선명하다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th style="text-align:right;">줄</th><th>읽어야 할 의미</th></tr></thead><tbody><tr><td><code>pintos/vm/vm.c</code></td><td style="text-align:right;">89-95</td><td><code>vm_get_victim()</code>은 아직 <code>NULL</code>만 돌려주는 TODO다</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td style="text-align:right;">100-104</td><td><code>vm_evict_frame()</code>은 victim을 골라 swap out하고 frame을 돌려줘야 한다</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td style="text-align:right;">112-118</td><td><code>vm_get_frame()</code>은 유저 풀 부족 시 eviction으로 이어져야 한다</td></tr><tr><td><code>pintos/vm/vm.c</code></td><td style="text-align:right;">162-171</td><td><code>vm_do_claim_page()</code>는 frame/page 연결 뒤 PTE 설치와 <code>swap_in()</code>을 완성해야 한다</td></tr><tr><td><code>pintos/include/vm/vm.h</code></td><td style="text-align:right;">63-67</td><td>기본 <code>struct frame</code>에는 <code>kva</code>, <code>page</code>만 있고 list/pin/owner 필드는 없다</td></tr></tbody></table></div>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 frame table도, clock hand도 모른다.</p>
+<p>QEMU가 도와주는 부분은 x86 하드웨어 효과다. guest CPU가 page table을 걷고 메모리에 접근하면 QEMU는 guest PTE의 accessed/dirty bit가 set되는 효과를 재현한다.</p>
+<p>대표 위치:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/cpu.h" class="external external-link">target/i386/cpu.h<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li><code>PG_ACCESSED_BIT</code></li>
+<li><code>PG_DIRTY_BIT</code></li>
+<li><code>PG_ACCESSED_MASK</code></li>
+<li><code>PG_DIRTY_MASK</code></li>
+</ul>
+</li>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>
+<ul>
+<li>page walk 중 accessed bit를 set</li>
+<li>store 접근이면 dirty bit도 set</li>
+</ul>
+</li>
+</ul>
+<p>이 말은 즉:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>QEMU</span></span>
+<span data-line><span>  -> guest PTE accessed/dirty bit 효과를 만들어 줌</span></span>
+<span data-line> </span>
+<span data-line><span>PintOS</span></span>
+<span data-line><span>  -> 그 bit를 읽고 어떤 frame을 내보낼지 결정함</span></span></code></pre></figure>
+<p>Host macOS/Linux가 QEMU process의 메모리를 swap out할 수도 있지만, 그것은 PintOS guest의 <code>anon_swap_out()</code>과 다른 층의 사건이다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>| 항목 | Linux / Windows | PintOS | QEMU |
+|---|---|---|
+| 후보 목록 | 복잡한 page/frame list와 per-node/per-process 상태 | frame table을 직접 설계 | 없음 |
+| hand 또는 reclaim cursor | LRU/reclaim cursor 계열 정책 일부 | <code>vm_get_victim()</code>에 clock hand 구현 가능 | 없음 |
+| accessed bit | reclaim 힌트 중 하나 | <code>pml4_is_accessed()</code>와 <code>pml4_set_accessed()</code>로 사용 | guest PTE bit 효과를 에뮬레이션 |
+| dirty 처리 | writeback, swap, page cache와 연결 | <code>swap_out(page)</code>가 page type별로 처리 | 정책 없음 |
+| 주소 공간 기준 | kernel VM metadata로 추적 | victim page의 owner pml4를 알아야 안전 | guest CR3/PTE를 하드웨어처럼 해석 |</p>
+<h2 id="clock-hand-victim-코드">Clock hand victim 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-빈-frame-확보-실패-지점">1. 빈 frame 확보 실패 지점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-빈-frame-확보-실패-지점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/vm/vm.c</code></li>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/palloc.c</code></li>
+</ul>
+<p><code>palloc_get_page(PAL_USER)</code>는 유저 풀에 빈 page가 없으면 <code>NULL</code>을 반환할 수 있다. <code>vm_get_frame()</code>은 이 실패를 <code>vm_evict_frame()</code> 호출로 이어야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>kva = palloc_get_page(PAL_USER)</span></span>
+<span data-line><span>  -> 성공: 새 struct frame 생성, frame table에 등록</span></span>
+<span data-line><span>  -> 실패: vm_evict_frame()으로 victim frame 재사용</span></span></code></pre></figure>
+<h3 id="2-현재-frame-구조에는-목록-연결-필드가-없다">2. 현재 frame 구조에는 목록 연결 필드가 없다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-현재-frame-구조에는-목록-연결-필드가-없다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/vm/vm.h</code></li>
+</ul>
+<p>현재 <code>struct frame</code>은 <code>kva</code>와 <code>page</code>만 가진다. 따라서 frame table을 list로 만들려면 연결용 필드를 추가해야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">kva;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>PintOS list는 <code>struct list_elem</code>을 구조체 안에 직접 넣는 intrusive list다.</p>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/include/lib/kernel/list.h</code></li>
+</ul>
+<p>이 구조 때문에 <code>struct frame</code> 목록도 보통 다음 모양이 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> list frame_table;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> list_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">clock_hand;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> lock frame_table_lock;</span></span></code></pre></figure>
+<h3 id="3-accessed-bit는-clear할-수-있다">3. accessed bit는 clear할 수 있다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-accessed-bit는-clear할-수-있다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/mmu.c</code></li>
+</ul>
+<p><code>pml4_is_accessed()</code>는 PTE의 <code>PTE_A</code>를 읽고, <code>pml4_set_accessed(..., false)</code>는 그 bit를 내린다. clock 알고리즘에서 이 clear가 “두 번째 기회”다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_is_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(owner_pml4, page</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">va</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    pml4_set_accessed</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(owner_pml4, page->va, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">    /* 다음 frame을 본다. */</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<h3 id="4-eviction은-old-mapping을-끊어야-한다">4. eviction은 old mapping을 끊어야 한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-eviction은-old-mapping을-끊어야-한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li>PintOS 저장소 상대 경로 <code>pintos/threads/mmu.c</code></li>
+</ul>
+<p><code>pml4_clear_page()</code>는 present bit를 끄고, 현재 CR3가 같은 pml4라면 <code>invlpg</code>로 낡은 TLB entry도 무효화한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>victim page가 frame에서 내려감</span></span>
+<span data-line><span>  -> pml4_clear_page(owner_pml4, victim->va)</span></span>
+<span data-line><span>  -> victim->frame = NULL</span></span>
+<span data-line><span>  -> frame->page = NULL 또는 새 page로 교체</span></span></code></pre></figure>
+<p>이 단계를 빼면 쫓겨난 old page와 새 page가 같은 frame bytes를 동시에 소유한 것처럼 보인다.</p>
+<h3 id="5-qemu는-hardware-bit-효과만-만든다">5. QEMU는 hardware bit 효과만 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-qemu는-hardware-bit-효과만-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 모델은 다음이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint32_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> set </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PG_ACCESSED_MASK;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (access_type </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> MMU_DATA_STORE) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    set </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PG_DIRTY_MASK;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>QEMU가 set한 bit를 PintOS가 <code>pml4_is_accessed()</code>로 읽을 수 있다. 하지만 victim 선택 정책은 QEMU가 아니라 PintOS 코드에 있다.</p>
+<h2 id="clock-hand-victim-값-추적">Clock hand victim 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-clock-hand-한-바퀴-계산">1. clock hand 한 바퀴 계산<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-clock-hand-한-바퀴-계산" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>초기 상태:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>hand = F0</span></span>
+<span data-line> </span>
+<span data-line><span>F0: A.accessed=1</span></span>
+<span data-line><span>F1: B.accessed=1</span></span>
+<span data-line><span>F2: C.accessed=0</span></span>
+<span data-line><span>F3: D.accessed=0</span></span></code></pre></figure>
+<p>순회:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>검사 1: F0 -> accessed=1 -> clear -> hand=F1</span></span>
+<span data-line><span>검사 2: F1 -> accessed=1 -> clear -> hand=F2</span></span>
+<span data-line><span>검사 3: F2 -> accessed=0 -> victim=F2</span></span></code></pre></figure>
+<p>결과:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>victim frame = F2</span></span>
+<span data-line><span>next hand    = F3</span></span>
+<span data-line> </span>
+<span data-line><span>A.accessed = 0</span></span>
+<span data-line><span>B.accessed = 0</span></span>
+<span data-line><span>C는 evict 대상</span></span>
+<span data-line><span>D는 아직 검사하지 않음</span></span></code></pre></figure>
+<h3 id="2-pte-flag가-어떻게-바뀌는가">2. PTE flag가 어떻게 바뀌는가<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pte-flag가-어떻게-바뀌는가" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>어떤 page B의 PTE가 다음 값이라고 하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE = 0x0000000012345067</span></span></code></pre></figure>
+<p>낮은 12비트가 flag다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>flags = 0x067</span></span>
+<span data-line> </span>
+<span data-line><span>0x001 PTE_P present</span></span>
+<span data-line><span>0x002 PTE_W writable</span></span>
+<span data-line><span>0x004 PTE_U user</span></span>
+<span data-line><span>0x020 PTE_A accessed</span></span>
+<span data-line><span>0x040 PTE_D dirty</span></span></code></pre></figure>
+<p>clock hand가 B를 봤는데 accessed가 1이면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pml4_set_accessed(..., false)</span></span>
+<span data-line> </span>
+<span data-line><span>flags before = 0x067</span></span>
+<span data-line><span>flags after  = 0x047</span></span></code></pre></figure>
+<p>frame 주소 부분 <code>0x12345000</code>은 그대로이고, accessed bit <code>0x20</code>만 내려간다.</p>
+<p>나중에 B가 victim으로 확정되어 present bit를 끄면:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pml4_clear_page(...)</span></span>
+<span data-line> </span>
+<span data-line><span>flags before = 0x047</span></span>
+<span data-line><span>flags after  = 0x046</span></span></code></pre></figure>
+<p>present bit만 내려가므로 dirty bit는 남아 있을 수 있다. 그래서 eviction 코드가 dirty 판단과 backing 기록 순서를 명확히 가져가야 한다.</p>
+<h3 id="3-frame-bytes는-그대로-재사용된다">3. frame bytes는 그대로 재사용된다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-frame-bytes는-그대로-재사용된다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>F2.kva = 0x800012340000</span></span>
+<span data-line><span>C.va   = 0x000000804a000</span></span>
+<span data-line><span>E.va   = 0x000000804e000</span></span></code></pre></figure>
+<p>eviction 전:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>F2.kva + 0x000 .. 0xfff = page C의 4096B</span></span>
+<span data-line><span>C.frame = F2</span></span>
+<span data-line><span>F2.page = C</span></span></code></pre></figure>
+<p>eviction 후:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>C.frame = NULL</span></span>
+<span data-line><span>C의 PTE = not-present</span></span>
+<span data-line><span>F2.page = E</span></span>
+<span data-line><span>E.frame = F2</span></span>
+<span data-line><span>F2.kva + 0x000 .. 0xfff = page E의 4096B</span></span></code></pre></figure>
+<p>같은 4096B 자리가 다른 page의 내용으로 바뀌는 것이다. 그래서 old page의 PTE를 끊고, dirty data를 보존하고, <code>frame->page</code>와 <code>page->frame</code> 양방향 링크를 맞춰야 한다.</p>
+<h2 id="구현-중-체크포인트">구현 중 체크포인트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현-중-체크포인트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Clock hand는 알고리즘 이름보다 불변식이 중요하다. 구현 중에는 다음 표를 먼저 만족시키면 된다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>체크포인트</th><th>통과 기준</th><th>깨졌을 때 증상</th></tr></thead><tbody><tr><td>후보 목록</td><td>frame table에 user pool frame만 들어 있다</td><td>kernel page나 비어 있는 frame을 victim으로 고름</td></tr><tr><td>hand 위치</td><td>victim을 반환한 뒤 다음 후보를 가리킨다</td><td>같은 frame만 반복 검사하거나 starvation이 생김</td></tr><tr><td>owner pml4</td><td>victim page의 PTE를 볼 주소 공간을 안다</td><td>다른 process page의 accessed/dirty bit를 현재 thread PML4에서 읽음</td></tr><tr><td>pin/busy 상태</td><td>I/O 중이거나 eviction 중인 frame은 건너뛴다</td><td>file read/write 중인 buffer를 victim으로 골라 데이터가 섞임</td></tr><tr><td>old mapping 제거</td><td><code>swap_out()</code> 뒤 old PTE가 not-present가 된다</td><td>old VA와 new VA가 같은 frame bytes를 공유함</td></tr><tr><td>link 정리</td><td><code>old->frame == NULL</code>, 새 claim 전 <code>victim->page == NULL</code> 또는 일관된 재연결 상태</td><td>cleanup이나 다음 fault에서 같은 frame을 두 번 소유함</td></tr></tbody></table></div>
+<p>특히 owner pml4는 초보 구현에서 자주 빠진다. <code>pml4_is_accessed(thread_current()->pml4, page->va)</code>만 쓰면 현재 실행 중인 process의 page만 볼 수 있다. frame table이 전역이고 victim이 다른 process의 page일 수 있다면, page 또는 frame metadata 안에 그 page를 설치한 pml4 기준을 남겨야 한다.</p>
+<p>테스트별로 기대하는 압박도 다르다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>테스트</th><th>압박하는 부분</th><th>GDB에서 같이 볼 값</th></tr></thead><tbody><tr><td><code>page-linear</code></td><td>순차 접근이 많은 page의 claim과 재접근 일관성</td><td><code>clock_hand</code>, <code>page->va</code>, <code>pml4_is_accessed()</code></td></tr><tr><td><code>swap-anon</code></td><td>anonymous page가 swap slot으로 내려갔다 돌아오는지</td><td><code>page->operations->type</code>, <code>page->anon</code>, <code>old->frame</code></td></tr><tr><td><code>swap-file</code></td><td>file-backed page가 eviction 압력 뒤에도 파일 offset과 zero-fill을 유지하는지</td><td><code>page->file</code>, <code>pml4_is_dirty()</code>, <code>file_backed_swap_in/out()</code></td></tr></tbody></table></div>
+<h2 id="clock-hand-victim-gdb">Clock hand victim GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>아직 구현 전이라면 확인 목표는 “어떤 필드가 없어서 관찰할 수 없는가”를 찾는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b vm_get_frame</span></span>
+<span data-line><span>b vm_evict_frame</span></span>
+<span data-line><span>b vm_get_victim</span></span>
+<span data-line><span>b palloc_get_page</span></span>
+<span data-line><span>b pml4_is_accessed</span></span>
+<span data-line><span>b pml4_set_accessed</span></span>
+<span data-line><span>b pml4_clear_page</span></span></code></pre></figure>
+<p>구현 뒤에는 <code>vm_get_victim()</code>에서 다음 값을 본다. 필드 이름은 구현에 맞게 바꿔 읽으면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p frame_table</span></span>
+<span data-line><span>p clock_hand</span></span>
+<span data-line><span>p victim</span></span>
+<span data-line><span>p victim->kva</span></span>
+<span data-line><span>p victim->page</span></span>
+<span data-line><span>p victim->page->va</span></span>
+<span data-line><span>p victim->page->frame</span></span>
+<span data-line><span>p victim_owner->pml4</span></span>
+<span data-line><span>p pml4_is_accessed(victim_owner->pml4, victim->page->va)</span></span>
+<span data-line><span>p pml4_is_dirty(victim_owner->pml4, victim->page->va)</span></span></code></pre></figure>
+<p>관찰할 순서:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>1. palloc_get_page(PAL_USER)가 NULL을 반환하는 순간을 잡는다.</span></span>
+<span data-line><span>2. vm_evict_frame()으로 들어가는지 본다.</span></span>
+<span data-line><span>3. clock hand가 한 frame씩 이동하는지 본다.</span></span>
+<span data-line><span>4. accessed=1인 page에서 pml4_set_accessed(..., false)가 호출되는지 본다.</span></span>
+<span data-line><span>5. accessed=0인 frame이 victim으로 반환되는지 본다.</span></span>
+<span data-line><span>6. victim page의 PTE가 pml4_clear_page()로 not-present가 되는지 본다.</span></span>
+<span data-line><span>7. 같은 frame->kva가 새 page에 다시 연결되는지 본다.</span></span></code></pre></figure>
+<p>테스트 후보:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>cd pintos  # PintOS 저장소 root에서 실행</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/page-linear</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/swap-anon</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/swap-file</span></span></code></pre></figure>
+<p><code>page-linear</code>는 여러 page를 순서대로 접근하며 page claim과 frame 재사용을 보기 좋다. <code>swap-anon</code>은 anonymous page가 victim으로 나간 뒤 <a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">swap slot</a>에서 다시 돌아오는지 확인하기 좋다. <code>swap-file</code>은 file-backed page가 eviction 압력을 받은 뒤에도 파일 offset과 zero-fill 의미를 잃지 않는지 보는 후보로 둔다.</p>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th style="text-align:right;">줄</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">176–203</td><td><code>vm_get_victim()</code></td><td>clock algorithm 구현: clock_ptr 순회, accessed bit 검사/clear, victim 반환</td></tr><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">208–217</td><td><code>vm_evict_frame()</code></td><td>victim의 swap_out 호출, page→frame 양방향 링크 해제, owner_thread NULL</td></tr><tr><td><code>vm/vm.c</code></td><td style="text-align:right;">231–250</td><td><code>vm_get_frame()</code></td><td>palloc PAL_USER 실패 시 vm_evict_frame 호출, frame 생성·frame_table 등록</td></tr><tr><td><code>include/vm/vm.h</code></td><td style="text-align:right;">66–72</td><td><code>struct frame</code></td><td>kva, page, elem(list_elem), owner_thread, ref_count 필드</td></tr><tr><td><code>include/vm/vm.h</code></td><td style="text-align:right;">45–63</td><td><code>struct page</code></td><td>operations, va, frame, hash_elem, writable, type union</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">320–323</td><td><code>pml4_is_accessed()</code></td><td>PTE의 PTE_A 비트 검사</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">330–341</td><td><code>pml4_set_accessed()</code></td><td>PTE_A 비트 set/clear + 같은 pml4면 invlpg</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">291–294</td><td><code>pml4_is_dirty()</code></td><td>PTE의 PTE_D 비트 검사</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">271–283</td><td><code>pml4_clear_page()</code></td><td>PTE_P 해제 + 같은 CR3면 invlpg</td></tr><tr><td><code>threads/mmu.c</code></td><td style="text-align:right;">251–262</td><td><code>pml4_set_page()</code></td><td>vtop(kpage) OR PTE_P/W/U로 PTE 설치</td></tr><tr><td><code>include/threads/pte.h</code></td><td style="text-align:right;">—</td><td><code>PTE_A</code>, <code>PTE_D</code>, <code>PTE_P</code></td><td>0x20(accessed), 0x40(dirty), 0x01(present)</td></tr><tr><td>QEMU <code>cpu.h</code></td><td style="text-align:right;">—</td><td><code>PG_ACCESSED_BIT</code>, <code>PG_DIRTY_BIT</code></td><td>guest PTE A/D 비트 상수</td></tr><tr><td>QEMU <code>excp_helper.c</code></td><td style="text-align:right;">—</td><td>page walk 중</td><td>accessed/dirty 비트 set 에뮬레이션</td></tr></tbody></table></div>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Clock hand victim 선택은 “accessed bit를 보고 덜 최근에 쓴 page를 고르는 단순한 정책”이다.</p>
+<p>PintOS에서 이 정책을 구현하려면 bit helper만으로는 부족하다. frame table, hand 위치, frame table lock, victim page의 owner pml4, eviction 중 중복 선택을 막는 상태가 함께 필요하다.</p>
+<p>QEMU는 accessed/dirty bit 같은 하드웨어 효과를 만들어 주지만, 어떤 frame을 victim으로 고르고 어디에 write-back할지는 PintOS의 VM 코드가 결정한다.</p>
+<h2 id="clock-hand-victim-관련-문서">Clock hand victim 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#clock-hand-victim-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">Frame Eviction Trace</a>
+<ul>
+<li>victim 선택 앞뒤의 전체 eviction 흐름.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/accessed-dirty-eviction-knowledge" class="internal internal-link alias" data-slug="wiki/os/accessed-dirty-eviction-knowledge">dirty eviction</a>
+<ul>
+<li>accessed/dirty bit의 의미와 write-back 판단.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE bit</a>
+<ul>
+<li>PTE flag가 낮은 비트에 들어가는 이유.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/tlb-cr3-address-space-switch-knowledge" class="internal internal-link alias" data-slug="wiki/os/tlb-cr3-address-space-switch-knowledge">TLB와 CR3</a>
+<ul>
+<li>owner pml4와 현재 CR3/TLB의 관계.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/swap-lab" class="internal internal-link alias" data-slug="wiki/os/swap-lab">swap Lab</a>
+<ul>
+<li>anonymous victim이 swap disk slot으로 내려가는 계산.</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">SPT</a>
+<ul>
+<li>resident가 아닌 page의 backing metadata를 기억하는 장부.</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/threads-execution-model" class="internal">스레드와 스케줄링</a></li><li><a href="../../wiki/os/clock-algorithm-victim" class="internal">시계 알고리즘 희생자 (Clock Algorithm Victim)</a></li><li><a href="../../wiki/os/frame-eviction-trace" class="internal">프레임 교체 (Frame Eviction) Trace</a></li><li><a href="../../wiki/os/page-replacement-algorithms" class="internal">페이지 교체 알고리즘 — Optimal, LRU, Clock</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/pte-accessed-bit" class="internal">PTE 접근 Bit (PTE Accessed Bit)</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-428" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#clock-hand로-victim-frame-고르기-lab" data-for="clock-hand로-victim-frame-고르기-lab">Clock hand로 victim frame 고르기 Lab</a></li><li class="depth-1"><a href="#왜-frame-table이-필요한가" data-for="왜-frame-table이-필요한가">왜 frame table이 필요한가</a></li><li class="depth-1"><a href="#clock-hand-victim-필요성" data-for="clock-hand-victim-필요성">Clock hand victim 필요성</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-2"><a href="#vm_get_victim-clock-algorithm-전체" data-for="vm_get_victim-clock-algorithm-전체">vm_get_victim() clock algorithm 전체</a></li><li class="depth-2"><a href="#victim-dirty-판단과-swap_out-분기" data-for="victim-dirty-판단과-swap_out-분기">victim dirty 판단과 swap_out 분기</a></li><li class="depth-1"><a href="#clock-hand-victim-흐름" data-for="clock-hand-victim-흐름">Clock hand victim 흐름</a></li><li class="depth-1"><a href="#유저-풀에-frame-네-개만-있다고-가정하자" data-for="유저-풀에-frame-네-개만-있다고-가정하자">유저 풀에 frame 네 개만 있다고 가정하자</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#clock-hand-victim-코드" data-for="clock-hand-victim-코드">Clock hand victim 코드</a></li><li class="depth-2"><a href="#1-빈-frame-확보-실패-지점" data-for="1-빈-frame-확보-실패-지점">1. 빈 frame 확보 실패 지점</a></li><li class="depth-2"><a href="#2-현재-frame-구조에는-목록-연결-필드가-없다" data-for="2-현재-frame-구조에는-목록-연결-필드가-없다">2. 현재 frame 구조에는 목록 연결 필드가 없다</a></li><li class="depth-2"><a href="#3-accessed-bit는-clear할-수-있다" data-for="3-accessed-bit는-clear할-수-있다">3. accessed bit는 clear할 수 있다</a></li><li class="depth-2"><a href="#4-eviction은-old-mapping을-끊어야-한다" data-for="4-eviction은-old-mapping을-끊어야-한다">4. eviction은 old mapping을 끊어야 한다</a></li><li class="depth-2"><a href="#5-qemu는-hardware-bit-효과만-만든다" data-for="5-qemu는-hardware-bit-효과만-만든다">5. QEMU는 hardware bit 효과만 만든다</a></li><li class="depth-1"><a href="#clock-hand-victim-값-추적" data-for="clock-hand-victim-값-추적">Clock hand victim 값 추적</a></li><li class="depth-2"><a href="#1-clock-hand-한-바퀴-계산" data-for="1-clock-hand-한-바퀴-계산">1. clock hand 한 바퀴 계산</a></li><li class="depth-2"><a href="#2-pte-flag가-어떻게-바뀌는가" data-for="2-pte-flag가-어떻게-바뀌는가">2. PTE flag가 어떻게 바뀌는가</a></li><li class="depth-2"><a href="#3-frame-bytes는-그대로-재사용된다" data-for="3-frame-bytes는-그대로-재사용된다">3. frame bytes는 그대로 재사용된다</a></li><li class="depth-1"><a href="#구현-중-체크포인트" data-for="구현-중-체크포인트">구현 중 체크포인트</a></li><li class="depth-1"><a href="#clock-hand-victim-gdb" data-for="clock-hand-victim-gdb">Clock hand victim GDB</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#clock-hand-victim-관련-문서" data-for="clock-hand-victim-관련-문서">Clock hand victim 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

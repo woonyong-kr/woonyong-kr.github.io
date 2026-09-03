@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>fault가 한 번도 나지 않은 mmap page는 누가 정리하나 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="fault가 한 번도 나지 않은 mmap page는 누가 정리하나 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="fault가 한 번도 나지 않은 mmap page는 누가 정리하나 · 최우녕"/><meta name="twitter:description" content="한 번도 fault가 발생하지 않은 UNINIT(FILE) page에는 frame도 dirty bit도 없어 write-back할 필요가 없다."/><meta property="og:description" content="한 번도 fault가 발생하지 않은 UNINIT(FILE) page에는 frame도 dirty bit도 없어 write-back할 필요가 없다."/><meta property="og:image:alt" content="한 번도 fault가 발생하지 않은 UNINIT(FILE) page에는 frame도 dirty bit도 없어 write-back할 필요가 없다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/mmap-uninit-file-page-cleanup-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/mmap-uninit-file-page-cleanup-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="한 번도 fault가 발생하지 않은 UNINIT(FILE) page에는 frame도 dirty bit도 없어 write-back할 필요가 없다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/mmap-uninit-file-page-cleanup-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-539" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-539" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>fault가 한 번도 나지 않은 mmap page는 누가 정리하나</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="fault가-한-번도-나지-않은-mmap-page는-누가-정리하나">fault가 한 번도 나지 않은 mmap page는 누가 정리하나<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#fault가-한-번도-나지-않은-mmap-page는-누가-정리하나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: 한 번도 fault가 발생하지 않은 <code>UNINIT(FILE)</code> page에는 frame도 dirty bit도 없어 write-back할 필요가 없다. 그러나 <code>aux</code>가 file reference와 offset을 들고 있으므로, cleanup을 끝내려면 <code>free(page)</code>가 아니라 <code>uninit_destroy()</code>가 <code>aux</code>와 file ownership을 정확히 한 번 정리해야 한다.</p>
+</blockquote>
+<h2 id="미사용-mmap-page-cleanup의-출발점">미사용 mmap page cleanup의 출발점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page-cleanup의-출발점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>mmap()</code>은 파일을 주소 공간에 연결한다. 하지만 lazy loading을 사용하면 <code>mmap()</code> 직후에도 실제 frame은 없을 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">char</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">p </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> mmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">10000000</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">8192</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, fd, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">munmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (p);</span></span></code></pre></figure>
+<p>위 코드에서 사용자가 <code>p[4096]</code>을 한 번도 읽지 않았다면 두 번째 page는 여전히 <code>VM_UNINIT</code> 상태일 수 있다.</p>
+<p>여기서 다음 질문이 생긴다.</p>
+<blockquote>
+<p>frame도 없고 dirty bit도 없는 <code>UNINIT(FILE)</code> page는 <code>munmap()</code> 또는 process exit에서 <code>free(page)</code>만 하면 될까?</p>
+</blockquote>
+<p>짧게 답하면, 아니다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>never-faulted UNINIT(FILE) page에는 frame은 없지만 aux가 있다.</span></span>
+<span data-line><span>aux에는 file reference, file offset, read_bytes 같은 작업지시서가 들어 있을 수 있다.</span></span>
+<span data-line> </span>
+<span data-line><span>따라서 cleanup은 &quot;write-back 없음&quot;으로 끝나는 것이 아니라</span></span>
+<span data-line><span>aux와 file reference ownership을 정확히 한 번 정리해야 끝난다.</span></span></code></pre></figure>
+<h2 id="미사용-mmap-page-cleanup이-필요한-이유">미사용 mmap page cleanup이 필요한 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page-cleanup이-필요한-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>처음 배울 때는 <code>munmap()</code> 정리를 다음과 같이 생각하기 쉽다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>dirty page면 파일에 쓰고,</span></span>
+<span data-line><span>page table entry를 지우고,</span></span>
+<span data-line><span>frame을 반환한다.</span></span></code></pre></figure>
+<p>이 모델은 이미 fault가 발생해 frame이 연결된 page에는 어느 정도 들어맞는다. 하지만 lazy <code>mmap()</code>에는 이와 다른 상태가 존재한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>SPT[0x10001000] -> UNINIT page</span></span>
+<span data-line><span>page->frame     -> NULL</span></span>
+<span data-line><span>PTE             -> 없음</span></span>
+<span data-line><span>page->uninit.aux -> file, ofs, read_bytes, zero_bytes, writable</span></span></code></pre></figure>
+<p>이 page는 RAM에 올라온 적이 없으므로 파일에 write-back할 바이트도 없다. 그러나 <code>aux</code>가 heap에 할당되어 있고 그 안에 <code>file_reopen()</code>으로 얻은 file object가 들어 있다면, 이를 그대로 버릴 수는 없다.</p>
+<p>즉, never-faulted page의 cleanup은 “디스크 write-back” 문제가 아니라 <strong>metadata ownership</strong> 문제다.</p>
+<p>실패하는 구현은 대개 다음 두 유형 중 하나다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>잘못된 구현</th><th>증상</th></tr></thead><tbody><tr><td><code>uninit_destroy()</code>가 아무것도 하지 않음</td><td>never-faulted page의 <code>aux</code>와 file reference leak</td></tr><tr><td><code>uninit_destroy()</code>와 region cleanup이 같은 file을 모두 닫음</td><td>double close, use-after-free, 다음 page cleanup 실패</td></tr></tbody></table></div>
+<p>따라서 가장 먼저 “누가 파일을 닫는가”를 정해야 한다.</p>
+<h2 id="꼬리-질문">꼬리 질문<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#꼬리-질문" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>이번 Trace에서는 다음 질문을 차례로 살펴본다.</p>
+<ol>
+<li>never-faulted <code>UNINIT(FILE)</code> page에는 어떤 자원이 남아 있을까?</li>
+<li><code>destroy(page)</code>는 <code>UNINIT</code> page와 <code>FILE</code> page에서 각각 어떤 함수로 진입할까?</li>
+<li><code>munmap()</code>은 frame이 없는 page에서도 dirty write-back을 해야 할까?</li>
+<li>process exit에서는 fd table을 이미 닫은 뒤에도 왜 mapping file이 살아 있어야 할까?</li>
+<li>file reference를 page별로 소유할지, region 하나가 소유할지 어떻게 결정할까?</li>
+<li>QEMU는 이러한 cleanup 누락을 감지할 수 있을까?</li>
+<li>GDB에서는 never-faulted page cleanup을 어디서 확인할 수 있을까?</li>
+</ol>
+<h2 id="미사용-mmap-page의-cleanup-흐름">미사용 mmap page의 cleanup 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page의-cleanup-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>mmap()</code> page는 cleanup 시점에 다음 세 상태 중 하나일 수 있다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>상태</th><th>page type</th><th>frame</th><th>metadata 위치</th><th>write-back</th><th>cleanup 핵심</th></tr></thead><tbody><tr><td>첫 fault 전</td><td><code>VM_UNINIT</code>, future <code>VM_FILE</code></td><td>없음</td><td><code>page->uninit.aux</code></td><td>없음</td><td>aux와 file ownership 정리</td></tr><tr><td>resident file page</td><td><code>VM_FILE</code></td><td>있음</td><td><code>page->file</code></td><td>dirty이면 필요</td><td>file bytes write-back 뒤 page 정리</td></tr><tr><td>evicted file page</td><td><code>VM_FILE</code></td><td>없을 수 있음</td><td><code>page->file</code></td><td>eviction 때 처리했거나 다시 판단</td><td>file metadata와 reference 정리</td></tr></tbody></table></div>
+<p>처음에는 이 세 상태를 다음과 같이 구분하면 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame이 있나?       -> dirty/write-back 판단에 필요</span></span>
+<span data-line><span>aux가 있나?         -> 첫 fault 전 작업지시서 cleanup에 필요</span></span>
+<span data-line><span>page->file이 있나?  -> 첫 fault 후 file-backed page cleanup에 필요</span></span></code></pre></figure>
+<p><code>aux</code>와 <code>page->file</code>은 같은 개념이 아니다. <a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal internal-link alias" data-slug="wiki/os/mmap-file-page-aux-transition-question">mmap file page의 aux는 언제 struct file page로 옮겨야 하나</a>에서 살펴봤듯이, <code>aux</code>는 첫 fault 전의 임시 작업 지시서이고 <code>page->file</code>은 첫 fault 이후에도 유지되는 metadata다.</p>
+<p>cleanup의 기준은 다음 한 문장으로 정리할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 page type이 무엇인지 보고,</span></span>
+<span data-line><span>그 type이 실제로 소유한 metadata만 정리한다.</span></span>
+<span data-line><span>file_close()는 ownership을 가진 곳에서 정확히 한 번만 호출한다.</span></span></code></pre></figure>
+<h2 id="파일-길이가-6000바이트이고-두-page를-매핑하는-경우">파일 길이가 <code>6000</code>바이트이고 두 page를 매핑하는 경우<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#파일-길이가-6000바이트이고-두-page를-매핑하는-경우" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>파일 길이가 <code>6000</code>바이트이고 두 page를 매핑한다고 가정하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">char</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">p </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> mmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">0x</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">10000000</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">6000</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, fd, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">p</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string"> 'A'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">munmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (p);</span></span></code></pre></figure>
+<p>첫 번째 page는 <code>p[0]</code> 접근으로 fault가 발생했다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x10000000 page</span></span>
+<span data-line><span>  type        = VM_FILE</span></span>
+<span data-line><span>  frame       = 있음</span></span>
+<span data-line><span>  page->file  = file, ofs=0, read_bytes=4096</span></span>
+<span data-line><span>  dirty       = true일 수 있음</span></span></code></pre></figure>
+<p>두 번째 page에는 한 번도 접근하지 않았다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x10001000 page</span></span>
+<span data-line><span>  type              = VM_UNINIT</span></span>
+<span data-line><span>  page_get_type()   = VM_FILE</span></span>
+<span data-line><span>  frame             = NULL</span></span>
+<span data-line><span>  page->uninit.aux  = file, ofs=4096, read_bytes=1904, zero_bytes=2192</span></span></code></pre></figure>
+<p>따라서 <code>munmap(p)</code>는 두 page를 같은 방식으로 처리해서는 안 된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page 0:</span></span>
+<span data-line><span>  dirty이면 file_write_at(file, frame->kva, 4096, 0)</span></span>
+<span data-line><span>  pml4_clear_page()</span></span>
+<span data-line><span>  spt_remove_page()</span></span>
+<span data-line><span>  file-backed cleanup</span></span>
+<span data-line> </span>
+<span data-line><span>page 1:</span></span>
+<span data-line><span>  frame이 없으므로 dirty write-back 없음</span></span>
+<span data-line><span>  PTE도 없을 수 있으므로 pml4_clear_page()는 있어도 효과가 작음</span></span>
+<span data-line><span>  spt_remove_page()</span></span>
+<span data-line><span>  uninit cleanup에서 aux와 file ownership 정리</span></span></code></pre></figure>
+<p>여기서 중요한 점은 page 1의 SPT entry도 지워야 한다는 것이다. 그래야 <code>munmap()</code> 뒤에 같은 주소를 읽었을 때 SPT lookup이 실패하고 프로세스가 종료된다.</p>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>munmap()</code> 또는 process exit에서 mmap page를 정리할 때는 page 상태에 따라 경로가 나뉜다.</p>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n  Start[\&quot;do_munmap(base) 또는\\nsupplemental_page_table_kill()\&quot;]\n  FindPage[\&quot;SPT에서 page 찾기\&quot;]\n  CheckType{\&quot;page->operations->type?\&quot;}\n\n  UninitPath[\&quot;VM_UNINIT\\n(never-faulted)\&quot;]\n  FilePath[\&quot;VM_FILE\\n(resident file page)\&quot;]\n\n  CheckFrame{\&quot;page->frame != NULL?\&quot;}\n  NoDirty[\&quot;frame 없음\\nwrite-back 불필요\&quot;]\n  CheckDirty{\&quot;pml4_is_dirty()?\&quot;}\n  WriteBack[\&quot;file_write_at()\\nframe bytes → file\&quot;]\n  SkipWB[\&quot;clean page\\nwrite-back 불필요\&quot;]\n\n  UninitDestroy[\&quot;uninit_destroy(page)\\naux->file close + aux free\&quot;]\n  FileDestroy[\&quot;file_backed_destroy(page)\\nfile metadata cleanup\&quot;]\n\n  ClearPTE[\&quot;pml4_clear_page()\&quot;]\n  RemoveSPT[\&quot;spt_remove_page()\\nvm_dealloc_page()\&quot;]\n\n  Start --> FindPage --> CheckType\n  CheckType -->|VM_UNINIT| UninitPath --> NoDirty --> UninitDestroy --> RemoveSPT\n  CheckType -->|VM_FILE| FilePath --> CheckFrame\n  CheckFrame -->|NULL| SkipWB --> FileDestroy --> RemoveSPT\n  CheckFrame -->|있음| CheckDirty\n  CheckDirty -->|dirty| WriteBack --> ClearPTE --> FileDestroy\n  CheckDirty -->|clean| SkipWB\n  FileDestroy --> RemoveSPT&quot;">flowchart TD
+  Start[&quot;do_munmap(base) 또는\nsupplemental_page_table_kill()&quot;]
+  FindPage[&quot;SPT에서 page 찾기&quot;]
+  CheckType{&quot;page->operations->type?&quot;}
+
+  UninitPath[&quot;VM_UNINIT\n(never-faulted)&quot;]
+  FilePath[&quot;VM_FILE\n(resident file page)&quot;]
+
+  CheckFrame{&quot;page->frame != NULL?&quot;}
+  NoDirty[&quot;frame 없음\nwrite-back 불필요&quot;]
+  CheckDirty{&quot;pml4_is_dirty()?&quot;}
+  WriteBack[&quot;file_write_at()\nframe bytes → file&quot;]
+  SkipWB[&quot;clean page\nwrite-back 불필요&quot;]
+
+  UninitDestroy[&quot;uninit_destroy(page)\naux->file close + aux free&quot;]
+  FileDestroy[&quot;file_backed_destroy(page)\nfile metadata cleanup&quot;]
+
+  ClearPTE[&quot;pml4_clear_page()&quot;]
+  RemoveSPT[&quot;spt_remove_page()\nvm_dealloc_page()&quot;]
+
+  Start --> FindPage --> CheckType
+  CheckType -->|VM_UNINIT| UninitPath --> NoDirty --> UninitDestroy --> RemoveSPT
+  CheckType -->|VM_FILE| FilePath --> CheckFrame
+  CheckFrame -->|NULL| SkipWB --> FileDestroy --> RemoveSPT
+  CheckFrame -->|있음| CheckDirty
+  CheckDirty -->|dirty| WriteBack --> ClearPTE --> FileDestroy
+  CheckDirty -->|clean| SkipWB
+  FileDestroy --> RemoveSPT
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="실제-운영체제에서는">실제 운영체제에서는<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제에서는" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Linux에서 <code>close(fd)</code>는 이미 만들어진 mapping을 즉시 없애지 않는다. 커널의 VMA와 file object reference가 mapping의 생명주기를 별도로 관리하기 때문이다. <code>munmap(addr, length)</code> 또는 process exit이 주소 범위를 없애면 VMA, PTE, page cache, file reference가 차례로 정리된다.</p>
+<p>Windows에서도 <code>MapViewOfFile()</code>로 만든 view는 user handle을 닫는 것과 별도의 생명주기를 가진다. <code>UnmapViewOfFile(base)</code> 또는 process teardown이 view를 정리하고, 이후 section/file object reference count도 그에 맞춰 감소한다.</p>
+<p>실제 OS는 PintOS보다 훨씬 복잡하다.</p>
+<ul>
+<li>file mapping은 범위 단위의 VMA/view 및 page cache와 연결된다.</li>
+<li>같은 file page를 여러 process가 공유할 수 있다.</li>
+<li>dirty write-back은 <code>munmap()</code> 순간에만 단순히 끝나지 않을 수 있다.</li>
+<li>close/unlink/truncate와 mapping 사이에는 reference count와 locking이 필요하다.</li>
+</ul>
+<p>그럼에도 초보자가 이해해야 할 핵심은 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>fd close와 mapping cleanup은 같은 사건이 아니다.</span></span>
+<span data-line><span>mapping이 살아 있는 동안 file reference는 별도로 살아 있어야 한다.</span></span></code></pre></figure>
+<h2 id="pintos에서는">PintOS에서는<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos에서는" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>W09 PintOS skeleton에는 이 cleanup 책임을 보여 주는 단서가 이미 있다.</p>
+<p>첫째, <code>struct page</code>는 type별 metadata를 union에 둔다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">union</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page uninit;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> anon_page anon;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> file_page file;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">};</span></span></code></pre></figure>
+<p>둘째, <code>uninit_new()</code>는 <code>aux</code>를 <code>page->uninit.aux</code>에 저장한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.uninit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> init,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .type </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> type,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> aux,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .page_initializer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> initializer,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>셋째, <code>uninit_destroy()</code> 주석은 첫 fault가 한 번도 발생하지 않은 page가 process exit까지 남을 수 있음을 설명한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>it is possible to have uninit pages when the process exit,</span></span>
+<span data-line><span>which are never referenced during the execution.</span></span></code></pre></figure>
+<p>즉, 상황에 따라 <code>uninit_destroy()</code>를 빈 함수로 두어서는 안 된다. <code>aux</code>가 heap memory나 reopened file reference를 소유한다면 이 함수 또는 region cleanup이 해당 자원을 회수해야 한다.</p>
+<h3 id="page별-file-소유-설계">page별 file 소유 설계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#page별-file-소유-설계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>가장 단순한 방법은 page마다 <code>file_reopen()</code>을 별도로 소유하는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>do_mmap()</span></span>
+<span data-line><span>  -> page 0 aux owns reopened file A</span></span>
+<span data-line><span>  -> page 1 aux owns reopened file B</span></span>
+<span data-line> </span>
+<span data-line><span>page 0 first fault</span></span>
+<span data-line><span>  -> ownership moves aux -> page->file</span></span>
+<span data-line><span>  -> file_backed_destroy() closes A</span></span>
+<span data-line> </span>
+<span data-line><span>page 1 never faulted</span></span>
+<span data-line><span>  -> uninit_destroy() closes B</span></span></code></pre></figure>
+<p>이 방식은 각 page를 독립적으로 cleanup할 수 있다는 장점이 있다. 반면 mapping의 page 수만큼 file object가 생길 수 있다는 단점도 있다.</p>
+<p>현재 W09 구현의 <code>uninit_destroy()</code>는 이미 이 방식을 따른다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">uninit_destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> lazy_load_arg </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> page->uninit.aux;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (aux->file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        file_close</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (aux->file);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    free</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (aux);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    page->uninit.aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>struct lazy_load_arg</code>가 ANON과 FILE lazy page에 공통으로 사용되므로, <code>page_get_type()</code>로 분기하지 않고 aux의 file 필드가 NULL이 아닐 때 닫는다. executable lazy page도 page별 <code>file_reopen()</code>을 가지므로 이 cleanup이 올바르게 동작한다.</p>
+<h3 id="region이-file을-소유하는-설계">region이 file을 소유하는 설계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#region이-file을-소유하는-설계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다른 방법은 <code>mmap_region</code>이 reopened file 하나를 소유하는 것이다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>mmap_region owns reopened file R</span></span>
+<span data-line><span>  page 0 aux points to region</span></span>
+<span data-line><span>  page 1 aux points to region</span></span></code></pre></figure>
+<p>이 설계에서는 page별 <code>uninit_destroy()</code>가 file을 닫아서는 안 된다. 마지막에 region이 한 번만 닫아야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>do_munmap(base)</span></span>
+<span data-line><span>  -> region 찾기</span></span>
+<span data-line><span>  -> region page들을 SPT에서 제거</span></span>
+<span data-line><span>     - never-faulted page: aux free, file_close 없음</span></span>
+<span data-line><span>     - faulted page: page metadata cleanup, file_close 없음</span></span>
+<span data-line><span>  -> region->file close 한 번</span></span>
+<span data-line><span>  -> region free</span></span></code></pre></figure>
+<p>이 방식은 range metadata와 file ownership을 한곳에서 관리할 수 있다는 장점이 있다. 대신 cleanup 순서를 더 엄격하게 지켜야 한다. page destroy가 region pointer를 참조한다면 page보다 region을 먼저 free해서는 안 된다.</p>
+<p>어느 설계를 선택하든 지켜야 할 불변식은 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>file reference owner는 하나다.</span></span>
+<span data-line><span>UNINIT page destroy와 FILE page destroy와 region destroy가</span></span>
+<span data-line><span>같은 file을 중복 close하면 안 된다.</span></span></code></pre></figure>
+<h3 id="process-exit-순서">process exit 순서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#process-exit-순서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>W09의 <code>process_exit()</code>은 VM 빌드에서 <code>process_cleanup()</code>을 먼저 호출한 뒤 fd를 닫는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>process_exit()</span></span>
+<span data-line><span>  -> process_cleanup()</span></span>
+<span data-line><span>       -> supplemental_page_table_kill(&amp;curr->spt)</span></span>
+<span data-line><span>  -> close_running_file(curr)</span></span>
+<span data-line><span>  -> close_open_files(curr)</span></span></code></pre></figure>
+<p>이 순서에서는 SPT kill 시점에도 fd table의 file이 열려 있다. 그러나 mapping이 fd table의 file pointer에 직접 의존해서는 안 된다. <code>mmap-close</code> 테스트처럼 사용자가 fd를 먼저 닫더라도 mapping은 계속 살아 있어야 하기 때문이다.</p>
+<p><code>mmap-close</code>와 <code>mmap-remove</code> 테스트도 같은 조건을 요구한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>mmap-close:</span></span>
+<span data-line><span>  mmap 후 fd close</span></span>
+<span data-line><span>  mapping 주소로 파일 내용을 읽어야 함</span></span>
+<span data-line> </span>
+<span data-line><span>mmap-remove:</span></span>
+<span data-line><span>  mmap 후 fd close와 remove</span></span>
+<span data-line><span>  mapping 주소로 기존 파일 내용을 읽어야 함</span></span></code></pre></figure>
+<p>따라서 결론은 분명하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>do_mmap()은 fd table file에 얕게 매달리면 안 된다.</span></span>
+<span data-line><span>file_reopen() 또는 region-owned reopened file로 mapping 생명주기를 분리해야 한다.</span></span></code></pre></figure>
+<h2 id="qemu에서-보이는-것과-보이지-않는-것">QEMU에서 보이는 것과 보이지 않는 것<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu에서-보이는-것과-보이지-않는-것" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 never-faulted <code>UNINIT(FILE)</code> page의 cleanup 여부를 알지 못한다.</p>
+<p>QEMU가 관찰할 수 있는 하드웨어 효과는 대략 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>첫 접근이 있었음</span></span>
+<span data-line><span>  -> not-present PTE access</span></span>
+<span data-line><span>  -> #PF, CR2, error_code</span></span>
+<span data-line><span>  -> PintOS가 PTE 설치</span></span>
+<span data-line> </span>
+<span data-line><span>store가 있었음</span></span>
+<span data-line><span>  -> QEMU x86 MMU emulation이 dirty bit 후보를 세움</span></span>
+<span data-line> </span>
+<span data-line><span>PintOS가 write-back함</span></span>
+<span data-line><span>  -> file system sector write</span></span>
+<span data-line><span>  -> QEMU IDE block backend write</span></span></code></pre></figure>
+<p>반면 never-faulted page cleanup은 다음과 같이 QEMU에 거의 드러나지 않는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame 없음</span></span>
+<span data-line><span>PTE 없음</span></span>
+<span data-line><span>dirty bit 없음</span></span>
+<span data-line><span>disk write 없음</span></span>
+<span data-line> </span>
+<span data-line><span>PintOS kernel heap의 aux free와 file reference close만 있음</span></span></code></pre></figure>
+<p>따라서 이 버그는 QEMU trace만으로 발견하기 어렵다. <code>mmap-close</code>, <code>mmap-remove</code>, <code>mmap-exit</code> 같은 PintOS 테스트와 함께 GDB에서 <code>uninit_destroy()</code>, <code>file_close()</code>를 확인해야 한다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td>mapping file reference는 누가 잡는가</td><td>VMA/view/section/file object reference</td><td><code>file_reopen()</code> 결과를 page 또는 region이 직접 관리</td><td>모름</td></tr><tr><td>never-faulted page가 가능한가</td><td>가능하며 VMA/page cache 정책이 처리</td><td><code>VM_UNINIT</code> page가 SPT에 남을 수 있음</td><td>guest kernel metadata를 모름</td></tr><tr><td>write-back 대상인가</td><td>dirty resident file page만 정책 대상</td><td>frame 없는 <code>UNINIT(FILE)</code>은 write-back 없음</td><td>disk write가 없으면 관찰할 것 없음</td></tr><tr><td>cleanup 단위</td><td>range, VMA, view, page cache</td><td>SPT page, optional <code>mmap_region</code>, <code>struct file_page</code></td><td>없음</td></tr><tr><td>실수하면 무엇이 깨지는가</td><td>refcount/leak/use-after-free</td><td>aux leak, file leak, double close, stale SPT</td><td>하드웨어 에뮬레이션은 정상처럼 보일 수 있음</td></tr></tbody></table></div>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>include/vm/vm.h:44-50</code></td><td><code>struct lazy_load_arg</code></td><td>aux 구조체 — file, ofs, read_bytes, zero_bytes</td></tr><tr><td><code>include/vm/vm.h</code></td><td><code>destroy(page)</code> 매크로</td><td>현재 operations의 destroy dispatch</td></tr><tr><td><code>vm/uninit.c:19-24</code></td><td><code>uninit_ops</code></td><td>UNINIT page용 operation table (swap_in=uninit_initialize, destroy=uninit_destroy)</td></tr><tr><td><code>vm/uninit.c:28-44</code></td><td><code>uninit_new()</code></td><td>page를 UNINIT으로 초기화, aux를 page->uninit.aux에 저장</td></tr><tr><td><code>vm/uninit.c:48-59</code></td><td><code>uninit_initialize()</code></td><td>첫 fault에서 init/aux를 지역 변수로 보존 후 initializer + callback 호출</td></tr><tr><td><code>vm/uninit.c:65-74</code></td><td><code>uninit_destroy()</code></td><td>never-faulted page cleanup — <code>file_close(aux->file)</code> + <code>free(aux)</code></td></tr><tr><td><code>vm/file.c:10-15</code></td><td><code>file_ops</code></td><td>FILE page용 operation table</td></tr><tr><td><code>vm/file.c:24-29</code></td><td><code>file_backed_initializer()</code></td><td>page->operations를 file_ops로 전환</td></tr><tr><td><code>vm/file.c:45-47</code></td><td><code>file_backed_destroy()</code></td><td>resident FILE page cleanup (TODO skeleton)</td></tr><tr><td><code>vm/file.c:51-53</code></td><td><code>do_mmap()</code></td><td>mmap syscall 구현 (TODO skeleton)</td></tr><tr><td><code>vm/file.c:57-58</code></td><td><code>do_munmap()</code></td><td>munmap syscall 구현 (TODO skeleton)</td></tr><tr><td><code>vm/vm.c:419-440</code></td><td><code>vm_do_claim_page()</code></td><td>frame 확보, PTE 설치, swap_in 호출, 실패 시 vm_destroy_page_frame</td></tr><tr><td><code>vm/vm.c:539-560</code></td><td><code>vm_destroy_page_frame()</code></td><td>PTE clear + frame table 제거 + palloc_free + link 해제</td></tr><tr><td><code>userprog/process.c:623-642</code></td><td><code>process_exit()</code></td><td>VM: process_cleanup() → close_open_files() 순서</td></tr><tr><td><code>userprog/process.c:1310-1335</code></td><td><code>lazy_load_segment()</code></td><td>executable lazy callback — 성공/실패 모두 aux close+free</td></tr><tr><td><code>userprog/process.c:1361-1380</code></td><td><code>load_segment()</code></td><td>page별 file_reopen + aux 생성, 등록 실패 시 즉시 cleanup</td></tr><tr><td><code>filesys/file.c:35-37</code></td><td><code>file_reopen()</code></td><td>inode_reopen으로 별도 file object 생성</td></tr></tbody></table></div>
+<h2 id="미사용-mmap-page-cleanup-코드">미사용 mmap page cleanup 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page-cleanup-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-destroypage는-현재-page의-operation을-따른다">1. <code>destroy(page)</code>는 현재 page의 operation을 따른다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-destroypage는-현재-page의-operation을-따른다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/include/vm/vm.h</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="punctuation">#define</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((page)->operations->destroy) (page)->operations->destroy (page)</span></span></code></pre></figure>
+<p>따라서 같은 <code>struct page *</code>라도 현재 operation이 <code>uninit_ops</code>이면 <code>uninit_destroy()</code>로, <code>file_ops</code>이면 <code>file_backed_destroy()</code>로 진입한다.</p>
+<h3 id="2-uninit_new는-aux를-page-내부에-저장한다">2. <code>uninit_new()</code>는 aux를 page 내부에 저장한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-uninit_new는-aux를-page-내부에-저장한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/vm/uninit.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">.uninit </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> uninit_page) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> init,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .type </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> type,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> aux,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    .page_initializer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> initializer,</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 <code>aux</code>는 첫 fault가 발생하기 전까지 <code>UNINIT</code> page가 보관하는 작업 지시서다.</p>
+<h3 id="3-uninit_initialize는-page-type을-전환한다">3. <code>uninit_initialize()</code>는 page type을 전환한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-uninit_initialize는-page-type을-전환한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/vm/uninit.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">vm_initializer </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">init;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">aux;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_initializer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page, uninit</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">type</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, kva) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;&amp;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    (init </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (page, aux) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p><code>page_initializer()</code>가 <code>page->operations</code>와 union 해석을 <code>VM_FILE</code>로 바꿀 수 있으므로, callback은 지역 변수 <code>aux</code>를 받아 필요한 정보를 <code>page->file</code>로 옮긴다.</p>
+<h3 id="4-uninit_destroy는-never-faulted-page를-정리한다">4. <code>uninit_destroy()</code>는 never-faulted page를 정리한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-uninit_destroy는-never-faulted-page를-정리한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/vm/uninit.c</code></li>
+</ul>
+<p>핵심 주석:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>it is possible to have uninit pages when the process</span></span>
+<span data-line><span>exit, which are never referenced during the execution.</span></span></code></pre></figure>
+<p>이 주석은 <code>UNINIT</code> page가 첫 fault 없이도 destroy될 수 있음을 뜻한다.</p>
+<h3 id="5-file-backed-destroy와-mmap의-관계">5. file-backed destroy와 mmap의 관계<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-file-backed-destroy와-mmap의-관계" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/vm/file.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">file_backed_destroy</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file_page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">file_page UNUSED </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">page->file;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">do_mmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (...) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">do_munmap</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">addr</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>따라서 구현자는 <code>UNINIT(FILE)</code> cleanup과 <code>FILE</code> cleanup의 책임을 나누어 구현해야 한다.</p>
+<h3 id="6-process-exit은-vm-빌드에서-spt를-먼저-제거한다">6. process exit은 VM 빌드에서 SPT를 먼저 제거한다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-process-exit은-vm-빌드에서-spt를-먼저-제거한다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심 흐름 (VM 빌드):</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>process_exit()</span></span>
+<span data-line><span>  -> process_cleanup()</span></span>
+<span data-line><span>       -> supplemental_page_table_kill(&amp;curr->spt)</span></span>
+<span data-line><span>  -> close_running_file(curr)</span></span>
+<span data-line><span>  -> close_open_files(curr)</span></span></code></pre></figure>
+<p>SPT kill 시점에는 fd table의 file이 아직 열려 있다. 그러나 <code>mmap-close</code> 테스트처럼 사용자가 fd를 먼저 닫을 수도 있으므로, mapping이 fd table의 file pointer에 직접 의존해서는 안 된다.</p>
+<h3 id="7-file_reopen은-같은-inode를-가리키는-별도의-file-object를-만든다">7. <code>file_reopen()</code>은 같은 inode를 가리키는 별도의 file object를 만든다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#7-file_reopen은-같은-inode를-가리키는-별도의-file-object를-만든다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>pintos/filesys/file.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">file_reopen</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> file </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">file</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> file_open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">inode_reopen</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (file->inode));</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 함수는 mapping의 생명주기를 fd close와 분리하는 기본 도구다.</p>
+<h2 id="미사용-mmap-page-cleanup-값-추적">미사용 mmap page cleanup 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page-cleanup-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>다음 mapping을 살펴보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>base       = 0x10000000</span></span>
+<span data-line><span>length     = 6000</span></span>
+<span data-line><span>PGSIZE     = 4096 = 0x1000</span></span>
+<span data-line><span>file ofs   = 0</span></span></code></pre></figure>
+<p>page별 metadata는 다음과 같이 나뉜다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>VA page</th><th style="text-align:right;">file offset</th><th style="text-align:right;">read bytes</th><th style="text-align:right;">zero bytes</th><th>접근 여부</th></tr></thead><tbody><tr><td><code>0x10000000</code></td><td style="text-align:right;"><code>0</code></td><td style="text-align:right;"><code>4096</code></td><td style="text-align:right;"><code>0</code></td><td><code>p[0]</code> 접근으로 fault 발생</td></tr><tr><td><code>0x10001000</code></td><td style="text-align:right;"><code>4096</code></td><td style="text-align:right;"><code>1904</code></td><td style="text-align:right;"><code>2192</code></td><td>접근 없음</td></tr></tbody></table></div>
+<p><code>p[0] = 'A'</code> 후 <code>munmap(p)</code>라면 첫 번째 page는 dirty 상태일 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>file_write_at(file, frame->kva, 4096, 0)</span></span></code></pre></figure>
+<p>그러나 두 번째 page에는 frame이 없다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->frame == NULL</span></span>
+<span data-line><span>PTE 없음</span></span>
+<span data-line><span>dirty bit 없음</span></span>
+<span data-line><span>file_write_at() 대상 아님</span></span></code></pre></figure>
+<p>그렇더라도 두 번째 page의 aux는 정리해야 한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>aux @ 0x8004200</span></span>
+<span data-line><span>  file       = reopened file or region file</span></span>
+<span data-line><span>  ofs        = 4096</span></span>
+<span data-line><span>  read_bytes = 1904</span></span>
+<span data-line><span>  zero_bytes = 2192</span></span>
+<span data-line><span>  writable   = true</span></span></code></pre></figure>
+<p>page별 file 소유 설계에서는 이 aux가 자신의 file을 닫는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>uninit_destroy(page)</span></span>
+<span data-line><span>  -> file_close(aux->file)</span></span>
+<span data-line><span>  -> free(aux)</span></span></code></pre></figure>
+<p>region 소유 설계에서는 aux가 file을 닫지 않는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>uninit_destroy(page)</span></span>
+<span data-line><span>  -> free(aux)</span></span>
+<span data-line> </span>
+<span data-line><span>region_destroy(region)</span></span>
+<span data-line><span>  -> file_close(region->file)</span></span></code></pre></figure>
+<p>두 방식 가운데 하나만 선택해야 한다. 두 경로가 같은 reopened file pointer를 모두 닫아서는 안 된다.</p>
+<h2 id="gdb로-미사용-mmap-page-cleanup-확인하기">GDB로 미사용 mmap page cleanup 확인하기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb로-미사용-mmap-page-cleanup-확인하기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>구현 중 GDB에서 중단할 지점은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b do_mmap</span></span>
+<span data-line><span>b vm_alloc_page_with_initializer</span></span>
+<span data-line><span>b do_munmap</span></span>
+<span data-line><span>b spt_remove_page</span></span>
+<span data-line><span>b vm_dealloc_page</span></span>
+<span data-line><span>b uninit_destroy</span></span>
+<span data-line><span>b file_backed_destroy</span></span>
+<span data-line><span>b supplemental_page_table_kill</span></span>
+<span data-line><span>b file_close</span></span></code></pre></figure>
+<p><code>mmap-close</code> 또는 <code>mmap-remove</code>에서 <code>do_munmap()</code>에 멈춘 뒤 page 상태에 따라 나누어 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x page->va</span></span>
+<span data-line><span>p page->operations->type</span></span>
+<span data-line><span>p page_get_type(page)</span></span>
+<span data-line><span>p page->frame</span></span></code></pre></figure>
+<p>never-faulted page에서는 다음을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p page->operations->type       /* VM_UNINIT */</span></span>
+<span data-line><span>p page_get_type(page)          /* VM_FILE */</span></span>
+<span data-line><span>p page->frame                  /* 0x0 */</span></span>
+<span data-line><span>p page->uninit.aux</span></span>
+<span data-line><span>p *(struct lazy_load_arg *) page->uninit.aux</span></span></code></pre></figure>
+<p>resident file page에서는 다음을 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p page->operations->type       /* VM_FILE */</span></span>
+<span data-line><span>p page->frame</span></span>
+<span data-line><span>p page->file.file</span></span>
+<span data-line><span>p/x page->file.ofs</span></span>
+<span data-line><span>p page->file.read_bytes</span></span>
+<span data-line><span>p pml4_is_dirty(thread_current()->pml4, page->va)</span></span></code></pre></figure>
+<p>회귀 테스트 후보는 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>cd pintos</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/mmap-close</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/mmap-remove</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/mmap-unmap</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/mmap-clean</span></span>
+<span data-line><span>make -C build check TESTS=tests/vm/mmap-exit</span></span></code></pre></figure>
+<p>현재 W09 VM 구현에는 skeleton TODO가 남아 있다. 따라서 위 명령은 현재의 통과 결과가 아니라 구현을 마친 뒤 확인할 지점을 나타낸다.</p>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li>never-faulted <code>UNINIT(FILE)</code> page는 frame도 PTE도 없으므로 dirty write-back 대상이 아니다.</li>
+<li>그렇더라도 <code>page->uninit.aux</code>는 heap memory와 file reference를 들고 있을 수 있으므로 반드시 cleanup해야 한다.</li>
+<li><code>destroy(page)</code>는 현재 operation table을 따르므로, <code>UNINIT</code> page는 <code>uninit_destroy()</code>가 처리하고 fault 이후의 <code>FILE</code> page는 <code>file_backed_destroy()</code>가 처리한다.</li>
+<li>file reference ownership은 page별 소유와 region 소유 중 하나로 일관되게 정해야 한다.</li>
+<li><code>file_close()</code>는 ownership을 가진 경로에서 정확히 한 번만 호출해야 한다.</li>
+<li><code>process_exit()</code>은 VM 빌드에서 SPT kill을 먼저 수행한다. 그러나 <code>mmap-close</code> 테스트처럼 fd가 먼저 닫히는 경우도 있으므로 mapping이 fd table의 file pointer에 의존해서는 안 된다.</li>
+<li>QEMU는 aux leak이나 double close를 알지 못하며 page fault, dirty bit, IDE sector write 같은 하드웨어 효과만 재현한다.</li>
+</ul>
+<h2 id="미사용-mmap-page-cleanup-관련-문서">미사용 mmap page cleanup 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#미사용-mmap-page-cleanup-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal internal-link alias" data-slug="wiki/os/mmap-file-page-aux-transition-question">mmap aux 전환</a>
+<ul>
+<li>첫 fault에서 <code>aux</code>가 <code>struct file_page</code>로 넘어가는 기준</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-ownership-contract-knowledge">aux ownership</a>
+<ul>
+<li>never-faulted cleanup과 fault 이후 cleanup의 owner를 나누는 계약</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-page-aux-cleanup-checklist-trace">cleanup checklist</a>
+<ul>
+<li>never-faulted cleanup을 <code>uninit_destroy()</code> helper의 책임으로 두는 구현 체크리스트</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-munmap-range-trace">munmap 범위</a>
+<ul>
+<li><code>do_munmap()</code>이 mapping 범위와 page를 찾아 정리하는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-backed-page-metadata-knowledge">file backed metadata</a>
+<ul>
+<li>file-backed page가 계속 기억해야 하는 file/offset/read bytes</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal internal-link alias" data-slug="wiki/os/mmap-file-backed-page-knowledge">mmap file backed page</a>
+<ul>
+<li><code>mmap()</code> 전체 모델과 실제 OS/PintOS/QEMU의 차이</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal internal-link alias" data-slug="wiki/os/mmap-dirty-writeback-qemu-trace">dirty mmap write back</a>
+<ul>
+<li>resident dirty page가 파일과 QEMU block write로 이어지는 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/lazy-load-aux-file-lifetime-trace" class="internal internal-link alias" data-slug="wiki/os/lazy-load-aux-file-lifetime-trace">lazy aux 수명</a>
+<ul>
+<li>executable lazy page의 <code>aux</code> 수명과의 비교</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/file-descriptor-knowledge" class="internal internal-link alias" data-slug="wiki/os/file-descriptor-knowledge">File Descriptor</a>
+<ul>
+<li>fd 번호와 열린 file object의 생명주기를 분리하는 방법</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/file-backed-page-metadata-knowledge" class="internal">file-backed page metadata에는 무엇을 저장해야 하나</a></li><li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal">lazy aux 실패 주입 Lab</a></li><li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal">lazy page aux cleanup 구현 체크리스트 Trace</a></li><li><a href="../../wiki/os/lazy-page-aux-ownership-contract-knowledge" class="internal">lazy page aux ownership 계약</a></li><li><a href="../../wiki/os/mmap-dirty-writeback-qemu-trace" class="internal">mmap dirty write-back은 어떻게 디스크 쓰기로 내려가나</a></li><li><a href="../../wiki/os/mmap-file-backed-page-knowledge" class="internal">mmap file-backed page는 어떻게 파일을 메모리처럼 보이게 하나</a></li><li><a href="../../wiki/os/mmap-file-page-aux-transition-question" class="internal">mmap file page의 aux는 언제 struct file_page로 옮겨야 하나</a></li><li><a href="../../wiki/os/mmap-multi-region-isolation-lab" class="internal">mmap 다중 region 격리는 무엇을 확인해야 하나</a></li><li><a href="../../wiki/os/mmap-munmap-range-trace" class="internal">mmap munmap 범위 흐름 (Mmap Munmap Range Trace)</a></li><li><a href="../../wiki/os/mmap-region-ownership-question" class="internal">mmap region metadata는 누가 소유해야 하나</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal">UNINIT swap_in 실패 롤백 Trace</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-537" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#fault가-한-번도-나지-않은-mmap-page는-누가-정리하나" data-for="fault가-한-번도-나지-않은-mmap-page는-누가-정리하나">fault가 한 번도 나지 않은 mmap page는 누가 정리하나</a></li><li class="depth-1"><a href="#미사용-mmap-page-cleanup의-출발점" data-for="미사용-mmap-page-cleanup의-출발점">미사용 mmap page cleanup의 출발점</a></li><li class="depth-1"><a href="#미사용-mmap-page-cleanup이-필요한-이유" data-for="미사용-mmap-page-cleanup이-필요한-이유">미사용 mmap page cleanup이 필요한 이유</a></li><li class="depth-1"><a href="#꼬리-질문" data-for="꼬리-질문">꼬리 질문</a></li><li class="depth-1"><a href="#미사용-mmap-page의-cleanup-흐름" data-for="미사용-mmap-page의-cleanup-흐름">미사용 mmap page의 cleanup 흐름</a></li><li class="depth-1"><a href="#파일-길이가-6000바이트이고-두-page를-매핑하는-경우" data-for="파일-길이가-6000바이트이고-두-page를-매핑하는-경우">파일 길이가 6000바이트이고 두 page를 매핑하는 경우</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-1"><a href="#실제-운영체제에서는" data-for="실제-운영체제에서는">실제 운영체제에서는</a></li><li class="depth-1"><a href="#pintos에서는" data-for="pintos에서는">PintOS에서는</a></li><li class="depth-2"><a href="#page별-file-소유-설계" data-for="page별-file-소유-설계">page별 file 소유 설계</a></li><li class="depth-2"><a href="#region이-file을-소유하는-설계" data-for="region이-file을-소유하는-설계">region이 file을 소유하는 설계</a></li><li class="depth-2"><a href="#process-exit-순서" data-for="process-exit-순서">process exit 순서</a></li><li class="depth-1"><a href="#qemu에서-보이는-것과-보이지-않는-것" data-for="qemu에서-보이는-것과-보이지-않는-것">QEMU에서 보이는 것과 보이지 않는 것</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#미사용-mmap-page-cleanup-코드" data-for="미사용-mmap-page-cleanup-코드">미사용 mmap page cleanup 코드</a></li><li class="depth-2"><a href="#1-destroypage는-현재-page의-operation을-따른다" data-for="1-destroypage는-현재-page의-operation을-따른다">1. destroy(page)는 현재 page의 operation을 따른다</a></li><li class="depth-2"><a href="#2-uninit_new는-aux를-page-내부에-저장한다" data-for="2-uninit_new는-aux를-page-내부에-저장한다">2. uninit_new()는 aux를 page 내부에 저장한다</a></li><li class="depth-2"><a href="#3-uninit_initialize는-page-type을-전환한다" data-for="3-uninit_initialize는-page-type을-전환한다">3. uninit_initialize()는 page type을 전환한다</a></li><li class="depth-2"><a href="#4-uninit_destroy는-never-faulted-page를-정리한다" data-for="4-uninit_destroy는-never-faulted-page를-정리한다">4. uninit_destroy()는 never-faulted page를 정리한다</a></li><li class="depth-2"><a href="#5-file-backed-destroy와-mmap의-관계" data-for="5-file-backed-destroy와-mmap의-관계">5. file-backed destroy와 mmap의 관계</a></li><li class="depth-2"><a href="#6-process-exit은-vm-빌드에서-spt를-먼저-제거한다" data-for="6-process-exit은-vm-빌드에서-spt를-먼저-제거한다">6. process exit은 VM 빌드에서 SPT를 먼저 제거한다</a></li><li class="depth-2"><a href="#7-file_reopen은-같은-inode를-가리키는-별도의-file-object를-만든다" data-for="7-file_reopen은-같은-inode를-가리키는-별도의-file-object를-만든다">7. file_reopen()은 같은 inode를 가리키는 별도의 file object를 만든다</a></li><li class="depth-1"><a href="#미사용-mmap-page-cleanup-값-추적" data-for="미사용-mmap-page-cleanup-값-추적">미사용 mmap page cleanup 값 추적</a></li><li class="depth-1"><a href="#gdb로-미사용-mmap-page-cleanup-확인하기" data-for="gdb로-미사용-mmap-page-cleanup-확인하기">GDB로 미사용 mmap page cleanup 확인하기</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#미사용-mmap-page-cleanup-관련-문서" data-for="미사용-mmap-page-cleanup-관련-문서">미사용 mmap page cleanup 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>`read()` 버퍼는 왜 PTE_W까지 확인해야 하나? · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="`read()` 버퍼는 왜 PTE_W까지 확인해야 하나? · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="`read()` 버퍼는 왜 PTE_W까지 확인해야 하나? · 최우녕"/><meta name="twitter:description" content="read(fd, buffer, size)의 buffer는 present 여부만 확인해서는 부족하다."/><meta property="og:description" content="read(fd, buffer, size)의 buffer는 present 여부만 확인해서는 부족하다."/><meta property="og:image:alt" content="read(fd, buffer, size)의 buffer는 present 여부만 확인해서는 부족하다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/read-buffer-writable-pte-question"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/read-buffer-writable-pte-question"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="read(fd, buffer, size)의 buffer는 present 여부만 확인해서는 부족하다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/read-buffer-writable-pte-question" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-621" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-621" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>`read()` 버퍼는 왜 PTE_W까지 확인해야 하나?</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="read-버퍼는-왜-pte_w까지-확인해야-하나"><code>read()</code> 버퍼는 왜 PTE_W까지 확인해야 하나?<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼는-왜-pte_w까지-확인해야-하나" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>확인 범위: 이 문서는 read()가 쓰기 대상 유저 버퍼의 매핑 여부뿐 아니라 쓰기 권한과 전체 범위를 검증해야 한다는 일반 원리와 PintOS에서의 설계 판단 기준을 설명한다. 제시된 코드와 PTE 값, GDB·QEMU 절차는 검증 방법 또는 예시이며, 특정 버전에서 실제로 실행해 얻은 결과나 성능 측정 결과를 보고하는 것은 아니다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: <code>read(fd, buffer, size)</code>의 <code>buffer</code>는 present 여부만 확인해서는 부족하다. 커널이 유저를 대신해 데이터를 쓰는 시스템 콜이므로 PTE_W까지 검사해 writable page인지 검증해야 한다.</p>
+</blockquote>
+<h2 id="read-버퍼-pte_w-쟁점">read() 버퍼 PTE_W 쟁점<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-쟁점" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>read(fd, buffer, size)</code>에서 <code>buffer</code> 주소가 현재 프로세스의 page table에 매핑되어 있기만 하면 충분할까?</p>
+<p>아니다. <code>read()</code>는 파일이나 키보드에서 읽은 바이트를 <strong>유저 버퍼에 써 주는</strong> 시스템 콜이다.</p>
+<p>여기서 확인된 사실은 커널이 유저 버퍼를 쓰기 대상으로 사용한다는 점이다. 따라서 검증 단계에서는 <code>buffer</code>가 단순히 present인 page인지뿐 아니라, 쓰기가 허용된 writable page인지도 확인해야 한다.</p>
+<h2 id="read-버퍼-pte_w-문제">read() 버퍼 PTE_W 문제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-문제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>유저 포인터 검증은 다음 두 질문으로 나누어야 한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>질문</th><th>필요한 이유</th></tr></thead><tbody><tr><td>이 주소가 mapped인가?</td><td>없는 page에 접근하면 <a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> 난다</td></tr><tr><td>이 방향으로 접근해도 되는가?</td><td>read-only page에 쓰면 보호 규칙을 어긴다</td></tr></tbody></table></div>
+<p><code>write(fd, buffer, size)</code>는 유저 버퍼에서 커널이나 파일 쪽으로 데이터를 가져간다. 따라서 유저 버퍼를 읽을 수 있어야 한다.</p>
+<p>반대로 <code>read(fd, buffer, size)</code>는 커널이나 파일 쪽 데이터를 유저 버퍼로 내보낸다. 따라서 유저 버퍼에 쓸 수 있어야 한다.</p>
+<p>즉, <code>read()</code> 검증은 <code>pml4_get_page() != NULL</code> 확인에서 끝나면 안 된다. PTE의 writable bit까지 살펴야 “이 page에 써도 되는가”라는 두 번째 질문에 답할 수 있다.</p>
+<h2 id="read-버퍼-pte_w-상태">read() 버퍼 PTE_W 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PTE에는 주소와 권한이 함께 담긴다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE_P = present</span></span>
+<span data-line><span>  지금 VA page가 frame으로 매핑되어 있는가?</span></span>
+<span data-line> </span>
+<span data-line><span>PTE_W = writable</span></span>
+<span data-line><span>  이 VA page에 쓰기 접근을 허용하는가?</span></span>
+<span data-line> </span>
+<span data-line><span>PTE_U = user</span></span>
+<span data-line><span>  유저 모드에서 접근 가능한 page인가?</span></span></code></pre></figure>
+<p><code>pml4_get_page()</code>는 present mapping의 존재 여부를 확인하기에 적합하다. 다만 반환값은 frame을 가리키는 kernel virtual address다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pml4_get_page()</span></span>
+<span data-line><span>  PTE를 찾아 present이면</span></span>
+<span data-line><span>  PTE_ADDR(*pte) + offset을 kernel VA로 바꿔 반환</span></span></code></pre></figure>
+<p>이 과정에서는 <code>PTE_W</code> 같은 flag의 판단 결과가 호출자에게 직접 드러나지 않는다. writable 여부를 판단하려면 PTE pointer 자체를 얻어 flag bit를 검사해야 한다.</p>
+<h2 id="vm-테스트에는-이-질문을-정확히-찌르는-케이스가-있다">VM 테스트에는 이 질문을 정확히 찌르는 케이스가 있다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#vm-테스트에는-이-질문을-정확히-찌르는-케이스가-있다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>VM 테스트에는 mapped 여부와 writable 여부의 차이를 직접 확인하는 케이스가 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/tests/vm/pt-write-code2.c</code></li>
+</ul>
+<p>핵심 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">CHECK</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((handle </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> open</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;sample.txt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;open </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\&quot;</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">sample.txt</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="string">\&quot;</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (handle, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">test_main</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">fail</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;" data-token-type="string">&quot;survived reading data into code segment&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span></code></pre></figure>
+<p><code>test_main</code>은 실행 코드가 놓인 주소다. text/code page는 present일 수 있지만 writable이어서는 안 된다.</p>
+<p>따라서 이 테스트가 묻는 것은 “주소가 매핑되어 있는가?”가 아니다.</p>
+<p>정확한 질문은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>read()가 파일에서 읽은 1바이트를</span></span>
+<span data-line><span>실행 코드 page에 써도 된다고 착각하는가?</span></span></code></pre></figure>
+<h2 id="실제-운영체제">실제 운영체제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-운영체제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>PintOS에서 확인한 쟁점을 실제 운영체제의 처리 흐름과 연결하면, 공통점은 커널이 user buffer를 일반 pointer처럼 곧바로 신뢰하지 않는다는 데 있다.</p>
+<p>Linux에서 <code>read(fd, user_buf, len)</code>은 커널이 user buffer로 데이터를 복사하는 흐름이다. 이때 user pointer는 쓰기 가능한 유저 메모리인지 확인하는 안전한 복사 경로를 거친다.</p>
+<p>Windows도 같은 문제를 다룬다. <code>ReadFile</code>은 애플리케이션 관점의 이름이지만, 커널이나 드라이버 관점에서는 output buffer에 데이터를 써야 한다. 따라서 그 버퍼가 유저 주소인지, 쓰기 가능한지, 요청 방식에 맞게 probe되었는지를 처리해야 한다.</p>
+<p>다만 실제 OS의 메모리 처리 정책은 PintOS보다 복잡하므로, present와 writable만으로 모든 경우를 설명할 수는 없다.</p>
+<ul>
+<li>현재 page가 없더라도 demand paging으로 복구할 수 있다.</li>
+<li>copy-on-write page에서는 쓰기 fault가 “불법 접근”이 아니라 “복사 후 허용”을 뜻할 수 있다.</li>
+<li>mmap, shared page, file-backed page는 backing metadata와 permission을 함께 살펴야 한다.</li>
+<li>실패 결과도 단순 종료가 아니라 <code>-EFAULT</code>, signal, exception 등으로 정책화된다.</li>
+</ul>
+<h2 id="pintos">PintOS<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현재 저장소의 <code>read()</code>는 시작 주소만 <code>check_address(buffer)</code>로 검사한다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code>
+<ul>
+<li><code>read()</code></li>
+<li><code>check_address()</code></li>
+<li><code>check_user_buffer()</code></li>
+</ul>
+</li>
+</ul>
+<p>핵심 흐름은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>read(fd, buffer, size)</span></span>
+<span data-line><span>  -> check_address(buffer)</span></span>
+<span data-line><span>  -> fd == 0이면 buf[i] = input_getc()</span></span>
+<span data-line><span>  -> 아니면 file_read(f, buffer, size)</span></span></code></pre></figure>
+<p><code>check_address()</code>는 null 여부, user address 여부, present mapping의 존재를 확인한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>addr != NULL</span></span>
+<span data-line><span>is_user_vaddr(addr)</span></span>
+<span data-line><span>pml4_get_page(curr->pml4, addr) != NULL</span></span></code></pre></figure>
+<p>하지만 <code>read()</code>에 필요한 검증 조건은 이보다 강하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>[buffer, buffer + size) 전체 page가</span></span>
+<span data-line><span>현재 process의 user page이고</span></span>
+<span data-line><span>PTE_W가 켜져 있는가?</span></span></code></pre></figure>
+<p>PintOS에는 PTE pointer를 얻을 수 있는 함수가 이미 노출되어 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/include/threads/mmu.h</code>
+<ul>
+<li><code>pml4e_walk(pml4, va, create)</code></li>
+<li><code>is_writable(pte)</code></li>
+</ul>
+</li>
+</ul>
+<p>따라서 설계 후보는 다음과 같이 구성할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">check_user_buffer_writable</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">buffer</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">unsigned</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important"> size</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uint8_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> buffer;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uintptr_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> start </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uintptr_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pg_round_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (addr);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    uintptr_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> end </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uintptr_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pg_round_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (addr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> size </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uintptr_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> start; page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> end; page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">+=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PGSIZE) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        check_address</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ((</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) page);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ()->pml4, page, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_P) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">||</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">||</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_W))</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">            exit</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>이 코드는 최종 구현 지시가 아니라 판단 기준을 보여 준다. 핵심은 <code>read()</code>용 helper가 range와 writable permission을 함께 검사해야 한다는 점이다.</p>
+<h2 id="qemu">QEMU<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 PintOS의 syscall 정책을 알지 못한다. QEMU의 역할은 x86 CPU가 page table permission을 해석하는 규칙을 재현하는 것이다.</p>
+<p>여기서 특히 주의할 점이 있다.</p>
+<p><code>read()</code> 안에서 <code>file_read()</code>나 <code>buf[i] = input_getc()</code>가 실행될 때 실제 메모리 store는 유저 모드가 아니라 <strong>커널 모드에서</strong> 일어난다.</p>
+<p>QEMU의 x86 page walk 경로는 write permission을 결정할 때 kernel/user context와 <code>CR0.WP</code>를 함께 고려한다.</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심 모델은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE가 writable이면 PAGE_WRITE 허용</span></span>
+<span data-line><span>또는</span></span>
+<span data-line><span>kernel context이고 CR0.WP가 꺼져 있으면 read-only page write도 허용될 수 있음</span></span></code></pre></figure>
+<p>PintOS의 부팅 코드에서도 이 차이와 관련된 설정을 확인할 수 있다.</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/loader.S</code>
+<ul>
+<li>주석: <code>WP</code>가 꺼져 있으면 ring 0 code가 page table의 write-protect bit를 무시할 수 있음</li>
+</ul>
+</li>
+<li><code>SW_AI-W11-pintos/pintos/threads/start.S</code>
+<ul>
+<li>현재 long mode 진입에서 <code>CR0_PE | CR0_PG</code>를 켜는 흐름이 보임</li>
+</ul>
+</li>
+</ul>
+<p>따라서 <code>read()</code>가 read-only user page에 쓰는 문제를 “하드웨어 <a href="../.././../tags/pf가" class="tag-link internal internal-link alias" data-slug="tags/pf가">pf가</a> 알아서 막아 줄 것”이라고 가정하면 위험하다. QEMU가 재현하는 하드웨어 동작과 PintOS가 시행해야 할 syscall 정책은 서로 다른 층의 책임이다. PintOS syscall 검증 코드가 PTE_W를 직접 확인해야 테스트 의도와 보안 경계가 일치한다.</p>
+<h2 id="비교">비교<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#비교" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux / Windows</th><th>PintOS</th><th>QEMU</th></tr></thead><tbody><tr><td><code>read()</code> 대상 버퍼</td><td>커널이 user buffer에 쓰므로 안전한 output buffer 검증 필요</td><td><code>check_address()</code>만으로는 present 여부만 확인하므로 PTE_W 확인이 별도로 필요</td><td>guest OS 정책을 알지 못하며 x86 permission 규칙만 재현</td></tr><tr><td>read-only code page</td><td>보호 속성과 VMA/section metadata로 관리</td><td>ELF <code>PF_W</code>가 꺼진 segment는 <code>pml4_set_page(..., writable=false)</code>로 매핑</td><td>user/kernel context와 <code>CR0.WP</code>에 따라 fault 여부가 달라질 수 있음</td></tr><tr><td>실패 정책</td><td>오류 반환, signal, exception 등 다양</td><td>과제에서는 대개 <code>exit(-1)</code>로 단순화</td><td><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> error code와 guest CPU state를 생성</td></tr><tr><td>핵심 판단 자료</td><td>VMA/section/page table/driver buffer metadata</td><td><code>pml4e_walk()</code>로 얻은 PTE의 <code>PTE_P/PTE_U/PTE_W</code></td><td><code>PG_PRESENT_MASK</code>, <code>PG_USER_MASK</code>, <code>PG_RW_MASK</code>, <code>CR0_WP_MASK</code></td></tr></tbody></table></div>
+<h2 id="read-버퍼-pte_w-코드">read() 버퍼 PTE_W 코드<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-코드" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-read는-user-buffer에-쓴다">1. <code>read()</code>는 user buffer에 쓴다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-read는-user-buffer에-쓴다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (fd </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="normal">    buf</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">[type_size] </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> input_getc</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ();</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">else</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    off_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> s </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> file_read</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (f, buffer, size);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>두 경우 모두 user buffer가 destination이다.</p>
+<h3 id="2-현재-check_address는-present-mapping까지만-본다">2. 현재 <code>check_address()</code>는 present mapping까지만 본다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-현재-check_address는-present-mapping까지만-본다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/syscall.c</code></li>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_get_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (curr</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">pml4</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, addr) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    exit</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>pml4_get_page()</code>는 PTE가 present이면 frame의 kernel VA를 반환한다. 하지만 이 반환값만으로는 PTE_W 여부를 알 수 없다.</p>
+<h3 id="3-pte_w는-매핑을-설치할-때-결정된다">3. PTE_W는 매핑을 설치할 때 결정된다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-pte_w는-매핑을-설치할-때-결정된다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/threads/mmu.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span></code></pre></figure>
+<p><code>rw</code>가 false인 page도 present user page일 수 있다. 이 경우 <code>PTE_P</code>와 <code>PTE_U</code>는 켜져 있어도 <code>PTE_W</code>는 꺼져 있다.</p>
+<h3 id="4-elf-segment의-writable-여부가-pte_w로-내려간다">4. ELF segment의 writable 여부가 PTE_W로 내려간다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-elf-segment의-writable-여부가-pte_w로-내려간다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><code>SW_AI-W11-pintos/pintos/userprog/process.c</code></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">bool</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> writable </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (phdr.p_flags </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PF_W) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">load_segment</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (..., writable);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">install_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (upage, kpage, writable);</span></span></code></pre></figure>
+<p>이 흐름에 따라 code segment는 보통 writable=false로 매핑된다.</p>
+<h3 id="5-qemu는-kernel-write와-cr0wp를-함께-본다">5. QEMU는 kernel write와 CR0.WP를 함께 본다<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-qemu는-kernel-write와-cr0wp를-함께-본다" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>파일:</p>
+<ul>
+<li><a href="https://github.com/woonyong-kr/qemu/blob/master/target/i386/tcg/system/excp_helper.c" class="external external-link">target/i386/tcg/system/excp_helper.c<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+</ul>
+<p>핵심:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> ((ptep </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PG_RW_MASK) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">||</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> !</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(is_user </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pg_mode </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PG_MODE_WP))) {</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    prot </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PAGE_WRITE;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>따라서 syscall 내부의 kernel write가 read-only PTE에서 항상 fault를 일으킨다고 단정해서는 안 된다.</p>
+<h2 id="read-버퍼-pte_w-값-추적">read() 버퍼 PTE_W 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>code page의 PTE가 다음 값이라고 가정하자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE = 0x0000000012345025</span></span></code></pre></figure>
+<p>주소와 flag를 나누어 보자.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>frame base = PTE &amp; ~0xfff</span></span>
+<span data-line><span>           = 0x0000000012345000</span></span>
+<span data-line> </span>
+<span data-line><span>flags      = PTE &amp; 0xfff</span></span>
+<span data-line><span>           = 0x025</span></span></code></pre></figure>
+<p>flag를 해석하면 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>0x025 = 0x020 + 0x004 + 0x001</span></span>
+<span data-line> </span>
+<span data-line><span>0x001 PTE_P present</span></span>
+<span data-line><span>0x004 PTE_U user</span></span>
+<span data-line><span>0x020 PTE_A accessed</span></span></code></pre></figure>
+<p>여기에는 <code>0x002 PTE_W</code>가 없다.</p>
+<p>따라서 결론은 다음과 같다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>pml4_get_page()는 null이 아닐 수 있다.</span></span>
+<span data-line><span>하지만 read() destination으로는 부적합하다.</span></span>
+<span data-line><span>파일에서 읽은 1바이트를 여기에 쓰면 code page를 바꾸는 시도가 된다.</span></span></code></pre></figure>
+<h2 id="순서도">순서도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="read-버퍼-검증-판단-흐름">read() 버퍼 검증 판단 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-검증-판단-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart TD\n    A[\&quot;read(fd, buffer, size) 진입\&quot;] --> B{\&quot;buffer == NULL?\&quot;}\n    B -- yes --> FAIL[\&quot;exit(-1)\&quot;]\n    B -- no --> C{\&quot;is_user_vaddr(buffer)?\&quot;}\n    C -- no --> FAIL\n    C -- yes --> D[\&quot;page = pg_round_down(buffer)\&quot;]\n    D --> E{\&quot;pml4e_walk(pml4, page) → PTE 존재?\&quot;}\n    E -- no/NULL --> F{\&quot;VM: SPT에 page 있나?\&quot;}\n    F -- yes --> G[\&quot;vm_claim_page() → demand paging\&quot;]\n    F -- no --> H{\&quot;stack growth 가능?\&quot;}\n    H -- yes --> G\n    H -- no --> FAIL\n    G --> E\n    E -- yes --> I{\&quot;*pte &amp; PTE_P?\&quot;}\n    I -- no --> FAIL\n    I -- yes --> J{\&quot;*pte &amp; PTE_U?\&quot;}\n    J -- no --> FAIL\n    J -- yes --> K{\&quot;read()이므로 write 방향\&quot;}\n    K --> L{\&quot;*pte &amp; PTE_W?\&quot;}\n    L -- no --> M{\&quot;VM: COW page인가?\&quot;}\n    M -- yes --> N[\&quot;vm_try_handle_fault() → COW 분리\&quot;]\n    N --> L\n    M -- no --> FAIL\n    L -- yes --> O[\&quot;다음 page로 이동\&quot;]\n    O --> P{\&quot;buffer 끝까지 검사 완료?\&quot;}\n    P -- no --> D\n    P -- yes --> Q[\&quot;검증 통과 → file_read() 실행\&quot;]&quot;">flowchart TD
+    A[&quot;read(fd, buffer, size) 진입&quot;] --> B{&quot;buffer == NULL?&quot;}
+    B -- yes --> FAIL[&quot;exit(-1)&quot;]
+    B -- no --> C{&quot;is_user_vaddr(buffer)?&quot;}
+    C -- no --> FAIL
+    C -- yes --> D[&quot;page = pg_round_down(buffer)&quot;]
+    D --> E{&quot;pml4e_walk(pml4, page) → PTE 존재?&quot;}
+    E -- no/NULL --> F{&quot;VM: SPT에 page 있나?&quot;}
+    F -- yes --> G[&quot;vm_claim_page() → demand paging&quot;]
+    F -- no --> H{&quot;stack growth 가능?&quot;}
+    H -- yes --> G
+    H -- no --> FAIL
+    G --> E
+    E -- yes --> I{&quot;*pte &amp; PTE_P?&quot;}
+    I -- no --> FAIL
+    I -- yes --> J{&quot;*pte &amp; PTE_U?&quot;}
+    J -- no --> FAIL
+    J -- yes --> K{&quot;read()이므로 write 방향&quot;}
+    K --> L{&quot;*pte &amp; PTE_W?&quot;}
+    L -- no --> M{&quot;VM: COW page인가?&quot;}
+    M -- yes --> N[&quot;vm_try_handle_fault() → COW 분리&quot;]
+    N --> L
+    M -- no --> FAIL
+    L -- yes --> O[&quot;다음 page로 이동&quot;]
+    O --> P{&quot;buffer 끝까지 검사 완료?&quot;}
+    P -- no --> D
+    P -- yes --> Q[&quot;검증 통과 → file_read() 실행&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="kernel-context-write와-cr0wp의-위험">kernel context write와 CR0.WP의 위험<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#kernel-context-write와-cr0wp의-위험" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;flowchart LR\n    A[\&quot;syscall 진입 → ring 0\&quot;] --> B[\&quot;file_read() → memcpy to user buffer\&quot;]\n    B --> C{\&quot;PTE_W == 0?\&quot;}\n    C -- \&quot;CR0.WP=1\&quot; --> D[\&quot;#PF 발생 (안전)\&quot;]\n    C -- \&quot;CR0.WP=0\&quot; --> E[\&quot;write 허용됨 (위험!)\&quot;]\n    E --> F[\&quot;code page 변조 가능\&quot;]\n    F --> G[\&quot;PintOS는 CR0.WP를 명시 설정하지 않음\&quot;]\n    G --> H[\&quot;syscall layer에서 PTE_W를 직접 확인해야 안전\&quot;]&quot;">flowchart LR
+    A[&quot;syscall 진입 → ring 0&quot;] --> B[&quot;file_read() → memcpy to user buffer&quot;]
+    B --> C{&quot;PTE_W == 0?&quot;}
+    C -- &quot;CR0.WP=1&quot; --> D[&quot;#PF 발생 (안전)&quot;]
+    C -- &quot;CR0.WP=0&quot; --> E[&quot;write 허용됨 (위험!)&quot;]
+    E --> F[&quot;code page 변조 가능&quot;]
+    F --> G[&quot;PintOS는 CR0.WP를 명시 설정하지 않음&quot;]
+    G --> H[&quot;syscall layer에서 PTE_W를 직접 확인해야 안전&quot;]
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체/매크로</th><th>역할</th></tr></thead><tbody><tr><td>userprog/syscall.c</td><td>validate_user_buffer()</td><td>buffer의 모든 page를 순회하며 write 여부와 함께 검증</td></tr><tr><td>userprog/syscall.c</td><td>validate_user_addr()</td><td>단일 주소의 present·writable 검증, 실패 시 exit(-1)</td></tr><tr><td>userprog/syscall.c</td><td>try_claim_user_addr()</td><td>present 아닌 page를 VM demand paging/COW/stack growth로 claim</td></tr><tr><td>userprog/syscall.c</td><td>user_page_accessible()</td><td>pml4e_walk → is_writable(pte) 검사</td></tr><tr><td>userprog/syscall.c</td><td>user_page_present()</td><td>pml4e_walk → PTE_P 검사</td></tr><tr><td>include/threads/mmu.h</td><td>is_writable(pte)</td><td><code>*(pte) &amp; PTE_W</code> — PTE writable bit 매크로</td></tr><tr><td>threads/mmu.c</td><td>pml4e_walk()</td><td>VA → PTE pointer 반환 (flag 검사 가능)</td></tr><tr><td>threads/mmu.c</td><td>pml4_get_page()</td><td>VA → frame kva 반환 (flag 검사 불가)</td></tr><tr><td>threads/mmu.c</td><td>pml4_set_page()</td><td><code>*pte = vtop(kpage) | PTE_P | (rw ? PTE_W : 0) | PTE_U</code></td></tr><tr><td>include/threads/pte.h</td><td>PTE_P, PTE_W, PTE_U</td><td>0x001, 0x002, 0x004 — PTE flag 상수</td></tr><tr><td>userprog/process.c</td><td>load_segment() → install_page()</td><td>ELF PF_W → writable 인자로 PTE_W 결정</td></tr><tr><td>threads/start.S</td><td>CR0 설정</td><td><code>CR0_PE | CR0_PG</code> 설정 (WP bit 미포함)</td></tr><tr><td>QEMU excp_helper.c</td><td>x86_ldst_mmu() 경로</td><td>kernel/user context + CR0.WP + PG_RW_MASK → PAGE_WRITE 판단</td></tr></tbody></table></div>
+<h2 id="read-버퍼-pte_w-gdb">read() 버퍼 PTE_W GDB<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-gdb" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="1-pintos에서-현재-검증-흐름-보기">1. PintOS에서 현재 검증 흐름 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-pintos에서-현재-검증-흐름-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>권장 breakpoint:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b read</span></span>
+<span data-line><span>b check_address</span></span>
+<span data-line><span>b pml4_get_page</span></span>
+<span data-line><span>b pml4e_walk</span></span></code></pre></figure>
+<p>확인할 값:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x buffer</span></span>
+<span data-line><span>p size</span></span>
+<span data-line><span>p/x pg_round_down(buffer)</span></span>
+<span data-line><span>p/x pml4_get_page(thread_current()->pml4, buffer)</span></span></code></pre></figure>
+<h3 id="2-pt-write-code2에서-pte_w-보기">2. <code>pt-write-code2</code>에서 PTE_W 보기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-pt-write-code2에서-pte_w-보기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>권장 테스트:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>tests/vm/pt-write-code2</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>p/x test_main</span></span>
+<span data-line><span>set $pte = pml4e_walk(thread_current()->pml4, (uint64_t) test_main, 0)</span></span>
+<span data-line><span>p/x *$pte</span></span>
+<span data-line><span>p/x *$pte &amp; PTE_P</span></span>
+<span data-line><span>p/x *$pte &amp; PTE_U</span></span>
+<span data-line><span>p/x *$pte &amp; PTE_W</span></span></code></pre></figure>
+<p>기대하는 판단:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE_P != 0</span></span>
+<span data-line><span>PTE_U != 0</span></span>
+<span data-line><span>PTE_W == 0</span></span></code></pre></figure>
+<p>이 상태에서 <code>read()</code>는 <code>exit(-1)</code>로 보내야 한다.</p>
+<h3 id="3-qemu-fault에만-의존하면-안-되는-이유-확인">3. QEMU fault에만 의존하면 안 되는 이유 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-qemu-fault에만-의존하면-안-되는-이유-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU 쪽에서 살펴볼 위치:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="gdb" data-theme="github-light github-dark"><code data-language="gdb" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>b QEMU/target/i386/tcg/system/excp_helper.c:381</span></span></code></pre></figure>
+<p>확인할 질문:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>현재 접근은 user context인가 kernel context인가?</span></span>
+<span data-line><span>guest CR0의 WP bit가 켜져 있는가?</span></span>
+<span data-line><span>PTE의 PG_RW_MASK가 꺼져 있어도 PAGE_WRITE가 붙는 경우가 있는가?</span></span></code></pre></figure>
+<p>이 실험의 목적은 syscall 정책을 검증하는 것이 아니라, 하드웨어 재현 층과 OS 정책 층을 구분하는 것이다. <code>read()</code> 버퍼를 거절할지는 QEMU가 아니라 PintOS syscall 코드가 결정해야 한다.</p>
+<h2 id="정리">정리<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#정리" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><code>read()</code>는 user buffer를 읽는 syscall이 아니라 user buffer에 쓰는 syscall이다.</li>
+<li>present mapping 확인은 “주소가 있다”에는 답하지만 “써도 된다”에는 답하지 못한다.</li>
+<li><code>pml4_get_page()</code> 반환값만으로는 <code>PTE_W</code>를 알 수 없다.</li>
+<li>PintOS에서는 <code>pml4e_walk()</code>로 PTE pointer를 얻고 <code>PTE_P/PTE_U/PTE_W</code>를 함께 확인하는 helper가 필요하다.</li>
+<li>QEMU는 x86 permission 규칙을 재현하지만 syscall의 유저 버퍼 정책을 대신 결정하지 않는다.</li>
+<li>특히 kernel context write와 <code>CR0.WP</code> 때문에 read-only user page 쓰기를 hardware fault에만 맡기면 학습용 테스트의 의도와 어긋날 수 있다.</li>
+</ul>
+<h2 id="read-버퍼-pte_w-관련-문서">read() 버퍼 PTE_W 관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#read-버퍼-pte_w-관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/read-write-buffer-boundary-lab" class="internal internal-link alias" data-slug="wiki/os/read-write-buffer-boundary-lab">write buffer boundary</a>
+<ul>
+<li><code>read()</code>와 <code>write()</code>의 range, 방향, 권한 차이</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/user-pointer-safe-copy-knowledge" class="internal internal-link alias" data-slug="wiki/os/user-pointer-safe-copy-knowledge">유저 포인터 안전 복사</a>
+<ul>
+<li>유저 포인터를 커널 포인터처럼 믿지 않는 이유</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-table-entry-bits-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-table-entry-bits-knowledge">PTE bit</a>
+<ul>
+<li><code>PTE_P/PTE_W/PTE_U</code>를 숫자로 해석하는 법</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/page-fault-error-code-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-error-code-knowledge">Page Fault Error Code</a>
+<ul>
+<li><a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> error code의 present/write/user bit 해석</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/address-translation-memory" class="internal internal-link alias" data-slug="wiki/os/address-translation-memory">주소 변환</a>
+<ul>
+<li>page table이 VA를 frame과 권한으로 바꾸는 큰 흐름</li>
+</ul>
+</li>
+<li><a href="../../wiki/os/syscall-end-to-end" class="internal internal-link alias" data-slug="wiki/os/syscall-end-to-end">syscall 전체 흐름</a>
+<ul>
+<li><code>read(fd, buffer, size)</code> 인자가 register에서 커널로 들어오는 과정</li>
+</ul>
+</li>
+<li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal internal-link alias" data-slug="wiki/hubs/user-program-execution-boundary">User Programs 실행 경계</a>
+<ul>
+<li>User Programs 전체</li>
+</ul>
+</li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/user-program-execution-boundary" class="internal">유저-커널 경계와 시스템 콜</a></li><li><a href="../../wiki/os/mmap-readonly-protection-lab" class="internal">mmap read-only 쓰기 보호 Lab</a></li><li><a href="../../wiki/os/read-write-buffer-boundary-lab" class="internal">read/write 버퍼 경계 검증 Lab</a></li><li><a href="../../wiki/os/user-pointer-safe-copy-knowledge" class="internal">유저 포인터 안전 복사는 왜 별도 규칙이 필요한가</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-619" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#read-버퍼는-왜-pte_w까지-확인해야-하나" data-for="read-버퍼는-왜-pte_w까지-확인해야-하나">read() 버퍼는 왜 PTE_W까지 확인해야 하나?</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-쟁점" data-for="read-버퍼-pte_w-쟁점">read() 버퍼 PTE_W 쟁점</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-문제" data-for="read-버퍼-pte_w-문제">read() 버퍼 PTE_W 문제</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-상태" data-for="read-버퍼-pte_w-상태">read() 버퍼 PTE_W 상태</a></li><li class="depth-1"><a href="#vm-테스트에는-이-질문을-정확히-찌르는-케이스가-있다" data-for="vm-테스트에는-이-질문을-정확히-찌르는-케이스가-있다">VM 테스트에는 이 질문을 정확히 찌르는 케이스가 있다</a></li><li class="depth-1"><a href="#실제-운영체제" data-for="실제-운영체제">실제 운영체제</a></li><li class="depth-1"><a href="#pintos" data-for="pintos">PintOS</a></li><li class="depth-1"><a href="#qemu" data-for="qemu">QEMU</a></li><li class="depth-1"><a href="#비교" data-for="비교">비교</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-코드" data-for="read-버퍼-pte_w-코드">read() 버퍼 PTE_W 코드</a></li><li class="depth-2"><a href="#1-read는-user-buffer에-쓴다" data-for="1-read는-user-buffer에-쓴다">1. read()는 user buffer에 쓴다</a></li><li class="depth-2"><a href="#2-현재-check_address는-present-mapping까지만-본다" data-for="2-현재-check_address는-present-mapping까지만-본다">2. 현재 check_address()는 present mapping까지만 본다</a></li><li class="depth-2"><a href="#3-pte_w는-매핑을-설치할-때-결정된다" data-for="3-pte_w는-매핑을-설치할-때-결정된다">3. PTE_W는 매핑을 설치할 때 결정된다</a></li><li class="depth-2"><a href="#4-elf-segment의-writable-여부가-pte_w로-내려간다" data-for="4-elf-segment의-writable-여부가-pte_w로-내려간다">4. ELF segment의 writable 여부가 PTE_W로 내려간다</a></li><li class="depth-2"><a href="#5-qemu는-kernel-write와-cr0wp를-함께-본다" data-for="5-qemu는-kernel-write와-cr0wp를-함께-본다">5. QEMU는 kernel write와 CR0.WP를 함께 본다</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-값-추적" data-for="read-버퍼-pte_w-값-추적">read() 버퍼 PTE_W 값 추적</a></li><li class="depth-1"><a href="#순서도" data-for="순서도">순서도</a></li><li class="depth-2"><a href="#read-버퍼-검증-판단-흐름" data-for="read-버퍼-검증-판단-흐름">read() 버퍼 검증 판단 흐름</a></li><li class="depth-2"><a href="#kernel-context-write와-cr0wp의-위험" data-for="kernel-context-write와-cr0wp의-위험">kernel context write와 CR0.WP의 위험</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-gdb" data-for="read-버퍼-pte_w-gdb">read() 버퍼 PTE_W GDB</a></li><li class="depth-2"><a href="#1-pintos에서-현재-검증-흐름-보기" data-for="1-pintos에서-현재-검증-흐름-보기">1. PintOS에서 현재 검증 흐름 보기</a></li><li class="depth-2"><a href="#2-pt-write-code2에서-pte_w-보기" data-for="2-pt-write-code2에서-pte_w-보기">2. pt-write-code2에서 PTE_W 보기</a></li><li class="depth-2"><a href="#3-qemu-fault에만-의존하면-안-되는-이유-확인" data-for="3-qemu-fault에만-의존하면-안-되는-이유-확인">3. QEMU fault에만 의존하면 안 되는 이유 확인</a></li><li class="depth-1"><a href="#정리" data-for="정리">정리</a></li><li class="depth-1"><a href="#read-버퍼-pte_w-관련-문서" data-for="read-버퍼-pte_w-관련-문서">read() 버퍼 PTE_W 관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

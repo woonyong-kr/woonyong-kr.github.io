@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>pml4_set_page 실패 뒤 claim 롤백 Trace · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="pml4_set_page 실패 뒤 claim 롤백 Trace · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="pml4_set_page 실패 뒤 claim 롤백 Trace · 최우녕"/><meta name="twitter:description" content="vmdoclaimpage()에서 frame을 얻은 뒤 pml4setpage()나 swapin()이 실패하면 연결한 page->frame·frame->page 양방향 포인터, 설치한 PTE, 할당한 user frame을 모두 되돌려야 하며, 부분 상태는 &quot;장부는 resident인데 PTE는 not-present&quot;인 모순으로 무한 #PF·stale pointer·frame leak을 만든다."/><meta property="og:description" content="vmdoclaimpage()에서 frame을 얻은 뒤 pml4setpage()나 swapin()이 실패하면 연결한 page->frame·frame->page 양방향 포인터, 설치한 PTE, 할당한 user frame을 모두 되돌려야 하며, 부분 상태는 &quot;장부는 resident인데 PTE는 not-present&quot;인 모순으로 무한 #PF·stale pointer·frame leak을 만든다."/><meta property="og:image:alt" content="vmdoclaimpage()에서 frame을 얻은 뒤 pml4setpage()나 swapin()이 실패하면 연결한 page->frame·frame->page 양방향 포인터, 설치한 PTE, 할당한 user frame을 모두 되돌려야 하며, 부분 상태는 &quot;장부는 resident인데 PTE는 not-present&quot;인 모순으로 무한 #PF·stale pointer·frame leak을 만든다."/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/vm-claim-rollback-trace"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/vm-claim-rollback-trace"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="vmdoclaimpage()에서 frame을 얻은 뒤 pml4setpage()나 swapin()이 실패하면 연결한 page->frame·frame->page 양방향 포인터, 설치한 PTE, 할당한 user frame을 모두 되돌려야 하며, 부분 상태는 &quot;장부는 resident인데 PTE는 not-present&quot;인 모순으로 무한 #PF·stale pointer·frame leak을 만든다."/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/vm-claim-rollback-trace" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-701" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-701" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>pml4_set_page 실패 뒤 claim 롤백 Trace</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="pml4_set_page-실패-뒤-claim-롤백-trace">pml4_set_page 실패 뒤 claim 롤백 Trace<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_set_page-실패-뒤-claim-롤백-trace" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>한 줄 요약: <code>vm_do_claim_page()</code>에서 frame을 얻은 뒤 <code>pml4_set_page()</code>나 <code>swap_in()</code>이 실패하면 연결한 <code>page->frame</code>·<code>frame->page</code> 양방향 포인터, 설치한 PTE, 할당한 user frame을 모두 되돌려야 하며, 부분 상태는 “장부는 resident인데 PTE는 not-present”인 모순으로 무한 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a>·stale pointer·frame leak을 만든다.</p>
+</blockquote>
+<h2 id="pml4_set_page-실패-뒤-claim-흐름">pml4_set_page 실패 뒤 claim 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_set_page-실패-뒤-claim-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p><code>vm_do_claim_page()</code>는 frame을 얻은 뒤 page와 frame을 서로 연결한다. 이어 PTE를 설치하고 page의 내용을 frame으로 가져온다. 이 과정에서 <code>pml4_set_page()</code> 또는 <code>swap_in()</code>이 실패하면 앞서 만든 상태를 역순으로 되돌려야 한다. <code>page->frame</code>과 <code>frame->page</code>의 연결, 설치된 PTE, 할당된 user frame 가운데 일부만 남으면 커널 metadata와 CPU page table이 서로 다른 상태를 나타내기 때문이다.</p>
+<p>커널 장부에는 page가 resident로 기록되어 있는데 CPU page table에는 mapping이 없다면 CPU는 같은 VA에서 계속 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 발생시킬 수 있다. 반대로 PTE만 남고 frame의 내용이 준비되지 않았다면 유저가 초기화되지 않은 bytes에 접근할 수 있다. 따라서 claim의 성공 여부는 page metadata, frame metadata, PTE가 함께 일관된 상태에 도달했는지로 판단해야 한다.</p>
+<h2 id="cpummu와-os-metadata가-어긋날-때">CPU/MMU와 OS metadata가 어긋날 때<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cpummu와-os-metadata가-어긋날-때" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>MMU가 참조하는 것은 page table이다. OS가 <code>page->frame</code>을 설정했더라도 PTE가 present가 아니면 CPU는 계속 <a href="../.././../tags/pf를" class="tag-link internal internal-link alias" data-slug="tags/pf를">pf를</a> 발생시킨다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>CPU/MMU가 보는 것</th><th>OS metadata가 말하는 것</th><th>불일치 시 결과</th></tr></thead><tbody><tr><td>PTE present = 0</td><td><code>page->frame != NULL</code> (resident)</td><td>같은 VA에 무한 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> 반복</td></tr><tr><td>PTE present = 1</td><td><code>page->frame == NULL</code></td><td>유저가 초기화 안 된 frame bytes 접근 가능</td></tr><tr><td>PTE가 가리키는 PA</td><td><code>frame->kva</code>에서 파생된 PA</td><td>불일치면 다른 frame의 데이터 노출</td></tr></tbody></table></div>
+<p>하드웨어는 rollback이 필요하다고 OS에 알려주지 않는다. PTE와 metadata의 일관성을 유지하고 실패했을 때 부분 상태를 정리하는 일은 OS의 책임이다.</p>
+<p>Linux와 Windows의 세부 구조와 오류 처리는 다르지만, 아래 표에 제시된 범위에서는 fault 처리 중 실패가 발생했을 때 관련 page table과 장부를 함께 정리한다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th></tr></thead><tbody><tr><td>fault 중 frame 확보 실패</td><td><code>alloc_pages()</code> 실패 → OOM killer 또는 SIGKILL</td><td>working set trimming 또는 process termination</td></tr><tr><td>PTE 설치 실패</td><td><code>set_pte_at()</code> 전에 page table page alloc 실패 → cleanup label로 점프</td><td>prototype PTE 설치 실패 → VAD entry 복원</td></tr><tr><td>swap_in 실패</td><td>I/O error → page 해제, PTE clear, <code>SIGBUS</code> 전달</td><td>pagefile read 실패 → <code>STATUS_IN_PAGE_ERROR</code></td></tr><tr><td>장부 정리 대상</td><td>page refcount, reverse mapping, LRU list, PTE, TLB</td><td>PFN entry, working set list, PTE, prototype PTE</td></tr></tbody></table></div>
+<p>이 비교에서 공통으로 확인할 수 있는 원칙은 page metadata가 resident라고 나타낼 때 page table과 physical page 장부도 같은 상태를 나타내야 한다는 점이다. 실패 지점마다 cleanup 경로를 두는 이유도 부분 상태가 남지 않게 하기 위해서다.</p>
+<h2 id="pintos의-claim과-rollback">PintOS의 claim과 rollback<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos의-claim과-rollback" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>현재 W09 코드의 <code>vm_do_claim_page()</code>는 frame을 확보한 뒤 양방향 포인터를 연결한다. 이어서 PTE를 설치하고 <code>swap_in()</code>을 호출한다. 두 단계 중 하나라도 실패하면 <code>vm_destroy_page_frame()</code>으로 rollback한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* vm/vm.c */</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_do_claim_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> thread </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">curr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> thread_current</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ();</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vm_get_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> ();</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_VALUE_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> curr </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    frame->page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    frame->owner </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> curr;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> frame;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">pml4_set_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (curr->pml4, page->va, frame->kva, page->writable)) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        vm_destroy_page_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">swap_in</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page, frame->kva)) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        vm_destroy_page_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">        return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">    }</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>vm_destroy_page_frame()</code>은 owner의 page table에서 PTE를 지우고 frame을 frame table에서 제거한다. 그다음 user page를 반환하고 양방향 포인터를 끊은 뒤 frame wrapper를 해제한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* vm/vm.c */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> void</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">vm_destroy_page_frame</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    RETURN_IF</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ||</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> page->frame;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (frame->owner </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &amp;&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> frame->owner->pml4 </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">        pml4_clear_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (frame->owner->pml4, page->va);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    lock_acquire</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">frame_table_lock);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    list_remove</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">frame->frame_elem);</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    lock_release</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function">frame_table_lock);</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    palloc_free_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (frame->kva);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    frame->page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    page->frame </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    free</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> (frame);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>실패 시점에 따라 이미 만들어진 상태와 정리할 대상이 달라진다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>실패 지점</th><th>이미 생긴 것</th><th>vm_destroy_page_frame이 하는 일</th></tr></thead><tbody><tr><td><code>vm_get_frame()</code> 실패</td><td>없음</td><td>호출되지 않음 (NULL 검사에서 조기 반환)</td></tr><tr><td><code>pml4_set_page()</code> 실패</td><td>frame↔page 양방향 링크</td><td>pml4_clear_page (no-op: PTE 미설치), frame table에서 제거, palloc_free, link 해제, frame free</td></tr><tr><td><code>swap_in()</code> 실패</td><td>frame↔page 링크 + PTE 설치됨</td><td>pml4_clear_page (PTE 제거 + invlpg), frame table에서 제거, palloc_free, link 해제, frame free</td></tr></tbody></table></div>
+<p><code>vm_get_frame()</code>이 실패하면 frame과 page를 아직 연결하지 않았으므로 되돌릴 상태가 없다. <code>pml4_set_page()</code>가 실패한 시점에는 양방향 링크가 이미 생겼지만 PTE는 설치되지 않았다. <code>swap_in()</code>이 실패한 시점에는 링크와 PTE가 모두 존재한다. 이때는 PTE까지 제거해야 유저가 준비되지 않은 frame에 접근하지 않는다.</p>
+<h3 id="pml4_set_page-실패-조건">pml4_set_page 실패 조건<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_set_page-실패-조건" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>pml4_set_page()</code>는 내부에서 <code>pml4e_walk(..., create = 1)</code>을 호출한다. 중간 page table page(PDPT, PD, PT)가 없으면 <code>palloc_get_page(PAL_ZERO)</code>로 새로 할당한다. 이 할당이 실패하면 <code>pte == NULL</code>이 되고 함수는 false를 반환한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">/* threads/mmu.c: pml4_set_page() */</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pml4e_walk</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pml4, (</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">uint64_t</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">upage</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (pte)</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">    *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> vtop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (kpage) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_P </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (rw </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">?</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> PTE_W </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">|</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> PTE_U;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> pte </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">!=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span></code></pre></figure>
+<p><code>vm_do_claim_page()</code>가 rollback할 때 page 자체는 free하지 않는다. 이 함수는 SPT에 있던 page를 frame에 올리려는 함수이며 SPT entry의 소유자가 아니기 때문이다. page 제거 여부는 process kill이나 SPT cleanup 같은 caller의 정책에서 결정한다.</p>
+<h2 id="qemu에서-보이는-상태">QEMU에서 보이는 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu에서-보이는-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>QEMU는 <code>page->frame</code>이나 <code>frame->page</code>를 알지 못한다. QEMU가 관찰하는 것은 guest page table과 guest physical memory의 접근 결과뿐이다.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>시나리오</th><th>QEMU 관점</th></tr></thead><tbody><tr><td>PTE 설치 실패 → rollback</td><td>같은 VA 재접근 시 guest page table walk 실패 → 다시 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a></td></tr><tr><td>PTE 설치 후 swap_in 실패 → PTE 미정리</td><td>present PTE를 통해 초기화 안 된 frame bytes에 접근 가능</td></tr><tr><td>정상 rollback (PTE clear + invlpg)</td><td>같은 VA 재접근 시 <a href="../.././../tags/pf" class="tag-link internal internal-link alias" data-slug="tags/pf">pf</a> → PintOS가 process kill</td></tr></tbody></table></div>
+<p>따라서 QEMU가 rollback 정책을 대신 수행하지는 않는다. guest OS가 PTE와 frame metadata를 일관되게 유지해야 한다.</p>
+<h2 id="pml4_set_page-실패-뒤-claim-값-추적">pml4_set_page 실패 뒤 claim 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_set_page-실패-뒤-claim-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="pte-값-계산-예제">PTE 값 계산 예제<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pte-값-계산-예제" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>다음 값에서는 <code>frame->kva</code>에서 <code>KERN_BASE</code>를 빼 frame의 physical address를 구할 수 있다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->va    = 0x0000000000401000</span></span>
+<span data-line><span>frame->kva  = 0x0000008016340000</span></span>
+<span data-line><span>KERN_BASE   = 0x0000008004000000</span></span></code></pre></figure>
+<p>frame의 physical address:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>vtop(frame->kva) = frame->kva - KERN_BASE</span></span>
+<span data-line><span>                 = 0x8016340000 - 0x8004000000</span></span>
+<span data-line><span>                 = 0x0000000012340000</span></span></code></pre></figure>
+<p>PTE 설치가 성공하면 이 physical address에 present, writable, user flag가 결합된다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>PTE_P = 0x1, PTE_W = 0x2, PTE_U = 0x4</span></span>
+<span data-line><span>PTE   = 0x0000000012340000 | 0x7 = 0x0000000012340007</span></span></code></pre></figure>
+<h3 id="상태-일관성-점검">상태 일관성 점검<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상태-일관성-점검" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>pml4_set_page()</code>가 실패한 직후에는 page와 frame의 metadata가 서로 연결되어 있지만 CPU가 사용할 mapping은 없다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->frame       = frame (≠ NULL)     ← metadata: resident</span></span>
+<span data-line><span>frame->page       = page (≠ NULL)      ← metadata: 사용중</span></span>
+<span data-line><span>pml4_get_page(...) = NULL              ← CPU: mapping 없음</span></span>
+<span data-line><span>  → 모순! metadata는 resident인데 CPU는 #PF를 낸다</span></span></code></pre></figure>
+<p>rollback이 끝나면 양방향 연결과 frame이 제거된다. PTE도 없는 상태이므로 metadata와 CPU의 관점이 다시 일치한다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->frame       = NULL               ← metadata: not resident</span></span>
+<span data-line><span>frame->page       = NULL               ← metadata: 사용 안 함 (이미 free됨)</span></span>
+<span data-line><span>pml4_get_page(...) = NULL              ← CPU: mapping 없음</span></span>
+<span data-line><span>  → 일관! 모두 &quot;이 page는 frame에 없다&quot;에 동의</span></span></code></pre></figure>
+<p><code>swap_in()</code> 실패 뒤 PTE를 정리하지 않으면 metadata와 mapping은 존재하지만 frame bytes가 초기화되지 않은 위험 상태가 남는다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>page->frame       = frame              ← metadata: resident</span></span>
+<span data-line><span>frame->page       = page               ← metadata: 사용중</span></span>
+<span data-line><span>pml4_get_page(...) = frame->kva        ← CPU: mapping 있음</span></span>
+<span data-line><span>frame bytes       = 초기화 안 됨       ← 위험: 유저가 쓰레기 읽음</span></span></code></pre></figure>
+<h3 id="frame-메모리-크기">frame 메모리 크기<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#frame-메모리-크기" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>제시된 크기 계산에서는 claim 한 번에 frame wrapper와 4096-byte user page가 함께 필요하다.</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="text" data-theme="github-light github-dark"><code data-language="text" data-theme="github-light github-dark" style="display:grid;"><span data-line><span>struct frame 크기     ≈ 32 bytes (kva, page, owner, frame_elem)</span></span>
+<span data-line><span>palloc user page      = 4096 bytes</span></span>
+<span data-line><span>총 frame 비용 per claim = 4096 + 32 = 4128 bytes</span></span>
+<span data-line><span>leak 1회당 손실       = 4128 bytes ≈ 4 KB</span></span>
+<span data-line><span>100회 leak            = 약 400 KB (user pool 고갈 가속)</span></span></code></pre></figure>
+<p>rollback에서 frame을 반환하지 않으면 이 비용이 leak으로 남아 user pool 고갈을 앞당긴다.</p>
+<h2 id="vm_do_claim_page-성공과-실패-경로">vm_do_claim_page 성공과 실패 경로<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#vm_do_claim_page-성공과-실패-경로" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% vm_do_claim_page 성공/실패 경로\nflowchart TD\n  start[\&quot;vm_do_claim_page(page)&lt;br/>진입\&quot;]\n  frame[\&quot;vm_get_frame()&lt;br/>성공?\&quot;]\n  fail0[\&quot;return false&lt;br/>되돌릴 것 없음\&quot;]\n  pte[\&quot;pml4_set_page()&lt;br/>성공?\&quot;]\n  ok[\&quot;return true&lt;br/>page resident\&quot;]\n  link[\&quot;page-&amp;gt;frame / frame owner 연결\&quot;]\n  rollback1[\&quot;PTE 설치 실패 rollback&lt;br/>owner·양방향 link 해제&lt;br/>새 frame 반환\&quot;]\n  swap[\&quot;page-&amp;gt;operations-&amp;gt;swap_in(page, frame-&amp;gt;kva)\&quot;]\n  rollback2[\&quot;swap_in 실패 rollback&lt;br/>PTE clear 후 owner·link 해제&lt;br/>새 frame 반환\&quot;]\n  start --> frame\n  frame -->|NULL| fail0\n  frame -->|성공| link\n  link --> pte\n  pte -->|실패| rollback1\n  pte -->|성공| swap\n  swap -->|실패| rollback2\n  swap -->|성공| ok&quot;">%% vm_do_claim_page 성공/실패 경로
+flowchart TD
+  start[&quot;vm_do_claim_page(page)&lt;br/>진입&quot;]
+  frame[&quot;vm_get_frame()&lt;br/>성공?&quot;]
+  fail0[&quot;return false&lt;br/>되돌릴 것 없음&quot;]
+  pte[&quot;pml4_set_page()&lt;br/>성공?&quot;]
+  ok[&quot;return true&lt;br/>page resident&quot;]
+  link[&quot;page-&amp;gt;frame / frame owner 연결&quot;]
+  rollback1[&quot;PTE 설치 실패 rollback&lt;br/>owner·양방향 link 해제&lt;br/>새 frame 반환&quot;]
+  swap[&quot;page-&amp;gt;operations-&amp;gt;swap_in(page, frame-&amp;gt;kva)&quot;]
+  rollback2[&quot;swap_in 실패 rollback&lt;br/>PTE clear 후 owner·link 해제&lt;br/>새 frame 반환&quot;]
+  start --> frame
+  frame -->|NULL| fail0
+  frame -->|성공| link
+  link --> pte
+  pte -->|실패| rollback1
+  pte -->|성공| swap
+  swap -->|실패| rollback2
+  swap -->|성공| ok
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>frame 확보에 실패하면 즉시 false를 반환한다. frame과 page를 연결한 뒤에는 이후 단계가 실패할 때마다 <code>vm_destroy_page_frame()</code>으로 이미 만든 상태를 제거한다.</p>
+<h3 id="pml4_set_page-실패-뒤-rollback-전후">pml4_set_page 실패 뒤 rollback 전후<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pml4_set_page-실패-뒤-rollback-전후" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% pml4_set_page 실패 뒤 rollback 전후 상태\nflowchart LR\n  before_pte[\&quot;PML4 walk&lt;br/>PTE = not present&lt;br/>CPU: mapping 없음\&quot;]\n  before_risk[\&quot;모순&lt;br/>metadata는 resident&lt;br/>CPU는 같은 VA에서 #PF\&quot;]\n  before_page[\&quot;before_page\&quot;]\n  before_frame[\&quot;before_frame\&quot;]\n  after_pte[\&quot;PML4 walk&lt;br/>PTE = not present&lt;br/>CPU: mapping 없음\&quot;]\n  after_ok[\&quot;일관 상태&lt;br/>모두 frame 없음에 동의\&quot;]\n  after_page[\&quot;after_page\&quot;]\n  after_frame[\&quot;after_frame\&quot;]\n  cleanup[\&quot;vm_destroy_page_frame()\&quot;]\n  before_page -->|frame| before_frame\n  before_frame -->|page| before_page\n  before_page -->|page-&amp;gt;va| before_pte\n  before_pte --> before_risk\n  after_page -. 끊김 .-> after_frame\n  after_page -->|page-&amp;gt;va| after_pte\n  after_pte --> after_ok\n  before_risk --> cleanup\n  cleanup --> after_page&quot;">%% pml4_set_page 실패 뒤 rollback 전후 상태
+flowchart LR
+  before_pte[&quot;PML4 walk&lt;br/>PTE = not present&lt;br/>CPU: mapping 없음&quot;]
+  before_risk[&quot;모순&lt;br/>metadata는 resident&lt;br/>CPU는 같은 VA에서 #PF&quot;]
+  before_page[&quot;before_page&quot;]
+  before_frame[&quot;before_frame&quot;]
+  after_pte[&quot;PML4 walk&lt;br/>PTE = not present&lt;br/>CPU: mapping 없음&quot;]
+  after_ok[&quot;일관 상태&lt;br/>모두 frame 없음에 동의&quot;]
+  after_page[&quot;after_page&quot;]
+  after_frame[&quot;after_frame&quot;]
+  cleanup[&quot;vm_destroy_page_frame()&quot;]
+  before_page -->|frame| before_frame
+  before_frame -->|page| before_page
+  before_page -->|page-&amp;gt;va| before_pte
+  before_pte --> before_risk
+  after_page -. 끊김 .-> after_frame
+  after_page -->|page-&amp;gt;va| after_pte
+  after_pte --> after_ok
+  before_risk --> cleanup
+  cleanup --> after_page
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p>PTE 설치 실패 직후에는 양방향 link만 남아 있다. cleanup은 이 link와 새 frame을 제거해 page metadata와 page table이 모두 frame 없음 상태를 나타내도록 만든다.</p>
+<h3 id="swap_in-실패-뒤-pte-clear가-필요한-이유">swap_in 실패 뒤 PTE clear가 필요한 이유<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#swap_in-실패-뒤-pte-clear가-필요한-이유" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% swap_in 실패 뒤 PTE clear가 필요한 이유\nflowchart LR\n  before_pte[\&quot;PML4 walk&lt;br/>PTE = 0x12340007&lt;br/>present + writable + user\&quot;]\n  before_user[\&quot;유저 코드&lt;br/>같은 VA 접근&lt;br/>불확정 bytes 읽기\&quot;]\n  before_frame[\&quot;before_frame\&quot;]\n  clear[\&quot;pml4_clear_page()&lt;br/>PTE present bit = 0\&quot;]\n  tlb[\&quot;invlpg&lt;br/>TLB stale entry 제거\&quot;]\n  next[\&quot;다음 접근&lt;br/>#PF\&quot;]\n  kill[\&quot;handler&lt;br/>process kill\&quot;]\n  cleanup[\&quot;vm_destroy_page_frame()\&quot;]\n  before_pte -->|PA mapping| before_frame\n  before_frame -->|user accessible| before_user\n  clear --> tlb\n  tlb --> next\n  next --> kill\n  before_user --> cleanup\n  cleanup --> clear&quot;">%% swap_in 실패 뒤 PTE clear가 필요한 이유
+flowchart LR
+  before_pte[&quot;PML4 walk&lt;br/>PTE = 0x12340007&lt;br/>present + writable + user&quot;]
+  before_user[&quot;유저 코드&lt;br/>같은 VA 접근&lt;br/>불확정 bytes 읽기&quot;]
+  before_frame[&quot;before_frame&quot;]
+  clear[&quot;pml4_clear_page()&lt;br/>PTE present bit = 0&quot;]
+  tlb[&quot;invlpg&lt;br/>TLB stale entry 제거&quot;]
+  next[&quot;다음 접근&lt;br/>#PF&quot;]
+  kill[&quot;handler&lt;br/>process kill&quot;]
+  cleanup[&quot;vm_destroy_page_frame()&quot;]
+  before_pte -->|PA mapping| before_frame
+  before_frame -->|user accessible| before_user
+  clear --> tlb
+  tlb --> next
+  next --> kill
+  before_user --> cleanup
+  cleanup --> clear
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<p><code>swap_in()</code>이 실패했는데 present PTE를 남겨 두면 유저 접근이 준비되지 않은 frame으로 전달될 수 있다. <code>pml4_clear_page()</code>로 present bit를 해제하고 <code>invlpg</code>로 stale TLB entry를 제거해야 다음 접근이 다시 <a href="../.././../tags/pf로" class="tag-link internal internal-link alias" data-slug="tags/pf로">pf로</a> 이어진다.</p>
+<h2 id="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#구현을-다시-찾기-위한-코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>역할</th></tr></thead><tbody><tr><td><code>vm/vm.c</code></td><td><code>vm_do_claim_page()</code></td><td>frame 확보 → link → PTE → swap_in, 실패 시 rollback</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_get_frame()</code></td><td>palloc user page + frame wrapper 할당, eviction 포함</td></tr><tr><td><code>vm/vm.c</code></td><td><code>vm_destroy_page_frame()</code></td><td>PTE clear + frame table 제거 + palloc free + link 해제</td></tr><tr><td><code>include/vm/vm.h</code></td><td><code>struct page</code></td><td><code>va</code>, <code>frame</code> 포인터, <code>writable</code>, <code>operations</code></td></tr><tr><td><code>include/vm/vm.h</code></td><td><code>struct frame</code></td><td><code>kva</code>, <code>page</code> 포인터, <code>owner</code>, <code>frame_elem</code></td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_set_page()</code></td><td>PTE 설치 (중간 page table page 할당 포함)</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4_clear_page()</code></td><td>PTE present bit 해제 + CR3 같으면 invlpg</td></tr><tr><td><code>threads/mmu.c</code></td><td><code>pml4e_walk()</code></td><td>4단계 walk, create=1이면 중간 table 할당</td></tr><tr><td><code>threads/palloc.c</code></td><td><code>palloc_get_page()</code></td><td>user/kernel pool에서 page 할당</td></tr><tr><td><code>threads/palloc.c</code></td><td><code>palloc_free_page()</code></td><td>page를 pool에 반환</td></tr><tr><td><code>userprog/process.c</code></td><td><code>duplicate_pte()</code></td><td>fork PTE 복사 시 <code>pml4_set_page</code> 실패 → <code>palloc_free</code> 패턴</td></tr><tr><td><code>userprog/process.c</code></td><td><code>process_cleanup()</code></td><td><code>supplemental_page_table_kill()</code> → 각 page destroy</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal internal-link alias" data-slug="wiki/os/vm-do-claim-page-trace">vm do claim page()</a></li>
+<li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal internal-link alias" data-slug="wiki/os/uninit-swap-in-failure-rollback-trace">UNINIT swap in rollback</a></li>
+<li><a href="../../wiki/os/page-fault-byte-equivalence-lab" class="internal internal-link alias" data-slug="wiki/os/page-fault-byte-equivalence-lab">user VA와 frame byte 비교</a></li>
+<li><a href="../../wiki/os/page-fault-instruction-retry-knowledge" class="internal internal-link alias" data-slug="wiki/os/page-fault-instruction-retry-knowledge">instruction retry</a></li>
+<li><a href="../../wiki/os/frame-eviction-trace" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-trace">Frame Eviction Trace</a></li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup SPT</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">Page Fault 처리</a></li>
+<li><a href="../../wiki/os/pintos-vm-structure-flow" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-structure-flow">PintOS VM 구조 흐름</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/lazy-aux-failure-injection-lab" class="internal">lazy aux 실패 주입 Lab</a></li><li><a href="../../wiki/os/lazy-page-aux-cleanup-checklist-trace" class="internal">lazy page aux cleanup 구현 체크리스트 Trace</a></li><li><a href="../../wiki/os/mmap-multi-region-isolation-lab" class="internal">mmap 다중 region 격리는 무엇을 확인해야 하나</a></li><li><a href="../../wiki/os/pintos-vm-implementation-prep" class="internal">PintOS VM 구현 준비</a></li><li><a href="../../wiki/os/uninit-swap-in-failure-rollback-trace" class="internal">UNINIT swap_in 실패 롤백 Trace</a></li><li><a href="../../wiki/os/vm-do-claim-page-trace" class="internal">vm_do_claim_page는 fault를 실제 frame mapping으로 바꾼다</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-699" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#pml4_set_page-실패-뒤-claim-롤백-trace" data-for="pml4_set_page-실패-뒤-claim-롤백-trace">pml4_set_page 실패 뒤 claim 롤백 Trace</a></li><li class="depth-1"><a href="#pml4_set_page-실패-뒤-claim-흐름" data-for="pml4_set_page-실패-뒤-claim-흐름">pml4_set_page 실패 뒤 claim 흐름</a></li><li class="depth-1"><a href="#cpummu와-os-metadata가-어긋날-때" data-for="cpummu와-os-metadata가-어긋날-때">CPU/MMU와 OS metadata가 어긋날 때</a></li><li class="depth-1"><a href="#pintos의-claim과-rollback" data-for="pintos의-claim과-rollback">PintOS의 claim과 rollback</a></li><li class="depth-2"><a href="#pml4_set_page-실패-조건" data-for="pml4_set_page-실패-조건">pml4_set_page 실패 조건</a></li><li class="depth-1"><a href="#qemu에서-보이는-상태" data-for="qemu에서-보이는-상태">QEMU에서 보이는 상태</a></li><li class="depth-1"><a href="#pml4_set_page-실패-뒤-claim-값-추적" data-for="pml4_set_page-실패-뒤-claim-값-추적">pml4_set_page 실패 뒤 claim 값 추적</a></li><li class="depth-2"><a href="#pte-값-계산-예제" data-for="pte-값-계산-예제">PTE 값 계산 예제</a></li><li class="depth-2"><a href="#상태-일관성-점검" data-for="상태-일관성-점검">상태 일관성 점검</a></li><li class="depth-2"><a href="#frame-메모리-크기" data-for="frame-메모리-크기">frame 메모리 크기</a></li><li class="depth-1"><a href="#vm_do_claim_page-성공과-실패-경로" data-for="vm_do_claim_page-성공과-실패-경로">vm_do_claim_page 성공과 실패 경로</a></li><li class="depth-2"><a href="#pml4_set_page-실패-뒤-rollback-전후" data-for="pml4_set_page-실패-뒤-rollback-전후">pml4_set_page 실패 뒤 rollback 전후</a></li><li class="depth-2"><a href="#swap_in-실패-뒤-pte-clear가-필요한-이유" data-for="swap_in-실패-뒤-pte-clear가-필요한-이유">swap_in 실패 뒤 PTE clear가 필요한 이유</a></li><li class="depth-1"><a href="#구현을-다시-찾기-위한-코드-좌표" data-for="구현을-다시-찾기-위한-코드-좌표">구현을 다시 찾기 위한 코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>

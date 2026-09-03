@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr"><head><title>SPT 해시 테이블 · 최우녕</title><meta charset="utf-8"/><link rel="preload" href="../../index-4019e294.css" as="style"/><link rel="preload" href="../../prescript-afbe3e6e.js" as="script"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="WN."/><meta property="og:title" content="SPT 해시 테이블 · 최우녕"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="SPT 해시 테이블 · 최우녕"/><meta name="twitter:description" content="PintOS SPT는 체이닝 해시 테이블로 구현돼 faulting address를 pgrounddown 후 h(key) &amp; (bucketcnt-1)로 평균 O(1) 조회해 page type(ANON/FILE/UNINIT)·swap 상태·file offset을 즉시 얻으며 원소 수 > bucket×2면 rehash한다"/><meta property="og:description" content="PintOS SPT는 체이닝 해시 테이블로 구현돼 faulting address를 pgrounddown 후 h(key) &amp; (bucketcnt-1)로 평균 O(1) 조회해 page type(ANON/FILE/UNINIT)·swap 상태·file offset을 즉시 얻으며 원소 수 > bucket×2면 rehash한다"/><meta property="og:image:alt" content="PintOS SPT는 체이닝 해시 테이블로 구현돼 faulting address를 pgrounddown 후 h(key) &amp; (bucketcnt-1)로 평균 O(1) 조회해 page type(ANON/FILE/UNINIT)·swap 상태·file offset을 즉시 얻으며 원소 수 > bucket×2면 rehash한다"/><meta property="og:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:url" content="https://woonyong-kr.github.io/static/og-image.png"/><meta name="twitter:image" content="https://woonyong-kr.github.io/static/og-image.png"/><meta property="og:image:type" content="image/.png"/><meta property="twitter:domain" content="woonyong-kr.github.io"/><meta property="og:url" content="https://woonyong-kr.github.io/wiki/os/supplemental-page-table-hash"/><meta property="twitter:url" content="https://woonyong-kr.github.io/wiki/os/supplemental-page-table-hash"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="PintOS SPT는 체이닝 해시 테이블로 구현돼 faulting address를 pgrounddown 후 h(key) &amp; (bucketcnt-1)로 평균 O(1) 조회해 page type(ANON/FILE/UNINIT)·swap 상태·file offset을 즉시 얻으며 원소 수 > bucket×2면 rehash한다"/><meta name="generator" content="Quartz"/><link href="../../index-4019e294.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-50e619f7.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-8a06014f.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-77d6a441.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-735924e0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-bbc3f7c0.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-1ea6ad18.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-34bdfded.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-642859cd.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-788c9ca3.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-274a3dfe.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../component-94cb6c84.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-a5c806d2.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-6bd36952.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-9857b007.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="../../static/resource-style-d3a1a224.css" rel="stylesheet" type="text/css" data-persist="true"/><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript-afbe3e6e.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const contentIndexUrl = new URL("../../static/contentIndex.json", window.location.href)
+let contentIndexPromise
+const fetchData = { then(resolve, reject) {
+  contentIndexPromise ||= fetch(contentIndexUrl).then(data => data.json())
+  return contentIndexPromise.then(resolve, reject)
+} }</script></head><body data-slug="wiki/os/supplemental-page-table-hash" data-basepath><div id="quartz-root" class="page" data-frame="default"><div id="quartz-body"><div class="left sidebar"><div class="explorer nav-files-container" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a2, b2) => {\n    if (!a2.isFolder &amp;&amp; !b2.isFolder || a2.isFolder &amp;&amp; b2.isFolder) {\n      return (a2.displayName || \&quot;\&quot;).localeCompare(b2.displayName || \&quot;\&quot;, void 0, {\n        numeric: true,\n        sensitivity: \&quot;base\&quot;\n      });\n    }\n    if (!a2.isFolder &amp;&amp; b2.isFolder) {\n      return 1;\n    }\n    return -1;\n  }&quot;,&quot;filterFn&quot;:&quot;(node) => node.slugSegments?.[0] === 'wiki'&quot;,&quot;mapFn&quot;:&quot;(node) => {\n    return node;\n  }&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-652" aria-label="탐색기"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Wiki</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-652" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#" class="nav-file-title tree-item-self"></a></li></template><template id="template-folder"><li><div class="folder-container nav-folder-title tree-item-self"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon nav-folder-collapse-indicator collapse-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content tree-item-children"></ul></div></li></template></div></div><div class="center"><div class="page-header"><header><div class="site-shell"><a class="site-shell__brand" href="/" aria-label="최우녕 홈">WN.</a><nav class="site-nav" aria-label="주요 메뉴"><a class="site-nav__link" href="/">Blog</a><a class="site-nav__link is-active" href="/wiki">Wiki</a><a class="site-nav__link" href="/about">About</a><a class="site-nav__link" href="https://github.com/woonyong-kr" target="_blank" rel="noreferrer">GitHub</a></nav></div><div class="search"><button class="search-button" aria-label="검색" aria-expanded="false"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>검색</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="검색어를 입력하세요" placeholder="검색어를 입력하세요"/><div class="search-layout" data-preview="true" data-field-priority="[&quot;title&quot;,&quot;content&quot;,&quot;tags&quot;]"></div></div></div></div><button class="darkmode" aria-label="다크 모드"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="다크 모드"><title>다크 모드</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="라이트 모드"><title>라이트 모드</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></header><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/">Wiki</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../wiki/os/">운영체제 학습</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>SPT 해시 테이블</a></div></nav></div></div><article class="popover-hint woon-wiki-note"><div class="markdown-preview-view markdown-rendered"><h1 id="spt-해시-테이블">SPT 해시 테이블<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-해시-테이블" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<blockquote>
+<p>범위: 이 문서는 해시 테이블과 SPT의 일반 원리·자료구조 선택 기준을 설명하고, 입력에 제시된 PintOS 코드와 Linux·Windows 비교를 바탕으로 구현 구조를 해설한다. 구체적인 버전별 동작과 실행 관찰값, 해시 분포·조회 지연 등 성능 판단은 해당 코드 버전 확인과 GDB·QEMU 실행 및 별도 측정이 필요한 검증 범위다.</p>
+</blockquote>
+<blockquote>
+<p>한 줄 요약: PintOS SPT는 체이닝 해시 테이블로 구현돼 faulting address를 <code>pg_round_down</code> 후 <code>h(key) &amp; (bucket_cnt-1)</code>로 평균 O(1) 조회해 page type(ANON/FILE/UNINIT)·swap 상태·file offset을 즉시 얻으며 원소 수 > bucket×2면 rehash한다 — Linux의 VMA red-black tree(O(log N), 영역 단위)와 달리 개별 4 KB page 단위다.</p>
+</blockquote>
+<h2 id="spt-해시-테이블-상태">SPT 해시 테이블 상태<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-해시-테이블-상태" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>Supplemental Page Table(SPT)은 프로세스의 모든 가상 페이지 메타데이터를 관리하는 자료구조다. PintOS에서 SPT는 <strong>체이닝 기반 해시 테이블</strong>로 구현된다. page fault가 발생하면 faulting address로 SPT를 O(1) 조회하여 해당 페이지의 타입(ANON/FILE/UNINIT), swap 상태, 파일 오프셋 등을 즉시 알아낸다. SPT 조회 성능이 page fault 처리 전체 지연 시간을 좌우하므로, 해시 테이블 선택은 성능상 핵심이다.</p>
+<h2 id="상세-설명">상세 설명<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#상세-설명" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="추상-개념-자료구조-규칙">추상 개념 (자료구조 규칙)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#추상-개념-자료구조-규칙" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>해시 테이블은 key → bucket index 매핑으로 평균 O(1) 탐색을 제공한다. 충돌 해결 방식에 따라 chaining(연결 리스트)과 open addressing(선형/이차 탐색)으로 나뉜다. PintOS는 chaining을 사용한다.</p>
+<p>핵심 구성 요소는 세 가지다:</p>
+<ul>
+<li><strong>해시 함수</strong> <code>h(key)</code>: key를 정수로 변환</li>
+<li><strong>버킷 인덱스</strong>: <code>h(key) &amp; (bucket_cnt - 1)</code> (bucket_cnt가 2의 거듭제곱이므로 비트마스크 사용)</li>
+<li><strong>충돌 해결</strong>: 같은 bucket에 들어간 원소들을 연결 리스트로 체이닝</li>
+</ul>
+<h3 id="실제-os-linuxwindows">실제 OS (Linux/Windows)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#실제-os-linuxwindows" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>Linux</th><th>Windows</th><th>PintOS</th></tr></thead><tbody><tr><td>SPT 자료구조</td><td>VMA red-black tree (mm_struct→mm_rb), 6.1+ maple tree</td><td>VAD balanced AVL tree (MMVAD)</td><td>hash table (체이닝)</td></tr><tr><td>탐색 복잡도</td><td>O(log N)</td><td>O(log N)</td><td>평균 O(1), 최악 O(N)</td></tr><tr><td>키</td><td>VMA 시작 주소 범위</td><td>VAD 시작/끝 주소</td><td>page VA (pg_round_down)</td></tr><tr><td>단위</td><td>VMA (연속 영역)</td><td>VAD (연속 영역)</td><td>개별 page (4 KB)</td></tr><tr><td>장점</td><td>연속 영역 병합, 범위 탐색 효율</td><td>범위 탐색, 균형 보장</td><td>단순, O(1) 단건 조회</td></tr><tr><td>리사이즈</td><td>트리이므로 불필요</td><td>트리이므로 불필요</td><td>원소 수 > bucket 수 × 2 시 rehash</td></tr></tbody></table></div>
+<p>Linux가 개별 page가 아닌 VMA 단위로 관리하는 이유: 프로세스가 수천 개의 4 KB page를 갖지만, 이들은 보통 수십 개의 연속 영역(code, data, heap, stack, mmap 등)에 속한다. 영역 단위로 관리하면 메타데이터 양이 크게 줄고, 범위 검색(이 주소가 어느 VMA에 속하는가?)이 트리 탐색 한 번으로 끝난다.</p>
+<h3 id="pintos-구현">PintOS 구현<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pintos-구현" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>1. 해시 테이블 초기화</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// vm/vm.c line 611</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">supplemental_page_table_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">spt</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">    hash_init</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">spt->hash_table, page_hash, page_less, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value">NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>초기 bucket_cnt = 4. 원소가 늘면 자동 rehash로 bucket을 2배씩 확장한다.</p>
+<p><strong>2. 해시 함수: page_hash()</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// vm/vm.c line 181</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> uint64_t</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_hash</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">e</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">UNUSED</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">item </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(e, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_bytes</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">item->va, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">sizeof</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> item->va);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p><code>hash_bytes()</code>는 FNV-1a (Fowler–Noll–Vo) 64-bit 해시를 사용한다:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// lib/kernel/hash.c line 244</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">hash </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> FNV_64_BASIS;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">        // 0xcbf29ce484222325</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">while</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (size</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">--</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> ></span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    hash </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (hash </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> FNV_64_PRIME) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">^</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">buf</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">++</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // FNV_64_PRIME = 0x00000100000001B3</span></span></code></pre></figure>
+<p>VA가 8바이트이므로 FNV 루프가 8번 돈다. 결과를 <code>&amp; (bucket_cnt - 1)</code>로 마스킹하여 bucket index를 얻는다.</p>
+<p><strong>3. 비교 함수: page_less()</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// vm/vm.c line 188</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">static</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> bool</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">page_less</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">a</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">const</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword"> struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">b</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">aux </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">UNUSED</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">page_one </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(a, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">page_two </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(b, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> page_one->va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal"> page_two->va;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>같은 bucket 내에서 원소를 찾을 때 <code>less()</code>로 동등성을 판단한다: <code>!less(a,b) &amp;&amp; !less(b,a)</code>이면 같은 원소다.</p>
+<p><strong>4. 조회: spt_find_page()</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// vm/vm.c line 248</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> page </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function">spt_find_page</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> supplemental_page_table </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">spt</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;" data-token-type="important">va</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) {</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    void</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> *</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">rounded_va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> pg_round_down</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(va);</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">   // 하위 12비트 제거</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> page temp;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">    temp.va </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> rounded_va;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> hash_elem </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">found </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_find</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">spt->hash_table, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">&amp;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="normal">temp.hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (found </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">==</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> NULL</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">    return</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;" data-token-type="function"> hash_entry</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">(found, </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">struct</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="function"> page, hash_elem);</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">}</span></span></code></pre></figure>
+<p>스택에 임시 <code>struct page</code>를 만들어 VA만 채우고, 이것의 <code>hash_elem</code>으로 <code>hash_find()</code>를 호출한다. <code>hash_find()</code>는 내부에서:</p>
+<ol>
+<li><code>find_bucket()</code>: <code>page_hash(&amp;temp.hash_elem)</code> → <code>&amp; (bucket_cnt - 1)</code> → bucket 결정</li>
+<li><code>find_elem()</code>: 해당 bucket의 리스트를 순회하며 <code>page_less()</code>로 비교</li>
+</ol>
+<p><strong>5. Rehash 정책</strong></p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="c" data-theme="github-light github-dark"><code data-language="c" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">// lib/kernel/hash.c rehash()</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">elem_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">bucket_cnt)</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // load factor > 1이면 확장</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    new_bucket_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">bucket_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="keyword">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation"> (h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">elem_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">*</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 4</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator"> &lt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">bucket_cnt)</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // load factor &lt; 0.25면 축소</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    new_bucket_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> h</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">-></span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">bucket_cnt </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;" data-token-type="operator">/</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;" data-token-type="value"> 2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;" data-token-type="punctuation">;</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;" data-token-type="comment">  // 최소 4 유지</span></span></code></pre></figure>
+<p>모든 원소를 새 bucket 배열로 재배치한다. 확장 시 bucket 수가 2배가 되므로 마스크 비트가 1개 늘어나고, 각 원소는 기존 bucket 또는 기존+offset bucket으로 이동한다.</p>
+<h3 id="qemu-에뮬레이션">QEMU 에뮬레이션<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#qemu-에뮬레이션" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p>QEMU는 SPT를 인식하지 않는다. guest OS가 일반 메모리(malloc/hash table)에서 관리하는 자료구조일 뿐, QEMU는 해당 메모리 접근을 일반 load/store로 처리한다. GDB에서 guest 메모리를 읽어 hash table 상태를 관찰할 수 있다.</p>
+<h2 id="spt-해시-테이블-값-추적">SPT 해시 테이블 값 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-해시-테이블-값-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>항목</th><th>값</th><th>계산</th></tr></thead><tbody><tr><td>초기 bucket 수</td><td>4</td><td>hash_init() 하드코딩</td></tr><tr><td>bucket 배열 크기 (초기)</td><td>64 bytes</td><td>4 × sizeof(struct list) = 4 × 16</td></tr><tr><td>rehash 임계값</td><td>elem_cnt > bucket_cnt</td><td>load factor > 1</td></tr><tr><td>page 100개 시 bucket 수</td><td>128</td><td>4→8→16→32→64→128 (6번 doubling)</td></tr><tr><td>page 100개 시 평균 체인 길이</td><td>0.78</td><td>100 / 128</td></tr><tr><td>hash_bytes 루프 횟수 (VA)</td><td>8</td><td>sizeof(void*) = 8 bytes</td></tr><tr><td>spt_find_page 평균 비교 횟수</td><td>~1</td><td>load factor &lt; 1이므로 대부분 체인 길이 0-1</td></tr></tbody></table></div>
+<p><strong>VA 해싱 예제:</strong></p>
+<p>VA = <code>0x0000000000401000</code> (코드 영역 두 번째 페이지)</p>
+<ol>
+<li>pg_round_down → <code>0x0000000000401000</code> (이미 정렬됨)</li>
+<li>hash_bytes(&amp;va, 8): FNV-1a로 8바이트 해시 → 예: <code>0x7a3b...</code> (64-bit)</li>
+<li>bucket_idx = hash &amp; (bucket_cnt - 1): bucket_cnt=128이면 <code>hash &amp; 0x7F</code></li>
+</ol>
+<p><strong>rehash 비용:</strong></p>
+<p>page 64→65개 삽입 시 bucket 64→128 확장. 기존 64개 원소를 모두 재해싱하고 새 bucket에 배치. O(N) 비용이지만 amortized O(1).</p>
+<h2 id="순서도--개념도">순서도 / 개념도<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#순서도--개념도" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="spt_find_page-조회-흐름">spt_find_page 조회 흐름<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt_find_page-조회-흐름" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% spt_find_page 조회 흐름\nflowchart TD\n  lookup[\&quot;spt_find_page(spt, 0x401234)\&quot;]\n  temp[\&quot;struct page temp&lt;br/>temp.va = 0x401000\&quot;]\n  mask[\&quot;bucket_idx = hash &amp;amp;&lt;br/>(bucket_cnt - 1)\&quot;]\n  scan[\&quot;find_elem()&lt;br/>bucket 리스트 순회\&quot;]\n  found[\&quot;found?\&quot;]\n  miss[\&quot;return NULL&lt;br/>page fault kill 후보\&quot;]\n  round[\&quot;round\&quot;]\n  find[\&quot;find\&quot;]\n  bucket[\&quot;bucket\&quot;]\n  hit[\&quot;hit\&quot;]\n  lookup --> round\n  round --> temp\n  temp --> find\n  find --> bucket\n  bucket --> mask\n  mask --> scan\n  scan --> found\n  found -->|Yes| hit\n  found -->|No| miss&quot;">%% spt_find_page 조회 흐름
+flowchart TD
+  lookup[&quot;spt_find_page(spt, 0x401234)&quot;]
+  temp[&quot;struct page temp&lt;br/>temp.va = 0x401000&quot;]
+  mask[&quot;bucket_idx = hash &amp;amp;&lt;br/>(bucket_cnt - 1)&quot;]
+  scan[&quot;find_elem()&lt;br/>bucket 리스트 순회&quot;]
+  found[&quot;found?&quot;]
+  miss[&quot;return NULL&lt;br/>page fault kill 후보&quot;]
+  round[&quot;round&quot;]
+  find[&quot;find&quot;]
+  bucket[&quot;bucket&quot;]
+  hit[&quot;hit&quot;]
+  lookup --> round
+  round --> temp
+  temp --> find
+  find --> bucket
+  bucket --> mask
+  mask --> scan
+  scan --> found
+  found -->|Yes| hit
+  found -->|No| miss
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="hash-table-내부-구조">Hash Table 내부 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#hash-table-내부-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% SPT hash_table bucket 체이닝 예시\nflowchart LR\n  table[\&quot;spt-&amp;gt;hash_table&lt;br/>bucket_cnt = 8&lt;br/>elem_cnt = 5&lt;br/>hash = page_hash&lt;br/>less = page_less\&quot;]\n  bucket0[\&quot;bucket[0]\&quot;]\n  bucket1[\&quot;bucket[1]&lt;br/>empty\&quot;]\n  bucket2[\&quot;bucket[2]&lt;br/>chain length = 2\&quot;]\n  bucket3[\&quot;bucket[3]\&quot;]\n  bucket4[\&quot;bucket[4]&lt;br/>empty\&quot;]\n  bucket5[\&quot;bucket[5]&lt;br/>user stack\&quot;]\n  bucket6[\&quot;bucket[6]&lt;br/>empty\&quot;]\n  bucket7[\&quot;bucket[7]&lt;br/>empty\&quot;]\n  p400000[\&quot;struct page&lt;br/>va = 0x400000\&quot;]\n  p401000[\&quot;struct page&lt;br/>va = 0x401000\&quot;]\n  p405000[\&quot;struct page&lt;br/>va = 0x405000\&quot;]\n  p47b000[\&quot;struct page&lt;br/>va = 0x47b000\&quot;]\n  pstack[\&quot;struct page&lt;br/>va = 0x7fffffe000\&quot;]\n  table -->|bucket array| bucket2\n  bucket0 --> p400000\n  bucket2 --> p401000\n  p401000 -->|hash_elem.list_elem| p405000\n  bucket3 --> p47b000\n  bucket5 --> pstack\n  bucket0 --> bucket1\n  bucket1 --> bucket2\n  bucket2 --> bucket3\n  bucket3 --> bucket4\n  bucket4 --> bucket5\n  bucket5 --> bucket6\n  bucket6 --> bucket7&quot;">%% SPT hash_table bucket 체이닝 예시
+flowchart LR
+  table[&quot;spt-&amp;gt;hash_table&lt;br/>bucket_cnt = 8&lt;br/>elem_cnt = 5&lt;br/>hash = page_hash&lt;br/>less = page_less&quot;]
+  bucket0[&quot;bucket[0]&quot;]
+  bucket1[&quot;bucket[1]&lt;br/>empty&quot;]
+  bucket2[&quot;bucket[2]&lt;br/>chain length = 2&quot;]
+  bucket3[&quot;bucket[3]&quot;]
+  bucket4[&quot;bucket[4]&lt;br/>empty&quot;]
+  bucket5[&quot;bucket[5]&lt;br/>user stack&quot;]
+  bucket6[&quot;bucket[6]&lt;br/>empty&quot;]
+  bucket7[&quot;bucket[7]&lt;br/>empty&quot;]
+  p400000[&quot;struct page&lt;br/>va = 0x400000&quot;]
+  p401000[&quot;struct page&lt;br/>va = 0x401000&quot;]
+  p405000[&quot;struct page&lt;br/>va = 0x405000&quot;]
+  p47b000[&quot;struct page&lt;br/>va = 0x47b000&quot;]
+  pstack[&quot;struct page&lt;br/>va = 0x7fffffe000&quot;]
+  table -->|bucket array| bucket2
+  bucket0 --> p400000
+  bucket2 --> p401000
+  p401000 -->|hash_elem.list_elem| p405000
+  bucket3 --> p47b000
+  bucket5 --> pstack
+  bucket0 --> bucket1
+  bucket1 --> bucket2
+  bucket2 --> bucket3
+  bucket3 --> bucket4
+  bucket4 --> bucket5
+  bucket5 --> bucket6
+  bucket6 --> bucket7
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h3 id="intrusive-hash_elem-구조">Intrusive hash_elem 구조<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#intrusive-hash_elem-구조" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><button class="expand-button" aria-label="Expand mermaid diagram" data-view-component="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 1.06L2.56 7h10.88l-2.22-2.22a.75.75 0 011.06-1.06l3.5 3.5a.75.75 0 010 1.06l-3.5 3.5a.75.75 0 11-1.06-1.06l2.22-2.22H2.56l2.22 2.22a.75.75 0 11-1.06 1.06l-3.5-3.5a.75.75 0 010-1.06l3.5-3.5z"></path></svg></button><code class="mermaid" data-clipboard="&quot;%% struct page 안의 intrusive hash_elem\nflowchart LR\n  page[\&quot;struct page&lt;br/>hash_elem: struct hash_elem&lt;br/>va: void *&lt;br/>writable: bool&lt;br/>operations: struct page_operations *&lt;br/>frame: struct frame *&lt;br/>union: uninit / anon / file\&quot;]\n  hash_elem[\&quot;struct hash_elem&lt;br/>list_elem: struct list_elem\&quot;]\n  list_elem[\&quot;struct list_elem&lt;br/>prev: struct list_elem *&lt;br/>next: struct list_elem *\&quot;]\n  restore[\&quot;page * 복원&lt;br/>hash_entry(elem, struct page, hash_elem)\&quot;]\n  page_hash_e[\&quot;page:hash:e\&quot;]\n  hash_elem_w[\&quot;hash_elem:w\&quot;]\n  hash_elem_list_e[\&quot;hash_elem:list:e\&quot;]\n  list_elem_w[\&quot;list_elem:w\&quot;]\n  page_hash_e -->|포함| hash_elem_w\n  hash_elem_list_e -->|체이닝 연결| list_elem_w\n  hash_elem -->|container_of 방식| restore&quot;">%% struct page 안의 intrusive hash_elem
+flowchart LR
+  page[&quot;struct page&lt;br/>hash_elem: struct hash_elem&lt;br/>va: void *&lt;br/>writable: bool&lt;br/>operations: struct page_operations *&lt;br/>frame: struct frame *&lt;br/>union: uninit / anon / file&quot;]
+  hash_elem[&quot;struct hash_elem&lt;br/>list_elem: struct list_elem&quot;]
+  list_elem[&quot;struct list_elem&lt;br/>prev: struct list_elem *&lt;br/>next: struct list_elem *&quot;]
+  restore[&quot;page * 복원&lt;br/>hash_entry(elem, struct page, hash_elem)&quot;]
+  page_hash_e[&quot;page:hash:e&quot;]
+  hash_elem_w[&quot;hash_elem:w&quot;]
+  hash_elem_list_e[&quot;hash_elem:list:e&quot;]
+  list_elem_w[&quot;list_elem:w&quot;]
+  page_hash_e -->|포함| hash_elem_w
+  hash_elem_list_e -->|체이닝 연결| list_elem_w
+  hash_elem -->|container_of 방식| restore
+</code><div id="mermaid-container" role="dialog"><div id="mermaid-space"><div class="mermaid-content"></div></div></div></pre>
+<h2 id="gdb-관찰-스크립트">GDB 관찰 스크립트<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gdb-관찰-스크립트" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="spt-hash-table-상태-확인">SPT hash table 상태 확인<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-hash-table-상태-확인" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) p thread_current()->spt.hash_table.elem_cnt
+(gdb) p thread_current()->spt.hash_table.bucket_cnt
+(gdb) printf &quot;load factor = %f\n&quot;, \
+  (double)thread_current()->spt.hash_table.elem_cnt / \
+  thread_current()->spt.hash_table.bucket_cnt
+</code></pre>
+<h3 id="spt_find_page-조회-관찰">spt_find_page 조회 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt_find_page-조회-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b spt_find_page
+(gdb) commands
+  printf &quot;SPT_FIND: va=%p, rounded=%p, elem_cnt=%d, bucket_cnt=%d\n&quot;, \
+    va, pg_round_down(va), \
+    (int)spt->hash_table.elem_cnt, \
+    (int)spt->hash_table.bucket_cnt
+  c
+end
+</code></pre>
+<h3 id="rehash-발생-시점-포착">rehash 발생 시점 포착<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#rehash-발생-시점-포착" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b rehash
+(gdb) commands
+  printf &quot;REHASH: old_bucket_cnt=%d, elem_cnt=%d\n&quot;, \
+    (int)h->bucket_cnt, (int)h->elem_cnt
+  finish
+  printf &quot;→ new_bucket_cnt=%d\n&quot;, (int)h->bucket_cnt
+  c
+end
+</code></pre>
+<p>→ 프로그램 로드 중 page 등록이 늘어나면서 bucket이 4→8→16→… 확장되는 시점 확인</p>
+<h3 id="hash_insert-충돌-관찰">hash_insert 충돌 관찰<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#hash_insert-충돌-관찰" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) b hash_insert
+(gdb) commands
+  set $bucket = find_bucket(h, new)
+  printf &quot;INSERT: bucket=%p, list_size=%d\n&quot;, \
+    $bucket, (int)list_size($bucket)
+  c
+end
+</code></pre>
+<p>→ 충돌이 많은 bucket이 있는지, 체인 길이가 고르게 분포하는지 확인</p>
+<h3 id="spt-전체-순회-디버깅용">SPT 전체 순회 (디버깅용)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#spt-전체-순회-디버깅용" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<pre><code>(gdb) define dump_spt
+  set $spt = &amp;thread_current()->spt
+  set $i = 0
+  while $i &lt; $spt.hash_table.bucket_cnt
+    set $bucket = &amp;$spt.hash_table.buckets[$i]
+    set $e = $bucket->head.next
+    while $e != &amp;$bucket->tail
+      set $he = (struct hash_elem*)((char*)$e - 0)
+      set $pg = (struct page*)((char*)$he - 0)
+      printf &quot;  bucket[%d]: page va=%p type=%d\n&quot;, $i, $pg->va, $pg->operations->type
+      set $e = $e->next
+    end
+    set $i = $i + 1
+  end
+end
+</code></pre>
+<h2 id="관찰-시나리오">관찰 시나리오<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관찰-시나리오" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="시나리오-프로그램-로드-시-spt-성장-추적">시나리오: 프로그램 로드 시 SPT 성장 추적<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#시나리오-프로그램-로드-시-spt-성장-추적" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><code>args-many</code> 테스트 실행 중 SPT가 어떻게 성장하는지 추적한다:</p>
+<ol>
+<li><code>supplemental_page_table_init</code>에 bp → bucket_cnt=4 확인</li>
+<li><code>hash_insert</code>에 bp → load_segment loop에서 page 등록마다 호출</li>
+<li><code>rehash</code>에 bp → bucket 확장 시점: elem 5→bucket 8, elem 9→bucket 16, …</li>
+<li>load 완료 후 <code>spt.hash_table.elem_cnt</code> → 총 page 수</li>
+<li>page fault 시 <code>spt_find_page</code> → 해시 조회 1회로 page 메타데이터 획득</li>
+</ol>
+<h2 id="코드-좌표">코드 좌표<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#코드-좌표" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>파일</th><th>함수/구조체</th><th>줄</th><th>역할</th></tr></thead><tbody><tr><td>vm/vm.c</td><td><code>supplemental_page_table_init()</code></td><td>611</td><td>hash_init 호출, bucket_cnt=4 시작</td></tr><tr><td>vm/vm.c</td><td><code>page_hash()</code></td><td>181</td><td>VA의 FNV-1a 해시값 계산</td></tr><tr><td>vm/vm.c</td><td><code>page_less()</code></td><td>188</td><td>VA 비교로 동등성 판단</td></tr><tr><td>vm/vm.c</td><td><code>spt_find_page()</code></td><td>248</td><td>pg_round_down → hash_find → page*</td></tr><tr><td>vm/vm.c</td><td><code>spt_insert_page()</code></td><td>265</td><td>hash_insert로 page 등록</td></tr><tr><td>vm/vm.c</td><td><code>supplemental_page_table_copy()</code></td><td>617</td><td>fork 시 SPT 전체 복사 (hash_apply)</td></tr><tr><td>vm/vm.c</td><td><code>supplemental_page_table_kill()</code></td><td>—</td><td>exit 시 SPT 전체 파괴 (hash_destroy)</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_init()</code></td><td>25</td><td>bucket 배열 malloc, bucket_cnt=4</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_find()</code></td><td>123</td><td>find_bucket → find_elem</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_insert()</code></td><td>92</td><td>find_bucket → insert_elem → rehash 검사</td></tr><tr><td>lib/kernel/hash.c</td><td><code>hash_bytes()</code></td><td>244</td><td>FNV-1a 64-bit 해시 (FNV_64_BASIS, FNV_64_PRIME)</td></tr><tr><td>lib/kernel/hash.c</td><td><code>find_bucket()</code></td><td>281</td><td><code>hash(e, aux) &amp; (bucket_cnt - 1)</code></td></tr><tr><td>lib/kernel/hash.c</td><td><code>find_elem()</code></td><td>289</td><td>bucket 리스트 순회, less()로 비교</td></tr><tr><td>lib/kernel/hash.c</td><td><code>rehash()</code></td><td>350</td><td>elem > bucket이면 2배 확장, elem &lt; bucket/4이면 축소</td></tr><tr><td>include/lib/kernel/hash.h</td><td><code>struct hash</code></td><td>55</td><td>elem_cnt, bucket_cnt, buckets[], hash, less</td></tr><tr><td>include/lib/kernel/hash.h</td><td><code>struct hash_elem</code></td><td>27</td><td>list_elem 래퍼 (intrusive)</td></tr><tr><td>include/vm/vm.h</td><td><code>struct supplemental_page_table</code></td><td>—</td><td>hash_table 멤버</td></tr></tbody></table></div>
+<h2 id="관련-문서">관련 문서<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#관련-문서" class="internal internal-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ul>
+<li><a href="../../wiki/os/supplemental-page-table-knowledge" class="internal internal-link alias" data-slug="wiki/os/supplemental-page-table-knowledge">Supplemental Page Table</a></li>
+<li><a href="../../wiki/os/pintos-vm-object-model-knowledge" class="internal internal-link alias" data-slug="wiki/os/pintos-vm-object-model-knowledge">PintOS VM 객체 모델</a></li>
+<li><a href="../../wiki/os/spt-vs-pml4-separation" class="internal internal-link alias" data-slug="wiki/os/spt-vs-pml4-separation">SPT와 PML4 분리</a></li>
+<li><a href="../../wiki/os/page-fault-handling" class="internal internal-link alias" data-slug="wiki/os/page-fault-handling">Page Fault 처리</a></li>
+<li><a href="../../wiki/os/list-elem-structure" class="internal internal-link alias" data-slug="wiki/os/list-elem-structure">list elem</a></li>
+<li><a href="../../wiki/os/list-entry-macro" class="internal internal-link alias" data-slug="wiki/os/list-entry-macro">list entry()</a></li>
+<li><a href="../../wiki/os/frame-eviction-swap" class="internal internal-link alias" data-slug="wiki/os/frame-eviction-swap">Frame Eviction</a></li>
+<li><a href="../../wiki/os/spt-copy-fork-trace" class="internal internal-link alias" data-slug="wiki/os/spt-copy-fork-trace">SPT fork copy</a></li>
+<li><a href="../../wiki/os/vm-process-cleanup-spt-kill-trace" class="internal internal-link alias" data-slug="wiki/os/vm-process-cleanup-spt-kill-trace">process cleanup SPT</a></li>
+<li><a href="../../wiki/os/lazy-loading-demand-paging" class="internal internal-link alias" data-slug="wiki/os/lazy-loading-demand-paging">Lazy Loading</a></li>
+</ul></div></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>그래프 뷰</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.05,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:34,&quot;fontSize&quot;:0.62,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.85,&quot;repelForce&quot;:0.45,&quot;centerForce&quot;:0.22,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.55,&quot;opacityScale&quot;:1,&quot;showTags&quot;:false,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="backlinks"><h3>백링크</h3><ul id="list-0" class="overflow"><li><a href="../../wiki/hubs/virtual-memory-translation" class="internal">가상 메모리와 Demand Paging</a></li><li><a href="../../wiki/os/bitmap-allocator-design" class="internal">Bitmap Allocator</a></li><li><a href="../../wiki/os/frame-eviction-swap" class="internal">Frame Eviction과 Swap</a></li><li class="overflow-end"></li></ul></div><div class="toc"><button type="button" class="toc-header" aria-controls="toc-650" aria-expanded="true"><h3>목차</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-0" class="toc-content overflow"><li class="depth-0"><a href="#spt-해시-테이블" data-for="spt-해시-테이블">SPT 해시 테이블</a></li><li class="depth-1"><a href="#spt-해시-테이블-상태" data-for="spt-해시-테이블-상태">SPT 해시 테이블 상태</a></li><li class="depth-1"><a href="#상세-설명" data-for="상세-설명">상세 설명</a></li><li class="depth-2"><a href="#추상-개념-자료구조-규칙" data-for="추상-개념-자료구조-규칙">추상 개념 (자료구조 규칙)</a></li><li class="depth-2"><a href="#실제-os-linuxwindows" data-for="실제-os-linuxwindows">실제 OS (Linux/Windows)</a></li><li class="depth-2"><a href="#pintos-구현" data-for="pintos-구현">PintOS 구현</a></li><li class="depth-2"><a href="#qemu-에뮬레이션" data-for="qemu-에뮬레이션">QEMU 에뮬레이션</a></li><li class="depth-1"><a href="#spt-해시-테이블-값-추적" data-for="spt-해시-테이블-값-추적">SPT 해시 테이블 값 추적</a></li><li class="depth-1"><a href="#순서도--개념도" data-for="순서도--개념도">순서도 / 개념도</a></li><li class="depth-2"><a href="#spt_find_page-조회-흐름" data-for="spt_find_page-조회-흐름">spt_find_page 조회 흐름</a></li><li class="depth-2"><a href="#hash-table-내부-구조" data-for="hash-table-내부-구조">Hash Table 내부 구조</a></li><li class="depth-2"><a href="#intrusive-hash_elem-구조" data-for="intrusive-hash_elem-구조">Intrusive hash_elem 구조</a></li><li class="depth-1"><a href="#gdb-관찰-스크립트" data-for="gdb-관찰-스크립트">GDB 관찰 스크립트</a></li><li class="depth-2"><a href="#spt-hash-table-상태-확인" data-for="spt-hash-table-상태-확인">SPT hash table 상태 확인</a></li><li class="depth-2"><a href="#spt_find_page-조회-관찰" data-for="spt_find_page-조회-관찰">spt_find_page 조회 관찰</a></li><li class="depth-2"><a href="#rehash-발생-시점-포착" data-for="rehash-발생-시점-포착">rehash 발생 시점 포착</a></li><li class="depth-2"><a href="#hash_insert-충돌-관찰" data-for="hash_insert-충돌-관찰">hash_insert 충돌 관찰</a></li><li class="depth-2"><a href="#spt-전체-순회-디버깅용" data-for="spt-전체-순회-디버깅용">SPT 전체 순회 (디버깅용)</a></li><li class="depth-1"><a href="#관찰-시나리오" data-for="관찰-시나리오">관찰 시나리오</a></li><li class="depth-2"><a href="#시나리오-프로그램-로드-시-spt-성장-추적" data-for="시나리오-프로그램-로드-시-spt-성장-추적">시나리오: 프로그램 로드 시 SPT 성장 추적</a></li><li class="depth-1"><a href="#코드-좌표" data-for="코드-좌표">코드 좌표</a></li><li class="depth-1"><a href="#관련-문서" data-for="관련-문서">관련 문서</a></li><li class="overflow-end"></li></ul></div></div></div></div></body><script src="../../static/resource-after-e13fffa1.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-8b336f9a.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-baba652b.js" type="application/javascript" data-persist="true"></script><script src="../../static/resource-after-5eb75950.js" type="module" data-persist="true"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript-c8e842be.js" type="module" data-persist="true"></script></html>
