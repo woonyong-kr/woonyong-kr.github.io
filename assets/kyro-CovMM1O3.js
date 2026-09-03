@@ -2,6 +2,10 @@ var e=`자동화가 클러스터를 직접 바꾸지 못하게 한 뒤, 장애 �
 
 Kyro는 Kubernetes 장애 증거를 모아 원인 후보를 제안하고, 허용된 수정안만 Draft PR로 남기도록 설계한 GitOps 도구입니다. 5인 팀의 팀장으로 전체 아키텍처와 장애 처리 파이프라인, 서비스 간 인터페이스를 설계했고 규칙 기반 원인 분석과 복구 권한 경계를 구현했습니다. 팀원이 맡은 수집기·프론트엔드·배포 작업까지 제 개인 구현으로 묶지 않았습니다.
 
+전체 흐름에서 Target EKS는 읽기 전용 증거만 내보내고, Management EKS의 판정과 복구 게이트를 통과한 변경만 GitHub Draft PR로 이어집니다.
+
+![Target EKS의 읽기 전용 증거가 Management EKS의 판정과 복구 게이트를 거쳐 GitHub Draft PR이 되는 Kyro 아키텍처](images/posts/kyro-system-architecture.svg)
+
 말보다 실물이 빠릅니다. 크래프톤 정글 공식 채널(Jungle Dev Club)에 올라간 발표 · 시연 영상입니다.
 
 ![Kyro — AI Agent 기반 Kubernetes 배포 및 운영 자동화 서비스 (크래프톤 정글 공식 채널)](https://www.youtube.com/watch?v=Ar4rNJZX7lU)
