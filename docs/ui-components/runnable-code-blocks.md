@@ -46,28 +46,61 @@ form, popup, top navigation, object 및 외부 resource를 차단합니다. 이 
 
 ## Browser runners
 
+아래 예제는 서로 다른 실행 방식을 보여 줍니다. React 예제는 `react`, `react-dom`,
+`react-dom/client` 세 진입점을 모두 사용하고, HTML·CSS는 독립 preview, Web·Web-TS는
+사용자 입력을 받는 작은 인터랙션을 렌더링합니다.
+
 ### React (JSX / TSX)
 
+{% raw %}
 ```run-react
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { createRoot } from "react-dom/client";
 
-export default function Counter() {
-  const [count, setCount] = useState<number>(0);
+export default function LearningCard() {
+  const [count, setCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const label = useMemo(() => `${count}개의 실험을 완료했어요`, [count]);
 
   return (
-    <button onClick={() => setCount((value) => value + 1)}>
-      Clicked {count} times
-    </button>
+    <>
+      <section style={{ maxWidth: 420, padding: 24, borderRadius: 16, background: "#10251d", color: "#ecfff3", fontFamily: "system-ui" }}>
+        <p style={{ margin: 0, color: "#73e6a5", fontSize: 12, fontWeight: 800, letterSpacing: ".08em" }}>REACT PLAYGROUND</p>
+        <h2 style={{ margin: "10px 0 6px" }}>작게 만들고, 바로 확인하기</h2>
+        <p style={{ margin: "0 0 18px", color: "#c8d9cf" }}>{label}</p>
+        <button onClick={() => setCount((value) => value + 1)}>완료 +1</button>{" "}
+        <button onClick={() => setIsOpen(true)}>요약 보기</button>
+        <p style={{ margin: "16px 0 0", color: "#9fb9aa", fontSize: 12 }}>
+          {typeof createRoot === "function" ? "ReactDOMClient ready" : "Loading renderer"}
+        </p>
+      </section>
+      {isOpen && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="실험 요약" style={{ position: "fixed", inset: 0, display: "grid", placeItems: "center", background: "rgb(0 0 0 / 56%)", fontFamily: "system-ui" }}>
+          <article style={{ width: "min(360px, calc(100% - 32px))", padding: 24, borderRadius: 16, background: "white", color: "#18231d", boxShadow: "0 20px 70px rgb(0 0 0 / 30%)" }}>
+            <h3 style={{ marginTop: 0 }}>오늘의 실험</h3>
+            <p>{label}</p>
+            <button onClick={() => setIsOpen(false)}>계속 만들기</button>
+          </article>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 ```
+{% endraw %}
 
 ### JavaScript
 
 ```run-javascript
-const stages = ["source", "render", "verify"];
-const completed = stages.map((stage, index) => `${index + 1}. ${stage}`);
-console.log(completed.join(" → "));
+const samples = ["HTML", "CSS", "JavaScript"];
+const report = samples.reduce(
+  (state, name) => ({ ...state, [name]: `${name} example ready` }),
+  {}
+);
+
+console.log(Object.values(report).join("\n"));
 ```
 
 ### TypeScript
@@ -86,9 +119,15 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
 ### HTML
 
 ```run-html
-<main style="font-family: system-ui; padding: 1rem; border: 2px solid #00863f">
-  <strong>HTML preview</strong>
-  <p>이 preview는 sandboxed iframe 안에서 렌더링됩니다.</p>
+<main style="max-width: 36rem; padding: 1.5rem; border-radius: 1rem; background: linear-gradient(135deg, #edfdf3, #f8fbf9); color: #163524; font-family: system-ui">
+  <p style="margin: 0; color: #087a3b; font-size: .75rem; font-weight: 800; letter-spacing: .08em">HTML PREVIEW</p>
+  <h1 style="margin: .5rem 0">읽기 좋은 문서 카드</h1>
+  <p style="line-height: 1.6">의미 있는 HTML만으로도 제목, 요약, 목록, 링크의 구조를 먼저 확인할 수 있습니다.</p>
+  <ul style="padding-left: 1.25rem; line-height: 1.7">
+    <li><strong>semantic</strong> markup</li>
+    <li>isolated preview</li>
+    <li><a href="#details">details</a></li>
+  </ul>
 </main>
 ```
 
@@ -98,27 +137,80 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
 .preview {
   display: grid;
   place-items: center;
-  min-height: 7rem;
-  color: #fff;
-  background: #00863f;
-  border-radius: 0.35rem;
-  font-weight: 700;
+  min-height: 18rem;
+  padding: 2rem;
+  background: radial-gradient(circle at top right, #b8f5cc, transparent 42%), #f4fbf6;
+}
+
+.preview-card {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.25rem;
+  background: #123524;
+  color: #f1fff6;
+  box-shadow: 0 1.25rem 3.5rem rgb(11 73 37 / 24%);
+}
+
+.preview-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: .35rem;
+  background: #00d970;
+  content: "";
+}
+
+.preview-eyebrow { color: #7df0ab; }
+.preview-copy { color: #c1d9ca; }
+
+.preview-button {
+  border: 0;
+  background: #00d970;
+  color: #07311a;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.preview-button:hover {
+  box-shadow: 0 .5rem 1.25rem rgb(0 217 112 / 28%);
+  transform: translateY(-2px);
 }
 ```
 
 ### Web (HTML/CSS/JS)
 
 ```run-web
-<button id="counter">Clicked 0 times</button>
+<main class="demo">
+  <p class="eyebrow">WEB INTERACTION</p>
+  <h1>오늘의 집중 세션</h1>
+  <p id="message">아직 시작하지 않았습니다.</p>
+  <div class="actions">
+    <button id="start" type="button">세션 시작</button>
+    <button id="reset" type="button" disabled>초기화</button>
+  </div>
+</main>
 <style>
-  #counter { padding: 10px 16px; border: 0; border-radius: 8px; background: #00863f; color: white; }
+  .demo { max-width: 34rem; padding: 1.5rem; border: 1px solid #d7e7dc; border-radius: 1rem; color: #153623; font-family: system-ui; }
+  .eyebrow { margin: 0; color: #00863f; font-size: .75rem; font-weight: 800; letter-spacing: .08em; }
+  h1 { margin: .5rem 0; } .actions { display: flex; gap: .5rem; }
+  button { border: 0; border-radius: .6rem; padding: .65rem .9rem; background: #00863f; color: white; cursor: pointer; font: inherit; font-weight: 750; }
+  button[disabled] { cursor: not-allowed; opacity: .45; } #reset { background: #e8f2eb; color: #215b39; }
 </style>
 <script>
-  let count = 0;
-  const button = document.querySelector("#counter");
-  button.addEventListener("click", () => {
-    button.textContent = `Clicked ${++count} times`;
-    console.log(button.textContent);
+  const start = document.querySelector("#start");
+  const reset = document.querySelector("#reset");
+  const message = document.querySelector("#message");
+  start.addEventListener("click", () => {
+    message.textContent = "25분 집중 세션이 진행 중입니다.";
+    start.textContent = "진행 중";
+    start.disabled = true;
+    reset.disabled = false;
+    console.log("focus session started");
+  });
+  reset.addEventListener("click", () => {
+    message.textContent = "아직 시작하지 않았습니다.";
+    start.textContent = "세션 시작";
+    start.disabled = false;
+    reset.disabled = true;
   });
 </script>
 ```
@@ -126,13 +218,26 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
 ### Web (HTML/CSS/TypeScript)
 
 ```run-web-ts
-<button id="counter">Clicked 0 times</button>
+<main class="panel">
+  <p>TypeScript state example</p>
+  <strong id="status">draft</strong>
+  <button id="advance" type="button">다음 상태</button>
+</main>
+<style>
+  .panel { display: flex; align-items: center; gap: .75rem; max-width: 34rem; padding: 1.25rem; border-radius: 1rem; background: #172a22; color: #ebfff2; font-family: system-ui; }
+  .panel p { flex: 1; margin: 0; } .panel strong { color: #7df0ab; } .panel button { border: 0; border-radius: .55rem; padding: .55rem .75rem; background: #00d970; color: #07311a; font: inherit; font-weight: 800; }
+</style>
 <script type="text/typescript">
-  let count: number = 0;
-  const button = document.querySelector<HTMLButtonElement>("#counter")!;
+  type Status = "draft" | "review" | "published";
+  const statuses: Status[] = ["draft", "review", "published"];
+  let index: number = 0;
+  const status = document.querySelector<HTMLElement>("#status")!;
+  const button = document.querySelector<HTMLButtonElement>("#advance")!;
+
   button.addEventListener("click", () => {
-    button.textContent = `Clicked ${++count} times`;
-    console.log(button.textContent);
+    index = (index + 1) % statuses.length;
+    status.textContent = statuses[index];
+    console.log(`document moved to ${statuses[index]}`);
   });
 </script>
 ```
