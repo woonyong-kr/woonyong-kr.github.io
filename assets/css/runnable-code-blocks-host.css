@@ -1,5 +1,5 @@
-/* The adapter supplies its own controls. These host values only align that
-   control with the two existing WN Docs schemes; they do not change JTD UI. */
+/* The adapter owns its interface. These host values only map WN Docs' two
+   schemes to the adapter's existing variables. */
 :root {
   --rcb-font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --rcb-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
@@ -9,11 +9,11 @@
 [data-wn-theme="light"] {
   --rcb-accent: #00863f;
   --rcb-bg: #ffffff;
-  --rcb-bg-muted: #ffffff;
-  --rcb-border: #5c5962;
-  --rcb-text: #5c5962;
+  --rcb-bg-muted: #f5f6fa;
+  --rcb-border: #eeebee;
+  --rcb-text: #3f3d48;
   --rcb-text-muted: #6a737d;
-  --rcb-toolbar: #ffffff;
+  --rcb-toolbar: #f5f6fa;
   --rcb-syntax-comment: #8c8c8c;
   --rcb-syntax-error: #c5221f;
   --rcb-syntax-function: #00627a;
@@ -27,7 +27,7 @@
 
 [data-wn-theme="dark"] {
   --rcb-accent: #00d970;
-  --rcb-bg: #302d36;
+  --rcb-bg: #0d1117;
   --rcb-bg-muted: #302d36;
   --rcb-border: #44434d;
   --rcb-text: #e6edf3;
@@ -35,90 +35,6 @@
   --rcb-toolbar: #302d36;
 }
 
-.rcb {
-  box-shadow: none;
-  margin: 1.5rem 0;
-}
-
-.rcb__toolbar {
-  min-height: 2.5rem;
-  gap: 0.875rem;
-  padding: 0 0.875rem;
-}
-
-.rcb__language,
-.rcb__button,
-.rcb__console-title,
-.rcb__notice {
-  font-size: 0.75rem;
-}
-
-.rcb__button--run {
-  color: #ffffff;
-}
-
-.rcb__actions {
-  gap: 0.5rem;
-  margin-left: auto;
-}
-
-.rcb__status {
-  justify-content: flex-end;
-  min-width: 4.5rem;
-  text-align: right;
-}
-
-.rcb__button {
-  min-width: 3.75rem;
-}
-
 [data-wn-theme="dark"] .rcb__button--run {
   color: #15141a;
-}
-
-[data-wn-theme="dark"] .rcb__editor,
-[data-wn-theme="dark"] .rcb__console,
-[data-wn-theme="dark"] .rcb .rcb__output {
-  background-color: #0d1117;
-}
-
-.rcb[data-state="running"] .rcb__status {
-  font-weight: 600;
-}
-
-.rcb[data-state="running"] .rcb__status::before {
-  width: 0.75rem;
-  height: 0.75rem;
-  box-sizing: border-box;
-  background: transparent;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  opacity: 1;
-  animation: wn-rcb-spin 700ms linear infinite;
-}
-
-.rcb[data-state="running"] .rcb__button--run {
-  background: transparent;
-  border-color: var(--rcb-accent);
-  color: var(--rcb-accent);
-  opacity: 1;
-}
-
-.rcb[data-state="running"] .rcb__button-label {
-  font-size: 0;
-}
-
-.rcb[data-state="running"] .rcb__button-label::after {
-  content: "Running";
-  font-size: 0.75rem;
-}
-
-@keyframes wn-rcb-spin {
-  to { transform: rotate(1turn); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rcb[data-state="running"] .rcb__status::before {
-    animation: none;
-  }
 }

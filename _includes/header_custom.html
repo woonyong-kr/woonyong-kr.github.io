@@ -7,11 +7,18 @@
   </a>
   <button class="wn-header-action wn-header-action--theme btn-reset" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
     <svg class="wn-theme-icon wn-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="4"></circle>
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+      <circle cx="12" cy="12" r="5"></circle>
+      <rect x="11" y="1.5" width="2" height="3.5" rx="1"></rect>
+      <rect x="11" y="19" width="2" height="3.5" rx="1"></rect>
+      <rect x="19" y="11" width="3.5" height="2" rx="1"></rect>
+      <rect x="1.5" y="11" width="3.5" height="2" rx="1"></rect>
+      <rect x="17.45" y="3.2" width="2" height="3.5" rx="1" transform="rotate(45 18.45 4.95)"></rect>
+      <rect x="4.55" y="17.3" width="2" height="3.5" rx="1" transform="rotate(45 5.55 19.05)"></rect>
+      <rect x="17.45" y="17.3" width="2" height="3.5" rx="1" transform="rotate(-45 18.45 19.05)"></rect>
+      <rect x="4.55" y="3.2" width="2" height="3.5" rx="1" transform="rotate(-45 5.55 4.95)"></rect>
     </svg>
     <svg class="wn-theme-icon wn-theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path>
+      <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.812A7.5 7.5 0 0 0 21.75 8.25a.75.75 0 0 1 .812.162 9.003 9.003 0 0 1-13.034 11.37A9.003 9.003 0 0 1 5.708 6.524a.75.75 0 0 1 .812-.162 7.5 7.5 0 0 0 3.008-4.764.75.75 0 0 1 .812-.812Z" clip-rule="evenodd"></path>
     </svg>
     <span class="sr-only">Theme</span>
   </button>
@@ -64,5 +71,17 @@
     mobileToggle = createMobileControls();
     bindThemeToggle(desktopToggle);
     bindThemeToggle(mobileToggle);
+
+    function revealControls() {
+      window.requestAnimationFrame(function () {
+        document.documentElement.classList.add("wn-ui-ready");
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", revealControls, { once: true });
+    } else {
+      revealControls();
+    }
   })();
 </script>

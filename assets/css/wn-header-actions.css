@@ -34,14 +34,12 @@
 }
 
 .wn-header-action:focus-visible {
+  outline: 0;
   color: #00863f;
-  background-color: rgba(0, 134, 63, 0.08);
-  transform: scale(1.04);
 }
 
 [data-wn-theme="dark"] .wn-header-action:focus-visible {
   color: #00d970;
-  background-color: rgba(0, 217, 112, 0.08);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -70,11 +68,7 @@
 }
 
 .wn-theme-icon {
-  fill: none !important;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: currentColor;
 }
 
 .wn-theme-icon-moon,
@@ -119,6 +113,11 @@
 
   .site-header .wn-mobile-header-actions .wn-header-action {
     margin: 0;
+  }
+
+  .site-header .wn-mobile-header-actions .wn-header-action:hover {
+    background-color: transparent;
+    transform: none;
   }
 }
 

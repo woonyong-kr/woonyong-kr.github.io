@@ -10,8 +10,8 @@ const [languagesSource, playground] = await Promise.all([
   readFile(playgroundFile, "utf8")
 ]);
 
-const supported = new Set([...languagesSource.matchAll(/language\("([a-z+#]+)"/gu)].map(([, language]) => language));
-const documentedFences = [...playground.matchAll(/^```run-([a-z+#]+)\s*$/gmu)].map(([, language]) => language);
+const supported = new Set([...languagesSource.matchAll(/language\("([a-z0-9+#-]+)"/gu)].map(([, language]) => language));
+const documentedFences = [...playground.matchAll(/^```run-([a-z0-9+#-]+)\s*$/gmu)].map(([, language]) => language);
 const documented = new Set(documentedFences);
 
 const missing = [...supported].filter((language) => !documented.has(language));

@@ -17,7 +17,8 @@ nav_order: 8
 | 구분 | 언어 | 실행 위치 |
 |:--|:--|:--|
 | 브라우저 | JavaScript, TypeScript | sandboxed Web Worker / browser transpile |
-| 브라우저 preview | HTML, CSS | sandboxed iframe |
+| 브라우저 preview | HTML, CSS | script·network가 차단된 sandboxed iframe |
+| 브라우저 상호작용 | Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | script만 허용한 isolated iframe |
 | 명시된 provider | Kotlin | Kotlin Playground |
 | 명시된 provider | Dart | DartPad compile → isolated frame |
 | 명시된 provider | Swift | SwiftFiddle |
@@ -26,6 +27,10 @@ nav_order: 8
 외부 provider를 사용하는 언어는 Run을 누를 때 source가 해당 provider로 전송됩니다.
 네트워크·provider 제한·컴파일러 변경 때문에 실패하거나 시간이 걸릴 수 있으며, 실패한
 실행을 다른 provider로 자동 재시도하지 않습니다.
+
+`run-web`과 `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
+외부 리소스, 팝업, form 제출, top navigation, same-origin 접근은 허용하지 않으며,
+`console.log`와 runtime 오류는 Output으로 전달됩니다.
 
 ## Browser runners
 
@@ -71,6 +76,37 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
   border-radius: 0.35rem;
   font-weight: 700;
 }
+```
+
+### Web (HTML/CSS/JS)
+
+```run-web
+<button id="counter">Clicked 0 times</button>
+<style>
+  #counter { padding: 10px 16px; border: 0; border-radius: 8px; background: #00863f; color: white; }
+</style>
+<script>
+  let count = 0;
+  const button = document.querySelector("#counter");
+  button.addEventListener("click", () => {
+    button.textContent = `Clicked ${++count} times`;
+    console.log(button.textContent);
+  });
+</script>
+```
+
+### Web (HTML/CSS/TypeScript)
+
+```run-web-ts
+<button id="counter">Clicked 0 times</button>
+<script type="text/typescript">
+  let count: number = 0;
+  const button = document.querySelector<HTMLButtonElement>("#counter")!;
+  button.addEventListener("click", () => {
+    button.textContent = `Clicked ${++count} times`;
+    console.log(button.textContent);
+  });
+</script>
 ```
 
 ## JVM and systems languages
