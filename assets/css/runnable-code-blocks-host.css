@@ -3,7 +3,6 @@
 :root {
   --rcb-font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --rcb-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  --rcb-radius: 0.25rem;
 }
 
 [data-wn-theme="light"] {
@@ -27,12 +26,12 @@
 
 [data-wn-theme="dark"] {
   --rcb-accent: #00d970;
-  --rcb-bg: #0d1117;
-  --rcb-bg-muted: #302d36;
+  --rcb-bg: #2b2d30;
+  --rcb-bg-muted: #1e1f22;
   --rcb-border: #44434d;
   --rcb-text: #e6edf3;
   --rcb-text-muted: #bab9c3;
-  --rcb-toolbar: #302d36;
+  --rcb-toolbar: #2b2d30;
 }
 
 [data-wn-theme="dark"] .rcb__button--run {
