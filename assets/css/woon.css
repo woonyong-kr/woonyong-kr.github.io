@@ -164,9 +164,10 @@ body a:hover { color: var(--wn-accent); }
 @media (max-width: 800px) {
   body { overflow-x: hidden; }
   .wn-header, .wn-page { width: min(100% - 2rem, 100%); }
-  .wn-header { min-height: 62px; gap: 0.5rem; }
-  .wn-header__nav { flex: 1 1 auto; justify-content: flex-end; gap: 0.45rem; min-width: 0; white-space: nowrap; }
-  .wn-header__nav a { font-size: 0.66rem; }
+  .wn-header { display: block; min-height: 0; padding: 0.85rem 0 0.7rem; }
+  .wn-header__brand { display: block; }
+  .wn-header__nav { display: flex; width: 100%; justify-content: space-between; gap: 0.45rem; margin-top: 0.75rem; white-space: nowrap; }
+  .wn-header__nav a { font-size: 0.7rem; }
   .wn-page--home, .wn-page--article, .wn-page--project, .wn-page--resume { padding-top: 2.6rem; }
   .home-intro { padding: 2rem 0 3.3rem; }
   .home-intro h1, .archive-intro h1, .wiki-index h1 { font-size: clamp(2.5rem, 13vw, 4rem); }
