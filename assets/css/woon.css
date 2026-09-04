@@ -166,8 +166,8 @@ body a:hover { color: var(--wn-accent); }
   .wn-header, .wn-page { width: min(100% - 2rem, 100%); }
   .wn-header { display: block; min-height: 0; padding: 0.85rem 0 0.7rem; }
   .wn-header__brand { display: block; }
-  .wn-header__nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; gap: 0.25rem; margin-top: 0.75rem; white-space: nowrap; }
-  .wn-header__nav a { overflow: hidden; font-size: 0.7rem; text-align: left; }
+  .wn-header__nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 0.55rem 1rem; margin-top: 0.75rem; }
+  .wn-header__nav a { min-width: 0; font-size: 0.76rem; text-align: left; }
   .wn-page--home, .wn-page--article, .wn-page--project, .wn-page--resume { padding-top: 2.6rem; }
   .home-intro { padding: 2rem 0 3.3rem; }
   .home-intro h1, .archive-intro h1, .wiki-index h1 { font-size: clamp(2.5rem, 13vw, 4rem); }
