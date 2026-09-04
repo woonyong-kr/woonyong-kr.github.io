@@ -5,7 +5,7 @@
     </svg>
     <span class="sr-only">GitHub profile</span>
   </a>
-  <button class="wn-header-action btn-reset" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+  <button class="wn-header-action wn-header-action--theme btn-reset" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
     <svg class="wn-theme-icon wn-theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <circle cx="12" cy="12" r="4"></circle>
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
@@ -18,21 +18,51 @@
 </div>
 <script>
   (function () {
-    var toggle = document.getElementById("theme-toggle");
+    var desktopToggle = document.getElementById("theme-toggle");
+    var mobileToggle;
 
-    function renderTheme(theme) {
+    function createMobileControls() {
+      var desktopControls = document.querySelector(".main-header .wn-header-actions");
+      var siteHeader = document.querySelector(".site-header");
+      var menuButton = document.getElementById("menu-button");
+
+      if (!desktopControls || !siteHeader || !menuButton || document.getElementById("theme-toggle-mobile")) {
+        return null;
+      }
+
+      var mobileControls = desktopControls.cloneNode(true);
+      mobileControls.classList.add("wn-mobile-header-actions");
+      mobileControls.setAttribute("aria-label", "Site controls");
+
+      var toggle = mobileControls.querySelector(".wn-header-action--theme");
+      toggle.id = "theme-toggle-mobile";
+      siteHeader.insertBefore(mobileControls, menuButton);
+      return toggle;
+    }
+
+    function renderTheme(toggle, theme) {
       var nextTheme = theme === "dark" ? "light" : "dark";
       toggle.setAttribute("aria-pressed", String(theme === "dark"));
       toggle.setAttribute("aria-label", "Switch to " + nextTheme + " mode");
       toggle.setAttribute("title", "Switch to " + nextTheme + " mode");
     }
 
-    renderTheme(window.wnTheme.getCurrentTheme());
-    window.addEventListener("wn-theme-change", function (event) {
-      renderTheme(event.detail.theme);
-    });
-    toggle.addEventListener("click", function () {
-      window.wnTheme.toggle();
-    });
+    function bindThemeToggle(toggle) {
+      if (!toggle) {
+        return;
+      }
+
+      renderTheme(toggle, window.wnTheme.getCurrentTheme());
+      window.addEventListener("wn-theme-change", function (event) {
+        renderTheme(toggle, event.detail.theme);
+      });
+      toggle.addEventListener("click", function () {
+        window.wnTheme.toggle();
+      });
+    }
+
+    mobileToggle = createMobileControls();
+    bindThemeToggle(desktopToggle);
+    bindThemeToggle(mobileToggle);
   })();
 </script>
