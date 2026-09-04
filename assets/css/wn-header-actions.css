@@ -19,10 +19,14 @@
   width: 2.25rem;
   height: 2.25rem;
   margin: auto 0.125rem;
-  color: inherit;
+  color: #5c5962;
   border-radius: 999px;
   cursor: pointer;
   transition: color 140ms ease-out, background-color 140ms ease-out, transform 140ms ease-out;
+}
+
+[data-wn-theme="dark"] .wn-header-action {
+  color: #bab9c3;
 }
 
 .wn-header-action:hover,
@@ -42,6 +46,12 @@
   width: 1.125rem;
   height: 1.125rem;
   fill: currentColor;
+}
+
+.wn-header-action--github svg {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.84;
 }
 
 .wn-theme-icon {
@@ -88,11 +98,6 @@
 .wn-theme-transition .highlight,
 .wn-theme-transition .rcb {
   transition: background-color 180ms ease-out, border-color 180ms ease-out, color 180ms ease-out;
-}
-
-.contributor-avatars img {
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 @media (max-width: 31.25rem) {

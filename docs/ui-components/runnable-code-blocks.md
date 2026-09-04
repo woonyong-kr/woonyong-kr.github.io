@@ -69,10 +69,6 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
   color: #fff;
   background: #00863f;
   border-radius: 0.35rem;
-}
-
-.preview::after {
-  content: "CSS preview";
   font-weight: 700;
 }
 ```
