@@ -80,6 +80,11 @@
   border-color: #44434d;
 }
 
+[data-wn-theme="dark"] .main-content :not(pre, figure) > code {
+  background-color: #302d36;
+  border-color: #44434d;
+}
+
 .contributor-avatars img {
   border-radius: 50%;
   object-fit: cover;
