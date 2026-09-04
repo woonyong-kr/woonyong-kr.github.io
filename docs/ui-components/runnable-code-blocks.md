@@ -7,7 +7,7 @@ nav_order: 8
 
 # Runnable Code Blocks
 
-이 페이지는 WN Docs의 `run-<language>` fenced block이 실제로 mount되고 실행되는지
+이 페이지는 WN Docs의 24개 `run-<language>` fenced block이 실제로 mount되고 실행되는지
 언어별로 확인하는 공개 smoke-test 페이지입니다. **Run**을 누르기 전에는 어떤 코드도
 실행하거나 전송하지 않습니다. 코드는 수정한 뒤 다시 실행할 수 있지만, 그 변경은 이
 페이지의 Markdown에 저장되지 않습니다.
@@ -18,7 +18,7 @@ nav_order: 8
 |:--|:--|:--|
 | 브라우저 | JavaScript, TypeScript | sandboxed Web Worker / browser transpile |
 | 브라우저 preview | HTML, CSS | script·network가 차단된 sandboxed iframe |
-| 브라우저 상호작용 | Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | script만 허용한 isolated iframe |
+| 브라우저 상호작용 | React (JSX/TSX), Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | script만 허용한 isolated iframe |
 | 명시된 provider | Kotlin | Kotlin Playground |
 | 명시된 provider | Dart | DartPad compile → isolated frame |
 | 명시된 provider | Swift | SwiftFiddle |
@@ -28,11 +28,29 @@ nav_order: 8
 네트워크·provider 제한·컴파일러 변경 때문에 실패하거나 시간이 걸릴 수 있으며, 실패한
 실행을 다른 provider로 자동 재시도하지 않습니다.
 
-`run-web`과 `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
+`run-react`, `run-web`, `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
 외부 리소스, 팝업, form 제출, top navigation, same-origin 접근은 허용하지 않으며,
-`console.log`와 runtime 오류는 Output으로 전달됩니다.
+`console.log`와 runtime 오류는 Output으로 전달됩니다. `run-react`는 bundle에 포함된
+React와 ReactDOM만 사용할 수 있고, `react`, `react-dom`, `react-dom/client` 이외의 import와
+상대 경로 multi-file import는 거부합니다.
 
 ## Browser runners
+
+### React (JSX / TSX)
+
+```run-react
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState<number>(0);
+
+  return (
+    <button onClick={() => setCount((value) => value + 1)}>
+      Clicked {count} times
+    </button>
+  );
+}
+```
 
 ### JavaScript
 
