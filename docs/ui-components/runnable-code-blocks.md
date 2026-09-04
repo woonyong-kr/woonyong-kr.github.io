@@ -53,7 +53,7 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
 ### HTML
 
 ```run-html
-<main style="font-family: system-ui; padding: 1rem; border: 2px solid #027f50">
+<main style="font-family: system-ui; padding: 1rem; border: 2px solid #00863f">
   <strong>HTML preview</strong>
   <p>이 preview는 sandboxed iframe 안에서 렌더링됩니다.</p>
 </main>
@@ -67,7 +67,7 @@ console.log(checks.filter(({ passed }) => passed).map(({ name }) => name).join("
   place-items: center;
   min-height: 7rem;
   color: #fff;
-  background: #027f50;
+  background: #00863f;
   border-radius: 0.35rem;
 }
 

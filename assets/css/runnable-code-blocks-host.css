@@ -1,28 +1,38 @@
 /* The adapter supplies its own controls. These host values only align that
    control with the two existing WN Docs schemes; they do not change JTD UI. */
 :root {
-  --rcb-accent: #027f50;
-  --rcb-bg: #ffffff;
-  --rcb-bg-muted: #f7f7f7;
-  --rcb-border: #eeebee;
-  --rcb-text: #24292f;
-  --rcb-text-muted: #6a737d;
-  --rcb-toolbar: #f7f7f7;
   --rcb-font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --rcb-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --rcb-radius: 0.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rcb-accent: #05d182;
-    --rcb-bg: #27262b;
-    --rcb-bg-muted: #302f36;
-    --rcb-border: #44434d;
-    --rcb-text: #f5f6fa;
-    --rcb-text-muted: #bab9c3;
-    --rcb-toolbar: #302f36;
-  }
+[data-wn-theme="light"] {
+  --rcb-accent: #00863f;
+  --rcb-bg: #ffffff;
+  --rcb-bg-muted: #ffffff;
+  --rcb-border: #5c5962;
+  --rcb-text: #5c5962;
+  --rcb-text-muted: #6a737d;
+  --rcb-toolbar: #ffffff;
+  --rcb-syntax-comment: #8c8c8c;
+  --rcb-syntax-error: #c5221f;
+  --rcb-syntax-function: #00627a;
+  --rcb-syntax-identifier: #080808;
+  --rcb-syntax-keyword: #0033b3;
+  --rcb-syntax-meta: #9e880d;
+  --rcb-syntax-number: #1750eb;
+  --rcb-syntax-string: #067d17;
+  --rcb-syntax-type: #7a3e9d;
+}
+
+[data-wn-theme="dark"] {
+  --rcb-accent: #00d970;
+  --rcb-bg: #302d36;
+  --rcb-bg-muted: #302d36;
+  --rcb-border: #44434d;
+  --rcb-text: #e6edf3;
+  --rcb-text-muted: #bab9c3;
+  --rcb-toolbar: #302d36;
 }
 
 .rcb {
@@ -46,8 +56,12 @@
   color: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  .rcb__button--run {
-    color: #15141a;
-  }
+[data-wn-theme="dark"] .rcb__button--run {
+  color: #15141a;
+}
+
+[data-wn-theme="dark"] .rcb__editor,
+[data-wn-theme="dark"] .rcb__console,
+[data-wn-theme="dark"] .rcb .rcb__output {
+  background-color: #0d1117;
 }
