@@ -4,12 +4,16 @@
     var manuallySelected = false;
     var currentTheme = null;
 
-    function applyTheme(isDark) {
+    function applyTheme(isDark, withTransition) {
+      if (withTransition) document.documentElement.classList.add("wn-theme-transition");
       currentTheme = isDark ? "dark" : "light";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
       document.documentElement.dataset.wnTheme = currentTheme;
       window.jtd.setTheme(isDark ? "woon-dark" : "woon-light");
       window.dispatchEvent(new CustomEvent("wn-theme-change", { detail: { theme: currentTheme } }));
+      if (withTransition) window.setTimeout(function () {
+        document.documentElement.classList.remove("wn-theme-transition");
+      }, 180);
     }
 
     function applySystemTheme(event) {
@@ -20,7 +24,7 @@
       getCurrentTheme: function () { return currentTheme; },
       toggle: function () {
         manuallySelected = true;
-        applyTheme(currentTheme !== "dark");
+        applyTheme(currentTheme !== "dark", true);
       }
     };
 
