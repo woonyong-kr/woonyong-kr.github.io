@@ -1,0 +1,8 @@
+version: 1
+name: 최우녕
+headline: 프로덕션 AI · 런타임 아키텍처 · 쿠버네티스 · 데이터베이스 · 운영체제 · C#/C++
+links:
+  - label: 블로그
+    url: https://woonyong-kr.github.io/#/blog
+  - label: 이메일
+    url: mailto:woonyong.kr@gmail.com
