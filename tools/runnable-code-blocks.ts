@@ -3,7 +3,7 @@ import { enhanceRunnableCodeBlocks } from "../vendor/runnable-code-blocks/src/we
 
 const registry = createRunnerRegistry({
   executionOrder: "browser-first",
-  fetch: window.rcbFetch,
+  fetch: window.fetch.bind(window),
   remoteExecutionEnabled: true,
 });
 

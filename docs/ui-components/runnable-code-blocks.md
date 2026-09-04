@@ -34,6 +34,16 @@ nav_order: 8
 React와 ReactDOM만 사용할 수 있고, `react`, `react-dom`, `react-dom/client` 이외의 import와
 상대 경로 multi-file import는 거부합니다.
 
+## 신뢰·sandbox 경계
+
+Run은 사용자가 누른 시점에만 실행되며, 이 공개 문서의 관리된 Markdown처럼 신뢰한 코드에만
+사용해야 합니다. 비밀값, 개인 데이터, 제3자가 제공한 임의 코드를 붙여 넣어 실행하는 기능은
+아닙니다. 실행 결과는 host와 분리된 중첩 iframe 안에서 렌더링됩니다. 바깥 iframe은 메시지
+전달을 위해 `allow-scripts`만 허용하고, 대화형 preview의 안쪽 iframe도 `allow-scripts`만
+허용합니다. 둘 모두 `allow-same-origin` 없이 opaque origin으로 동작하며 CSP로 network,
+form, popup, top navigation, object 및 외부 resource를 차단합니다. 이 제약은 host 문서를
+보호하지만, 실행 버튼을 누르는 행위 자체가 신뢰하지 않는 코드를 안전하게 만드는 것은 아닙니다.
+
 ## Browser runners
 
 ### React (JSX / TSX)

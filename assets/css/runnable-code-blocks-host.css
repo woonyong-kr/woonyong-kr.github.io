@@ -1,39 +1,68 @@
-/* The adapter owns its interface. These host values only map WN Docs' two
-   schemes to the adapter's existing variables. */
-:root {
-  --rcb-font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  --rcb-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-}
-
+/* WN Docs supplies semantic host tokens; the upstream adapter owns component UI. */
 [data-wn-theme="light"] {
-  --rcb-accent: #00863f;
-  --rcb-bg: #ffffff;
-  --rcb-bg-muted: #f5f6fa;
-  --rcb-border: #eeebee;
-  --rcb-text: #3f3d48;
-  --rcb-text-muted: #6a737d;
-  --rcb-toolbar: #f5f6fa;
-  --rcb-syntax-comment: #8c8c8c;
-  --rcb-syntax-error: #c5221f;
-  --rcb-syntax-function: #00627a;
-  --rcb-syntax-identifier: #080808;
-  --rcb-syntax-keyword: #0033b3;
-  --rcb-syntax-meta: #9e880d;
-  --rcb-syntax-number: #1750eb;
-  --rcb-syntax-string: #067d17;
-  --rcb-syntax-type: #7a3e9d;
+  --background-primary: #ffffff;
+  --background-secondary: #f5f6fa;
+  --background-secondary-alt: #f5f6fa;
+  --background-modifier-border: #eeebee;
+  --background-modifier-border-focus: #00863f;
+  --background-modifier-hover: rgb(0 134 63 / 10%);
+  --code-comment: #8c8c8c;
+  --code-function: #00627a;
+  --code-important: #7a3e9d;
+  --code-keyword: #0033b3;
+  --code-normal: #080808;
+  --code-string: #067d17;
+  --code-tag: #9e880d;
+  --code-value: #1750eb;
+  --color-green: #00863f;
+  --divider-color: #eeebee;
+  --focus-ring-width: 2px;
+  --font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-medium: 500;
+  --font-monospace: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-semibold: 600;
+  --font-ui-smaller: 11px;
+  --input-height: 30px;
+  --interactive-accent: #00863f;
+  --interactive-accent-hover: #006a32;
+  --radius-s: 6px;
+  --text-error: #c5221f;
+  --text-muted: #6a737d;
+  --text-normal: #3f3d48;
+  --text-on-accent: #ffffff;
+  --text-success: #00863f;
 }
 
 [data-wn-theme="dark"] {
-  --rcb-accent: #00d970;
-  --rcb-bg: #2b2d30;
-  --rcb-bg-muted: #1e1f22;
-  --rcb-border: #44434d;
-  --rcb-text: #e6edf3;
-  --rcb-text-muted: #bab9c3;
-  --rcb-toolbar: #2b2d30;
-}
-
-[data-wn-theme="dark"] .rcb__button--run {
-  color: #15141a;
+  --background-primary: #2b2d30;
+  --background-secondary: #1e1f22;
+  --background-secondary-alt: #2b2d30;
+  --background-modifier-border: #44434d;
+  --background-modifier-border-focus: #00d970;
+  --background-modifier-hover: rgb(0 217 112 / 12%);
+  --code-comment: #9ca3af;
+  --code-function: #7dd3fc;
+  --code-important: #d8b4fe;
+  --code-keyword: #fda4af;
+  --code-normal: #e6edf3;
+  --code-string: #86efac;
+  --code-tag: #fde68a;
+  --code-value: #93c5fd;
+  --color-green: #00d970;
+  --divider-color: #44434d;
+  --focus-ring-width: 2px;
+  --font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-medium: 500;
+  --font-monospace: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-semibold: 600;
+  --font-ui-smaller: 11px;
+  --input-height: 30px;
+  --interactive-accent: #00d970;
+  --interactive-accent-hover: #38e98d;
+  --radius-s: 6px;
+  --text-error: #ff7b72;
+  --text-muted: #bab9c3;
+  --text-normal: #e6edf3;
+  --text-on-accent: #15141a;
+  --text-success: #00d970;
 }

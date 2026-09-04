@@ -41,38 +41,4 @@
 <link rel="stylesheet" href="{{ '/assets/css/runnable-code-blocks.css' | relative_url }}?v={{ wn_assets_revision }}">
 <link rel="stylesheet" href="{{ '/assets/css/runnable-code-blocks-host.css' | relative_url }}?v={{ wn_assets_revision }}">
 <link rel="stylesheet" href="{{ '/assets/css/wn-header-actions.css' | relative_url }}?v={{ wn_assets_revision }}">
-<script>
-  (function () {
-    function createElement(parent, tag, options, callback) {
-      var document_ = parent.nodeType === Node.DOCUMENT_NODE ? parent : parent.ownerDocument;
-      var element = document_.createElement(tag);
-      var info = typeof options === "string" ? { cls: options } : options || {};
-      if (info.cls) element.className = Array.isArray(info.cls) ? info.cls.join(" ") : info.cls;
-      if (info.text !== undefined) element.textContent = info.text;
-      parent.append(element);
-      if (callback) callback(element);
-      return element;
-    }
-
-    Node.prototype.createEl = function (tag, options, callback) {
-      return createElement(this, tag, options, callback);
-    };
-    Node.prototype.createDiv = function (options, callback) {
-      return createElement(this, "div", options, callback);
-    };
-    Node.prototype.createSpan = function (options, callback) {
-      return createElement(this, "span", options, callback);
-    };
-    Node.prototype.createSvg = function (tag, options, callback) {
-      var document_ = this.nodeType === Node.DOCUMENT_NODE ? this : this.ownerDocument;
-      var element = document_.createElementNS("http://www.w3.org/2000/svg", tag);
-      var info = typeof options === "string" ? { cls: options } : options || {};
-      if (info.cls) element.setAttribute("class", Array.isArray(info.cls) ? info.cls.join(" ") : info.cls);
-      this.append(element);
-      if (callback) callback(element);
-      return element;
-    };
-    window.rcbFetch = window.fetch.bind(window);
-  })();
-</script>
 <script type="module" src="{{ '/assets/js/runnable-code-blocks.js' | relative_url }}?v={{ wn_assets_revision }}"></script>
