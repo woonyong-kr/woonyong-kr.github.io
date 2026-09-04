@@ -33,6 +33,12 @@ jobs:
       - name: Install adapter dependencies
         run: npm --prefix vendor/runnable-code-blocks ci
 
+      - name: Test runnable adapter
+        run: npm run test:adapter
+
+      - name: Check runnable playground coverage
+        run: npm run check:playground
+
       - name: Build runnable adapter
         run: npm run build:runnable
 
@@ -44,6 +50,9 @@ jobs:
 
       - name: Build Jekyll site
         run: bundle exec jekyll build --destination _site
+
+      - name: Check rendered internal links
+        run: npm run check:links
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

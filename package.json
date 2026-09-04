@@ -3,6 +3,9 @@
   "scripts": {
     "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
     "build": "npm run build:runnable && bundle exec jekyll build --destination _site",
-    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href"
+    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
+    "check:playground": "node scripts/check-runnable-playground.mjs",
+    "test:adapter": "npm --prefix vendor/runnable-code-blocks test",
+    "verify": "npm run test:adapter && npm run check:playground && npm run build && npm run check:links"
   }
 }
