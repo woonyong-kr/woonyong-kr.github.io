@@ -1,19 +1,36 @@
 <script>
   (function () {
     var systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    var manuallySelected = false;
+    var currentTheme = null;
 
-    function applySystemTheme(event) {
-      var isDark = event.matches;
+    function applyTheme(isDark) {
+      currentTheme = isDark ? "dark" : "light";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+      document.documentElement.dataset.wnTheme = currentTheme;
       window.jtd.setTheme(isDark ? "woon-dark" : "woon-light");
+      window.dispatchEvent(new CustomEvent("wn-theme-change", { detail: { theme: currentTheme } }));
     }
 
-    applySystemTheme(systemTheme);
+    function applySystemTheme(event) {
+      if (!manuallySelected) applyTheme(event.matches);
+    }
+
+    window.wnTheme = {
+      getCurrentTheme: function () { return currentTheme; },
+      toggle: function () {
+        manuallySelected = true;
+        applyTheme(currentTheme !== "dark");
+      }
+    };
+
+    applyTheme(systemTheme.matches);
     systemTheme.addEventListener("change", applySystemTheme);
   })();
 </script>
 <link rel="stylesheet" href="{{ '/assets/css/runnable-code-blocks.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/css/runnable-code-blocks-host.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/css/wn-header-actions.css' | relative_url }}">
 <script>
   (function () {
     function createElement(parent, tag, options, callback) {

@@ -1,0 +1,59 @@
+.wn-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  height: 100%;
+}
+
+.wn-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 100%;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wn-header-action:hover,
+.wn-header-action:focus-visible {
+  color: #027f50;
+}
+
+[data-wn-theme="dark"] .wn-header-action:hover,
+[data-wn-theme="dark"] .wn-header-action:focus-visible {
+  color: #05d182;
+}
+
+.wn-header-action svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: currentColor;
+}
+
+.wn-theme-icon {
+  fill: none !important;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wn-theme-icon-moon,
+[data-wn-theme="dark"] .wn-theme-icon-sun {
+  display: none;
+}
+
+[data-wn-theme="dark"] .wn-theme-icon-moon {
+  display: block;
+}
+
+.contributor-avatars img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@media (max-width: 31.25rem) {
+  .wn-header-action {
+    width: 2.75rem;
+  }
+}

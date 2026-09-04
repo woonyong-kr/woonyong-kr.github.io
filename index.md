@@ -64,7 +64,7 @@ email, or any other method with the owners of this repository before making a ch
 
 #### Thank you to the contributors of Just the Docs!
 
-<ul class="list-style-none">
+<ul class="list-style-none contributor-avatars">
 {% for contributor in site.github.contributors %}
   <li class="d-inline-block mr-1">
      <a href="{{ contributor.html_url }}"><img src="{{ contributor.avatar_url }}" width="32" height="32" alt="{{ contributor.login }}"></a>
