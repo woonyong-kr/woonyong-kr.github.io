@@ -1,0 +1,53 @@
+/* The adapter supplies its own controls. These host values only align that
+   control with the two existing WN Docs schemes; they do not change JTD UI. */
+:root {
+  --rcb-accent: #027f50;
+  --rcb-bg: #ffffff;
+  --rcb-bg-muted: #f7f7f7;
+  --rcb-border: #eeebee;
+  --rcb-text: #24292f;
+  --rcb-text-muted: #6a737d;
+  --rcb-toolbar: #f7f7f7;
+  --rcb-font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --rcb-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --rcb-radius: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rcb-accent: #05d182;
+    --rcb-bg: #27262b;
+    --rcb-bg-muted: #302f36;
+    --rcb-border: #44434d;
+    --rcb-text: #f5f6fa;
+    --rcb-text-muted: #bab9c3;
+    --rcb-toolbar: #302f36;
+  }
+}
+
+.rcb {
+  box-shadow: none;
+  margin: 1.5rem 0;
+}
+
+.rcb__toolbar {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+}
+
+.rcb__language,
+.rcb__button,
+.rcb__console-title,
+.rcb__notice {
+  font-size: 0.75rem;
+}
+
+.rcb__button--run {
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .rcb__button--run {
+    color: #15141a;
+  }
+}

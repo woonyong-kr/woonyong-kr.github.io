@@ -1,0 +1,76 @@
+title: WN Docs
+description: Woon의 공개 기술 문서 기준본
+url: "https://woonyong-kr.github.io"
+baseurl: ""
+repository: woonyong-kr/woonyong-kr.github.io
+permalink: pretty
+
+theme: just-the-docs
+color_scheme: woon-light
+
+defaults:
+  - scope:
+      path: "docs"
+      type: "pages"
+    values:
+      layout: "default"
+
+exclude:
+  - .bundle/
+  - .jekyll-cache/
+  - .sass-cache/
+  - _site/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - package.json
+  - scripts/
+  - tools/
+  - vendor/bundle/
+  - vendor/runnable-code-blocks/
+  - generated/public-content/README.md
+
+search_enabled: true
+search:
+  heading_level: 2
+  previews: 2
+  preview_words_before: 3
+  preview_words_after: 10
+  tokenizer_separator: /[\s/]+/
+  rel_url: true
+  button: false
+  focus_shortcut_key: "k"
+
+enable_copy_code_button: true
+heading_anchors: true
+nav_enabled: true
+nav_sort: case_sensitive
+nav_error_report: true
+
+aux_links: {}
+nav_external_links: []
+footer_content: ""
+last_edit_timestamp: false
+gh_edit_link: false
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-github-metadata
+  - jekyll-include-cache
+  - jekyll-sitemap
+
+liquid:
+  error_mode: strict
+  strict_filters: true
+
+kramdown:
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+sass:
+  quiet_deps: true
+  silence_deprecations: ["import"]

@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
+    "build": "npm run build:runnable && bundle exec jekyll build --destination _site",
+    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href"
+  }
+}

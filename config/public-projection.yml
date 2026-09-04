@@ -1,0 +1,5 @@
+content_root: generated/public-content
+input_owner: Obsidian Vault
+write_policy: compiler-only
+publish_policy: approved-documents-only
+site_behavior: read-only-build-input

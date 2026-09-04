@@ -1,0 +1,4 @@
+[submodule "vendor/runnable-code-blocks"]
+	path = vendor/runnable-code-blocks
+	url = https://github.com/woonyong-kr/obsidian-runnable-code-blocks.git
+	branch = main
