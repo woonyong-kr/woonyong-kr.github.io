@@ -16,10 +16,13 @@ const supported = new Set([
 ].map(([, language]) => language));
 const documentedFences = [...playground.matchAll(/^```run-([a-z0-9+#-]+)\s*$/gmu)].map(([, language]) => language);
 const documented = new Set(documentedFences);
+const repeatableExamples = new Set(["react"]);
 
 const missing = [...supported].filter((language) => !documented.has(language));
 const unknown = [...documented].filter((language) => !supported.has(language));
-const duplicates = [...documented].filter((language) => documentedFences.filter((entry) => entry === language).length !== 1);
+const duplicates = [...documented].filter(
+  (language) => !repeatableExamples.has(language) && documentedFences.filter((entry) => entry === language).length !== 1
+);
 
 if (missing.length || unknown.length || duplicates.length) {
   const details = [
@@ -30,4 +33,4 @@ if (missing.length || unknown.length || duplicates.length) {
   throw new Error(`Runnable playground coverage failed (${details.join("; ")})`);
 }
 
-console.log(`Runnable playground documents all ${String(supported.size)} supported languages exactly once.`);
+console.log(`Runnable playground documents all ${String(supported.size)} supported languages; focused React examples may repeat.`);

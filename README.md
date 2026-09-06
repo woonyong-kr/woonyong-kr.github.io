@@ -59,8 +59,9 @@ npm run check:links
 git add vendor/runnable-code-blocks assets/js/runnable-code-blocks.js assets/css/runnable-code-blocks.css
 ```
 
-`check:playground`는 plugin의 지원 언어 목록과 runnable examples 페이지의
-`run-<language>` fence가 정확히 일치하는지 확인합니다.
+`check:playground`는 plugin의 지원 언어 목록이 runnable examples 페이지에 모두
+포함되는지 확인합니다. React는 모션·상태·접근성처럼 학습 목적별 예제를 여러 개 둘 수 있고,
+나머지 언어는 하나의 대표 예제를 유지합니다.
 
 ## 로컬 실행과 검증
 
