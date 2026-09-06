@@ -2,10 +2,12 @@
   "private": true,
   "scripts": {
     "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
-    "build": "npm run build:runnable && bundle exec jekyll build --destination _site",
+    "build": "npm run check:projection && npm run build:runnable && bundle exec jekyll build --destination _site",
     "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
     "check:playground": "node scripts/check-runnable-playground.mjs",
+    "check:projection": "node scripts/check-public-projection.mjs",
     "test:adapter": "npm --prefix vendor/runnable-code-blocks test",
-    "verify": "npm run test:adapter && npm run check:playground && npm run build && npm run check:links"
+    "test:projection": "node --test scripts/check-public-projection.test.mjs",
+    "verify": "npm run test:projection && npm run test:adapter && npm run check:playground && npm run build && npm run check:links"
   }
 }

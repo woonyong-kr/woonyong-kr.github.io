@@ -39,6 +39,9 @@ jobs:
       - name: Check runnable playground coverage
         run: npm run check:playground
 
+      - name: Check approved public projection boundary
+        run: npm run check:projection
+
       - name: Build runnable adapter
         run: npm run build:runnable
 

@@ -19,6 +19,10 @@ private / draft / publish 문서 상태  →  generated/public-content (read-onl
   Vault projection으로 교체할 때까지는 개인 지식 정본이 아닙니다.
 - `generated/public-content/`는 Vault compiler의 결과물만 받습니다. 이 저장소에서
   Markdown을 직접 고치지 않습니다.
+- `config/public-projection.yml`과 `npm run check:projection`은 projection Markdown에
+  `publication_state: publish`, projection hash, portable front matter가 있는지와
+  Obsidian wikilink·로컬 경로·private source link·session ID가 없는지를 검사합니다.
+  승인된 문서가 아직 없을 때는 빈 projection을 정상 상태로 처리합니다.
 - 표준 layout, sidebar, 검색, child navigation, typography는 `just-the-docs` gem이
   소유합니다. 이 저장소는 Just the Docs의 public extension point만 사용합니다.
 - 색상 변경은 기존 WN 정글 초록색 light/dark scheme으로 제한합니다. 첫 렌더와 실행 중
@@ -74,8 +78,9 @@ npm run verify
 bundle exec jekyll serve --destination _site
 ```
 
-`npm run verify`는 adapter unit test, 지원 언어/예제 일치 검사, Jekyll build, 내부 링크와
-페이지 anchor 검사를 순서대로 실행합니다. GitHub Actions도 같은 검증을 실행한 뒤에만
+`npm run verify`는 projection boundary unit test·검사, adapter unit test, 지원 언어/예제
+일치 검사, Jekyll build, 내부 링크와 페이지 anchor 검사를 순서대로 실행합니다. GitHub
+Actions도 같은 검증을 실행한 뒤에만
 Pages artifact를 올립니다.
 
 ## 배포

@@ -3,3 +3,16 @@ input_owner: Obsidian Vault
 write_policy: compiler-only
 publish_policy: approved-documents-only
 site_behavior: read-only-build-input
+required_front_matter:
+  - layout
+  - title
+  - nav_order
+  - permalink
+  - publication_state
+  - projection_id
+  - projection_sha256
+privacy_prohibited:
+  - obsidian-wikilink
+  - local-file-path
+  - private-source-link
+  - source-session-id
