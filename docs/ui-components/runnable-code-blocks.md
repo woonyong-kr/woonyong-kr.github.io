@@ -54,33 +54,251 @@ form, popup, top navigation, object 및 외부 resource를 차단합니다. 이 
 
 {% raw %}
 ```run-react
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
-export default function LearningCard() {
-  const [count, setCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const label = useMemo(() => `${count}개의 실험을 완료했어요`, [count]);
+const sessions = [
+  { id: "flow", eyebrow: "FLOW 01", title: "Layout rhythm", copy: "카드의 간격과 명암을 조율합니다.", time: "14 min" },
+  { id: "motion", eyebrow: "FLOW 02", title: "Motion language", copy: "움직임이 다음 행동을 자연스럽게 안내합니다.", time: "09 min" },
+  { id: "ship", eyebrow: "FLOW 03", title: "Ship the detail", copy: "작은 상태 변화까지 실제로 확인합니다.", time: "06 min" }
+];
+
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+export default function MotionLab() {
+  const [activeId, setActiveId] = useState("flow");
+  const [isRunning, setIsRunning] = useState(true);
+  const [secondsLeft, setSecondsLeft] = useState(18 * 60 + 42);
+  const [completed, setCompleted] = useState([]);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const closeButtonRef = useRef(null);
+  const activeSession = useMemo(
+    () => sessions.find((session) => session.id === activeId) ?? sessions[0],
+    [activeId]
+  );
+  const completion = Math.round((completed.length / sessions.length) * 100);
+
+  useEffect(() => {
+    if (!isRunning) return undefined;
+    const timer = window.setInterval(() => {
+      setSecondsLeft((value) => (value > 0 ? value - 1 : 18 * 60 + 42));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (!isReportOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setIsReportOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [isReportOpen]);
+
+  function toggleCompleted(id) {
+    setCompleted((items) =>
+      items.includes(id) ? items.filter((item) => item !== id) : [...items, id]
+    );
+  }
 
   return (
     <>
-      <section style={{ maxWidth: 420, padding: 24, borderRadius: 16, background: "#10251d", color: "#ecfff3", fontFamily: "system-ui" }}>
-        <p style={{ margin: 0, color: "#73e6a5", fontSize: 12, fontWeight: 800, letterSpacing: ".08em" }}>REACT PLAYGROUND</p>
-        <h2 style={{ margin: "10px 0 6px" }}>작게 만들고, 바로 확인하기</h2>
-        <p style={{ margin: "0 0 18px", color: "#c8d9cf" }}>{label}</p>
-        <button onClick={() => setCount((value) => value + 1)}>완료 +1</button>{" "}
-        <button onClick={() => setIsOpen(true)}>요약 보기</button>
-        <p style={{ margin: "16px 0 0", color: "#9fb9aa", fontSize: 12 }}>
-          {typeof createRoot === "function" ? "ReactDOMClient ready" : "Loading renderer"}
-        </p>
+      <style>{`
+        * { box-sizing: border-box; }
+        .motion-lab {
+          position: relative;
+          isolation: isolate;
+          overflow: hidden;
+          max-width: 760px;
+          min-height: 520px;
+          padding: clamp(20px, 4vw, 38px);
+          border: 1px solid rgb(255 255 255 / 12%);
+          border-radius: 28px;
+          background: #121815;
+          color: #f2fff6;
+          box-shadow: 0 30px 80px rgb(0 0 0 / 30%);
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        .motion-lab::before,
+        .motion-lab::after {
+          position: absolute;
+          z-index: -1;
+          width: 330px;
+          height: 330px;
+          border-radius: 999px;
+          content: "";
+          filter: blur(2px);
+          opacity: .85;
+          pointer-events: none;
+        }
+        .motion-lab::before {
+          top: -130px;
+          right: -110px;
+          background: radial-gradient(circle, rgb(0 217 112 / 38%), transparent 68%);
+          animation: motion-orbit 10s ease-in-out infinite alternate;
+        }
+        .motion-lab::after {
+          bottom: -180px;
+          left: -120px;
+          background: radial-gradient(circle, rgb(87 111 255 / 25%), transparent 67%);
+          animation: motion-orbit 13s ease-in-out infinite alternate-reverse;
+        }
+        .motion-lab button { font: inherit; }
+        .motion-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid rgb(255 255 255 / 10%);
+        }
+        .motion-brand, .motion-status { display: inline-flex; align-items: center; gap: 9px; }
+        .motion-brand { color: #f2fff6; font-size: 13px; font-weight: 800; letter-spacing: .12em; }
+        .motion-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: #00d970;
+          box-shadow: 0 0 0 6px rgb(0 217 112 / 12%), 0 0 22px rgb(0 217 112 / 60%);
+          animation: motion-pulse 1.8s ease-out infinite;
+        }
+        .motion-status { color: #b9c9bd; font-size: 12px; }
+        .motion-status strong { color: #7df0ab; font-weight: 750; }
+        .motion-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 26px; align-items: end; padding: 34px 0 28px; }
+        .motion-eyebrow { margin: 0 0 10px; color: #7df0ab; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+        .motion-title { max-width: 560px; margin: 0; font-size: clamp(32px, 7vw, 58px); letter-spacing: -.06em; line-height: .96; }
+        .motion-copy { max-width: 480px; margin: 16px 0 0; color: #b9c9bd; font-size: 15px; line-height: 1.65; }
+        .motion-timer {
+          min-width: 126px;
+          padding: 16px 17px;
+          border: 1px solid rgb(255 255 255 / 12%);
+          border-radius: 18px;
+          background: rgb(7 13 10 / 55%);
+          box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+          text-align: right;
+        }
+        .motion-timer span { display: block; color: #9fb6a6; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+        .motion-timer strong { display: block; margin-top: 5px; color: #f2fff6; font-size: 27px; letter-spacing: -.06em; }
+        .motion-progress { height: 8px; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / 10%); }
+        .motion-progress span { display: block; width: ${completion}%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #00d970, #a4ffbf); box-shadow: 0 0 18px rgb(0 217 112 / 60%); transition: width 520ms cubic-bezier(.22, 1, .36, 1); }
+        .motion-progress-meta { display: flex; justify-content: space-between; margin: 10px 1px 24px; color: #9fb6a6; font-size: 12px; }
+        .motion-progress-meta strong { color: #dfffe8; }
+        .motion-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .motion-card {
+          position: relative;
+          min-height: 188px;
+          padding: 18px;
+          border: 1px solid rgb(255 255 255 / 9%);
+          border-radius: 18px;
+          background: rgb(255 255 255 / 5%);
+          color: inherit;
+          cursor: pointer;
+          text-align: left;
+          transition: border-color 220ms ease, background-color 220ms ease, transform 220ms cubic-bezier(.22, 1, .36, 1), box-shadow 220ms ease;
+          animation: motion-enter 620ms both;
+        }
+        .motion-card:nth-child(2) { animation-delay: 90ms; }
+        .motion-card:nth-child(3) { animation-delay: 180ms; }
+        .motion-card:hover { transform: translateY(-5px); border-color: rgb(125 240 171 / 55%); background: rgb(0 217 112 / 9%); box-shadow: 0 18px 36px rgb(0 0 0 / 18%); }
+        .motion-card[aria-pressed="true"] { border-color: #00d970; background: linear-gradient(145deg, rgb(0 217 112 / 18%), rgb(255 255 255 / 5%)); }
+        .motion-card:focus-visible, .motion-action:focus-visible, .motion-icon-button:focus-visible, .motion-close:focus-visible { outline: 3px solid #a4ffbf; outline-offset: 3px; }
+        .motion-card small { color: #8fb49b; font-size: 10px; font-weight: 850; letter-spacing: .12em; }
+        .motion-card h3 { margin: 42px 0 9px; font-size: 19px; letter-spacing: -.04em; }
+        .motion-card p { margin: 0; color: #b9c9bd; font-size: 13px; line-height: 1.55; }
+        .motion-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 17px; color: #dfffe8; font-size: 12px; font-weight: 750; }
+        .motion-check { display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid rgb(255 255 255 / 24%); border-radius: 999px; color: transparent; transition: all 220ms ease; }
+        .motion-card.is-complete .motion-check { border-color: #00d970; background: #00d970; color: #062414; transform: scale(1.05); }
+        .motion-controlbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding-top: 22px; border-top: 1px solid rgb(255 255 255 / 10%); }
+        .motion-active { min-width: 0; }
+        .motion-active span { display: block; overflow: hidden; color: #8fb49b; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-overflow: ellipsis; white-space: nowrap; }
+        .motion-active strong { display: block; margin-top: 4px; font-size: 15px; }
+        .motion-actions { display: flex; gap: 8px; }
+        .motion-icon-button, .motion-action, .motion-close { border: 0; cursor: pointer; }
+        .motion-icon-button { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; background: rgb(255 255 255 / 9%); color: #f2fff6; transition: transform 180ms ease, background-color 180ms ease; }
+        .motion-icon-button:hover { background: rgb(255 255 255 / 16%); transform: scale(1.04); }
+        .motion-action { min-width: 112px; padding: 0 16px; border-radius: 13px; background: #00d970; color: #062414; font-weight: 850; transition: transform 180ms ease, box-shadow 180ms ease; }
+        .motion-action:hover { box-shadow: 0 11px 25px rgb(0 217 112 / 25%); transform: translateY(-2px); }
+        .motion-modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgb(2 8 5 / 68%); backdrop-filter: blur(12px); animation: motion-fade 180ms ease-out; }
+        .motion-modal { width: min(100%, 420px); padding: 26px; border: 1px solid rgb(255 255 255 / 16%); border-radius: 22px; background: #18231d; box-shadow: 0 30px 90px rgb(0 0 0 / 48%); animation: motion-modal 300ms cubic-bezier(.22, 1, .36, 1); }
+        .motion-modal h2 { margin: 18px 0 8px; font-size: 28px; letter-spacing: -.05em; }
+        .motion-modal p { margin: 0; color: #b9c9bd; line-height: 1.65; }
+        .motion-modal dl { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin: 24px 0; padding: 17px; border-radius: 15px; background: rgb(255 255 255 / 6%); }
+        .motion-modal dt { color: #9fb6a6; } .motion-modal dd { margin: 0; color: #f2fff6; font-weight: 800; }
+        .motion-close { width: 100%; min-height: 44px; border-radius: 12px; background: #00d970; color: #062414; font-weight: 850; }
+        .motion-runtime { margin: 16px 0 0; color: #8fb49b; font-size: 11px; }
+        @keyframes motion-orbit { to { transform: translate3d(-26px, 32px, 0) scale(1.12); } }
+        @keyframes motion-pulse { 0%, 100% { box-shadow: 0 0 0 6px rgb(0 217 112 / 12%), 0 0 18px rgb(0 217 112 / 45%); } 50% { box-shadow: 0 0 0 11px rgb(0 217 112 / 0%), 0 0 28px rgb(0 217 112 / 75%); } }
+        @keyframes motion-enter { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes motion-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes motion-modal { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 620px) { .motion-hero { grid-template-columns: 1fr; } .motion-timer { width: 100%; text-align: left; } .motion-grid { grid-template-columns: 1fr; } .motion-card { min-height: 142px; } .motion-card h3 { margin-top: 24px; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+      `}</style>
+      <section className="motion-lab" aria-label="Motion Lab React demo">
+        <header className="motion-topbar">
+          <div className="motion-brand"><span className="motion-dot" />MOTION LAB</div>
+          <div className="motion-status"><strong>{isRunning ? "LIVE" : "PAUSED"}</strong> · React sandbox</div>
+        </header>
+
+        <div className="motion-hero">
+          <div>
+            <p className="motion-eyebrow">MAKE THE NEXT MOVE OBVIOUS</p>
+            <h1 className="motion-title">Design that feels alive.</h1>
+            <p className="motion-copy">React state가 카드 선택, 진행률, timer, modal을 연결합니다. 버튼을 눌러 실제 화면의 리듬을 바꿔보세요.</p>
+          </div>
+          <div className="motion-timer" aria-live="polite"><span>FOCUS CLOCK</span><strong>{formatTime(secondsLeft)}</strong></div>
+        </div>
+
+        <div className="motion-progress" role="progressbar" aria-label="완료한 flow" aria-valuemin="0" aria-valuemax="100" aria-valuenow={completion}><span /></div>
+        <div className="motion-progress-meta"><span>{completed.length} of {sessions.length} flows complete</span><strong>{completion}%</strong></div>
+
+        <div className="motion-grid">
+          {sessions.map((session) => {
+            const isComplete = completed.includes(session.id);
+            return (
+              <button
+                key={session.id}
+                type="button"
+                className={`motion-card${activeId === session.id ? " is-active" : ""}${isComplete ? " is-complete" : ""}`}
+                aria-pressed={activeId === session.id}
+                onClick={() => { setActiveId(session.id); toggleCompleted(session.id); }}
+              >
+                <small>{session.eyebrow}</small>
+                <h3>{session.title}</h3>
+                <p>{session.copy}</p>
+                <div className="motion-card-footer"><span>{session.time}</span><span className="motion-check" aria-label={isComplete ? "완료됨" : "완료로 표시"}>✓</span></div>
+              </button>
+            );
+          })}
+        </div>
+
+        <footer className="motion-controlbar">
+          <div className="motion-active"><span>NOW EXPLORING</span><strong>{activeSession.title}</strong></div>
+          <div className="motion-actions">
+            <button className="motion-icon-button" type="button" aria-label={isRunning ? "Timer pause" : "Timer resume"} onClick={() => setIsRunning((value) => !value)}>{isRunning ? "Ⅱ" : "▶"}</button>
+            <button className="motion-action" type="button" onClick={() => setIsReportOpen(true)}>View report</button>
+          </div>
+        </footer>
+        <p className="motion-runtime">{typeof createRoot === "function" ? "ReactDOMClient ready · keyboard focus supported" : "Loading React renderer"}</p>
       </section>
-      {isOpen && createPortal(
-        <div role="dialog" aria-modal="true" aria-label="실험 요약" style={{ position: "fixed", inset: 0, display: "grid", placeItems: "center", background: "rgb(0 0 0 / 56%)", fontFamily: "system-ui" }}>
-          <article style={{ width: "min(360px, calc(100% - 32px))", padding: 24, borderRadius: 16, background: "white", color: "#18231d", boxShadow: "0 20px 70px rgb(0 0 0 / 30%)" }}>
-            <h3 style={{ marginTop: 0 }}>오늘의 실험</h3>
-            <p>{label}</p>
-            <button onClick={() => setIsOpen(false)}>계속 만들기</button>
+
+      {isReportOpen && createPortal(
+        <div className="motion-modal-backdrop" role="presentation" onMouseDown={() => setIsReportOpen(false)}>
+          <article className="motion-modal" role="dialog" aria-modal="true" aria-label="Motion Lab report" onMouseDown={(event) => event.stopPropagation()}>
+            <p className="motion-eyebrow">SESSION REPORT</p>
+            <h2>작은 변화도<br />사용자에게 보여주세요.</h2>
+            <p>선택한 flow와 완료 상태는 React state에서 파생되고, modal은 닫힐 때 DOM에서 제거됩니다.</p>
+            <dl><dt>Active flow</dt><dd>{activeSession.title}</dd><dt>Completion</dt><dd>{completion}%</dd><dt>Clock</dt><dd>{formatTime(secondsLeft)}</dd></dl>
+            <button ref={closeButtonRef} className="motion-close" type="button" onClick={() => setIsReportOpen(false)}>계속 만들기</button>
           </article>
         </div>,
         document.body
