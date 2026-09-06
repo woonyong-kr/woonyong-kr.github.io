@@ -1,0 +1,31 @@
+/* WN Docs-only responsive refinements. The upstream Just the Docs table rules stay untouched. */
+@media (max-width: 40rem) {
+  #실행-경계 + .table-wrapper {
+    overflow-x: visible;
+  }
+
+  #실행-경계 + .table-wrapper table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  #실행-경계 + .table-wrapper th,
+  #실행-경계 + .table-wrapper td {
+    padding: 0.5rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  #실행-경계 + .table-wrapper th:nth-child(1),
+  #실행-경계 + .table-wrapper td:nth-child(1),
+  #실행-경계 + .table-wrapper th:nth-child(3),
+  #실행-경계 + .table-wrapper td:nth-child(3) {
+    width: 29%;
+  }
+
+  #실행-경계 + .table-wrapper th:nth-child(2),
+  #실행-경계 + .table-wrapper td:nth-child(2) {
+    width: 42%;
+  }
+}
