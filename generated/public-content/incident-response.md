@@ -1,17 +1,20 @@
 ---
 layout: default
-title: Incident 대응
-nav_order: 1
+title: 장애 대응
+nav_order: 12
 permalink: /wiki/incident-response/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/platform-delivery-operations/service-operations/incident-response
-projection_sha256: d0124be6defb8d09bb67cb048d28beb7dcd34e36e836e82ddd6c1820ee114eb0
-parent: 서비스 운영
-grand_parent: 플랫폼·전달·운영
+has_toc: true
+projection_id: Wiki/platform-delivery-operations/incident-response
+projection_sha256: ff3489a806ce6b994dfd28ce7a3616e595b83d12d1eacd3bd3ed5399329c6430
+parent: 플랫폼
+content_status: planned
+public_parent_id: Wiki/platform-delivery-operations
 ---
 
-# Incident 대응
+# 장애 대응
 {: .no_toc }
 
-<!-- Incident 대응의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

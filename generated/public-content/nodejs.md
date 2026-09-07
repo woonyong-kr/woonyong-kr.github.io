@@ -1,17 +1,21 @@
 ---
 layout: default
 title: Node.js
-nav_order: 2
+nav_order: 3
 permalink: /wiki/nodejs/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/programming-languages-runtime/runtime-build/nodejs
-projection_sha256: 96b7cf4e7b10619cf77f3b1520684449ae9c25689ce0a70d766063ca88d968a5
-parent: 런타임·빌드
-grand_parent: 프로그래밍 언어·런타임
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/nodejs
+projection_sha256: ceb9ed1d27df39b6188093f97063107fb3c38decbe0c43e9336babbeef57b93a
+parent: Runtime
+content_status: planned
+public_parent_id: Wiki/keywords/programming-languages-runtime-topic-a5b710f9d5d9
+grand_parent: 프로그래밍
 ---
 
 # Node.js
 {: .no_toc }
 
-<!-- Node.js의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

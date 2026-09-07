@@ -6,3 +6,8 @@ vendor/bundle/
 vendor/runnable-code-blocks/node_modules/
 assets/js/runnable-code-blocks.js
 assets/css/runnable-code-blocks.css
+
+node_modules/
+assets/js/runnable/
+test-results/
+playwright-report/

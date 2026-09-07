@@ -6,13 +6,13 @@
   --background-modifier-border: #eeebee;
   --background-modifier-border-focus: #00863f;
   --background-modifier-hover: rgb(0 134 63 / 10%);
-  --code-comment: #8c8c8c;
+  --code-comment: #6a6a6a;
   --code-function: #00627a;
   --code-important: #7a3e9d;
   --code-keyword: #0033b3;
   --code-normal: #080808;
-  --code-string: #067d17;
-  --code-tag: #9e880d;
+  --code-string: #066b14;
+  --code-tag: #756400;
   --code-value: #1750eb;
   --color-green: #00863f;
   --divider-color: #eeebee;
@@ -27,7 +27,7 @@
   --interactive-accent-hover: #006a32;
   --radius-s: 6px;
   --text-error: #c5221f;
-  --text-muted: #6a737d;
+  --text-muted: #626a73;
   --text-normal: #3f3d48;
   --text-on-accent: #ffffff;
   --text-success: #00863f;

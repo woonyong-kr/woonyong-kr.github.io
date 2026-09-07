@@ -1,17 +1,21 @@
 ---
 layout: default
 title: Java
-nav_order: 4
+nav_order: 3
 permalink: /wiki/java/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/programming-languages-runtime/languages/java
-projection_sha256: 26985caaa3247405684a2484676174e3561cc8f8d6256a5850ca54c45801f8a7
-parent: 언어
-grand_parent: 프로그래밍 언어·런타임
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/java
+projection_sha256: 7fbd11c6073015455f5a9f9a186e83c1585443fd4740a30cea50f84090c3321e
+parent: 프로그래밍 언어
+content_status: planned
+public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
+grand_parent: 프로그래밍
 ---
 
 # Java
 {: .no_toc }
 
-<!-- Java의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

@@ -1,14 +1,20 @@
 {
   "private": true,
   "scripts": {
-    "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
-    "build": "npm run check:projection && npm run build:runnable && bundle exec jekyll build --destination _site",
-    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
-    "check:playground": "node scripts/check-runnable-playground.mjs",
+    "check:types": "vendor/runnable-code-blocks/node_modules/.bin/tsc --noEmit",
     "check:projection": "node scripts/check-public-projection.mjs",
-    "check:theme-bootstrap": "node scripts/check-theme-bootstrap.mjs",
-    "test:adapter": "npm --prefix vendor/runnable-code-blocks test",
-    "test:projection": "node --test scripts/check-public-projection.test.mjs",
-    "verify": "npm run test:projection && npm run test:adapter && npm run check:playground && npm run build && npm run check:theme-bootstrap && npm run check:links"
+    "check:playground": "node scripts/check-runnable-playground.mjs",
+    "test": "node --test scripts/*.test.mjs && bundle exec ruby scripts/test-wiki-visibility.rb",
+    "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
+    "build": "npm run check:projection && npm run build:runnable && node scripts/build-site.mjs",
+    "check:built": "node scripts/check-built-site.mjs",
+    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
+    "test:browser": "playwright test",
+    "verify": "npm run check:types && npm test && npm run check:playground && npm run build && npm run check:built && npm run check:links && npm run test:browser"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "parse5": "^8.0.1",
+    "yaml": "^2.9.0"
   }
 }

@@ -9,5 +9,6 @@ gem "jekyll-sitemap"
 
 group :development do
   gem "html-proofer", "~> 5.2"
+  gem "minitest", "~> 5.25"
   gem "webrick"
 end

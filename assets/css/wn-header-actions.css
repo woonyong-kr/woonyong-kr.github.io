@@ -32,9 +32,13 @@
 [data-wn-theme="dark"] .wn-header-action {
   color: #bab9c3;
 }
+@media (prefers-color-scheme: dark) {
+  html:not([data-wn-theme]) .wn-header-action { color: #bab9c3; }
+}
 
 .wn-header-action:focus-visible {
-  outline: 0;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
   color: #00863f;
 }
 

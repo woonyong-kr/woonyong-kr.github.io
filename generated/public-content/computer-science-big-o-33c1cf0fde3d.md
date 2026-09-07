@@ -1,0 +1,21 @@
+---
+layout: default
+title: Big O
+nav_order: 2
+permalink: /wiki/computer-science-big-o-33c1cf0fde3d/
+publication_state: publish
+has_toc: true
+projection_id: Wiki/keywords/computer-science-big-o-33c1cf0fde3d
+projection_sha256: 5d6c69c129a6bc8873ab4527766ee1065600c9bceec633000028e24fe15bebd5
+parent: 복잡도
+content_status: planned
+public_parent_id: Wiki/computer-science/complexity
+grand_parent: CS
+---
+
+# Big O
+{: .no_toc }
+
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

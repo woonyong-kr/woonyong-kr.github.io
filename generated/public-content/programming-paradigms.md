@@ -1,17 +1,20 @@
 ---
 layout: default
-title: 객체지향·함수형 패러다임
-nav_order: 4
+title: 프로그래밍 패러다임
+nav_order: 5
 permalink: /wiki/programming-paradigms/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/programming-languages-runtime/language-common/programming-paradigms
-projection_sha256: 443f0574c047a8f61b3cd5762ec1aa590d7640d4eaf92ac82baec69f457918a3
-parent: 언어 공통
-grand_parent: 프로그래밍 언어·런타임
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/programming-paradigms
+projection_sha256: 03a230b6b8690ec961a37d38fd11729844d81ebe3742007e497be917415c3091
+parent: 프로그래밍
+content_status: planned
+public_parent_id: Wiki/programming-languages-runtime
 ---
 
-# 객체지향·함수형 패러다임
+# 프로그래밍 패러다임
 {: .no_toc }
 
-<!-- 객체지향·함수형 패러다임의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

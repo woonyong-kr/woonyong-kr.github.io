@@ -1,17 +1,21 @@
 ---
 layout: default
 title: Redis
-nav_order: 1
+nav_order: 12
 permalink: /wiki/redis/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/data-storage/cache-search/redis
-projection_sha256: b844c6e19e74834f8d1d2b67e92e58d10e8e68517ab747a5b6d25993f0b92d4a
-parent: 캐시·검색
-grand_parent: 데이터·저장소
+has_toc: true
+projection_id: Wiki/data-storage/redis
+projection_sha256: 3aa9b847fa271d49163794740e899641ac4059d24871388698f441dbfabc0c8a
+parent: Database
+content_status: planned
+public_parent_id: Wiki/data-storage
+grand_parent: Data
 ---
 
 # Redis
 {: .no_toc }
 
-<!-- Redis의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

@@ -1,27 +1,18 @@
 ---
 layout: default
-title: 컴퓨터 과학 기초
+title: CS
 nav_order: 2
 permalink: /wiki/computer-science/
 publication_state: publish
-has_toc: false
+has_toc: true
 projection_id: Wiki/computer-science
-projection_sha256: 2acc81eeed83442d88b2a5818a7478bb72110c6898fe0df0c6974cb3233955ea
+projection_sha256: 40f427c252942f8f494c1bc2c31d74c292e4c1c0a0b0f75315d2fbf3e4aa8769
+content_status: overview
 ---
 
-# 컴퓨터 과학 기초
+# CS
 {: .no_toc }
 
-## 목차
-{: .no_toc .text-delta }
+프로그램을 작성하다 보면 같은 결과를 내는 코드라도 데이터가 많아질수록 실행 시간이 크게 달라진다. 자료를 어떻게 저장하고 처리하는지 살펴보면 이런 차이를 설명할 수 있다.
 
-1. TOC
-{:toc}
-
-## 계산의 기초
-- [자료구조](/wiki/data-structures/)
-- [알고리즘](/wiki/algorithms/)
-- [계산 복잡도](/wiki/computational-complexity/)
-
-
-<!-- 컴퓨터 과학 기초의 정의와 학습 내용을 이 페이지에 정리한다. -->
+자료구조와 알고리즘에서 출발해 복잡도로 비용을 비교하고, 수학을 통해 논리와 계산의 근거를 다룬다.

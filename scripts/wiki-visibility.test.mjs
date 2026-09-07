@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtemp, mkdir, readFile, rm, writeFile, access } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import test from 'node:test';
+
+test('Jekyll visibility switch changes HTML, navigation, search and sitemap together', async () => {
+  const root = await mkdtemp(resolve(tmpdir(), 'wn-visibility-'));
+  const source = resolve(root, 'source');
+  const output = resolve(root, 'output');
+  await mkdir(resolve(source, '_layouts'), { recursive: true });
+  await writeFile(resolve(source, '_layouts/default.html'), '<main>{{ content }}</main><nav>{% for item in site.pages %}{% if item.projection_id %}<a href="{{ item.url }}">{{ item.title }}</a>{% endif %}{% endfor %}</nav>');
+  const pages = [['root', 'overview', ''], ['branch', 'planned', 'root'], ['ready', 'ready', 'branch'], ['future', 'planned', 'branch']];
+  for (const [id, status, parent] of pages) await writeFile(resolve(source, `${id}.md`), `---\nlayout: default\ntitle: ${id}\npermalink: /wiki/${id}/\nprojection_id: ${id}\ncontent_status: ${status}\n${parent ? `public_parent_id: ${parent}\n` : ''}---\n\n# ${id}\n`);
+  await writeFile(resolve(source, 'search.json'), '---\n---\n[{% assign pages = site.pages | where_exp: "p", "p.projection_id" %}{% for p in pages %}{{ p.url | jsonify }}{% unless forloop.last %},{% endunless %}{% endfor %}]');
+  try {
+    for (const visible of [false, true]) {
+      const config = { source, destination: output, config: [], quiet: true, url: 'https://docs.example.com', plugins: ['jekyll-sitemap'], plugins_dir: [resolve(import.meta.dirname, '../_plugins')], wiki_show_planned: visible };
+      execFileSync('bundle', ['exec', 'ruby', '-rjekyll', '-rjson', '-e', 'Jekyll::Site.new(Jekyll.configuration(JSON.parse(STDIN.read))).process'], { input: JSON.stringify(config), encoding: 'utf8' });
+      const home = await readFile(resolve(output, 'wiki/root/index.html'), 'utf8');
+      const search = JSON.parse(await readFile(resolve(output, 'search.json'), 'utf8'));
+      const sitemap = await readFile(resolve(output, 'sitemap.xml'), 'utf8');
+      assert.deepEqual(search.sort(), (visible ? ['/wiki/root/', '/wiki/branch/', '/wiki/ready/', '/wiki/future/'] : ['/wiki/root/', '/wiki/branch/', '/wiki/ready/']).sort());
+      assert.equal(home.includes('href="/wiki/future/"'), visible);
+      assert.equal(sitemap.includes('/wiki/future/'), visible);
+      if (visible) await access(resolve(output, 'wiki/future/index.html'));
+      else await assert.rejects(access(resolve(output, 'wiki/future/index.html')));
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

@@ -1,103 +1,90 @@
 # WN Docs
 
-WN Docs의 테마 소스와 GitHub Pages 배포 원본입니다. 공개 문서의 내용 정본은
-private Obsidian Vault에 있고, 이 저장소는 승인된 문서 projection과 그 문서를
-읽는 테마만 관리합니다.
+Just the Docs와 GitHub Pages로 운영하는 공개 문서 사이트입니다. 내용 정본은 private
+Obsidian Vault에 있고, 이 저장소는 승인된 projection과 테마·웹 실행 연결을 관리합니다.
 
 ## 소유 경계
 
-```text
-Obsidian Vault                         WN Docs (this repository)
-──────────────────────────────────     ─────────────────────────────────────────
-private / draft / publish 문서 상태  →  generated/public-content (read-only projection)
-공개 승인된 Markdown 원본            →  Just the Docs 기반 WN Docs theme
-근거·승인 기록                       →  Runnable Code Blocks web adapter
-                                      →  GitHub Actions → GitHub Pages
-```
+- `generated/public-content/`는 Vault producer의 결과입니다. 생성 Markdown과
+  `projection_sha256`를 사이트에서 수동 수정하거나 재계산하지 않습니다.
+- 공개 검사는 YAML parser와 schema, ID·permalink 유일성, 파일 유형을 검사합니다.
+  Jekyll 빌드 후에는 정규화한 렌더링 URL, 검색·sitemap, 전체 배포 파일 목록도 검사합니다.
+- `docs/`에는 기존 URL의 [실행 showcase](https://docs.woonyong.com/docs/ui-components/runnable-code-blocks/)만
+  남습니다. 종료 주소는 404를 반환합니다. 작은 회귀 fixture는 `tests/fixtures/`에 있고 배포되지 않습니다.
+- 표준 layout·검색·navigation은 Just the Docs gem을 사용합니다. 기본 stylesheet가 light를
+  담당하고 custom dark를 추가합니다. 작은 upstream navigation 보조 stylesheet는 유지합니다.
+- 테마 수동 선택은 현재 페이지에서만 유지합니다. 다음 페이지는 OS 설정을 따릅니다.
+- `wiki_show_planned`는 승인된 공개 projection의 작성 예정 문서 표시 설정입니다.
+  false이면 준비된 문서와 그 조상만 출력합니다. 공개 승인 자체를 바꾸는 설정은 아닙니다.
 
-- `docs/`는 현재 Just the Docs 공식 데모를 비교하기 위해 둔 초기 문서 집합입니다.
-  Vault projection으로 교체할 때까지는 개인 지식 정본이 아닙니다.
-- `generated/public-content/`는 Vault compiler의 결과물만 받습니다. 이 저장소에서
-  Markdown을 직접 고치지 않습니다.
-- Map·hub 문서의 직접 하위 키워드는 공개 본문에서도 그룹별 링크로 유지합니다.
-  같은 제목이 다른 branch에 있을 때는 projection이 `parent`, `grand_parent`,
-  `ancestor`를 함께 기록해 Just the Docs가 서로 다른 경로를 구분합니다.
-- `config/public-projection.yml`과 `npm run check:projection`은 projection Markdown에
-  `publication_state: publish`, projection hash, portable front matter가 있는지와
-  Obsidian wikilink·로컬 경로·private source link·session ID가 없는지를 검사합니다.
-  승인된 문서가 아직 없을 때는 빈 projection을 정상 상태로 처리합니다.
-- 표준 layout, sidebar, 검색, child navigation, typography는 `just-the-docs` gem이
-  소유합니다. 이 저장소는 Just the Docs의 public extension point만 사용합니다.
-- 색상 변경은 기존 WN 정글 초록색 light/dark scheme으로 제한합니다. 첫 페인트 전에
-  `prefers-color-scheme`과 일치하는 stylesheet를 선택하고, header의 수동 토글은 현재
-  페이지에서만 전환하며 별도의 사용자 설정을 저장하지 않습니다.
+## 실행 방식
 
-## Runnable Code Blocks
+`vendor/runnable-code-blocks`는 [공통 원본](https://github.com/woonyong-kr/obsidian-runnable-code-blocks)의
+검증된 Git submodule commit입니다. 공통 동작은 원본에서 수정하고 사이트에서 복제하지 않습니다.
 
-`vendor/runnable-code-blocks`는 [obsidian-runnable-code-blocks](https://github.com/woonyong-kr/obsidian-runnable-code-blocks)의
-검토된 commit을 가리키는 Git submodule입니다. `tools/runnable-code-blocks.ts`가 그
-공통 runner를 정적 웹 adapter로 bundle하고, `run-<language>` fenced block만 실행 UI로
-바꿉니다.
+일반 문서는 작은 탐색 코드만 내려받습니다. 원래 코드는 즉시 읽을 수 있고, 편집기는
+viewport의 200px 이내 또는 사용자가 코드에 접근할 때 준비합니다. React·TypeScript는
+해당 언어 실행 시 로드됩니다. 웹 bundle은 ESM chunk이고 Obsidian 배포물은 단일 bundle입니다.
 
-- 실행 가능한 언어와 각 provider는 plugin source의 `SUPPORTED_LANGUAGES`가 정본입니다.
-- JavaScript, TypeScript, HTML, CSS는 브라우저의 격리된 실행/preview를 사용합니다.
-- 준비된 container 언어는 실행 버튼을 누른 경우에만 `runner.woonyong.com`으로 source를
-  보내며, WN Docs에서는 named public provider fallback을 사용하지 않습니다.
-- 전체 예제는 [Runnable Code Blocks](https://docs.woonyong.com/docs/ui-components/runnable-code-blocks/)에서
-  언어별로 확인할 수 있습니다.
+브라우저 언어는 Worker 또는 sandbox preview를 사용합니다. 나머지는 현재 개인 실행 서버를
+사용하며 Run 전에는 source를 보내지 않습니다. 외부 공개 provider로 자동 전환하지 않습니다.
 
-### Adapter 업데이트
+- capabilities deadline: 2.5초. 실행 deadline: 전송 재시도를 포함해 22초.
+- 전송 실패만 같은 request ID로 최대 한 번 재시도합니다. 취소·timeout·429는 자동 재실행하지 않습니다.
+- JSON 응답은 최대 1MiB이며 header와 body 모두 deadline·취소 범위에 포함됩니다.
+- 서버 사용 불가 상태는 다시 확인, online 전환, 탭 복귀로 복구합니다. 편집 내용과 출력은 유지합니다.
+- 최초 module 다운로드 실패는 본문을 보존하고 새로고침 동작을 제공합니다. 브라우저가 실패한 module import를 현재 문서에 캐시하기 때문입니다. 이 단계에는 아직 생성된 편집기가 없습니다.
+- HTTP 중단은 응답 대기를 중단합니다. 서버 작업 종료를 보장하지 않습니다.
+- Preview 중단·재시작은 제공하지만, iframe에서 CPU 무한 반복의 강제 종료는 보장하지 않습니다.
 
-plugin 변경을 자동으로 따라가지 않습니다. 아래처럼 commit을 의도적으로 검토·고정한 뒤,
-테스트와 사이트 build를 모두 통과시켜야 합니다.
+## 로컬 검증
 
-```bash
-git submodule update --init --recursive
-git -C vendor/runnable-code-blocks fetch origin
-git -C vendor/runnable-code-blocks checkout <reviewed-commit>
-npm --prefix vendor/runnable-code-blocks ci
-npm --prefix vendor/runnable-code-blocks test
-npm run check:playground
-npm run build
-npm run check:links
-git add vendor/runnable-code-blocks assets/js/runnable-code-blocks.js assets/css/runnable-code-blocks.css
-```
-
-`check:playground`는 plugin의 지원 언어 목록이 runnable examples 페이지에 모두
-포함되는지 확인합니다. React는 모션·상태·접근성처럼 학습 목적별 예제를 여러 개 둘 수 있고,
-나머지 언어는 하나의 대표 예제를 유지합니다.
-
-## 로컬 실행과 검증
-
-`.ruby-version`의 Ruby 3.2.9와 Node.js 22가 필요합니다. macOS 기본 Ruby 2.6은
-`Gemfile.lock`의 Bundler를 만족하지 않으므로 사용하지 않습니다. rbenv를 쓰는 환경에서는
-`rbenv shell 3.2.9`를 먼저 실행합니다.
+Node.js 22와 `.ruby-version`의 Ruby 3.2.9가 필요합니다. macOS 기본 Ruby 2.6은 사용하지 않습니다.
 
 ```bash
 git clone --recurse-submodules https://github.com/woonyong-kr/woonyong-kr.github.io.git
 cd woonyong-kr.github.io
-rbenv shell 3.2.9 # rbenv를 쓰는 경우
+rbenv shell 3.2.9
+npm ci
 npm --prefix vendor/runnable-code-blocks ci
 bundle install
+npx playwright install chromium firefox webkit
 npm run verify
 bundle exec jekyll serve --destination _site
 ```
 
-`npm run verify`는 projection boundary unit test·검사, adapter unit test, 지원 언어/예제
-일치 검사, Jekyll build, 내부 링크와 페이지 anchor 검사를 순서대로 실행합니다. GitHub
-Actions도 같은 검증을 실행한 뒤에만
-Pages artifact를 올립니다.
+`npm run verify`는 타입 검사, 공개 경계/Jekyll 통합 테스트, fence 예제 계약, projection 검사,
+ESM·Jekyll build, 최종 파일/URL 검사, 내부 링크 검사, 실제 산출물 Playwright를 한 번씩 실행합니다.
+Chromium은 전체 시나리오, Firefox·WebKit은 문서·테마·기본 실행·복구 시나리오를 검사합니다.
+브라우저 테스트의 개인 서버는 로컬 fixture로 대체하며 source를 실제 서버로 전송하지 않습니다.
 
-## 배포
+로컬 최종 전달 전에는 Woon producer가 설치된 Python 환경에서 읽기 전용 bytes 비교를 추가합니다.
+CI에는 private Vault가 없으므로 이 검사는 로컬 전달 gate입니다.
 
-`main`에 push하면 `.github/workflows/deploy.yml`이 build와 검증을 거쳐 GitHub Pages에
-배포합니다. 배포 결과는 [Actions](https://github.com/woonyong-kr/woonyong-kr.github.io/actions)와
-[https://docs.woonyong.com/](https://docs.woonyong.com/)에서 확인합니다.
+```bash
+python3 scripts/check-projection-source.py --vault <canonical-vault>
+```
 
-배포 전에는 다음을 확인합니다.
+불일치하면 Vault producer 소유 작업에서 재생성하고 다시 비교합니다. 생성 파일의 수동 보정은 금지합니다.
 
-1. `git status --short`로 변경 범위와 submodule pointer를 확인한다.
-2. `npm run verify`를 통과시킨다.
-3. runnable page에서 적어도 browser runner 하나를 실제 실행하고, light/dark 렌더와
-   console 오류를 확인한다.
-4. push 뒤에는 Actions 성공과 라이브 페이지의 build 결과를 재확인한다.
+## Adapter 갱신과 배포
+
+1. 공통 원본에서 `npm run verify`를 통과시키고 commit을 원격에 먼저 올립니다.
+2. 사이트 submodule을 그 commit으로 고정하고 사이트의 `npm run verify`를 실행합니다.
+3. 사이트 commit은 submodule만 stage합니다. bundle·CSS·`_site`는 생성물이므로 Git에 추가하지 않습니다.
+
+```bash
+git -C vendor/runnable-code-blocks fetch origin
+git -C vendor/runnable-code-blocks checkout <verified-remote-commit>
+npm --prefix vendor/runnable-code-blocks ci
+npm run verify
+git add vendor/runnable-code-blocks
+```
+
+PR은 검증만 실행합니다. 검증된 main 산출물만 Pages에 배포하며 Pages·OIDC 권한은 deploy job에 한정합니다.
+`build-info.json`에는 site SHA, adapter SHA, 공개 자산 해시만 포함합니다. private receipt나 Vault 경로는 없습니다.
+배포 후 live build 정보·자산을 대조하고 홈·Wiki·showcase, 테마, 브라우저 실행과 개인 서버 실행을 확인합니다.
+개인 서버 offline은 문서 사이트 장애와 구분해 기록합니다.
+
+되돌릴 때는 직전 검증된 site commit과 adapter 조합으로 revert합니다. 생성 bundle 교체나 history 재작성으로
+되돌리지 않습니다. 테스트 변경 근거와 측정 결과는 [QUALITY.md](QUALITY.md)에 기록합니다.

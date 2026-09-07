@@ -1,8 +1,10 @@
 ---
 layout: default
 title: Runnable Code Blocks
-parent: UI Components
-nav_order: 8
+nav_order: 1000
+nav_exclude: true
+search_exclude: false
+permalink: /docs/ui-components/runnable-code-blocks/
 ---
 
 # Runnable Code Blocks
@@ -13,6 +15,7 @@ nav_order: 8
 페이지의 Markdown에 저장되지 않습니다.
 
 ## 실행 경계
+{: .wn-execution-boundary }
 
 | 구분 | 언어 | 실행 위치 |
 |:--|:--|:--|
@@ -25,19 +28,22 @@ nav_order: 8
 Java·Kotlin처럼 compile runtime이 필요한 언어는 Run을 누를 때 source가
 `runner.woonyong.com`을 거쳐 운영자의 개인 컴퓨터에 있는 격리 container로 전송됩니다.
 운영 비용을 줄이기 위한 개인 실행 서버이므로 컴퓨터가 꺼져 있으면 해당 언어의 버튼은
-실행 오류 대신 잠시 쉬고 있다는 안내를 표시합니다. 서버가 다시 온라인이 되면 별도 설정 없이
-사용할 수 있으며, JavaScript·TypeScript와 모든 browser preview는 계속 실행됩니다.
+실행 오류 대신 잠시 쉬고 있다는 안내를 표시합니다. 서버가 다시 온라인이 되면 **다시 확인**을 누르거나 탭으로 돌아와 상태를 갱신할 수 있으며, JavaScript·TypeScript와 모든 browser preview는 계속 실행됩니다.
 
 개인 컴파일러는 현재 PC에 명시적으로 준비된 digest-pinned runtime만 버튼을 활성화합니다. container는 network가
 차단되고, read-only root filesystem·non-root user·CPU·memory·process·15초 실행 시간·출력
-크기 제한을 적용합니다. 전송이 끊기면 같은 request ID로 한 번만 재요청하여 같은 코드를
-중복 실행하지 않습니다.
+크기 제한을 적용합니다. 전송 실패 시 전체 22초 안에서 같은 request ID로 최대 한 번 재요청합니다.
+중단 버튼은 응답 대기를 취소하며, 서버 작업 자체의 종료를 보장하지 않습니다.
+429 응답에는 서버가 알려준 대기 시간 이후 다시 확인할 수 있습니다.
 
 `run-react`, `run-web`, `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
 외부 리소스, 팝업, form 제출, top navigation, same-origin 접근은 허용하지 않으며,
 `console.log`와 runtime 오류는 Output으로 전달됩니다. `run-react`는 bundle에 포함된
 React와 ReactDOM만 사용할 수 있고, `react`, `react-dom`, `react-dom/client` 이외의 import와
 상대 경로 multi-file import는 거부합니다.
+
+Preview는 종료 후 다시 실행할 수 있습니다. iframe은 CPU 시간을 격리하지 않으므로
+무한 반복은 탭을 멈출 수 있습니다. 긴 계산에는 JavaScript·TypeScript Worker 예제를 사용하세요.
 
 ## 신뢰·sandbox 경계
 

@@ -72,16 +72,16 @@
     bindThemeToggle(desktopToggle);
     bindThemeToggle(mobileToggle);
 
-    function revealControls() {
-      window.requestAnimationFrame(function () {
-        document.documentElement.classList.add("wn-ui-ready");
+    document.documentElement.classList.add("wn-ui-ready");
+
+    /* Just the Docs opens the current ancestry on DOM ready. Its click handler
+       updates aria-expanded later; synchronize the initial expanded state too. */
+    function syncExpandedNavigation() {
+      document.querySelectorAll(".nav-list-expander").forEach(function (button) {
+        button.setAttribute("aria-expanded", String(button.parentElement.classList.contains("active")));
       });
     }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", revealControls, { once: true });
-    } else {
-      revealControls();
-    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", syncExpandedNavigation, { once: true });
+    else syncExpandedNavigation();
   })();
 </script>

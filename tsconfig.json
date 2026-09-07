@@ -1,0 +1,9 @@
+{
+  "extends": "./vendor/runnable-code-blocks/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {"obsidian": ["./vendor/runnable-code-blocks/node_modules/obsidian"]},
+    "typeRoots": ["./vendor/runnable-code-blocks/node_modules/@types"]
+  },
+  "include": ["tools/**/*.ts", "vendor/runnable-code-blocks/src/**/*.d.ts"]
+}

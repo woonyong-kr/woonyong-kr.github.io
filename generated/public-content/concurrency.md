@@ -1,17 +1,20 @@
 ---
 layout: default
 title: 동시성
-nav_order: 4
+nav_order: 6
 permalink: /wiki/concurrency/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/computer-systems-network/operating-systems/concurrency
-projection_sha256: a4d2629e9c2fb7246009ced2dac3f2aac4edeb82a58e31017d76d77e4c18c433
-parent: 운영체제
-grand_parent: 컴퓨터 시스템·네트워크
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/concurrency
+projection_sha256: 4217cdd8480c6875f261a3fe39a889a5cd4a418bee5e6d6647249844b4bd59cc
+parent: 프로그래밍
+content_status: planned
+public_parent_id: Wiki/programming-languages-runtime
 ---
 
 # 동시성
 {: .no_toc }
 
-<!-- 동시성의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

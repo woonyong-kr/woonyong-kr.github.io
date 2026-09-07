@@ -1,4 +1,8 @@
 title: WN Docs
+# Show the complete keyword tree for the initial public review. Set false and
+# rebuild to remove planned pages from HTML, navigation and the search index.
+wiki_show_planned: true
+lang: ko-KR
 description: Woon의 공개 기술 문서 기준본
 url: "https://docs.woonyong.com"
 baseurl: ""
@@ -29,6 +33,19 @@ exclude:
   - Gemfile.lock
   - node_modules/
   - package.json
+  - package-lock.json
+  - tsconfig.json
+  - playwright.config.ts
+  - tests/
+  - test-results/
+  - playwright-report/
+  - config/
+  - README.md
+  - QUALITY.md
+  - LICENSE
+  - assets/js/runnable-code-blocks.js
+  - assets/css/just-the-docs-light.scss
+  - assets/css/just-the-docs-dark.scss
   - scripts/
   - tools/
   - vendor/bundle/
@@ -77,5 +94,6 @@ kramdown:
       line_numbers: false
 
 sass:
+  sourcemap: never
   quiet_deps: true
   silence_deprecations: ["import"]

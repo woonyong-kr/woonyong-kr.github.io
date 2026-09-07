@@ -1,35 +1,21 @@
 ---
 layout: default
 title: Kotlin
-nav_order: 1
+nav_order: 2
 permalink: /wiki/kotlin/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/programming-languages-runtime/languages/kotlin
-projection_sha256: a5ec142853a2dfa60b30d03def15bc818e7cd0da89f2a1f7368ce38978bb516f
-parent: 언어
-grand_parent: 프로그래밍 언어·런타임
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/kotlin
+projection_sha256: eaa470158716e59526e4755834a16c6e6620583e6b567b4d1ae47079fa81fe31
+parent: 프로그래밍 언어
+content_status: planned
+public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
+grand_parent: 프로그래밍
 ---
 
 # Kotlin
 {: .no_toc }
 
-## 목차
-{: .no_toc .text-delta }
+<p class="wn-content-status">작성 예정</p>
 
-1. TOC
-{:toc}
-
-## 문법과 호출
-- [기본 문법·타입](/wiki/kotlin-syntax-types/)
-- [함수·호출](/wiki/kotlin-functions-calls/)
-
-## 객체와 데이터
-- [클래스·객체·인터페이스](/wiki/kotlin-classes-objects-interfaces/)
-- [컬렉션·제네릭스](/wiki/kotlin-collections-generics/)
-
-## 비동기와 실행 환경
-- [Coroutine·Flow·JVM 상호운용](/wiki/kotlin-coroutines-flow-jvm/)
-
-
-<!-- Kotlin의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<!-- Keyword registered; reader content is not yet written. -->

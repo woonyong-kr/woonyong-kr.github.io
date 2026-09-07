@@ -1,0 +1,1 @@
+"search_terms": {{ include.page.search_terms | jsonify }},

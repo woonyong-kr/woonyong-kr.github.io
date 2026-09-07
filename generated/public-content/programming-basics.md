@@ -1,17 +1,20 @@
 ---
 layout: default
 title: 프로그래밍 기초
-nav_order: 1
+nav_order: 2
 permalink: /wiki/programming-basics/
 publication_state: publish
-has_toc: false
-projection_id: Wiki/programming-languages-runtime/language-common/programming-basics
-projection_sha256: 12f22c7d59de7b57dff166537920fce789067c794a807afb3daea8fbcd83eaf8
-parent: 언어 공통
-grand_parent: 프로그래밍 언어·런타임
+has_toc: true
+projection_id: Wiki/programming-languages-runtime/programming-basics
+projection_sha256: 0f0891629c367eb774554f22b89b2c4681d1d8ff87f776fe8ab3e0c0cfbca5a4
+parent: 프로그래밍
+content_status: planned
+public_parent_id: Wiki/programming-languages-runtime
 ---
 
 # 프로그래밍 기초
 {: .no_toc }
 
-<!-- 프로그래밍 기초의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

@@ -1,27 +1,22 @@
 ---
 layout: default
-title: 관측성
-nav_order: 5
+title: Monitoring
+nav_order: 10
 permalink: /wiki/observability/
 publication_state: publish
-has_toc: false
+has_toc: true
 projection_id: Wiki/platform-delivery-operations/observability
-projection_sha256: 00b28c6c58122e539b31dc6475b080abe472e996abdb4ade7a6ec22f50137c7b
-parent: 플랫폼·전달·운영
+projection_sha256: 9a93e3ee779b4087c6c00df15e53a5fa8671d050b322e2dc4439684dba75ed9a
+parent: 플랫폼
+content_status: planned
+public_parent_id: Wiki/platform-delivery-operations
+search_terms:
+- 모니터링
 ---
 
-# 관측성
+# Monitoring
 {: .no_toc }
 
-## 목차
-{: .no_toc .text-delta }
+<p class="wn-content-status">작성 예정</p>
 
-1. TOC
-{:toc}
-
-## 관측 신호
-- [Logging](/wiki/logging/)
-- [Metrics·Tracing](/wiki/metrics-tracing/)
-
-
-<!-- 관측성의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<!-- Keyword registered; reader content is not yet written. -->

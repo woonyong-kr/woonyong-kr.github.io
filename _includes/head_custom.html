@@ -1,24 +1,23 @@
-{% assign wn_assets_revision = site.github.build_revision | default: site.time | date: "%s" %}
+{% assign wn_assets_fallback = site.time | date: "%s" %}
+{% assign wn_assets_revision = site.github.build_revision | default: wn_assets_fallback %}
 <meta name="rcb-personal-compiler-endpoint" content="{{ site.runnable_code_blocks.personal_compiler_endpoint }}">
-<link id="wn-theme-light-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-light.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: light)">
 <link id="wn-theme-dark-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-dark.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: dark)">
 <style>
   html[data-wn-theme="light"], html[data-wn-theme="light"] body { background-color: #ffffff; }
   html[data-wn-theme="dark"], html[data-wn-theme="dark"] body { background-color: #27262b; }
-  html:not(.wn-ui-ready) .wn-header-actions { visibility: hidden; }
+  html:not(.wn-ui-ready) .wn-header-action--theme { display: none; }
 </style>
 <script>
   (function () {
     var systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-    var lightStylesheet = document.getElementById("wn-theme-light-stylesheet");
     var darkStylesheet = document.getElementById("wn-theme-dark-stylesheet");
     var manuallySelected = false;
     var currentTheme = null;
 
     function applyTheme(isDark, withTransition) {
       if (withTransition) document.documentElement.classList.add("wn-theme-transition");
+      if (withTransition) manuallySelected = true;
       currentTheme = isDark ? "dark" : "light";
-      lightStylesheet.media = isDark ? "not all" : "all";
       darkStylesheet.media = isDark ? "all" : "not all";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
       document.documentElement.dataset.wnTheme = currentTheme;
@@ -41,6 +40,7 @@
     };
 
     applyTheme(systemTheme.matches);
+    window.jtd = window.jtd || {};
     window.jtd.getTheme = function () { return currentTheme; };
     window.jtd.setTheme = function (theme) {
       applyTheme(theme === "dark" || theme === "woon-dark", true);
@@ -52,4 +52,11 @@
 <link rel="stylesheet" href="{{ '/assets/css/runnable-code-blocks-host.css' | relative_url }}?v={{ wn_assets_revision }}">
 <link rel="stylesheet" href="{{ '/assets/css/wn-header-actions.css' | relative_url }}?v={{ wn_assets_revision }}">
 <link rel="stylesheet" href="{{ '/assets/css/wn-docs-refinements.css' | relative_url }}?v={{ wn_assets_revision }}">
-<script type="module" src="{{ '/assets/js/runnable-code-blocks.js' | relative_url }}?v={{ wn_assets_revision }}"></script>
+<noscript><style>
+  @media (max-width: 49.999rem) {
+    #main-header { display: flex; }
+    .main-header .wn-header-actions { display: flex; margin-left: auto; }
+    .main-header .search { display: none; }
+  }
+</style></noscript>
+<script type="module" async src="{{ '/assets/js/runnable/loader.js' | relative_url }}?v={{ wn_assets_revision }}"></script>

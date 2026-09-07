@@ -1,31 +1,74 @@
 /* WN Docs-only responsive refinements. The upstream Just the Docs table rules stay untouched. */
+.wn-content-status {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: #64616a;
+}
+[data-wn-theme="dark"] .wn-content-status { color: #b8b5bf; }
+.nav-list .nav-list-item .nav-list-link {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 40rem) {
-  #실행-경계 + .table-wrapper {
+  .wn-execution-boundary + .table-wrapper {
     overflow-x: visible;
   }
 
-  #실행-경계 + .table-wrapper table {
+  .wn-execution-boundary + .table-wrapper table {
     width: 100%;
     min-width: 0;
     table-layout: fixed;
   }
 
-  #실행-경계 + .table-wrapper th,
-  #실행-경계 + .table-wrapper td {
+  .wn-execution-boundary + .table-wrapper th,
+  .wn-execution-boundary + .table-wrapper td {
     padding: 0.5rem;
     overflow-wrap: anywhere;
     white-space: normal;
   }
 
-  #실행-경계 + .table-wrapper th:nth-child(1),
-  #실행-경계 + .table-wrapper td:nth-child(1),
-  #실행-경계 + .table-wrapper th:nth-child(3),
-  #실행-경계 + .table-wrapper td:nth-child(3) {
+  .wn-execution-boundary + .table-wrapper th:nth-child(1),
+  .wn-execution-boundary + .table-wrapper td:nth-child(1),
+  .wn-execution-boundary + .table-wrapper th:nth-child(3),
+  .wn-execution-boundary + .table-wrapper td:nth-child(3) {
     width: 29%;
   }
 
-  #실행-경계 + .table-wrapper th:nth-child(2),
-  #실행-경계 + .table-wrapper td:nth-child(2) {
+  .wn-execution-boundary + .table-wrapper th:nth-child(2),
+  .wn-execution-boundary + .table-wrapper td:nth-child(2) {
     width: 42%;
   }
+}
+
+/* Keep all button states above AA contrast without a low-contrast gradient. */
+.btn-primary, .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background: #006a32;
+  color: #fff;
+}
+[data-wn-theme="dark"] .btn-primary,
+[data-wn-theme="dark"] .btn-primary:hover,
+[data-wn-theme="dark"] .btn-primary:focus,
+[data-wn-theme="dark"] .btn-primary:active {
+  background: #00d970;
+  color: #15141a;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-wn-theme]) .btn-primary { background: #00d970; color: #15141a; }
+}
+.btn:not(.btn-primary), .btn:not(.btn-primary):hover, .btn:not(.btn-primary):focus {
+  background: #f5f6fa;
+  color: #006a32;
+}
+[data-wn-theme="dark"] .btn:not(.btn-primary),
+[data-wn-theme="dark"] .btn:not(.btn-primary):hover,
+[data-wn-theme="dark"] .btn:not(.btn-primary):focus {
+  background: #1e1f22;
+  color: #00d970;
+}
+.btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-wn-theme]) .btn:not(.btn-primary) { background: #1e1f22; color: #00d970; }
 }

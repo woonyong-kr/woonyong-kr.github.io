@@ -1,16 +1,20 @@
 ---
 layout: default
 title: 알고리즘
-nav_order: 2
+nav_order: 3
 permalink: /wiki/algorithms/
 publication_state: publish
-has_toc: false
+has_toc: true
 projection_id: Wiki/computer-science/algorithms
-projection_sha256: 3dd633c29b807c14cffa5b311a9fce1a25acd5084617d3c3c55fc5fd786bfc0b
-parent: 컴퓨터 과학 기초
+projection_sha256: 6ad2152fffbdfb05aa311758d4827e09362e00cde32d170c5e56f8c011d349c3
+parent: CS
+content_status: planned
+public_parent_id: Wiki/computer-science
 ---
 
 # 알고리즘
 {: .no_toc }
 
-<!-- 알고리즘의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<p class="wn-content-status">작성 예정</p>
+
+<!-- Keyword registered; reader content is not yet written. -->

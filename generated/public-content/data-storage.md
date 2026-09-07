@@ -1,33 +1,22 @@
 ---
 layout: default
-title: 데이터·저장소
-nav_order: 6
+title: Database
+nav_order: 2
 permalink: /wiki/data-storage/
 publication_state: publish
-has_toc: false
+has_toc: true
 projection_id: Wiki/data-storage
-projection_sha256: 222bf2141cf4747842a9c5f668d44637cd45ffc983f4b4fdea3b3dd232f5d950
+projection_sha256: 7a4a17a63ac7e1fff9b1d4f45bbb9eca90ade6ab0406a1d60ed378111505a63b
+parent: Data
+content_status: planned
+public_parent_id: Wiki/data
+search_terms:
+- 데이터베이스
 ---
 
-# 데이터·저장소
+# Database
 {: .no_toc }
 
-## 목차
-{: .no_toc .text-delta }
+<p class="wn-content-status">작성 예정</p>
 
-1. TOC
-{:toc}
-
-## 모델과 저장
-- [데이터 모델링](/wiki/data-modeling/)
-- [관계형 데이터베이스](/wiki/relational-databases/)
-- [트랜잭션·동시성 제어](/wiki/transactions-concurrency-control/)
-- [인덱스·저장 구조](/wiki/indexes-storage-structures/)
-
-## 조회와 분산
-- [캐시·검색](/wiki/cache-search/)
-- [분산 데이터](/wiki/distributed-data/)
-- [데이터 파이프라인·분석](/wiki/data-pipelines-analytics/)
-
-
-<!-- 데이터·저장소의 정의와 학습 내용을 이 페이지에 정리한다. -->
+<!-- Keyword registered; reader content is not yet written. -->
