@@ -6,9 +6,13 @@ const preview = parse(readFileSync('_config.yml', 'utf8')).wiki_show_planned ===
 
 test('@core Korean keyword aliases and language symbols remain searchable', async ({ page }) => {
   test.skip(!preview, 'The full planned keyword preview is disabled.');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
   await page.goto('/wiki/home/', { waitUntil: 'networkidle' });
   for (const [query, title] of [
-    ['힙', 'Heap'], ['Heap', 'Heap'], ['클래스', 'Class'], ['큐', 'Queue'],
+    ['힙', 'Heap'], ['Heap', 'Heap'], ['리스트', 'Linked List'], ['List', 'Linked List'],
+    ['클래스', 'Class'], ['Class', 'Class'], ['큐', 'Queue'], ['Queue', 'Queue'],
+    ['그리드', 'Grid'], ['Grid', 'Grid'],
     ['C++', 'C++'], ['C#', 'C#'], ['.NET', '.NET'],
   ]) {
     await page.locator('#search-input').fill(query);
@@ -16,4 +20,5 @@ test('@core Korean keyword aliases and language symbols remain searchable', asyn
     const titles = page.locator('.search-result-doc-title');
     await expect.poll(() => titles.allTextContents()).toContain(title);
   }
+  expect(errors).toEqual([]);
 });
