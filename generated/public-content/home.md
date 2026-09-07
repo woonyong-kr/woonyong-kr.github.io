@@ -1,15 +1,23 @@
 ---
 layout: default
-title: 개발 Wiki
+title: 홈
 nav_order: 1
 permalink: /wiki/home/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/developer-wiki
-projection_sha256: 0ca0b31bbc7298cf0cea67b2547cf014db6af863f51d642985a0ea7de7abfa14
+projection_sha256: c76d6c7f110650487b8a1a1516a1144b9e79b43c5efb2df4e060e145d3106474
 ---
 
-# 개발 Wiki
+# 홈
 {: .no_toc }
 
-개발에 필요한 개념과 프로젝트를 읽는 순서에 맞춰 정리한다. 왼쪽에서 분야를 고르면 한 페이지 안에서 기초부터 다음 주제로 이어지는 전체 목차를 볼 수 있다.
+## 목차
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+## 책에서 흡수한 지식
+
+책의 원문과 목차를 복제하지 않고, 개발 키워드에 흡수한 공개 지식의 읽기 기록을 이곳에서 이어 간다.

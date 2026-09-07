@@ -6,26 +6,10 @@ permalink: /wiki/ai-machine-learning/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/ai-machine-learning
-projection_sha256: fa9464fead3f6d9703cc6127426fe4e7ba73d31beba15b269da7f4798769c609
+projection_sha256: bb82485be91864e8c768e77053a8b199e163ab29b26ae1959295026e4f9469fc
 ---
 
 # AI·머신러닝
 {: .no_toc }
 
-데이터에서 규칙을 학습하는 기본 원리부터 모델을 실제 제품에 적용하고 검증하는 과정까지 다룬다.
-
-## 목차
-{: .no_toc .text-delta }
-
-1. TOC
-{:toc}
-
-## 머신러닝 기초
-
-## 딥러닝
-
-## 대규모 언어 모델
-
-## AI 애플리케이션
-
-## AI 평가·안전성
+<!-- AI·머신러닝의 정의와 학습 내용을 이 페이지에 정리한다. -->
