@@ -3,6 +3,21 @@ import retiredUrls from '../fixtures/retired-urls.json' with { type: 'json' };
 
 const showcase = '/docs/ui-components/runnable-code-blocks/';
 const api = 'http://127.0.0.1:4177';
+
+test('@core search closes and reopens when focus leaves without a target', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  const input = page.locator('#search-input');
+  await input.pressSequentially('Runnable');
+  await expect(page.locator('.search-result').first()).toBeVisible();
+  await input.evaluate((element: HTMLInputElement) => element.blur());
+  await expect(page.locator('html')).not.toHaveClass(/search-active/);
+  expect(errors).toEqual([]);
+  await input.focus();
+  await expect(page.locator('.search-result').first()).toBeVisible();
+});
+
 async function configureRunner(page: Page, endpoint = api) {
   await page.addInitScript(endpoint => {
     new MutationObserver((_, observer) => {

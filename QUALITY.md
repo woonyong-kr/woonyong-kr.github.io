@@ -45,7 +45,8 @@
 공통 원본: Node/Vitest 147개, Chromium E2E 9개. Coverage는
 statements 80.81%, branches 76.19%, functions 81.67%, lines 84.72%이며 기존 threshold를 낮추지 않았다.
 사이트 검사는 Node/Jekyll 경계·integration, Wiki visibility Ruby 검사와 Chromium/Firefox/WebKit의 실제 문서를 사용한다.
-최종 `npm run verify`: Node/Jekyll 25개, Ruby 4개, 브라우저 32개 모두 통과했다.
+통합 commit `c204ee4`의 로컬·원격 `npm run verify`: Node/Jekyll 25개, Ruby 4개, 브라우저 32개 모두 통과했다.
+운영 확인에서 발견한 검색 focusout 회귀를 추가한 뒤 실제 빌드·공개 산출물 검사와 브라우저 35개를 통과했다.
 최종 산출물 1,340개 HTML·1,361개 파일과 2,610개 내부 링크 및 제목 앵커를 검사했다.
 테스트 개수 자체를 품질 목표로 삼지 않는다.
 
@@ -67,6 +68,10 @@ statements 80.81%, branches 76.19%, functions 81.67%, lines 84.72%이며 기존 
   초기 navigation 동작 후 속성을 동기화하고 실제 키보드 접기·펼치기를 검사한다.
 - Wiki 영어 표제의 한국어 별칭은 검색 metadata로 보존한다. 기본 Latin trimmer가 한글과 C++/C# 기호를
   제거하는 실패를 실제 검색에서 확인하고 공식 Lunr 확장 지점에서 Unicode 문자·숫자와 언어 기호를 보존한다.
+- 실제 배포 화면에서 검색창의 focusout 대상이 null일 때 upstream이 예외를 내고 검색을 닫지 못하는 결함을 발견했다.
+  실제 `blur()` 후 닫기·다시 열기와 pageerror 검사가 수정 전 3브라우저에서 모두 실패했다. Jekyll hook이 gem의
+  검색 코드에 작은 null guard를 적용하도록 했다. upstream 전체 파일을 복사하지 않으며, 해당 구문이 바뀌면
+  빌드를 실패시켜 호환성 수정을 다시 검토하게 한다.
 - 브라우저는 실패한 module import를 현재 문서에 캐시한다. 최초 다운로드 실패 때는 원래 코드를 보존하고
   작동하는 새로고침 복구를 제공한다. 서버 offline/잘못된 endpoint 복구는 새로고침 없이 편집 내용을 유지한다.
 
