@@ -6,8 +6,9 @@
     "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
     "check:playground": "node scripts/check-runnable-playground.mjs",
     "check:projection": "node scripts/check-public-projection.mjs",
+    "check:theme-bootstrap": "node scripts/check-theme-bootstrap.mjs",
     "test:adapter": "npm --prefix vendor/runnable-code-blocks test",
     "test:projection": "node --test scripts/check-public-projection.test.mjs",
-    "verify": "npm run test:projection && npm run test:adapter && npm run check:playground && npm run build && npm run check:links"
+    "verify": "npm run test:projection && npm run test:adapter && npm run check:playground && npm run build && npm run check:theme-bootstrap && npm run check:links"
   }
 }

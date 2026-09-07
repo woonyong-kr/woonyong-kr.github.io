@@ -1,4 +1,6 @@
 {% assign wn_assets_revision = site.github.build_revision | default: site.time | date: "%s" %}
+<link id="wn-theme-light-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-light.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: light)">
+<link id="wn-theme-dark-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-dark.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: dark)">
 <style>
   html[data-wn-theme="light"], html[data-wn-theme="light"] body { background-color: #ffffff; }
   html[data-wn-theme="dark"], html[data-wn-theme="dark"] body { background-color: #27262b; }
@@ -7,15 +9,18 @@
 <script>
   (function () {
     var systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    var lightStylesheet = document.getElementById("wn-theme-light-stylesheet");
+    var darkStylesheet = document.getElementById("wn-theme-dark-stylesheet");
     var manuallySelected = false;
     var currentTheme = null;
 
     function applyTheme(isDark, withTransition) {
       if (withTransition) document.documentElement.classList.add("wn-theme-transition");
       currentTheme = isDark ? "dark" : "light";
+      lightStylesheet.media = isDark ? "not all" : "all";
+      darkStylesheet.media = isDark ? "all" : "not all";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
       document.documentElement.dataset.wnTheme = currentTheme;
-      window.jtd.setTheme(isDark ? "woon-dark" : "woon-light");
       window.dispatchEvent(new CustomEvent("wn-theme-change", { detail: { theme: currentTheme } }));
       if (withTransition) window.setTimeout(function () {
         document.documentElement.classList.remove("wn-theme-transition");
@@ -35,6 +40,10 @@
     };
 
     applyTheme(systemTheme.matches);
+    window.jtd.getTheme = function () { return currentTheme; };
+    window.jtd.setTheme = function (theme) {
+      applyTheme(theme === "dark" || theme === "woon-dark", true);
+    };
     systemTheme.addEventListener("change", applySystemTheme);
   })();
 </script>

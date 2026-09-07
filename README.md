@@ -25,8 +25,9 @@ private / draft / publish 문서 상태  →  generated/public-content (read-onl
   승인된 문서가 아직 없을 때는 빈 projection을 정상 상태로 처리합니다.
 - 표준 layout, sidebar, 검색, child navigation, typography는 `just-the-docs` gem이
   소유합니다. 이 저장소는 Just the Docs의 public extension point만 사용합니다.
-- 색상 변경은 기존 WN 정글 초록색 light/dark scheme으로 제한합니다. 첫 렌더와 실행 중
-  OS의 `prefers-color-scheme` 변화를 따르며, 수동 토글이나 저장된 사용자 설정은 없습니다.
+- 색상 변경은 기존 WN 정글 초록색 light/dark scheme으로 제한합니다. 첫 페인트 전에
+  `prefers-color-scheme`과 일치하는 stylesheet를 선택하고, header의 수동 토글은 현재
+  페이지에서만 전환하며 별도의 사용자 설정을 저장하지 않습니다.
 
 ## Runnable Code Blocks
 
@@ -37,9 +38,9 @@ private / draft / publish 문서 상태  →  generated/public-content (read-onl
 
 - 실행 가능한 언어와 각 provider는 plugin source의 `SUPPORTED_LANGUAGES`가 정본입니다.
 - JavaScript, TypeScript, HTML, CSS는 브라우저의 격리된 실행/preview를 사용합니다.
-- 나머지 언어는 실행 버튼을 누른 경우에만 해당 provider로 source를 보냅니다. provider의
-  응답·제한·가용성은 WN Docs가 보증하지 않습니다.
-- 전체 예제는 [Runnable Code Blocks](https://woonyong-kr.github.io/docs/ui-components/runnable-code-blocks/)에서
+- 준비된 container 언어는 실행 버튼을 누른 경우에만 `runner.woonyong.com`으로 source를
+  보내며, WN Docs에서는 named public provider fallback을 사용하지 않습니다.
+- 전체 예제는 [Runnable Code Blocks](https://docs.woonyong.com/docs/ui-components/runnable-code-blocks/)에서
   언어별로 확인할 수 있습니다.
 
 ### Adapter 업데이트
@@ -88,7 +89,7 @@ Pages artifact를 올립니다.
 
 `main`에 push하면 `.github/workflows/deploy.yml`이 build와 검증을 거쳐 GitHub Pages에
 배포합니다. 배포 결과는 [Actions](https://github.com/woonyong-kr/woonyong-kr.github.io/actions)와
-[https://woonyong-kr.github.io/](https://woonyong-kr.github.io/)에서 확인합니다.
+[https://docs.woonyong.com/](https://docs.woonyong.com/)에서 확인합니다.
 
 배포 전에는 다음을 확인합니다.
 
