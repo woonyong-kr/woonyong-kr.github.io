@@ -6,7 +6,7 @@ permalink: /wiki/backend-services/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services
-projection_sha256: da5027d43e136fc28a8885a2b36e0d09569bd8c50da0769c3372221f018dfb0a
+projection_sha256: a7b9782aad363f9760f7e524d2bb3610f8672913c24fe8057d06c4ba5af3b345
 ---
 
 # 백엔드·서비스

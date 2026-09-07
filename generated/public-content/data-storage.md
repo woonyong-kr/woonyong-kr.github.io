@@ -6,7 +6,7 @@ permalink: /wiki/data-storage/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage
-projection_sha256: 075b564adb111a45bf69963a1be2ccf46f1dbd88b7a254b483bc30a535ec5596
+projection_sha256: 8d6b0195ebc72d3514405087d9c72fccd3112a3a3152f3eed082353ef79f83a4
 ---
 
 # 데이터·저장소

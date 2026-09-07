@@ -6,7 +6,7 @@ permalink: /wiki/software-design-architecture/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture
-projection_sha256: 666bea7f4ebc671681e10cf95a0c478d024f4e9d2f9307c2a56d02126e72b237
+projection_sha256: c2dd8d5da4999301a4d4f5416200fbeeda58963bd22c3469aa1cf9a882bd5823
 ---
 
 # 소프트웨어 설계·아키텍처

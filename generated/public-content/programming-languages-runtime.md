@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime
-projection_sha256: b28db210c8b189bab87b2460d31abdb26f17f3702b976aabf7607d73216fe318
+projection_sha256: fbe5525309be7c99f376de7284dbb8f1c0a79966e883bd05a983a0ad3a7e42ce
 ---
 
 # 프로그래밍 언어·런타임

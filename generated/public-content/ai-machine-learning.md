@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/ai-machine-learning
-projection_sha256: 610ce38d76f6be36017e5159dda242554dedff9412bbb7f0fd3b96fa5a1f8254
+projection_sha256: fa9464fead3f6d9703cc6127426fe4e7ba73d31beba15b269da7f4798769c609
 ---
 
 # AI·머신러닝

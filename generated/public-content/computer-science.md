@@ -6,7 +6,7 @@ permalink: /wiki/computer-science/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-science
-projection_sha256: a9e40086c2ae59cdbb6e548d585c41c52a2a34728cc96ba0d4094ed205c13dae
+projection_sha256: 3ee892d9ca03c3692f2fe0d3e8363fd6a8f02bbd86fa6df5ef3f8587eba58f25
 ---
 
 # 컴퓨터 과학 기초

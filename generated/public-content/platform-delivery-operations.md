@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations
-projection_sha256: f7f993e1ec3d3bec0852dadfe684e41c68b774355565481920e3de99bd896248
+projection_sha256: 87c1356f21aebb603c3eca6748381908bd16869c981337ab00b01e863a3abd6f
 ---
 
 # 플랫폼·전달·운영
