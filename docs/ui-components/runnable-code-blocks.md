@@ -19,14 +19,18 @@ nav_order: 8
 | 브라우저 | JavaScript, TypeScript | sandboxed Web Worker / browser transpile |
 | 브라우저 preview | HTML, CSS | script·network가 차단된 sandboxed iframe |
 | 브라우저 상호작용 | React (JSX/TSX), Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | script만 허용한 isolated iframe |
-| 명시된 provider | Kotlin | Kotlin Playground |
-| 명시된 provider | Dart | DartPad compile → isolated frame |
-| 명시된 provider | Swift | SwiftFiddle |
-| 명시된 provider | Python, SQL, Java, C, C++, Go, Rust, C#, Ruby, PHP, R, Scala, Lua, Shell | Wandbox |
+| 개인 컴파일러 | Python, SQL, Kotlin, Java, C, C++, Go, Rust, C#, Swift, Ruby, PHP, R, Scala, Dart, Lua, Shell | `runner.woonyong.com` → 격리된 local container |
 
-외부 provider를 사용하는 언어는 Run을 누를 때 source가 해당 provider로 전송됩니다.
-네트워크·provider 제한·컴파일러 변경 때문에 실패하거나 시간이 걸릴 수 있으며, 실패한
-실행을 다른 provider로 자동 재시도하지 않습니다.
+Java·Kotlin처럼 compile runtime이 필요한 언어는 Run을 누를 때 source가
+`runner.woonyong.com`을 거쳐 운영자의 개인 컴퓨터에 있는 격리 container로 전송됩니다.
+운영 비용을 줄이기 위한 개인 실행 서버이므로 컴퓨터가 꺼져 있으면 해당 언어의 버튼은
+실행 오류 대신 잠시 쉬고 있다는 안내를 표시합니다. 서버가 다시 온라인이 되면 별도 설정 없이
+사용할 수 있으며, JavaScript·TypeScript와 모든 browser preview는 계속 실행됩니다.
+
+개인 컴파일러는 명시적으로 준비된 digest-pinned runtime만 공개합니다. container는 network가
+차단되고, read-only root filesystem·non-root user·CPU·memory·process·15초 실행 시간·출력
+크기 제한을 적용합니다. 전송이 끊기면 같은 request ID로 한 번만 재요청하여 같은 코드를
+중복 실행하지 않습니다.
 
 `run-react`, `run-web`, `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
 외부 리소스, 팝업, form 제출, top navigation, same-origin 접근은 허용하지 않으며,
