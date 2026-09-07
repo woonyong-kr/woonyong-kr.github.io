@@ -6,8 +6,9 @@ permalink: /wiki/component-design/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/ui-accessibility/component-design
-projection_sha256: 8024e79031e47a9c2d46c533b0b7d1eb2d43307c65df4ebadaa4dff4ecaf03bb
+projection_sha256: d748acc51f81a68ff7a11ab7a841735f723340110d250d2f5b081972a6f7b9c2
 parent: UI·접근성
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 컴포넌트 설계

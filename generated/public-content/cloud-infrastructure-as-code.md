@@ -6,7 +6,7 @@ permalink: /wiki/cloud-infrastructure-as-code/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations/cloud-infrastructure-as-code
-projection_sha256: e0795ec003f6d82e36427f5f3154c5d304e325df0885a585fc7faf57493327b0
+projection_sha256: eebf1f88fe8e32a6c1756c13e488157007f3fbb548231fbe3baf1beb4ccd8012
 parent: 플랫폼·전달·운영
 ---
 

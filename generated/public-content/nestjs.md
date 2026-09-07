@@ -6,8 +6,9 @@ permalink: /wiki/nestjs/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/server-frameworks/nestjs
-projection_sha256: f627a3b3e863a9c003756c4dd04ea1608a9c3f63248876c1e423ab95dddd0a17
+projection_sha256: c823bf5f29b25d020067923e3019aa1ae642854efac8471fe13da0cce8754f24
 parent: 서버 프레임워크
+grand_parent: 백엔드·서비스
 ---
 
 # NestJS

@@ -6,8 +6,9 @@ permalink: /wiki/fault-isolation/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/fault-tolerant-design/fault-isolation
-projection_sha256: 773b6757e1d226e6d766813f962f4362fc7d132f85657d79930a2c6ce310b66f
+projection_sha256: c21202074ec42d6cf2648abc46f87a0e4b08e96af0cc51b983384f5d78625612
 parent: 장애 허용 설계
+grand_parent: 품질·보안·신뢰성
 ---
 
 # 장애 격리

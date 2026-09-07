@@ -6,8 +6,9 @@ permalink: /wiki/keys-integrity/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/data-modeling/keys-integrity
-projection_sha256: c51433f48356142624d483d506f9fd1ccf3f90ae9ca8ba25aec5d6e07139d3c6
+projection_sha256: db464632d2b9ee69f92f3efe72b54ff0cb9915ebdf98234e59f9b73860ca7bfc
 parent: 데이터 모델링
+grand_parent: 데이터·저장소
 ---
 
 # 키·무결성

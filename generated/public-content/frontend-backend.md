@@ -6,7 +6,7 @@ permalink: /wiki/frontend-backend/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/books/frontend-backend
-projection_sha256: 5aab5804014cda409456fe4e2159aa0b69c09be4a3b5f3757e0b98cd517f92d4
+projection_sha256: bc64949496afc45a4be5b9c312ee5f3ad39ebe5a5fc21d2d9707e0b9b8f3cbb8
 parent: 책
 ---
 

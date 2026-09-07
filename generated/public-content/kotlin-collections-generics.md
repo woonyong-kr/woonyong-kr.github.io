@@ -6,8 +6,10 @@ permalink: /wiki/kotlin-collections-generics/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/kotlin/kotlin-collections-generics
-projection_sha256: 8d402adb01c1158eec0b95deba861abe2ae09d73e7b0768ec0b9e08c977c5e1c
+projection_sha256: 375d8199853ee9bea1fa0b671a27102d9dd76fbb0278f2aad39356c1185c6df3
 parent: Kotlin
+grand_parent: 언어
+ancestor: 프로그래밍 언어·런타임
 ---
 
 # 컬렉션·제네릭스

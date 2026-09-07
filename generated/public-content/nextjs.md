@@ -6,8 +6,9 @@ permalink: /wiki/nextjs/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/web-frameworks/nextjs
-projection_sha256: 4b7d7ed0ecae6fe771078c5d7222506d2b9766795916446c16d647aa0d68cb71
+projection_sha256: 7c1917a9207875e87b5e93fd86a2287e223c615644519305a4bf93777fcb3542
 parent: 웹 프레임워크
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # Next.js

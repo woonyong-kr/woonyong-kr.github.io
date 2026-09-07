@@ -6,7 +6,7 @@ permalink: /wiki/computer-architecture/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/computer-architecture
-projection_sha256: 8209136476abbf21a9a19755714c5d229b2513a4d18cf06050fe06400b7b5ecb
+projection_sha256: 5aee3efbd07fdb6d997ebcb3f195ca9823e7eaf7ab154a65513cf8d161a26b0b
 parent: 컴퓨터 시스템·네트워크
 ---
 

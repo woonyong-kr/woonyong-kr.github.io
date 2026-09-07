@@ -6,7 +6,7 @@ permalink: /wiki/design-principles-patterns/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/design-principles-patterns
-projection_sha256: 96aea75818bb75dd608ac4f9ebca03ff46c9b3dc058592ad7a31707ad53186aa
+projection_sha256: 209569052a196f0f1cf4559d34f937f3f8fd009b0782bd9ae9bcba20f847f38c
 parent: 소프트웨어 설계·아키텍처
 ---
 

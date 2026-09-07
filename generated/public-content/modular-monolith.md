@@ -6,8 +6,9 @@ permalink: /wiki/modular-monolith/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/application-architecture/modular-monolith
-projection_sha256: d8442992bdb2bc85da0a5f030d019e067cc9f1cf9aa69ba5311c9227e7001b81
+projection_sha256: e26fe16a2a28c63168ad494b34a87246edadbf9b39545172a9b0ae4780935f8d
 parent: 애플리케이션 아키텍처
+grand_parent: 소프트웨어 설계·아키텍처
 ---
 
 # Modular Monolith

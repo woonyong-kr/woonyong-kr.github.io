@@ -6,8 +6,9 @@ permalink: /wiki/erd-relations/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/data-modeling/erd-relations
-projection_sha256: b1cf84ed3b3da101db6c3d92a8905bfacaac192e5815d92c077f763f864d19f0
+projection_sha256: 07bb4c920f4093364cb13cb2c72d59d1360745f59c02ee8f591914017c42817f
 parent: 데이터 모델링
+grand_parent: 데이터·저장소
 ---
 
 # ERD·관계

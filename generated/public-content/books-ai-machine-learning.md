@@ -6,7 +6,7 @@ permalink: /wiki/books-ai-machine-learning/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/books/books-ai-machine-learning
-projection_sha256: 7901a2d923c1f74e348365f37a40918b1b4aa51179b9c01d8ac5c929b1744e57
+projection_sha256: d1aa0149ab4771c88834ef2f9a7f17c938d86bc6aae615d0a5844c62d48d0e68
 parent: 책
 ---
 

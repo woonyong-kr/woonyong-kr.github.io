@@ -6,7 +6,7 @@ permalink: /wiki/code-design-refactoring/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/code-design-refactoring
-projection_sha256: e871b69f6c8857b8c449a9da9d86e8d52cb38a388415edf5c7163d41f5e7551e
+projection_sha256: 2aedc6a56d7d4fa44dd45c6ac0a5f4399e8c0ccf71b90ccd214e795e8a0f5ef3
 parent: 소프트웨어 설계·아키텍처
 ---
 

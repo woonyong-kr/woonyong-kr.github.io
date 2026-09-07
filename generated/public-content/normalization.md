@@ -6,8 +6,9 @@ permalink: /wiki/normalization/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/data-modeling/normalization
-projection_sha256: f403803e2b054af19c9e4d083d658f1bd1e2631e9f40df4649a2db4e2aa84f04
+projection_sha256: 53647d3d9e31ec32af58d8fe4a7dd69e356759e6659c0d085ff44fac1ff8753f
 parent: 데이터 모델링
+grand_parent: 데이터·저장소
 ---
 
 # 정규화

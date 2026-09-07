@@ -6,8 +6,9 @@ permalink: /wiki/websocket-sse/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/realtime-communication/websocket-sse
-projection_sha256: 13509e118b2059916d0686993f5a9fd6f1f49cef904a02164e29b53fd802ddb3
+projection_sha256: cb2c66cd679763b76636a648ef47537c73189418de115da4848bcb35379e8c74
 parent: 실시간 통신
+grand_parent: 백엔드·서비스
 ---
 
 # WebSocket·SSE

@@ -6,7 +6,7 @@ permalink: /wiki/data-pipelines-analytics/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/data-pipelines-analytics
-projection_sha256: d6d53a4784d9aee450f522ff1e94585ae9fccd80ed2b304199712483f845050d
+projection_sha256: 8001a033f58ab7df1acb9ee06346073d5d301be14226d4d294dfc931d69f0b15
 parent: 데이터·저장소
 ---
 

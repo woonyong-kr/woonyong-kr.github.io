@@ -6,8 +6,9 @@ permalink: /wiki/oauth2-oidc/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/authentication-authorization/oauth2-oidc
-projection_sha256: 95f3b2aa8b74397e430ae3f8505f1e3bc64112999273afeee70b4633c70820ff
+projection_sha256: ad7c85bf50fd68cda7b6f938042fd931f815e76f71cd24265ec2a8e8c5f12ab9
 parent: 인증·인가
+grand_parent: 백엔드·서비스
 ---
 
 # OAuth 2.0·OIDC

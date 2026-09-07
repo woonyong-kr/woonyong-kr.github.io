@@ -6,8 +6,9 @@ permalink: /wiki/backup-recovery/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/recovery-continuity/backup-recovery
-projection_sha256: a61861e2ca99c01b90b6024975af672e46803b0ae59680f63d96373e76f64b53
+projection_sha256: ae08b7290f9913cdb6d93b8f2c793c010d862d109832711d6c5107773a89819f
 parent: 복구·연속성
+grand_parent: 품질·보안·신뢰성
 ---
 
 # Backup·Recovery

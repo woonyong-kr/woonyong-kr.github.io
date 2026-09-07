@@ -6,8 +6,9 @@ permalink: /wiki/filesystems-io/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/operating-systems/filesystems-io
-projection_sha256: 061c0b28d471df184d9e9dd0b764d43b62bbde2dcfbe778c7cde92c720963233
+projection_sha256: a7a0511b28f24709e425b05646fd978e6c1c36f7eeff1b97fcabd17bc9e717d4
 parent: 운영체제
+grand_parent: 컴퓨터 시스템·네트워크
 ---
 
 # 파일 시스템·입출력

@@ -6,8 +6,9 @@ permalink: /wiki/spring-boot/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/server-frameworks/spring-boot
-projection_sha256: 276a2eb8518536da6402432b59a4b82bd61372108a91f7bc8a3fb3557e39a755
+projection_sha256: 8b92ee99480b0e2e9eff927e841912de700fb09a1fd9b5852b78f2e06ce0a959
 parent: 서버 프레임워크
+grand_parent: 백엔드·서비스
 ---
 
 # Spring Boot

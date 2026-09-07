@@ -6,8 +6,9 @@ permalink: /wiki/dns-tls-https/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/networking/dns-tls-https
-projection_sha256: a8c87446b780b32c308094cf1aa0e005e4e2b454e4698639bc0a84389fa26244
+projection_sha256: 2a1e11c37ee9e79886b8b4e4a202194739ffe15f85f6fa3c1d7eaa0c50f849a0
 parent: 네트워크
+grand_parent: 컴퓨터 시스템·네트워크
 ---
 
 # DNS·TLS·HTTPS

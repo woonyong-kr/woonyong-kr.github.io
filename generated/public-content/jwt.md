@@ -6,8 +6,9 @@ permalink: /wiki/jwt/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/authentication-authorization/jwt
-projection_sha256: a0504025bb19b5c4ad48dafcda878a46c03e5c8ea678c5c807aa3e615c47bbb3
+projection_sha256: e316c0d480294856a6bc53ada91401b608fd650636c377645eaef51b2f124bba
 parent: 인증·인가
+grand_parent: 백엔드·서비스
 ---
 
 # JWT

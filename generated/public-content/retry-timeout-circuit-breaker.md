@@ -6,8 +6,9 @@ permalink: /wiki/retry-timeout-circuit-breaker/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/fault-tolerant-design/retry-timeout-circuit-breaker
-projection_sha256: 066ed810d8738b31d5b560ff5a89121f33bcb799bfd591a7319f153e0ec9545b
+projection_sha256: 91d755486123db89cc36a59a1a55de73f1f1e5190b2c2ab6933913e11000536c
 parent: 장애 허용 설계
+grand_parent: 품질·보안·신뢰성
 ---
 
 # Retry·Timeout·Circuit Breaker

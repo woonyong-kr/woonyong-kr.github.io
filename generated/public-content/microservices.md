@@ -6,8 +6,9 @@ permalink: /wiki/microservices/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/distributed-architecture/microservices
-projection_sha256: ee0766fe18fa31f17768a1e2b45300d5a699f87663be9423e5c7bb29025ed779
+projection_sha256: 83eb3940949aa1b260f13b05f123ead625ddc8abbcd566681339d12dbe42ee0e
 parent: 분산 아키텍처
+grand_parent: 소프트웨어 설계·아키텍처
 ---
 
 # Microservices

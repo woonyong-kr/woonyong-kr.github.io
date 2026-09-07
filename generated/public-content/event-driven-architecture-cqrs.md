@@ -6,8 +6,9 @@ permalink: /wiki/event-driven-architecture-cqrs/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/distributed-architecture/event-driven-architecture-cqrs
-projection_sha256: 38ed6f32713a7204f8bd03cb1ae4092758fc88a8179f56535b1e6fff8c7360a7
+projection_sha256: 98a79b7bfa46aedb6b6d1338b4b5af7ec5988491a813494c657c3399b076f067
 parent: 분산 아키텍처
+grand_parent: 소프트웨어 설계·아키텍처
 ---
 
 # Event-Driven Architecture·CQRS

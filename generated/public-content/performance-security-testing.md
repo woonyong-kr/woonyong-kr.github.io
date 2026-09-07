@@ -6,8 +6,9 @@ permalink: /wiki/performance-security-testing/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/testing-verification/performance-security-testing
-projection_sha256: f85557defdaf726767955fa56f18bcd79866328020b478bde36ef00fa0c04ddb
+projection_sha256: c57e7908c6a5a762b661e49580f45c6a1f47b65915eaac3826ab1491fdada3b0
 parent: 테스트·검증
+grand_parent: 품질·보안·신뢰성
 ---
 
 # 성능·보안 검증

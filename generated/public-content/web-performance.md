@@ -6,8 +6,9 @@ permalink: /wiki/web-performance/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/web-platform/web-performance
-projection_sha256: 0144ed3eb23df9b05b0b00932da651fc9bbdad0c2cf1231c46fefbf1cb5944bf
+projection_sha256: 5f6df3339f97ba9cc2825748037b797ab6e06094758bffd5e478b8b90130e167
 parent: 웹 플랫폼
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 웹 성능

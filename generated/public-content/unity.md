@@ -6,8 +6,9 @@ permalink: /wiki/unity/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/games-interactive/unity
-projection_sha256: ce5f130a6d2f8c5ea857e19f8ee957c661886f8c51a48e06bbd936440e85f922
+projection_sha256: 9a795e206ec05af1af79ae2c3ae36af81a4fe6cd59106bcd3ebb5608cf33b60a
 parent: 게임·인터랙티브
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # Unity

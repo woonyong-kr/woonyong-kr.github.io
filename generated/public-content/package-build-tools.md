@@ -6,8 +6,9 @@ permalink: /wiki/package-build-tools/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/runtime-build/package-build-tools
-projection_sha256: 6ac1779da0ee33dc6df554da0563af5f19e94c9ac95e436ed9a8a4748c5a35cd
+projection_sha256: 83f83cb5b475f4998aa2fe868b3d6c3a992758acfb457f7c11ccaf9e67225f73
 parent: 런타임·빌드
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # 패키지·빌드 도구

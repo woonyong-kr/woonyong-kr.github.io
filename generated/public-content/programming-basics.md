@@ -6,8 +6,9 @@ permalink: /wiki/programming-basics/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/language-common/programming-basics
-projection_sha256: 961bb0fd180c7afbec45ebd3dacbcfc08184e346f74600332fc2c32077fc4085
+projection_sha256: 12f22c7d59de7b57dff166537920fce789067c794a807afb3daea8fbcd83eaf8
 parent: 언어 공통
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # 프로그래밍 기초

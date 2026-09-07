@@ -6,8 +6,9 @@ permalink: /wiki/type-systems/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/language-common/type-systems
-projection_sha256: b9732054b0b794e8d8b202f8e437faf3842272fdd82233ce58d9cd633953212e
+projection_sha256: 30a7b57c31cb60da49e0bbeb8f05f27ac48b8def7ee73260f0198c5786728fe9
 parent: 언어 공통
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # 타입 시스템

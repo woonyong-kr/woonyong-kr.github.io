@@ -6,8 +6,9 @@ permalink: /wiki/accessibility/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/ui-accessibility/accessibility
-projection_sha256: 80344974065f4b1f6996ebc794597be472624d8aa9db9c75c812f1e873083c36
+projection_sha256: 9de9d90446554d33221601474b14a9a3fd3710692a6a99861afedb19b953e791
 parent: UI·접근성
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 접근성

@@ -6,8 +6,9 @@ permalink: /wiki/react-server-components/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/rendering-state/react-server-components
-projection_sha256: c809dcc01ed350c675f45df59ab45a1d7f0d914c7d35e6fd6b6547e98ab0a3e5
+projection_sha256: 915bb06c992764b3efd5cd5f8342eabc914a2733061f5d3f96913ad1c6922f35
 parent: 렌더링·상태
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # React Server Components

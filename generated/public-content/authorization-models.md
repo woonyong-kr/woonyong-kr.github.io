@@ -6,8 +6,9 @@ permalink: /wiki/authorization-models/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/authentication-authorization/authorization-models
-projection_sha256: 673de3447968d1abd4d853831a733aa5c4077a1106d918615fb23b6fe1663011
+projection_sha256: 412383b423c31996aa6c3123dc3ddca642853df1491381793450e32cae7d8add
 parent: 인증·인가
+grand_parent: 백엔드·서비스
 ---
 
 # 권한 모델

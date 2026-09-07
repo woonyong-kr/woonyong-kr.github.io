@@ -6,7 +6,7 @@ permalink: /wiki/deep-learning/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/ai-machine-learning/deep-learning
-projection_sha256: 073d9f6fb3ec9cea5df312549abb7a3415cc1e971b56b6e33a170aeafb417a74
+projection_sha256: faa1bc23dfacf983777856613b1b8c2b49b7e9250a594a8db01264efdcbff87f
 parent: AI·머신러닝
 ---
 

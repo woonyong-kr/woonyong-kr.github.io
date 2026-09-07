@@ -6,8 +6,9 @@ permalink: /wiki/logging/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations/observability/logging
-projection_sha256: 9f02633b5398886b62f834c13de29c05d3bdbf8e89aa9a9faa217f81d10abe0a
+projection_sha256: c8833fbced50c1fb9fe3d4000744de0477fc7e7fa204d5b2a6d1e53d5af7d650
 parent: 관측성
+grand_parent: 플랫폼·전달·운영
 ---
 
 # Logging

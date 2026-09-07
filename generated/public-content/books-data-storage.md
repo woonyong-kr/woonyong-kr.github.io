@@ -6,7 +6,7 @@ permalink: /wiki/books-data-storage/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/books/books-data-storage
-projection_sha256: a2bdf2c6e48e930f1a5903674a5474cf91f10f0f0d1aff38127615e3a7cf13e0
+projection_sha256: 07f64d15b48a6b9f3208d88545d8dd935d37b411659db5a94a8b1d8bccebc182
 parent: 책
 ---
 

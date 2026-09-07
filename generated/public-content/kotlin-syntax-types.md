@@ -6,8 +6,10 @@ permalink: /wiki/kotlin-syntax-types/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/kotlin/kotlin-syntax-types
-projection_sha256: d7044f289da109945b1042d480eb97f95f51e7690d39390dd75885ff04c95a75
+projection_sha256: 03727806caddecbcc4951168b5e73f2ca197083ed58ff1f61d271d3f953d352f
 parent: Kotlin
+grand_parent: 언어
+ancestor: 프로그래밍 언어·런타임
 ---
 
 # 기본 문법·타입

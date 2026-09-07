@@ -6,7 +6,7 @@ permalink: /wiki/ai-evaluation-safety/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/ai-machine-learning/ai-evaluation-safety
-projection_sha256: 21cfae65c20faa5099500dd2307c6e9fba10e5ab5caea904a16170be3143e652
+projection_sha256: 420b2f33041cf36c49c8175eccb405e5c28e7274ef1c3f65d43e1e922258318e
 parent: AI·머신러닝
 ---
 

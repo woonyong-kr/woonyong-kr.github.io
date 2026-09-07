@@ -6,7 +6,7 @@ permalink: /wiki/systems-platform/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/books/systems-platform
-projection_sha256: c6a67d2041958e21fd92750c290cd72d2d63e3bfeb187f29b89127c63097c135
+projection_sha256: bdeb3ffdf5c7fde55c6f3d79344d6a4a4deba13831f88eb7146665656e76b94a
 parent: 책
 ---
 

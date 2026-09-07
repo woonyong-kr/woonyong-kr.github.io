@@ -6,8 +6,9 @@ permalink: /wiki/partition/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/distributed-data/partition
-projection_sha256: 4a05620ef34865fd3672f1b81a651d342090e7f6396b980932e5dccfabc40fc1
+projection_sha256: 0f1f487327f0f4e839381dbde40e1b1bb593b43ecec44057d1d448bcdb5eb9c3
 parent: 분산 데이터
+grand_parent: 데이터·저장소
 ---
 
 # Partition

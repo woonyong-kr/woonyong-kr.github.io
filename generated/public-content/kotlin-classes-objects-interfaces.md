@@ -6,8 +6,10 @@ permalink: /wiki/kotlin-classes-objects-interfaces/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/kotlin/kotlin-classes-objects-interfaces
-projection_sha256: 45e355c0f459592f0b3905220c994590841e940990db4ec84a37bad0fcae39ea
+projection_sha256: 8a3c13f3259bc72feaa83d8fb890215029fe92294505d1c42373f2cabbc62c6d
 parent: Kotlin
+grand_parent: 언어
+ancestor: 프로그래밍 언어·런타임
 ---
 
 # 클래스·객체·인터페이스

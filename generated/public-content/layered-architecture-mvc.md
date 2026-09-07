@@ -6,8 +6,9 @@ permalink: /wiki/layered-architecture-mvc/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/application-architecture/layered-architecture-mvc
-projection_sha256: 05740f0bf62846039bf5d0657f1802da8f90fdaa29a4925fb6249fedb68f34b3
+projection_sha256: bdff8adaa6488090a2edb2438c8c94c901bd5ca59b06eed78148cf07b40bc572
 parent: 애플리케이션 아키텍처
+grand_parent: 소프트웨어 설계·아키텍처
 ---
 
 # 계층형 아키텍처·MVC

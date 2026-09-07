@@ -6,7 +6,7 @@ permalink: /wiki/machine-learning-basics/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/ai-machine-learning/machine-learning-basics
-projection_sha256: 76a4f040f3dda67a08800de22676e1ab6f8e956463b492c7d9d5b3977178cb9f
+projection_sha256: bfbcd16b48afcd0124bdc41cd4416b296d38c4569c0c8059a6e28e4d8013318c
 parent: AI·머신러닝
 ---
 

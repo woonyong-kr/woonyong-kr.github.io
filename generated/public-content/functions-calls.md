@@ -6,8 +6,9 @@ permalink: /wiki/functions-calls/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/language-common/functions-calls
-projection_sha256: ea4a66811e0cb5f1f7b232d1d4ae8ece681f579fc5cf11b7c0fe41edf0e2b013
+projection_sha256: 00ea44063fe6ea320c508a3c79fdd2cb27960120b13d7b089dfd3fc406cd1532
 parent: 언어 공통
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # 함수·호출

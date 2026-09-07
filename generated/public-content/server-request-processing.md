@@ -6,8 +6,9 @@ permalink: /wiki/server-request-processing/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/web-applications/server-request-processing
-projection_sha256: f4470a37307ed54e9185baa0a2585a70574b230ea24a04dfa60675b5d1fee960
+projection_sha256: d8fd96b03b403a0595c1519bbfbccd714acae0bdd2bb9c665e3ce7c85f498f90
 parent: 웹 애플리케이션
+grand_parent: 백엔드·서비스
 ---
 
 # 서버·요청 처리

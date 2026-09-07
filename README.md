@@ -19,6 +19,9 @@ private / draft / publish 문서 상태  →  generated/public-content (read-onl
   Vault projection으로 교체할 때까지는 개인 지식 정본이 아닙니다.
 - `generated/public-content/`는 Vault compiler의 결과물만 받습니다. 이 저장소에서
   Markdown을 직접 고치지 않습니다.
+- Map·hub 문서의 직접 하위 키워드는 공개 본문에서도 그룹별 링크로 유지합니다.
+  같은 제목이 다른 branch에 있을 때는 projection이 `parent`, `grand_parent`,
+  `ancestor`를 함께 기록해 Just the Docs가 서로 다른 경로를 구분합니다.
 - `config/public-projection.yml`과 `npm run check:projection`은 projection Markdown에
   `publication_state: publish`, projection hash, portable front matter가 있는지와
   Obsidian wikilink·로컬 경로·private source link·session ID가 없는지를 검사합니다.

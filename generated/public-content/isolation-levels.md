@@ -6,8 +6,9 @@ permalink: /wiki/isolation-levels/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/transactions-concurrency-control/isolation-levels
-projection_sha256: 4504d03d8e6da4f9d4e10f00751f5dce0d12c8a3af99d01325f175301e9b841a
+projection_sha256: 1a77142aee386904a1f4e5d39c357832153a4b594e093f2d918275fd7ffb8447
 parent: 트랜잭션·동시성 제어
+grand_parent: 데이터·저장소
 ---
 
 # 격리 수준

@@ -6,8 +6,9 @@ permalink: /wiki/clean-hexagonal-architecture/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/software-design-architecture/application-architecture/clean-hexagonal-architecture
-projection_sha256: 250884fa57ff4707867402a0ba59cdf14b126115a1bbbb9997d2597f646ffa1b
+projection_sha256: e11992e577b42ceafb0a60375ccabfa1ca1a12996e718dbe3165b47db25bce68
 parent: 애플리케이션 아키텍처
+grand_parent: 소프트웨어 설계·아키텍처
 ---
 
 # Clean·Hexagonal Architecture

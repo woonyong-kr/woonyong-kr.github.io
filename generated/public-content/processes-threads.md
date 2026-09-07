@@ -6,8 +6,9 @@ permalink: /wiki/processes-threads/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/operating-systems/processes-threads
-projection_sha256: a58aba4eafe0b6ce17be7a1ca412499d765a315b29486d366d86fac1f5fbc84b
+projection_sha256: 2f8f7a0357f48f84a70045be2de2719133c527809aa52cb1e3872c3db4a96058
 parent: 운영체제
+grand_parent: 컴퓨터 시스템·네트워크
 ---
 
 # 프로세스·스레드

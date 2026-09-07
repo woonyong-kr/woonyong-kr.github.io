@@ -6,8 +6,9 @@ permalink: /wiki/rest/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/api-design/rest
-projection_sha256: 6bd2a0f0d3c316af0d24675819e38854bcf47cb70267d9ef080e0f78c57c0a31
+projection_sha256: acd92c17b55e31422df0192c0fa1160e5e0e52efa860340e507db04828f4dc85
 parent: API 설계
+grand_parent: 백엔드·서비스
 ---
 
 # REST

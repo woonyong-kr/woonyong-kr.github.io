@@ -6,8 +6,9 @@ permalink: /wiki/props-state-management/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/rendering-state/props-state-management
-projection_sha256: 59293959cd1b2c4cd7b1719b89fdd396444c9b03780abcf8f6232f8267591c6a
+projection_sha256: 30cfb7a9a56a1e120ffe54a9804badddbcde9f7b5062e3d9399cab655456fae4
 parent: 렌더링·상태
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # Props·상태 관리

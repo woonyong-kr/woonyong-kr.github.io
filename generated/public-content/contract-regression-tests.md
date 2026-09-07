@@ -6,8 +6,9 @@ permalink: /wiki/contract-regression-tests/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/testing-verification/contract-regression-tests
-projection_sha256: 18e6ce0fa569844a4e20e68576f5d4d36e805a56868b143f7676da2cc37740b3
+projection_sha256: 6c023975e9661bbf4d7e0fe103f321f538ea6e5044b1da7abcfb6938cfe70a36
 parent: 테스트·검증
+grand_parent: 품질·보안·신뢰성
 ---
 
 # 계약·회귀 테스트

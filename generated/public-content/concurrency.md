@@ -6,8 +6,9 @@ permalink: /wiki/concurrency/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/operating-systems/concurrency
-projection_sha256: f17b8d1aa236ec08351a49d6437bc34216dc2ed11dadbcaef6880a98efa18f56
+projection_sha256: a4d2629e9c2fb7246009ced2dac3f2aac4edeb82a58e31017d76d77e4c18c433
 parent: 운영체제
+grand_parent: 컴퓨터 시스템·네트워크
 ---
 
 # 동시성

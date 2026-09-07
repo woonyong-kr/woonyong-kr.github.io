@@ -6,8 +6,9 @@ permalink: /wiki/jvm/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/runtime-build/jvm
-projection_sha256: 4eb776a91843f12ab8f74a3c78fbb0f99bff0b8a60d6e577c30bab20f09eb7d3
+projection_sha256: b41f942ee57571d88254e0152df9e53e54fc5940c743f5c17a9cdd401a549373
 parent: 런타임·빌드
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # JVM

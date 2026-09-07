@@ -6,8 +6,10 @@ permalink: /wiki/kotlin-coroutines-flow-jvm/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/kotlin/kotlin-coroutines-flow-jvm
-projection_sha256: 2417be672725c51d3ffdb43c5cb320441655c5fd6b3b5c4604f4b0203336c4b2
+projection_sha256: 907c55d88c3483b2f5700a709e8029ffec99bc3e4d52d94928748c2a8257342d
 parent: Kotlin
+grand_parent: 언어
+ancestor: 프로그래밍 언어·런타임
 ---
 
 # Coroutine·Flow·JVM 상호운용

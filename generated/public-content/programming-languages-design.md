@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-design/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/books/programming-languages-design
-projection_sha256: 11faaf0d7e4a028edcb7609354b7d08f0ed8a7d468e4a77ff0b6a988b08e46b4
+projection_sha256: 806605855661cf4e583bdeb714061c6d1381ac287d39b387b6822a34ca7462f6
 parent: 책
 ---
 

@@ -6,8 +6,9 @@ permalink: /wiki/routing/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/rendering-state/routing
-projection_sha256: dcb2a72190cc820579bcd317955d70b0d9df3f81ab5cd7e73b0ac6fa2bc7650f
+projection_sha256: 6254a34049b212553fdf78fa102231bc34040849fa83e3b765e48e466e8922e5
 parent: 렌더링·상태
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 라우팅

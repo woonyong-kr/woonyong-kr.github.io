@@ -6,7 +6,7 @@ permalink: /wiki/ci-cd-release/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations/ci-cd-release
-projection_sha256: 64aeadccce6b931d95a3743dc69c83e58dd15c6830a188194468df88f264b584
+projection_sha256: ddc5bd017d85c33b0af96f284d1a7419ea13f98c5e1d3af55d87ad78156f3147
 parent: 플랫폼·전달·운영
 ---
 

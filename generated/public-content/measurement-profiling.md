@@ -6,8 +6,9 @@ permalink: /wiki/measurement-profiling/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-systems-network/system-performance/measurement-profiling
-projection_sha256: 8a3b33bb0d36bdffd92b31095c597bd9c728ea1fd60ca6afc61f0202631100fa
+projection_sha256: 63cf1ca07f17bb9b3ea65d9f8b012d2aedb8ffcf32db7b8b330eacdb9bc1993d
 parent: 시스템 성능
+grand_parent: 컴퓨터 시스템·네트워크
 ---
 
 # 측정·프로파일링

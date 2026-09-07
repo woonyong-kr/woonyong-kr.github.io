@@ -6,8 +6,9 @@ permalink: /wiki/nodejs/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/runtime-build/nodejs
-projection_sha256: 80ea2ab89dc5c5c93d69ba28ca673f1fa3dd4288d22257766e9f7a084ff0eb42
+projection_sha256: 96b7cf4e7b10619cf77f3b1520684449ae9c25689ce0a70d766063ca88d968a5
 parent: 런타임·빌드
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # Node.js

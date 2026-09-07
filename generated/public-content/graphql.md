@@ -6,8 +6,9 @@ permalink: /wiki/graphql/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/backend-services/api-design/graphql
-projection_sha256: 473ac03a12bda34ba1de07e09d459eec0865cd103dcde7b39207057c32470c71
+projection_sha256: 122b8a11d64dd7cedbb2546240b106f25e3d3e179d0e458cff6c55218214b2dc
 parent: API 설계
+grand_parent: 백엔드·서비스
 ---
 
 # GraphQL

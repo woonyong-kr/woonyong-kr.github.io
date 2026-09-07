@@ -6,8 +6,9 @@ permalink: /wiki/rate-limiting/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/application-security/rate-limiting
-projection_sha256: 21481b8debcc5ce034eec9df7fb9afbcb0aabf328b7ebae32daf8ffd9dc5b01d
+projection_sha256: 39a8b10d860492c92f3be24059ee637edd0414114e659a64e6c1289dd495325d
 parent: 애플리케이션 보안
+grand_parent: 품질·보안·신뢰성
 ---
 
 # Rate Limiting

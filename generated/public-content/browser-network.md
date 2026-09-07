@@ -6,8 +6,9 @@ permalink: /wiki/browser-network/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/web-platform/browser-network
-projection_sha256: 9d2ae4bb522d171ffd000eb558d227875f32dd1d08f938f8f9a64dfd14730916
+projection_sha256: d5e6b5e7a2b73e985d009c610e969825c0f4da5417e0e12f44e0f0d9d70491c5
 parent: 웹 플랫폼
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 브라우저 네트워크

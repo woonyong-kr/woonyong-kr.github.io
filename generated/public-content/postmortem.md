@@ -6,8 +6,9 @@ permalink: /wiki/postmortem/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations/service-operations/postmortem
-projection_sha256: 711d3a2f871ba61e234b5558dbc1f2dcf1aaaaaf7e9dd7ef2ffa5c95aaa1ef40
+projection_sha256: 98c140c04e5f90c3654cdb3b74f926284dfd20c9335be75ae90b65ed2f3a6325
 parent: 서비스 운영
+grand_parent: 플랫폼·전달·운영
 ---
 
 # Postmortem

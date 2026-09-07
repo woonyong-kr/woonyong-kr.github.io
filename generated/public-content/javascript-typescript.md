@@ -6,8 +6,9 @@ permalink: /wiki/javascript-typescript/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/javascript-typescript
-projection_sha256: bf287b77a477465f2983904a27ce55fb52a81cdc460dbd9fb97808d4b5cb96fe
+projection_sha256: ce7960ff9dea17eb43ffbefd60cc1a109d48b200f411cc567c4057242db92e1f
 parent: 언어
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # JavaScript·TypeScript

@@ -6,7 +6,7 @@ permalink: /wiki/mobile-desktop/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/mobile-desktop
-projection_sha256: c2e45521ea25adee33f16e1cda68e56c9dd166588ca3674fd83eaf3415d50643
+projection_sha256: a33bd4a301117af0f733cf72b42f6ec7810198ed65b9089a0c4fcc6ae9f9a520
 parent: 프런트엔드·클라이언트
 ---
 

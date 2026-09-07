@@ -6,8 +6,9 @@ permalink: /wiki/input-rendering/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/frontend-client/games-interactive/input-rendering
-projection_sha256: 99aee8746ee42ee6d5e4a33f5d2c8fab40dea84924cab94059fc5c6f73b95e08
+projection_sha256: 18d532ea39390d5283c104d559ff710634af01348d998da1adab67b14dda233e
 parent: 게임·인터랙티브
+grand_parent: 프런트엔드·클라이언트
 ---
 
 # 입력·렌더링

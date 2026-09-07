@@ -6,8 +6,9 @@ permalink: /wiki/slo-error-budget/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/recovery-continuity/slo-error-budget
-projection_sha256: 22f9d331d8550f4a03c02a28afa81191e424267b4e2fa479b943fb1e7c8c3709
+projection_sha256: 20f911b0f97f38a5b7abb2c7b095059d67887c756e8b8776c1dd9812d14649ba
 parent: 복구·연속성
+grand_parent: 품질·보안·신뢰성
 ---
 
 # SLO·Error Budget

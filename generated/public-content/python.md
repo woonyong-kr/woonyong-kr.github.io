@@ -6,8 +6,9 @@ permalink: /wiki/python/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/languages/python
-projection_sha256: c1f120fb01174a656daccd13cabced21169aabda6fa8a8e07a20bf0e88ebff54
+projection_sha256: 36148e900e37efa69c6192d900d85c2934f6b77b4510b5426f627d1aafe606a8
 parent: 언어
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # Python

@@ -6,8 +6,9 @@ permalink: /wiki/native-runtime/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/programming-languages-runtime/runtime-build/native-runtime
-projection_sha256: 21850ffd31bfc2cb0b37a2c476a8f9429b84950f3401e47f224a3ce2dfd99f01
+projection_sha256: 159481759855a4d194e7c754ea62ef2daabb6c8b3df909db5cc8976390e30efd
 parent: 런타임·빌드
+grand_parent: 프로그래밍 언어·런타임
 ---
 
 # 네이티브 실행 환경

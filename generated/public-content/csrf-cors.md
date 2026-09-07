@@ -6,8 +6,9 @@ permalink: /wiki/csrf-cors/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/application-security/csrf-cors
-projection_sha256: a4a939212539077dabd3f933153f91538bc7f7997d7383efb1aa8b77d6a7f96d
+projection_sha256: 7972f81fd000e525d292add346cb6068e77af58cd3307cfce0cabdce3ff8670d
 parent: 애플리케이션 보안
+grand_parent: 품질·보안·신뢰성
 ---
 
 # CSRF·CORS

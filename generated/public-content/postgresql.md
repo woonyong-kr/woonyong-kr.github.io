@@ -6,8 +6,9 @@ permalink: /wiki/postgresql/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/relational-databases/postgresql
-projection_sha256: d8cc3414b437abde18a232552cdc8e954a8413eafb15d1abf856078ea8e59cbb
+projection_sha256: fae3bf7ec302ce282b661987046ce9fb43917a769f458a7b3d291173237110d8
 parent: 관계형 데이터베이스
+grand_parent: 데이터·저장소
 ---
 
 # PostgreSQL

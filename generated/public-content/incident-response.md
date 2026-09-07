@@ -6,8 +6,9 @@ permalink: /wiki/incident-response/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/platform-delivery-operations/service-operations/incident-response
-projection_sha256: bb85185647637e056fcf78b088f09bc4535b667833b10d046bbbcba7d4476897
+projection_sha256: d0124be6defb8d09bb67cb048d28beb7dcd34e36e836e82ddd6c1820ee114eb0
 parent: 서비스 운영
+grand_parent: 플랫폼·전달·운영
 ---
 
 # Incident 대응

@@ -6,8 +6,9 @@ permalink: /wiki/owasp/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/quality-security-reliability/application-security/owasp
-projection_sha256: ca28e42457007c0e80c56cc7ef2e3d418eec49d910f91ab9b771d8e08641f4c8
+projection_sha256: af44a4c61bff60014de632b954114e4ba43e891c286e14d0e35b72ae333a4b9f
 parent: 애플리케이션 보안
+grand_parent: 품질·보안·신뢰성
 ---
 
 # OWASP

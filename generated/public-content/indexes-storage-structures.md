@@ -6,7 +6,7 @@ permalink: /wiki/indexes-storage-structures/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/data-storage/indexes-storage-structures
-projection_sha256: 745a16b30fac6ddfff729dbe1bf346fc499d152923ae4e939ac79f119f409403
+projection_sha256: cc0dd66ba26f417edf4536a2fd50f4f1291527c620378482eb035ffe1eda0d66
 parent: 데이터·저장소
 ---
 
