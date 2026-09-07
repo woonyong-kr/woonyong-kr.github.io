@@ -1,4 +1,5 @@
 {% assign wn_assets_revision = site.github.build_revision | default: site.time | date: "%s" %}
+<meta name="rcb-personal-compiler-endpoint" content="{{ site.runnable_code_blocks.personal_compiler_endpoint }}">
 <link id="wn-theme-light-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-light.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: light)">
 <link id="wn-theme-dark-stylesheet" rel="stylesheet" href="{{ '/assets/css/just-the-docs-woon-dark.css' | relative_url }}?v={{ wn_assets_revision }}" media="(prefers-color-scheme: dark)">
 <style>

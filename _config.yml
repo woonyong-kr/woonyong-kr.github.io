@@ -5,6 +5,9 @@ baseurl: ""
 repository: woonyong-kr/woonyong-kr.github.io
 permalink: pretty
 
+runnable_code_blocks:
+  personal_compiler_endpoint: "https://runner.woonyong.com"
+
 theme: just-the-docs
 color_scheme: woon-light
 

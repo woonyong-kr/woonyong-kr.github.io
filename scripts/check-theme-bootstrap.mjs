@@ -19,5 +19,8 @@ if (!html.includes('media="(prefers-color-scheme: dark)"')) {
 if (!html.includes('href="https://docs.woonyong.com/docs/configuration/"')) {
   throw new Error("The built page must use the docs.woonyong.com canonical URL.");
 }
+if (!html.includes('name="rcb-personal-compiler-endpoint" content="https://runner.woonyong.com"')) {
+  throw new Error("The personal compiler endpoint must be injected from the site deployment config.");
+}
 
-console.log("Theme stylesheets are render-blocking in <head> and the custom canonical URL is active.");
+console.log("Theme bootstrap, custom canonical URL, and runner deployment config are active.");
