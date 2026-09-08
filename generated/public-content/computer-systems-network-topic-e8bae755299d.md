@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-e8bae755299d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e8bae755299d
-projection_sha256: 725c231c3d5f547ce748a42a79c701353aefb4d14c55b7a082f552254bb2ae9a
+projection_sha256: 6654b209bf552a53152d1c757e92773ee176b234c728bcbdfdeb562382cfd9ac
 parent: 트래픽 처리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-7b8f000c7073
@@ -77,3 +77,15 @@ Proxy가 받은 Header를 모두 다음 연결로 복사해서는 안 된다. Co
 한쪽에서 읽은 Byte를 다른 쪽에 쓸 때도 부분 입출력을 처리해야 한다. 느린 수신자 때문에 Buffer가 계속 커지지 않도록 흐름을 조절하고, 취소·시간 제한·소켓 해제를 함께 다룬다. [Socket](/wiki/socket/)의 읽기·쓰기 규칙이 이 두 연결에 각각 적용된다.
 
 중계 지점에는 캐시, 필터링, 로깅, 인증과 부하 분산 같은 기능을 둘 수 있다. 모든 Proxy가 그 기능을 전부 수행하는 것은 아니며, 적용할 때는 응답의 재사용 범위와 사용자 정보의 전달을 확인해야 한다. 캐시를 여러 거점에서 사용하는 구조는 [CDN](/wiki/computer-systems-network-cdn-a6d4d37d4c09/)으로 이어진다.
+
+## 과제 프록시에서 캐시 삽입 시점을 정하기
+
+원본 응답의 앞부분만 받은 상태에서 연결이 끊겼다고 하자. 그때까지 받은 바이트를 캐시에 넣으면 다음 요청은 실패했던 응답을 정상 결과처럼 받게 된다. Web Proxy Lab 구현 안내는 중계 중 바이트를 누적하되 응답 전체를 받은 뒤 객체 크기 상한을 확인하고 캐시에 넣도록 제안한다. 완결성 확인과 캐시 재사용 가능성 판단은 별도 조건이다. 이 옛 안내의 크기 제한만으로 현재 HTTP 캐시 정책이 완성되었다고 볼 수는 없다.
+
+여러 작업 스레드가 캐시를 공유하면 조회·삽입·퇴출의 동시 접근도 관리해야 한다. 또한 accept 루프의 지역 변수 주소를 그대로 작업 스레드에 넘기면 다음 연결이 값을 바꿀 수 있다. 연결별 인자와 해제 책임을 분리하는 이유다. 원본의 빈 함수 채우기 순서와 옛 채점 명령은 구현 역사에 보존하고 현재 실행 지침으로 옮기지 않는다. [Web Proxy Lab 구현 힌트 가이드 · 0580e06](https://github.com/woonyong-kr/lrn-http-proxy/blob/0580e06a40163a42e70b18d065f47687ed9f53bf/webproxy-lab/IMPLEMENTATION_HINT_GUIDE.md)
+
+## Echo 예제가 보여 주는 연결 소유권과 실행 환경
+
+옛 Echo 예제에서는 부모 프로세스가 accept를 계속하고 fork된 자식이 연결 하나를 처리한다. 로그의 PID·PPID와 클라이언트 포트를 함께 읽으면 어떤 프로세스가 어느 연결을 맡았는지 추적할 수 있다. 이 예제의 프로세스 모델을 현재 HTTP Proxy의 동시 처리 방식과 혼동하지 않는다.
+
+macOS에서 만든 바이너리와 Linux 컨테이너용 바이너리를 같은 이름으로 덮어쓰면 실행 형식이 맞지 않을 수 있어 `.build/<OS>-<ARCH>/`로 출력을 나눈 기록도 남아 있다. 반면 첫 번째 Docker 컨테이너를 자동 선택하던 편의 명령은 대상이 불명확하므로 재사용할 실행 절차에서 제외한다. [Echo 연습 폴더 · 0580e06](https://github.com/woonyong-kr/lrn-http-proxy/blob/0580e06a40163a42e70b18d065f47687ed9f53bf/webproxy-lab/echo/README.md)

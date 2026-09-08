@@ -6,7 +6,7 @@ permalink: /wiki/ide-controller/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/io/devices/ide-controller
-projection_sha256: 1029316791efbad22411bcba45a89df3e2349991cf8b2703497d884297ecd88d
+projection_sha256: 36e0125f3219a048b4866a461eaf446ce9901451c459eac0bc7fb03141b7394c
 parent: 장치
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d38307e3894c

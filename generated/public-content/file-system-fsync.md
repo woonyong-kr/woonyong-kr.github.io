@@ -6,7 +6,7 @@ permalink: /wiki/file-system-fsync/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/file-system/fsync
-projection_sha256: c0c1be8915187213b4c43515ada45ee31d301c7424b6a74e9f004d264dbf16f2
+projection_sha256: 3cd69b6fee0762cad58390d545b871ad0c22add7058b0aa938aaeeef8eb5cdae
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189

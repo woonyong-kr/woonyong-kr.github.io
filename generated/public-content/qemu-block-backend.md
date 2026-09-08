@@ -6,7 +6,7 @@ permalink: /wiki/qemu-block-backend/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/pintos/qemu/block-backend
-projection_sha256: 10a155170bb689d23acdfc03f67cb594a21024fe966b4fc1581e9218f0edf922
+projection_sha256: 1537a45dfe22d848de5b4028c543238d11ace0d2ba838fd4ce9a3bc4ee09cc18
 parent: QEMU
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02

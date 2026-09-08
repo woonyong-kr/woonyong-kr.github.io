@@ -6,7 +6,7 @@ permalink: /wiki/file-system-buffer-cache/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/file-system/buffer-cache
-projection_sha256: 2603c4c2880399bc5d75499c7d8c35062d4fb42a8423f9123efd3e0d83a1b808
+projection_sha256: aa6fa70adf084c8fbe2b120bc3c212d973894f199b5cc12f808f4975b2d46ce0
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189

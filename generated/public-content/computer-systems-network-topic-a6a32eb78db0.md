@@ -6,10 +6,19 @@ permalink: /wiki/computer-systems-network-topic-a6a32eb78db0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a6a32eb78db0
-projection_sha256: 67d1b6388460444b33fd16352dcddfe6556b5328bc817901d6cd0585f637ffd2
+projection_sha256: 022c4958546198de7fc6e941fb1af4f0b039e44d5fda6bb1a4f4018adcd6cc24
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
+search_terms:
+- copy_in_string
+- point_of_no_return
+- FD_CLOEXEC
+- e_entry
+- _start
+- load_bias
+- AT_ENTRY
+- AddressOfEntryPoint
 grand_parent: PintOS
 ancestor: 시스템
 ---
@@ -270,7 +279,112 @@ Lazy Loading도 Metadata 메모리를 사용한다. 또한 `setup_stack()`은 St
 
 명령줄은 공백을 기준으로 분리하며 `argv` 배열은 최대 64개 인자를 받는다. 초기 Stack에는 문자열, 정렬 여백, `argv[argc]`의 NULL, 인자 포인터와 가짜 반환 주소가 들어간다. `RDI`에는 `argc`, `RSI`에는 `argv` 주소를 넣는다. Linux처럼 환경 변수와 Auxiliary Vector를 함께 구성하는 경로는 아니다. 인자의 자세한 배치는 [인자 전달](/wiki/computer-systems-network-topic-1217820258bd/)에서 이어서 다룬다.
 
-Segment와 Stack 준비가 성공하면 `if_->rip = ehdr.e_entry`를 설정하고 `process_exec()`가 `do_iret()`로 사용자 실행 상태를 복원한다. 이 구현은 이전 주소 공간을 먼저 정리하므로 새 적재에 실패했을 때 이전 프로그램으로 돌아가는 방식이 아니다. `process_exec()`는 실패를 반환하고 시스템 콜의 `exec()`가 `exit(-1)`로 처리한다. 실행 파일의 참조는 [파일시스템 구현](/wiki/computer-systems-network-topic-c76b83867c50/#실행-파일의-쓰기를-막는-이유)에서 설명하는 쓰기 보호 수명과 함께 유지된다.
+Segment와 Stack 준비가 성공하면 `if_->rip = ehdr.e_entry`를 설정하고 `process_exec()`가 `do_iret()`로 사용자 실행 상태를 복원한다. 실행 파일의 참조는 [파일시스템 구현](/wiki/computer-systems-network-topic-c76b83867c50/#실행-파일의-쓰기를-막는-이유)에서 설명하는 쓰기 보호 수명과 함께 유지된다.
+
+## e_entry에서 첫 명령어까지
+
+ELF64 Header의 `e_entry`는 파일 offset `0x18`에 놓인 8바이트 값이다. 파일 안에서 실행할 코드를 찾는 offset이 아니라 실행을 시작할 가상 주소다. 이 PintOS의 구조체 이름은 `struct ELF`이고, `load()`는 Segment 적재와 초기 Stack 준비가 끝난 뒤 `if_->rip = ehdr.e_entry`를 수행한다. 이 대입만으로 CPU의 RIP가 즉시 바뀌지는 않는다. 커널이 계속 실행하다가 `do_iret()`로 준비한 문맥을 복원할 때 제어가 넘어간다.
+
+PintOS의 [User Linker Script](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/lib/user/user.lds)는 `.text`를 `0x400000`부터 배치하고 `ENTRY(_start)`를 선언한다. `_start`가 항상 `.text`의 첫 바이트에 놓이는 것은 아니다. 링크할 Object의 내용과 배치에 따라 심볼의 주소가 달라질 수 있으므로 `args-single`이나 `halt`의 진입 주소는 해당 빌드의 ELF에서 읽어야 한다. `_start()`는 `main(argc, argv)`를 호출하고 그 반환값을 `exit()`에 전달한다. [User 진입 함수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/lib/user/entry.c)
+
+| 관찰하는 값 | 위치 | 달라지는 시점 |
+|---|---|---|
+| `ehdr.e_entry` | 커널이 읽은 ELF Header | 실행 파일을 읽을 때 |
+| `if_->rip` | 커널 메모리의 복귀 프레임 | `load()` 마지막 대입 뒤 |
+| CPU의 RIP | 실행 중인 CPU 상태 | `iretq`가 복귀 상태를 반영할 때 |
+| 첫 명령어 바이트 | 사용자 가상 주소의 Mapping | 즉시 적재 또는 Lazy Page 초기화 이후 접근 가능 |
+
+진입점이 있다는 사실과 그 위치에서 실행할 수 있다는 사실은 다르다. 현재 로더는 각 `PT_LOAD`의 범위를 검사하지만, `e_entry`가 실제 적재 Segment 안에 있는지 별도로 대조하지 않는다. Header를 읽고 Stack을 준비하는 데 성공해도 첫 명령어를 가져오는 과정에서 실패할 수 있다.
+
+주소가 canonical이고 유효한 Lazy Page가 등록되어 있다면 첫 Instruction Fetch의 Page Fault가 정상적인 적재 계기가 될 수 있다. 반면 미등록 주소나 사용자에게 허용되지 않은 Mapping은 다른 문제다. Supervisor Mapping의 코드를 CPL 3에서 가져오면 접근 권한 위반이고, non-canonical RIP는 Page Table 조회 실패와도 구분한다. 따라서 `e_entry >= KERN_BASE`라는 비교 하나로 모든 실패를 `#PF`라고 설명하지 않는다. 이 구현이 ELF의 실행 권한 `PF_X`를 별도로 적용하지 않는다는 점도 Segment의 존재 여부와 나눠 확인해야 한다.
+
+프레임에서는 `rip`이 `0x98`, `cs`가 `0xa0`에 있다. GDB에서 `x/gx $rdi+0xa0`으로 진입점을 확인하려 하면 CS를 읽게 된다. 구조체 타입으로 `tf->rip`을 읽고, 현재 빌드의 `iretq` 직전 프레임과 직후 RIP를 비교하는 절차는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에서 다룬다.
+
+## exec는 같은 프로세스의 프로그램을 바꾼다
+
+`fork()`는 자식을 만들지만 `exec()`는 현재 프로세스가 실행할 프로그램을 바꾼다. 이 PintOS의 `process_exec()`는 같은 Thread에서 실행되므로 tid와 Kernel Stack을 유지한다. 부모가 종료 상태를 읽을 `self_status`와 자신의 자식 목록도 새로 만들지 않는다. 성공한 exec에서는 일반 파일의 fd Table도 그대로 사용한다.
+
+교체되는 것은 사용자 주소 공간과 실행 파일 참조다. 이전 코드·데이터·Stack·mmap을 정리하고, 새 프로그램의 PML4와 SPT, 초기 Stack을 준비한다. 자원별 회수 순서는 [프로세스 종료](/wiki/computer-systems-network-topic-93ebb5bf7e48/)의 주소 공간 정리와 같다. 다만 성공한 exec는 Thread를 종료하지 않고 새 프로그램으로 이어진다.
+
+| 상태 | 성공한 PintOS exec 전후 |
+|---|---|
+| tid와 Kernel Stack | 유지한다 |
+| 일반 파일의 fd Table | 열린 파일과 현재 위치를 유지한다 |
+| `self_status`와 자식 상태 목록 | 기존 부모·자식 관계를 유지한다 |
+| 사용자 PML4·SPT와 코드·데이터·Stack | 이전 내용을 정리하고 새 이미지로 구성한다 |
+| `running_file` | 이전 실행 파일을 닫고 새 실행 파일의 쓰기 보호를 유지한다 |
+| 사용자 RIP·RSP | 새 Entry Point와 인자 배치를 마친 Stack으로 바꾼다 |
+
+시스템 콜의 `exec()`는 먼저 `copy_in_string()`으로 명령줄을 Kernel Page에 복사한다. 곧 이전 사용자 주소 공간을 파괴하므로, 그 안의 문자열을 계속 참조해서는 안 되기 때문이다. 이 함수는 최대 한 Page 안에서 문자열 끝을 찾고 주소를 확인한다. 잘못된 주소, 길이 초과, 복사 공간 할당 실패는 `process_exec()`에 들어가기 전에도 `exit(-1)`로 이어질 수 있다. [명령줄 복사와 exec 호출](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c)
+
+### 새 주소 공간을 준비하는 순서
+
+`process_exec()`는 자신의 Kernel Stack에 지역 변수 `intr_frame`을 둔다. 스케줄러가 저장하는 `thread->tf`를 새 프로그램의 초기 프레임으로 덮어쓰지 않는다. 사용자 Code Selector는 `0x23`, Data·Stack Selector는 `0x1b`, 초기 RFLAGS는 `FLAG_IF | FLAG_MBS`, 즉 `0x202`다. 이 값은 현재 저장소의 GDT 정의를 기준으로 하며 다른 구현의 `0x2b`·`0x33`과 섞지 않는다.
+
+프레임 전체를 0으로 초기화하는 코드는 없다. Segment와 Flag를 먼저 설정하고, 적재 과정에서 RIP·RSP·RDI·RSI를 채운다. 따라서 나머지 일반 레지스터가 모두 0이라고 예상해서는 안 된다. [초기 프레임과 exec 구현](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c), [Selector 정의](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/threads/loader.h)
+
+| 단계 | VM 빌드 | non-VM 빌드 |
+|---|---|---|
+| 이전 이미지 정리 | `process_cleanup()` 뒤 `close_running_file()` | `close_running_file()` 뒤 `process_cleanup()` |
+| SPT 준비 | `supplemental_page_table_init()`으로 다시 초기화 | SPT를 사용하지 않음 |
+| 새 이미지 적재 | `load()`가 PML4, Lazy Page와 초기 Stack 준비 | `load()`가 PML4, 데이터 Frame과 초기 Stack 준비 |
+| 마지막 처리 | 명령줄 Kernel Page를 반환하고, 성공하면 `do_iret()` | 동일 |
+
+VM에서 SPT를 먼저 정리하는 것은 Lazy Page와 파일에 연결된 자원을 실행 파일 참조의 수명과 맞추기 위해서다. 파괴한 Hash Table을 초기화하기 전까지 정상적인 SPT처럼 탐색해서는 안 된다. `load()` 내부에서 인자를 나누려고 만든 별도의 명령줄 복사본은 `load()`가 정리하고, 시스템 콜이 전달한 복사본은 `process_exec()`가 정리한다.
+
+### 실패해도 이전 프로그램으로 돌아갈 수 있을까
+
+이 구현은 새 실행 파일을 열기 전에 이전 주소 공간을 정리한다. 따라서 파일 열기, Header 검사, Segment나 Stack 준비가 실패해도 이전 이미지로 돌아갈 수 없다. `load()`의 실패를 받은 `process_exec()`는 `-1`을 반환하고, 시스템 콜의 `exec()`는 이를 `exit(-1)`로 처리한다. 그 종료 경로에서 남아 있는 새 주소 공간과 일반 파일도 정리한다. “exec가 실패하면 사용자 호출 지점에서 계속 실행된다”는 규칙을 이 PintOS에 적용하면 안 된다.
+
+아래 모델은 이미지 교체의 성공과 실패를 비교한다. 실제 Page Table이나 파일을 조작하지 않으며, 예제의 `fds`는 열린 파일 상태를 나타내는 작은 Dictionary다.
+
+```run-python
+from dataclasses import dataclass, field
+from typing import Optional
+
+@dataclass
+class Process:
+    tid: int = 7
+    image: Optional[str] = "program-A"
+    kernel_stack: str = "kernel-stack-7"
+    fds: dict = field(default_factory=lambda: {3: ("notes.txt", 20)})
+    exited: bool = False
+    exit_status: Optional[int] = None
+
+
+def replace_program(load_succeeds):
+    process = Process()
+    original_tid = process.tid
+    original_stack = process.kernel_stack
+    original_fds = process.fds
+    print("exec 전:", process.image, dict(process.fds))
+
+    process.image = None  # 이 PintOS는 이전 이미지를 먼저 정리한다.
+    if load_succeeds:
+        process.image = "program-B"
+        assert process.tid == original_tid
+        assert process.kernel_stack == original_stack
+        assert process.fds is original_fds
+        assert process.fds[3] == ("notes.txt", 20)
+        print("새 프로그램 시작:", process.image, dict(process.fds))
+    else:
+        # process_exec()의 실패를 시스템 콜 exec()가 종료로 처리한다.
+        process.exited = True
+        process.exit_status = -1
+        process.fds.clear()
+        print("프로세스 종료:", process.exit_status, dict(process.fds))
+
+    assert process.image != "program-A"
+    print("이전 프로그램의 exec 호출 다음으로 복귀하지 않습니다.\n")
+
+
+replace_program(load_succeeds=True)
+replace_program(load_succeeds=False)
+```
+
+Linux도 모든 exec 실패를 되돌릴 수 있는 것은 아니다. 준비 단계의 오류는 기존 프로그램에 반환할 수 있지만, Linux v6.12의 `begin_new_exec()`가 `point_of_no_return`을 설정한 뒤에는 이후 오류를 치명적인 실패로 처리한다. 이 Flag는 `exec_mmap()`보다 먼저 설정된다. 따라서 경계를 단순히 “PML4를 바꿨는가”로 판단하지 않는다. 이후 실패 경로는 기존의 치명적 Signal이 없으면 SIGSEGV를 보낸다. [Linux의 교체 확정 시점과 실패 처리](https://github.com/torvalds/linux/blob/v6.12/fs/exec.c#L1149)
+
+Linux의 fd도 별도 규칙을 따른다. 일반 fd는 유지되지만 `FD_CLOEXEC`가 설정된 fd는 닫는다. Signal 처리 방식과 다른 Thread, 환경 변수와 Auxiliary Vector 등의 처리까지 이 PintOS의 단일 Thread·fd Table 모델로 설명하지 않는다. [execve가 바꾸는 프로세스 속성](https://man7.org/linux/man-pages/man2/execve.2.html)
 
 ## 바이너리와 GDB에서 확인하기
 
@@ -300,12 +414,34 @@ Segment를 살펴볼 때는 `load_loadable_segment()`에서 `p *phdr`, `validate
 
 VM 미사용 빌드에서는 `install_page()`에서 사용자 주소와 커널 Frame 주소를 함께 확인한다. VM 빌드에서는 SPT 등록과 PML4의 현재 Mapping을 구분한다. `info proc mappings`는 PintOS의 SPT를 출력하는 명령이 아니다. `pml4_get_page()`가 아직 NULL이어도 Lazy Page가 SPT에 등록되어 있을 수 있다. 실제 적재 이후에는 entry 주소와 그 주소에 대응하는 커널 가상 주소에서 같은 바이트가 보이는지, BSS 범위가 0인지 확인할 수 있다.
 
-이 문서의 Python 예제는 Header 해석과 계산을 실행한다. GDB 명령은 해당 커널에서 확인할 관찰 절차이며, 새 QEMU 실행의 통과 기록이나 메모리 측정값으로 제시하지 않는다.
+주소 공간 교체를 보려면 `process_exec()`, `process_cleanup()`, `load()`, `do_iret()`에 중단점을 둔다. `process_exec()`에서 `curr` 대입을 지난 뒤 이전 PML4, tid와 fd Table을 기록하고, 새 적재 뒤 같은 항목과 매핑 내용을 비교한다. 반환된 Page가 재사용되면 이전과 새 PML4의 주소 값이 같을 수도 있으므로 주소가 달라졌는지만으로 교체 여부를 판단하지 않는다.
+
+```gdb
+break process_exec
+break process_cleanup
+break load
+break do_iret
+
+# do_iret(tf)에 중단했을 때 새 사용자 문맥을 확인한다.
+p/x tf->rip
+p/x tf->rsp
+p/x tf->cs
+p/x tf->ss
+p/x tf->eflags
+p tf->R.rdi
+p/x tf->R.rsi
+```
+
+`pml4_activate()` 진입 시점의 CR3는 아직 전환 전일 수 있다. `lcr3()`가 실행된 뒤의 `$cr3`와 대상 PML4의 물리 주소를 비교해야 한다. Kernel 가상 주소인 PML4 포인터와 CR3를 그대로 비교하거나, 임의의 `process_exec+100`에 중단해 아직 정해지지 않은 `success`를 읽지 않는다. QEMU의 TCG TLB 갱신과 Guest Page Pool의 반환 역시 서로 다른 사건이다. [PML4 활성화](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c), [QEMU CR3 갱신](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/helper.c)
+
+이 문서의 Python 예제는 Header 해석, 페이지 계산과 이미지 교체 모델을 실행한다. GDB 명령은 해당 커널에서 확인할 관찰 절차이며, 새 QEMU 실행의 통과 기록이나 메모리 측정값으로 제시하지 않는다.
 
 ## Linux·Windows·QEMU와의 경계
 
 Linux의 `execve()`는 현재 프로세스의 프로그램 이미지를 바꾸며, 성공하면 이전 호출 위치로 돌아오지 않는다. 동적 링크 ELF에서는 `PT_INTERP`가 가리키는 Interpreter가 공유 라이브러리 적재와 연결에 참여한다. Linux의 프로세스 이미지를 설명할 때는 Demand Paging, ASLR, 환경 변수와 Auxiliary Vector, Signal·Thread·권한 상태의 변경도 함께 고려한다. 구체적인 주소 상한, ASLR 설정과 프로그램 Header 수 제한을 모든 Linux 환경에서 같은 상수로 보지 않는다. [Linux execve](https://www.man7.org/linux/man-pages/man2/execve.2.html)
 
-Windows의 PE 이미지는 `MZ` Header와 `PE\0\0` Signature, COFF·Optional Header, Section 정보를 사용한다. 진입점의 `AddressOfEntryPoint`는 Image Base를 기준으로 한 RVA이며 파일 offset과 다르다. Import, Relocation과 DLL 처리가 필요한 것도 단순한 파일 복사로 설명할 수 없는 이유다. `CreateProcess`로 새 프로세스를 만드는 API와 Linux의 `execve()`로 기존 이미지를 교체하는 API도 구분한다. [Microsoft PE 명세](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
+Linux v6.12의 `load_elf_binary()`는 주 실행 파일의 진입점을 `e_entry + load_bias`로 계산한다. `PT_INTERP`가 있으면 최초 제어는 Interpreter의 적재 주소와 그 ELF의 `e_entry`를 합한 위치로 넘기고, 주 프로그램 진입점은 Auxiliary Vector의 `AT_ENTRY`로 전달한다. Interpreter가 없으면 주 프로그램 진입점을 사용한다. 정적 링크 여부만으로 Load Bias가 항상 0이라고 판단할 수는 없으며, ET_EXEC와 ET_DYN, ASLR 적용 조건도 확인해야 한다. [Linux ELF 진입점 계산](https://github.com/torvalds/linux/blob/v6.12/fs/binfmt_elf.c)
+
+Windows의 PE 이미지는 `MZ` Header와 `PE\0\0` Signature, COFF·Optional Header, Section 정보를 사용한다. 진입점의 `AddressOfEntryPoint`는 실제 적재 Base를 기준으로 더하는 RVA이며 파일 offset과 다르다. Header의 `ImageBase`는 선호 주소이므로 실제 적재 주소와 항상 같다고 전제하지 않는다. PE 진입점의 계산만으로 OS Loader를 포함한 최초 Thread 시작 절차 전체를 설명할 수는 없다. Import, Relocation과 DLL 처리가 필요한 것도 단순한 파일 복사로 설명할 수 없는 이유다. `CreateProcess`로 새 프로세스를 만드는 API와 Linux의 `execve()`로 기존 이미지를 교체하는 API도 구분한다. [Microsoft PE 명세](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
 
 PintOS를 System Emulation으로 실행하는 QEMU는 Guest CPU·메모리·디스크 장치의 동작을 제공한다. 여기서 Guest 파일시스템 안의 `args-none`을 해석하는 쪽은 PintOS 로더다. Guest가 디스크 바이트를 읽고 PTE를 기록하면 QEMU는 그 장치와 주소 변환 동작을 실행한다. 이 설명은 QEMU 자체에 ELF를 읽는 코드가 없다는 뜻은 아니다. Machine의 Kernel Image를 직접 적재하는 경로와 User Mode Emulation은 별도로 구분해야 한다. [QEMU System Emulation](https://www.qemu.org/docs/master/system/introduction.html), [User Mode Emulation](https://www.qemu.org/docs/master/user/main.html)
