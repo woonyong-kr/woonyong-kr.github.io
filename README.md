@@ -34,8 +34,8 @@ viewport의 200px 이내 또는 사용자가 코드에 접근할 때 준비합�
 - JSON 응답은 최대 1MiB이며 header와 body 모두 deadline·취소 범위에 포함됩니다.
 - 서버 사용 불가 상태는 다시 확인, online 전환, 탭 복귀로 복구합니다. 편집 내용과 출력은 유지합니다.
 - 최초 module 다운로드 실패는 본문을 보존하고 새로고침 동작을 제공합니다. 브라우저가 실패한 module import를 현재 문서에 캐시하기 때문입니다. 이 단계에는 아직 생성된 편집기가 없습니다.
-- HTTP 중단은 응답 대기를 중단합니다. 서버 작업 종료를 보장하지 않습니다.
-- Preview 중단·재시작은 제공하지만, iframe에서 CPU 무한 반복의 강제 종료는 보장하지 않습니다.
+- HTTP 중단은 원래 request ID로 개인 서버에 취소를 요청합니다. 서버가 Docker 컨테이너 제거를 확인한 뒤에만 종료 완료로 표시하며, 오프라인·이전 서버·정리 실패로 확인할 수 없으면 종료 여부가 불명확하다고 표시합니다.
+- Interactive preview의 JavaScript는 Worker에서 실행합니다. 중단은 Worker를 실제로 종료하며, 2초 동안 응답하지 않는 Worker도 자동 종료합니다. 코드를 편집한 뒤 다시 실행할 수 있습니다. Worker DOM의 지원 범위를 사용하므로 Canvas/WebGL과 임의의 동기식 layout/browser API는 지원하지 않습니다.
 
 ## Mermaid
 
