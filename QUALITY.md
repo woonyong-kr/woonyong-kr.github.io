@@ -181,6 +181,11 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
   macOS의 세 브라우저에서는 native WebGL 지원과 실제 shader 출력을 별도로 확인했다.
   브라우저 제한 때문에 WebGL 검사를 통째로 삭제하거나 무조건 건너뛰지 않는다.
 - showcase의 오래된 HTTP/CPU 취소 불가 설명을 현재 동작으로 고쳤다. Wiki 본문은 수정하지 않았다.
+- 최종 adapter `9745b806bb14108a9f4245a3e04fe8ac9f10bbe7`은 같은 실행기와
+  공통 SVG 버튼·접근성 이름·상하 여백 개선을 포함한다. 원본의 170개 Node/Vitest와
+  22개 Chromium E2E를 다시 통과했고 360px·1280px에서 실제 복사와 toolbar 여백을 확인했다.
+  사이트 전용 UI 복사본은 추가하지 않는다. WebGL을 비활성화한 Chromium에서도
+  앞선 사이트 검사의 2D 출력·지원 안내·중단 경로가 통과했다.
 
 ## 전달과 남는 한계
 
