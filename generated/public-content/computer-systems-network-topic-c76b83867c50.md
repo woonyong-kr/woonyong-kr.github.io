@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-c76b83867c50/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
-projection_sha256: d40f6061c7dbadb1fa9ef3444909ccd24577c650b0973ec5a9ca65b2a41e5613
+projection_sha256: 534f18129a73c77809519cd81fbd5c20937e9c779402ab100c14ca8c9a976b20
 parent: PintOS
 content_status: ready
 public_parent_id: Wiki/projects/pintos
@@ -22,6 +22,8 @@ ancestor: 시스템
 여기서는 [lrn-pintos의 `5afaa6d` 시점](https://github.com/woonyong-kr/lrn-pintos/tree/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0)의 파일 객체와 연속 할당 구조를 읽는다. 하위 키워드의 파일 확장·Directory·경로 탐색은 이 구조에서 이어서 다룰 주제다.
 
 ## file, inode, inode_disk
+
+`struct file`의 전체 정의는 `file.c`에 있고, 헤더의 함수 원형은 내부 필드를 공개하지 않은 채 `struct file *`를 사용한다. 외부 코드는 `file_read()`·`file_seek()` 같은 API로 파일을 다룬다. 구조체가 메모리에서 어떤 상태를 갖는지와 다른 모듈에 무엇을 공개하는지는 별개의 설계다.
 
 `struct file`에는 `inode` 포인터, 현재 위치인 `pos`, 해당 파일 객체의 쓰기 금지 요청을 나타내는 `deny_write`가 있다. 같은 파일을 여러 번 열면 서로 다른 `struct file`이 같은 inode를 가리킬 수 있다. 각 `pos`가 따로 있으므로 같은 파일 내용에 독립적인 위치로 접근할 수 있다.
 
@@ -52,11 +54,29 @@ flowchart TD
 
 `struct file`의 `bool`은 1바이트이며, 앞의 8바이트 포인터와 4바이트 `off_t`에 이어 배치되고 구조체 끝에 정렬용 Padding이 붙는다. `bool` 자체를 4바이트라고 계산하지 않는다. inode의 `data`는 offset 32에서 시작하므로 전체 크기는 `32 + 512 = 544`바이트다. 다른 ABI나 구조체 정의에서는 `sizeof`를 다시 확인해야 한다.
 
+`inode_disk`의 앞 세 필드는 각각 4바이트이고 `unused[125]`가 500바이트를 채워 전체가 `12 + 500 = 512`바이트가 된다. `unused`는 소스에 명시된 배열이며 컴파일러가 자동으로 삽입한 Padding과는 다르다. `inode_create()`는 `ASSERT(sizeof *disk_inode == DISK_SECTOR_SIZE)`로 디스크에 쓸 구조체의 크기를 확인한다.
+
+메모리의 `inode->data`는 디스크에서 읽은 Metadata 사본이다. 이 사본을 변경했다고 디스크에 자동 반영되지는 않는다. 저장 형식을 확장한다면 언제 어떤 Metadata를 `disk_write()`로 기록할지도 함께 정해야 한다.
+
+## 디스크의 inode와 메모리 목록을 비교하기
+
+ext4의 inode table은 디스크에 저장된 inode record들의 배열이다. PintOS의 `open_inodes`는 메모리에서 열린 객체를 관리하는 List이므로 두 구조를 같은 종류의 목록으로 비교하지 않는다. 디스크 구조를 비교할 때는 ext4의 inode record와 PintOS의 `inode_disk`를, 열린 상태를 비교할 때는 각 커널의 메모리 객체를 따로 봐야 한다.
+
+ext4의 디스크 inode record 크기는 포맷 시 정하며 `s_inode_size`에 기록된다. 흔한 기본값은 256바이트지만 모든 환경에서 고정된 값은 아니다. 또한 소유자·그룹·접근 권한을 나타내는 `uid`·`gid`·`mode`와 접근·내용 수정·inode 변경 시각 등을 저장한다. 현재 PintOS의 `inode_disk`에는 이런 필드가 없다. 이 차이는 파일을 어떤 정보로 관리하는지의 차이이며, 구조체 크기만으로 기능이나 성능의 우열을 판단할 수는 없다. [ext4 inode의 저장 형식](https://www.kernel.org/doc/html/latest/filesystems/ext4/inodes.html)
+
 ## 열려 있는 inode를 재사용한다
+
+`inode_init()`은 전역 `open_inodes` List를 빈 상태로 초기화한다. 이는 디스크에 있는 모든 파일의 inode 목록이 아니라 현재 메모리에 열린 inode를 관리하는 목록이다.
 
 `inode_open(sector)`는 먼저 `open_inodes` List에서 같은 Sector의 inode가 이미 열려 있는지 찾는다. 있으면 `inode_reopen()`으로 `open_cnt`를 늘려 같은 객체를 돌려준다. 없으면 새 inode를 할당하고 디스크의 Metadata를 읽어 온다.
 
+현재 `inode_open()`은 `malloc()` 실패를 확인한 뒤에만 새 객체를 List에 넣는다. 할당이 실패하면 `NULL`을 반환한다. 마지막 `inode_close()`에서는 `open_cnt`가 0이 된 객체를 List에서 빼고 메모리를 해제한다.
+
+이 검색과 참조 수 변경 자체에 내부 Lock이 있는 것은 아니다. 공유 List 접근이 겹칠 수 있는 호출 경로에서는 호출자가 파일 시스템 Lock 등으로 접근을 보호해야 한다. `deny_write_cnt`는 파일 내용의 쓰기 허용 여부를 나타내며 List와 참조 수에 대한 동시 접근을 막는 Lock을 대신하지 않는다.
+
 이 inode를 받은 `file_open()`은 새 파일 객체의 위치를 0, 쓰기 금지 상태를 `false`로 초기화한다. 따라서 파일을 두 번 열었을 때 inode는 공유해도 파일 객체는 각각 생긴다. 같은 inode를 찾는 List와 프로세스의 fd table은 다른 자료구조다.
+
+`file_open()`은 전달받은 inode의 소유권도 넘겨받는다. 파일 객체 할당에 실패하거나 inode가 `NULL`이면 inode를 닫고 할당한 메모리를 정리한다. 성공한 경우에만 나중의 `file_close()`가 이 참조를 해제한다. `file_reopen()`은 inode 참조를 하나 늘린 뒤 새 파일을 열기 때문에 위치가 0에서 시작한다. 현재 위치까지 복사하는 `file_duplicate()`와 구분해야 한다.
 
 현재 위치를 사용하는 `file_read()`와 `file_write()`는 inode의 위치 지정 I/O에 작업을 맡긴 뒤, 실제 처리한 Byte 수만큼 `pos`를 이동시킨다. 요청한 크기를 전부 처리하지 못했다면 요청 크기 전체를 더하지 않는다. 위치 지정 함수인 `file_read_at()`·`file_write_at()`은 인자로 받은 offset을 사용하며 파일 객체의 현재 위치를 바꾸지 않는다. [file 구현](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/filesys/file.c)
 
@@ -95,7 +115,7 @@ print("new file offset:", offset)
 
 실제 `inode_read_at()`은 Sector 전체를 읽을 수 있는 경우 호출자가 건넨 목적지 Buffer로 바로 읽고, 일부만 필요한 경우 임시 Bounce Buffer에 Sector를 읽은 뒤 필요한 범위를 복사한다. 따라서 모든 읽기가 항상 Bounce Buffer를 거치는 것도 아니다. 위의 5,000 offset처럼 Sector 중간에서 시작하는 읽기에서 임시 Buffer가 필요한 이유를 볼 수 있다.
 
-`inode_create()`는 필요한 연속 공간을 Free Map에서 할당하고 Metadata를 기록한 뒤 데이터 Sector를 0으로 채운다. 이 구조에서 파일 크기 변경과 공간 확장을 다루려면 위치 계산뿐 아니라 할당·회수 정책까지 함께 바꿔야 한다.
+`inode_create()`는 필요한 연속 공간을 Free Map에서 할당하고 Metadata를 기록한 뒤 데이터 Sector를 0으로 채운다. 이 구조에서 파일 크기 변경과 공간 확장을 다루려면 위치 계산뿐 아니라 할당·회수 정책까지 함께 바꿔야 한다. 끝을 넘는 쓰기의 처리와 FAT·Extent의 차이는 [파일 확장](/wiki/computer-systems-network-topic-11f41b49c3a0/)에서 이어진다.
 
 ## close와 remove가 만나는 시점
 

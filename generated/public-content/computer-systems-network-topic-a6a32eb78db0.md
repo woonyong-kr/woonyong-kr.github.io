@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a6a32eb78db0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a6a32eb78db0
-projection_sha256: b0bbe6fe5b2639200d0a7081e0f48ceea1341b1a1673ab3c21700745dcd61f41
+projection_sha256: 67d1b6388460444b33fd16352dcddfe6556b5328bc817901d6cd0585f637ffd2
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -270,7 +270,7 @@ Lazy Loading도 Metadata 메모리를 사용한다. 또한 `setup_stack()`은 St
 
 명령줄은 공백을 기준으로 분리하며 `argv` 배열은 최대 64개 인자를 받는다. 초기 Stack에는 문자열, 정렬 여백, `argv[argc]`의 NULL, 인자 포인터와 가짜 반환 주소가 들어간다. `RDI`에는 `argc`, `RSI`에는 `argv` 주소를 넣는다. Linux처럼 환경 변수와 Auxiliary Vector를 함께 구성하는 경로는 아니다. 인자의 자세한 배치는 [인자 전달](/wiki/computer-systems-network-topic-1217820258bd/)에서 이어서 다룬다.
 
-Segment와 Stack 준비가 성공하면 `if_->rip = ehdr.e_entry`를 설정하고 `process_exec()`가 `do_iret()`로 사용자 실행 상태를 복원한다. 이 구현은 이전 주소 공간을 먼저 정리하므로 새 적재에 실패했을 때 이전 프로그램으로 돌아가는 방식이 아니다. `process_exec()`는 실패를 반환하고 시스템 콜의 `exec()`가 `exit(-1)`로 처리한다. 실행 파일의 참조는 [파일시스템 구현](/wiki/computer-systems-network-topic-c76b83867c50/#실행 파일의 쓰기를 막는 이유)에서 설명하는 쓰기 보호 수명과 함께 유지된다.
+Segment와 Stack 준비가 성공하면 `if_->rip = ehdr.e_entry`를 설정하고 `process_exec()`가 `do_iret()`로 사용자 실행 상태를 복원한다. 이 구현은 이전 주소 공간을 먼저 정리하므로 새 적재에 실패했을 때 이전 프로그램으로 돌아가는 방식이 아니다. `process_exec()`는 실패를 반환하고 시스템 콜의 `exec()`가 `exit(-1)`로 처리한다. 실행 파일의 참조는 [파일시스템 구현](/wiki/computer-systems-network-topic-c76b83867c50/#실행-파일의-쓰기를-막는-이유)에서 설명하는 쓰기 보호 수명과 함께 유지된다.
 
 ## 바이너리와 GDB에서 확인하기
 
