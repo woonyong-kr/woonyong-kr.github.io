@@ -203,12 +203,12 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
   단위 테스트는 추가하지 않았고 실제 컴파일 결과와 사용자 JVM 인자를 확인했다.
 - 콘텐츠 담당 작업의 `f95b350`까지 보존하며, Wiki 본문을 직접 수정하지 않았다.
 
-최종 사이트 adapter는 `832e2fbb381528f5b6587c3d3f847d78d24401af`이다.
+최종 사이트 adapter는 `4f933fdbf2cd7542bbba1c15291521c5778e94e1`이다.
 서버의 비동기 요청 실패를 처리하고 다음 요청을 받을 수 있게 하는 공통 경계를 포함한다.
 또한 Obsidian의 24px 접기 여백이 중첩된 실행 편집기에 들어와 활성 줄 배경을 끊는 문제를
 `.rcb` 범위 안에서 수정했다. 실제 host CSS를 넣은 회귀 검사는 수정 전에 실패했고,
 수정 후 줄번호와 코드의 배경·높이·경계가 이어지며 코드 안쪽 8px 여백을 확인했다.
-별도 실행의 원본 verify는 171개 Node/Vitest와 24개 Chromium E2E를 통과했다.
+별도 실행의 원본 verify는 173개 Node/Vitest와 24개 Chromium E2E를 통과했다.
 운영 서버 CLI의 hash는 UI 변경 전후 동일하며 추가 서버 재시작은 필요하지 않다.
 
 Run과 Stop은 하나의 버튼에서 전환되고, preview watchdog이 Worker를 종료해도 Run으로 복귀한다.
@@ -225,9 +225,33 @@ Run과 Stop은 하나의 버튼에서 전환되고, preview watchdog이 Worker�
 않는다. fractional CSS pixel 비교에만 1px 이내 반올림 오차를 허용한다. 수정본은 Chromium·Firefox·
 WebKit에서 모두 통과했다. 기존 취소·재실행 시나리오를 교체했으며 보호 검사를 삭제하지 않았다.
 
-최종 콘텐츠 기준은 담당 작업의 `1a195b1`이다. producer 대조에서 발견한 다음 배포용
-Socket·데이터 표현 두 문서는 담당 작업이 producer로 반영했고, 이번 검증이 끝날 때까지
-canonical compiler와 공개 projection을 함께 동결했다. 생성물의 수동 보정은 하지 않았다.
+최종 콘텐츠 기준은 담당 작업의 `d8e24017e118e136ddef4129e9772f2b3a4402cb`다.
+앞선 `1a195b1`의 Socket·데이터 표현과 별도로 14개 네트워크/PintOS 문서를 담당 작업이
+정규 producer로 반영했다. 공개 문서는 1,341개다. 담당 작업은 84개 브라우저/화면 크기 조합과
+전체 링크 검사를 통과했고, 마지막 Web Server 도식 줄바꿈도 source에서 수정하고 재검증했다.
+이번 검증이 끝날 때까지 canonical compiler와 공개 projection을 함께 동결했다.
+사이트에서 생성물을 수동 보정하지 않았다.
+
+## 429 대기 후 복구 경계
+
+사이트 CI `34228254821`에서는 앞선 무한 반복 종료 검사는 통과했지만, Firefox의 429 검사에서
+1초 대기 뒤에도 Check again이 비활성화된 실패를 잡았다. timer가 deadline보다 1ms 일찍
+호출되면 기존 구현은 비활성 상태를 유지한 채 다음 timer를 예약하지 않는 결함을 단위 검사로
+재현했다. 기존 코드에서 실패했고 수정 후 통과했다. CI trace에는 timer 호출 시각 자체가 없어
+그 실행의 직접 원인을 소급 확정하지는 않으며, 재현한 결함과 구분한다.
+
+대기 계산은 monotonic clock으로 통일하고 이른 timer 호출에서는 남은 시간만 다시 예약한다.
+deadline 전에 버튼을 활성화하지 않고, deadline 이후에는 사용자 재확인을 허용한다.
+시스템 시각을 60초 뒤로 조정해도 1초의 상대 대기가 끝나는 회귀 검사도 추가했다.
+검사 timeout이나 retry 횟수는 늘리지 않았으며, 자동 code 실행·상시 polling도 추가하지 않는다.
+dispose는 예정된 timer를 취소하고 callback의 lifecycle guard를 유지한다. 서버 CLI는 변경하지 않는다.
+최종 원본의 로컬·CI verify는 173개 Node/Vitest와 24개 Chromium E2E를 통과했다.
+실제 Jekyll 빌드의 429 복구·동일 요청 ID 취소도 세 브라우저에서 각각 세 번, 총 9회 통과했다.
+
+부하가 있는 로컬 검증에서 cache용 가짜 Docker의 Node VM 시작이 2초 제한을 넘겨 두 검사가
+실패했으며 단독 실행에서는 통과했다. inventory/cache 검사는 가벼운 shell 실행 fixture로 분리해
+실제 executable 경계를 유지한다. 실패 cache 검사는 임의의 rejection을 허용하지 않고 의도한
+Docker unavailable 오류를 확인한다. 운영의 2초 조회 deadline과 컨테이너 취소·timeout 검사는 유지한다.
 
 ## 전달과 남는 한계
 
