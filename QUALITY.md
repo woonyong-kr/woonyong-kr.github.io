@@ -134,6 +134,35 @@ gzip은 1,519 → 1,482 bytes다. 새 preview Worker chunk는 84,310 bytes / gzi
 HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청하지 않는다.
 실행기 본체는 gzip 194,356 → 195,626 bytes다. CPU 종료를 위한 코드 비용은 실행 시에 지불한다.
 
+## Canvas와 Kotlin 종료 진단 후속 개선
+
+- 실행기 `b1c4989fa966919edd148b56022c64dac2ea7249`에서 native OffscreenCanvas의
+  2D·WebGL·WebGL2를 Worker 안에서 실행한다. 실제 shader 출력·readback·크기 변경·입력·
+  증분 그리기·Worker 종료와 재시작을 Chromium/Firefox/WebKit 15개 검사로 확인했다.
+  이 신규 기능 검사는 수정 전 revision에서 4개 모두 실패했다.
+- 화면에는 bounded ImageBitmap만 전송하고 generic DOM method executor는 열지 않았다.
+  canvas 최대 8개·한 변 2048px·개별 1 megapixel·전체 4 megapixel, 최대 30fps 및
+  canvas별 전송 중 이미지 1개를 제한한다. frame의 크기 제한만 완화한 임시 mutation에서는
+  비정상 전송 보호 검사가 실제 실패했고 원상 복구 후 최종 검증했다.
+- Kotlin 정상 예제가 CPU를 제한한 실제 Docker에서 15초 후 `exitCode: 137` 및 빈 stdout/stderr로
+  끝나는 현상을 재현했다. 같은 조건의 수정본은 `exitCode: 124`, `failureReason: timeout`,
+  컴파일을 포함한 15초 제한 설명을 반환한다. 기존 최초 1회는 stderr/exitCode 기록이 없어
+  원인을 소급 확정하지 않는다. 수정 후 일반 조건의 실제 Kotlin 4회는 모두 정상 출력했다
+  (4.44–5.07초). 확인된 Docker OOM과 진단 없는 비정상 종료도 별도로 분류한다.
+- 취소 테스트는 실제 child process가 1초 내 시작한다는 가정을 제거하고 시작·제거 이벤트를
+  기다린다. 기존 취소·중복 실행·sandbox·출력 제한 검사는 유지했다. timeout·OOM·동일 ID
+  결과 재사용·선택적 metadata 검사를 추가했고 기준을 낮추지 않았다.
+- 원본의 최종 `npm run verify`는 168개 Node/Vitest, 22개 Chromium E2E를 통과했다.
+  coverage는 statements 82%, branches 74.92%, functions 85.15%, lines 86.62%다.
+  Worker Canvas entry는 frame entry와 같이 실제 브라우저에서 실행되므로 Node coverage에서 제외한다.
+  사이트는 production bundle의 Canvas/WebGL 연결을 별도로 검증한다.
+- 같은 사이트 빌드 조건에서 초기 탐색 코드 합계는 2,681 → 2,809 bytes,
+  gzip 1,482 → 1,549 bytes다. 실행할 때만 받는 preview chunk는
+  84,310 → 88,201 bytes / gzip 23,110 → 24,661 bytes이고,
+  실행기 본체 gzip은 195,626 → 195,674 bytes다. 일반 문서의 실행기 본체 요청은 추가하지 않는다.
+- 이번 후속 변경은 위키 본문·Vault·생성 Markdown을 수정하지 않는다.
+  콘텐츠 담당 작업의 `b1bbe65`를 보존하며, 그 작업의 Mermaid 검증과 함께 사이트 `npm run verify`를 실행한다.
+
 ## 전달과 남는 한계
 
 로컬·CI의 사이트 최종 명령은 `npm run verify`다. PR은 검증만 하고 검증된 main 산출물만 배포한다.
@@ -143,7 +172,8 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
 아래 두 한계는 추가 개선으로 해소했다. 개인 서버는 요청 ID로 실제 Docker 작업을 취소하고,
 interactive preview의 사용자 코드는 종료 가능한 Worker에서 실행한다. 서버가 오프라인이거나
 이전 버전이라 취소를 확인할 수 없을 때에는 UI가 종료를 확인했다고 표시하지 않는다.
-Worker DOM은 완전한 browser DOM이 아니므로 Canvas/WebGL과 임의의 동기식 layout/browser API는 지원하지 않는다.
+Canvas 2D·WebGL·WebGL2는 후속 개선으로 Worker의 native OffscreenCanvas에서 실행한다.
+Worker DOM은 완전한 browser DOM이 아니므로 임의의 동기식 layout/browser API는 지원 범위에 따른다.
 개인 서버 offline은 브라우저 실행·본문·검색·테마의 장애와 구분한다.
 Obsidian 정식 release·설치, 실행 인프라 교체, 상시 monitoring은 수행하지 않았다.
 실패한 운영 반영은 직전 검증된 site/adapter 조합으로 revert하며 history를 재작성하지 않는다.

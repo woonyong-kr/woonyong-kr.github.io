@@ -313,3 +313,21 @@ test('@core runaway preview stops its Worker and restarts on the built site', as
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect(preview.getByText('Recovered preview')).toBeVisible();
 });
+
+test('@core renders Worker Canvas and WebGL through the production bundle', async ({ page }) => {
+  await configureRunner(page);
+  await page.goto(showcase);
+  const web = await block(page, 'web');
+  await web.locator('.cm-content').fill(`<canvas id="two" width="20" height="20"></canvas><canvas id="gpu" width="20" height="20"></canvas><script>
+    const c = document.querySelector('#two').getContext('2d'); c.fillStyle = '#00ff00'; c.fillRect(0,0,20,20);
+    const gl = document.querySelector('#gpu').getContext('webgl'); if (!gl) throw new Error('WebGL unavailable');
+    gl.clearColor(1,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+    </script>`);
+  await web.getByRole('button', { name: 'Run code', exact: true }).click();
+  const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
+  for (const [id, expected] of [['two', [0,255,0,255]], ['gpu', [255,0,0,255]]] as const) {
+    await expect.poll(() => preview.locator(`#${id}`).evaluate((element: HTMLCanvasElement) => Array.from(element.getContext('2d')?.getImageData(0,0,1,1).data ?? []))).toEqual(expected);
+  }
+  await web.getByRole('button', { name: 'Stop', exact: true }).click();
+  await expect(web).toHaveAttribute('data-state', 'cancelled');
+});
