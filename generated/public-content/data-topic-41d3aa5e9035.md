@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-41d3aa5e9035/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-41d3aa5e9035
-projection_sha256: 49587d1d83960ce2a47bfad9064ea21293351177518e1001ca04fff4cf3a2899
-parent: MiniDB
+projection_sha256: 42c3ab4dd61c20ce33556589d66e57e3d67175e74dec307b1be298e0faa8d525
+parent: lrn-sql
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

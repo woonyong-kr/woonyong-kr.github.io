@@ -6,8 +6,8 @@ permalink: /wiki/data-sql-ac4d1119ed58/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-sql-ac4d1119ed58
-projection_sha256: c32916c3bffb494c92279770b956ae9dd891018497c6ecf7cd6ede947f65829b
-parent: MiniDB
+projection_sha256: 5ad7cc92a14306abbf748f0096dd2f5c68c64d97a75d768554c90398483c5b75
+parent: lrn-sql
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

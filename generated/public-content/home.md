@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: d4c894ab4e401f21dc250cef984eeac246b3c36ebaefa3e7f0817897214fe83f
+projection_sha256: 138d6da10439a642b7291be45a2a8772c38fa0aa64f4a5e39f068b56b7df23bd
 content_status: ready
 ---
 
@@ -26,6 +26,13 @@ content_status: ready
 - [플랫폼](/wiki/platform-delivery-operations/)
 - [AI](/wiki/ai-machine-learning/)
 - [프로젝트](/wiki/projects/)
+
+## 학습 프로젝트
+
+SQL 엔진과 운영체제를 구현하며 살펴본 내용을 관련 개념과 연결한다. 아래 순서는 GitHub 저장소 생성 순서다.
+
+- [SQL](/wiki/lrn-sql/) — 저장과 조회가 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
+- [PintOS](/wiki/pintos/) — Thread Scheduling과 가상 메모리를 다루는 OS 구현. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
 
 ## 참고한 책
 

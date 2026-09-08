@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-b1206d266e93/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-b1206d266e93
-projection_sha256: 67d3d005dd74ee645f2b87e0b33e45cd5d5df05ff09c71572e4b04c934e904f8
-parent: MiniDB
+projection_sha256: 974a0dde30ae98617a5a41e0192534f3ee91b082aeb0aa9926d7d56574affe51
+parent: lrn-sql
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database
