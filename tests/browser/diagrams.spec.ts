@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ page, baseURL }) => {
+  // The Index page also contains SQL; keep its capability probe on the test server.
+  await page.addInitScript(endpoint => {
+    new MutationObserver((_, observer) => {
+      const meta = document.querySelector<HTMLMetaElement>('meta[name="rcb-personal-compiler-endpoint"]');
+      if (meta) { meta.content = endpoint; observer.disconnect(); }
+    }).observe(document, { childList: true, subtree: true });
+  }, baseURL!);
+});
+
 for (const slug of ['indexes', 'data-b-tree-cd9340fd2546']) {
   test(`@core ${slug} diagrams fit mobile and follow theme changes`, async ({ page }) => {
     const errors: string[] = [];
