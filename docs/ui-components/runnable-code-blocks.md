@@ -21,7 +21,7 @@ permalink: /docs/ui-components/runnable-code-blocks/
 |:--|:--|:--|
 | 브라우저 | JavaScript, TypeScript | sandboxed Web Worker / browser transpile |
 | 브라우저 preview | HTML, CSS | script·network가 차단된 sandboxed iframe |
-| 브라우저 상호작용 | React (JSX/TSX), Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | script만 허용한 isolated iframe |
+| 브라우저 상호작용 | React (JSX/TSX), Web (HTML/CSS/JS), Web (HTML/CSS/TypeScript) | Worker 실행 · sandboxed iframe에 결과 표시 |
 | 개인 컴파일러 | Python, SQL, Kotlin, Java, C, C++, Go, Rust, C#, Swift, Ruby, PHP, R, Dart, Lua, Shell | `runner.woonyong.com` → 준비된 격리 local container |
 | 외부 provider 전용 | Scala | WN Docs에서는 외부 전송을 끈 상태라 실행하지 않음 |
 
@@ -33,17 +33,20 @@ Java·Kotlin처럼 compile runtime이 필요한 언어는 Run을 누를 때 sour
 개인 컴파일러는 현재 PC에 명시적으로 준비된 digest-pinned runtime만 버튼을 활성화합니다. container는 network가
 차단되고, read-only root filesystem·non-root user·CPU·memory·process·15초 실행 시간·출력
 크기 제한을 적용합니다. 전송 실패 시 전체 22초 안에서 같은 request ID로 최대 한 번 재요청합니다.
-중단 버튼은 응답 대기를 취소하며, 서버 작업 자체의 종료를 보장하지 않습니다.
+중단 버튼은 같은 request ID의 서버 작업에 취소를 요청합니다. 서버가 container 제거를 확인한
+뒤에만 종료 완료로 표시하며, 연결이 끊겨 확인할 수 없으면 종료 여부가 불명확하다고 안내합니다.
+15초 제한에는 컴파일 시간이 포함되며, timeout과 메모리 제한 초과는 Output에 원인을 표시합니다.
 429 응답에는 서버가 알려준 대기 시간 이후 다시 확인할 수 있습니다.
 
-`run-react`, `run-web`, `run-web-ts`는 iframe 안에서만 script를 실행합니다. 네트워크 요청,
+`run-react`, `run-web`, `run-web-ts`는 작성한 script를 Worker에서 실행하고 iframe에 결과를 표시합니다. 네트워크 요청,
 외부 리소스, 팝업, form 제출, top navigation, same-origin 접근은 허용하지 않으며,
 `console.log`와 runtime 오류는 Output으로 전달됩니다. `run-react`는 bundle에 포함된
 React와 ReactDOM만 사용할 수 있고, `react`, `react-dom`, `react-dom/client` 이외의 import와
 상대 경로 multi-file import는 거부합니다.
 
-Preview는 종료 후 다시 실행할 수 있습니다. iframe은 CPU 시간을 격리하지 않으므로
-무한 반복은 탭을 멈출 수 있습니다. 긴 계산에는 JavaScript·TypeScript Worker 예제를 사용하세요.
+Preview의 중단 버튼은 Worker를 종료하며, 2초 동안 응답하지 않는 무한 반복도 자동으로 중단합니다.
+코드를 편집한 뒤 다시 실행할 수 있습니다. Canvas 2D·WebGL·WebGL2도 Worker에서 실행하며,
+WebGL context 제공 여부는 브라우저와 GPU 환경에 따릅니다.
 
 ## 신뢰·sandbox 경계
 

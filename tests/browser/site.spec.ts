@@ -317,17 +317,29 @@ test('@core runaway preview stops its Worker and restarts on the built site', as
 test('@core renders Worker Canvas and WebGL through the production bundle', async ({ page }) => {
   await configureRunner(page);
   await page.goto(showcase);
+  // The CI VM can lack a GL driver (Firefox reports WEBGL_EXHAUSTED_DRIVERS).
+  // Establish native Worker support independently of our bridge; a bridge regression
+  // must fail whenever that native context is available.
+  const nativeWebGL = await page.evaluate(async () => await new Promise<boolean>((resolve, reject) => {
+    const url = URL.createObjectURL(new Blob([`try { self.postMessage(!!new OffscreenCanvas(20,20).getContext('webgl')); } catch { self.postMessage(false); }`], {type: 'text/javascript'}));
+    const worker = new Worker(url);
+    const timer = setTimeout(() => { worker.terminate(); URL.revokeObjectURL(url); reject(new Error('Native WebGL probe timed out')); }, 5_000);
+    worker.onmessage = event => { clearTimeout(timer); worker.terminate(); URL.revokeObjectURL(url); resolve(event.data === true); };
+    worker.onerror = () => { clearTimeout(timer); worker.terminate(); URL.revokeObjectURL(url); reject(new Error('Native WebGL probe failed')); };
+  }));
   const web = await block(page, 'web');
   await web.locator('.cm-content').fill(`<canvas id="two" width="20" height="20"></canvas><canvas id="gpu" width="20" height="20"></canvas><script>
     const c = document.querySelector('#two').getContext('2d'); c.fillStyle = '#00ff00'; c.fillRect(0,0,20,20);
-    const gl = document.querySelector('#gpu').getContext('webgl'); if (!gl) throw new Error('WebGL unavailable');
-    gl.clearColor(1,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+    let gl; try { gl = document.querySelector('#gpu').getContext('webgl'); } catch {}
+    if (gl) { gl.clearColor(1,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT); }
+    else { console.log('WebGL context unavailable on this browser'); }
     </script>`);
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
-  for (const [id, expected] of [['two', [0,255,0,255]], ['gpu', [255,0,0,255]]] as const) {
+  for (const [id, expected] of [['two', [0,255,0,255]], ...(nativeWebGL ? [['gpu', [255,0,0,255]]] as const : [])] as const) {
     await expect.poll(() => preview.locator(`#${id}`).evaluate((element: HTMLCanvasElement) => Array.from(element.getContext('2d')?.getImageData(0,0,1,1).data ?? []))).toEqual(expected);
   }
+  if (!nativeWebGL) await expect(web.locator('.rcb__output')).toContainText('WebGL context unavailable on this browser');
   await web.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect(web).toHaveAttribute('data-state', 'cancelled');
 });

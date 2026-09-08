@@ -163,6 +163,25 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
 - 이번 후속 변경은 위키 본문·Vault·생성 Markdown을 수정하지 않는다.
   콘텐츠 담당 작업의 `b1bbe65`를 보존하며, 그 작업의 Mermaid 검증과 함께 사이트 `npm run verify`를 실행한다.
 
+## 초기 실행 가능 여부와 CI 렌더링 환경
+
+- 후속 실행기 `4c1f8f24c9ebf7331d5faaa39eb1fcb0278c24d2`는 선택적 local-runner의
+  capabilities 조회를 단일 Docker image 목록·동시 요청 공유·2초 cache로 변경했다.
+  설치된 repository와 pinned digest가 모두 일치할 때만 제공하며 실패는 cache하지 않는다.
+  실제 6개 동시 요청의 조회 시간은 3.25초 → 0.49초였고 client의 2.5초 deadline은 유지한다.
+  최종 원본 verify는 170개 Node/Vitest와 22개 Chromium E2E를 통과했다.
+  변경은 서버와 테스트에 한정되어 browser/plugin bundle hash는 앞선 revision과 동일하다.
+- 실제 Worker close 관찰에서 생성 후 약 2.34초에 watchdog 안내가 도착하고,
+  Chromium의 target detachment는 생성 후 약 3.98초에 도착했다. 2초 watchdog과
+  4초 이내 안내 assertion은 유지하고 별도 close 관찰만 6초로 보완했다.
+- Ubuntu CI의 Firefox trace는 `WEBGL_EXHAUSTED_DRIVERS`를 기록했다.
+  사이트 검사는 preview와 독립된 native Worker의 WebGL 지원을 먼저 조회한다.
+  Canvas 2D는 항상 실제 픽셀을 검사하고, native WebGL이 있으면 실제 WebGL 픽셀도 검사한다.
+  native context가 없으면 명확한 안내와 2D 표시·중단 가능 상태를 검증한다.
+  macOS의 세 브라우저에서는 native WebGL 지원과 실제 shader 출력을 별도로 확인했다.
+  브라우저 제한 때문에 WebGL 검사를 통째로 삭제하거나 무조건 건너뛰지 않는다.
+- showcase의 오래된 HTTP/CPU 취소 불가 설명을 현재 동작으로 고쳤다. Wiki 본문은 수정하지 않았다.
+
 ## 전달과 남는 한계
 
 로컬·CI의 사이트 최종 명령은 `npm run verify`다. PR은 검증만 하고 검증된 main 산출물만 배포한다.
