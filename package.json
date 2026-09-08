@@ -6,7 +6,8 @@
     "check:playground": "node scripts/check-runnable-playground.mjs",
     "test": "node --test scripts/*.test.mjs && bundle exec ruby scripts/test-wiki-visibility.rb",
     "build:runnable": "node scripts/build-runnable-code-blocks.mjs",
-    "build": "npm run check:projection && npm run build:runnable && node scripts/build-site.mjs",
+    "build:diagrams": "node scripts/build-diagrams.mjs",
+    "build": "npm run check:projection && npm run build:runnable && npm run build:diagrams && node scripts/build-site.mjs",
     "check:built": "node scripts/check-built-site.mjs",
     "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
     "test:browser": "playwright test",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "mermaid": "11.17.2",
     "parse5": "^8.0.1",
     "yaml": "^2.9.0"
   }

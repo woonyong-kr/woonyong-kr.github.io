@@ -94,9 +94,13 @@ export async function checkBuiltSite(root) {
     'assets/css/wn-header-actions.css', 'assets/css/wn-docs-refinements.css',
     'assets/js/vendor/lunr.min.js', 'assets/js/just-the-docs.js', 'assets/js/search-data.json', 'favicon.ico',
     'assets/js/runnable/THIRD_PARTY_NOTICES.txt',
+    'assets/js/diagrams/LICENSE.txt',
+    'assets/js/diagrams/THIRD_PARTY_NOTICES.txt',
   ];
   const meta = JSON.parse(await readFile(resolve(root, '.jekyll-cache/runnable-meta.json'), 'utf8'));
   for (const path of Object.keys(meta.outputs)) assets.push(relative(root, resolve(root, path)));
+  const diagramsMeta = JSON.parse(await readFile(resolve(root, '.jekyll-cache/diagrams-meta.json'), 'utf8'));
+  for (const path of Object.keys(diagramsMeta.outputs)) assets.push(relative(root, resolve(root, path)));
   const expected = new Set([...pages, ...assets, 'sitemap.xml', 'robots.txt', 'CNAME']);
   const actual = (await filesUnder(output)).map(file => relative(output, file)).filter(name => name !== 'build-info.json');
   checkFileList(actual, expected);

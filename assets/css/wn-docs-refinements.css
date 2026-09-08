@@ -12,6 +12,21 @@
   overflow-wrap: anywhere;
 }
 
+/* Keep diagram sources usable before rendering, offline, and without JavaScript. */
+#main-content pre:has(> code.language-mermaid) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.wn-diagram {
+  max-width: 100%;
+  margin-block: 1.5rem;
+}
+.wn-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 @media (max-width: 40rem) {
   .wn-execution-boundary + .table-wrapper {
     overflow-x: visible;

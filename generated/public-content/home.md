@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: 138d6da10439a642b7291be45a2a8772c38fa0aa64f4a5e39f068b56b7df23bd
+projection_sha256: d83da024db7c2e8a759ea0190c355ecd58e6fe4b2ad26f6b7cfa550d66b03822
 content_status: ready
 ---
 
@@ -27,14 +27,14 @@ content_status: ready
 - [AI](/wiki/ai-machine-learning/)
 - [프로젝트](/wiki/projects/)
 
-## 학습 프로젝트
-
-SQL 엔진과 운영체제를 구현하며 살펴본 내용을 관련 개념과 연결한다. 아래 순서는 GitHub 저장소 생성 순서다.
+## 학습
 
 - [SQL](/wiki/lrn-sql/) — 저장과 조회가 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
 - [PintOS](/wiki/pintos/) — Thread Scheduling과 가상 메모리를 다루는 OS 구현. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
 
 ## 참고한 책
 
-- [Kotlin in Action 2/e](https://www.acornpub.co.kr/product/kotlin-in-action-2e/6048/category/1/display/2/)
-- [Build a Large Language Model (From Scratch)](https://www.manning.com/books/build-a-large-language-model-from-scratch)
+- [Kotlin in Action 2/e](https://www.yes24.com/product/goods/142690359)
+- [밑바닥부터 만들면서 배우는 LLM](https://www.yes24.com/product/goods/154099735)
+- [밑바닥부터 시작하는 딥러닝 1 (리마스터판)](https://www.yes24.com/product/goods/141787639)
+- [컴퓨터 시스템 (3판)](https://www.yes24.com/product/goods/31950404)

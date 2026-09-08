@@ -37,6 +37,16 @@ viewport의 200px 이내 또는 사용자가 코드에 접근할 때 준비합�
 - HTTP 중단은 응답 대기를 중단합니다. 서버 작업 종료를 보장하지 않습니다.
 - Preview 중단·재시작은 제공하지만, iframe에서 CPU 무한 반복의 강제 종료는 보장하지 않습니다.
 
+## Mermaid
+
+Mermaid fence가 있는 페이지에서만 로컬 렌더러를 불러옵니다. `tools/diagrams.ts`가
+원문을 보존하며 밝은 테마와 어두운 테마에 맞춰 다시 그립니다. JavaScript가 없거나
+렌더링에 실패해도 원문 코드는 가로 스크롤 안에서 읽을 수 있습니다.
+
+`npm run build:diagrams`는 lockfile에 고정한 Mermaid와 필요한 diagram 모듈을
+`assets/js/diagrams/`에 생성합니다. 생성물과 의존 패키지 고지문은 최종 자산 목록과
+해시 검사에 포함하며, 일반 문서에서는 Mermaid 자산을 요청하지 않습니다.
+
 ## 로컬 검증
 
 Node.js 22와 `.ruby-version`의 Ruby 3.2.9가 필요합니다. macOS 기본 Ruby 2.6은 사용하지 않습니다.

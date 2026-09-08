@@ -15,6 +15,9 @@ runnable_code_blocks:
 theme: just-the-docs
 color_scheme: woon-light
 
+# The Just the Docs Mermaid include loads our local renderer on diagram pages.
+mermaid: true
+
 defaults:
   - scope:
       path: "docs"

@@ -9,5 +9,6 @@ assets/css/runnable-code-blocks.css
 
 node_modules/
 assets/js/runnable/
+assets/js/diagrams/
 test-results/
 playwright-report/
