@@ -121,14 +121,26 @@ test('plain documents request no editor/runtime or personal service; viewport lo
   expect(requests.some(url => /virtual_react/.test(url))).toBe(true);
 });
 
-test('@core browser preview can stop and restart', async ({ page }) => {
+test('@core browser preview can stop and restart after page scrolling', async ({ page }) => {
   await configureRunner(page);
   await page.goto(showcase);
   const web = await block(page, 'web');
   await web.locator('.cm-content').fill('<button onclick="this.textContent=\'clicked\'">preview</button>');
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect(web.locator('.rcb__console-meta')).toContainText('Preview ready');
-  const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
+  const previewFrame = web.locator('iframe');
+  const preview = previewFrame.contentFrame().locator('#preview').contentFrame();
+  await expect(preview.getByRole('button', { name: 'preview' })).toBeVisible();
+  // Reproduce a click reached while the main document is still smooth-scrolling.
+  await previewFrame.evaluate(frame => window.scrollTo({
+    top: window.scrollY + frame.getBoundingClientRect().top - 280, behavior: 'instant',
+  }));
+  await page.evaluate(() => new Promise<void>(resolve => {
+    window.addEventListener('scroll', () => resolve(), { once: true });
+    window.scrollBy({ top: -250, behavior: 'smooth' });
+  }));
+  // The inner button can be stable while smooth scrolling still moves its host.
+  await previewFrame.scrollIntoViewIfNeeded();
   await preview.getByRole('button', { name: 'preview' }).click();
   await expect(preview.getByRole('button', { name: 'clicked' })).toBeVisible();
   await web.getByRole('button', { name: 'Stop' }).click();
