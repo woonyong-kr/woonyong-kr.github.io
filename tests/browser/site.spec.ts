@@ -126,6 +126,8 @@ test('@core browser preview can stop and restart after page scrolling', async ({
   await page.goto(showcase);
   const web = await block(page, 'web');
   await web.locator('.cm-content').fill('<button onclick="this.textContent=\'clicked\'">preview</button>');
+  // Editing collapses the block; settle its toolbar away from the viewport edges.
+  await web.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect(web.locator('.rcb__console-meta')).toContainText('Preview ready');
   const previewFrame = web.locator('iframe');
