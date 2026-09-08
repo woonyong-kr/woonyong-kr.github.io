@@ -12,9 +12,8 @@
   overflow-wrap: anywhere;
 }
 
-/* Keep sources usable before the diagram or runnable editor is ready. */
-#main-content pre:has(> code.language-mermaid),
-#main-content pre:has(> code[class*="language-run-"]) {
+/* Plain fences need scrolling too; highlighted sources already have a wrapper. */
+#main-content pre:not(.highlight):has(> code) {
   max-width: 100%;
   overflow-x: auto;
 }
