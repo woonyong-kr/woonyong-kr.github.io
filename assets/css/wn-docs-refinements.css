@@ -12,8 +12,9 @@
   overflow-wrap: anywhere;
 }
 
-/* Keep diagram sources usable before rendering, offline, and without JavaScript. */
-#main-content pre:has(> code.language-mermaid) {
+/* Keep sources usable before the diagram or runnable editor is ready. */
+#main-content pre:has(> code.language-mermaid),
+#main-content pre:has(> code[class*="language-run-"]) {
   max-width: 100%;
   overflow-x: auto;
 }

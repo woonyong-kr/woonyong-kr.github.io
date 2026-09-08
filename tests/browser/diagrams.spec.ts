@@ -10,7 +10,7 @@ test.beforeEach(async ({ page, baseURL }) => {
   }, baseURL!);
 });
 
-for (const slug of ['indexes', 'data-b-tree-cd9340fd2546']) {
+for (const slug of ['indexes', 'data-b-tree-cd9340fd2546', 'cloud']) {
   test(`@core ${slug} diagrams fit mobile and follow theme changes`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -19,10 +19,13 @@ for (const slug of ['indexes', 'data-b-tree-cd9340fd2546']) {
     await page.goto(`/wiki/${slug}/`);
     await expect(page.locator('.wn-diagram svg').first()).toBeVisible();
     await expect(page.locator('code.language-mermaid')).toHaveCount(0);
+    if (slug === 'cloud') await expect(page.locator('.wn-diagram svg')).toHaveCount(2);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect(page.locator('.wn-diagram').first()).toHaveAttribute('data-theme', 'dark');
-    await expect(page.locator('.wn-diagram svg').first()).toBeVisible();
+    for (const diagram of await page.locator('.wn-diagram').all()) {
+      await expect(diagram).toHaveAttribute('data-theme', 'dark');
+      await expect(diagram.locator('svg')).toBeVisible();
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     expect(errors).toEqual([]);
   });
