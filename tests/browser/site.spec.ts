@@ -298,16 +298,40 @@ test('@core runaway preview stops its Worker and restarts on the built site', as
   await configureRunner(page);
   await page.goto(showcase);
   const web = await block(page, 'web');
-  await web.locator('.cm-content').fill('<button onclick="while(true){}">Busy worker</button>');
+  // A legitimate preview can reveal a control after the old pre-click close timer expired.
+  await web.locator('.cm-content').fill(`<button hidden onclick="while(true){}">Busy worker</button>
+    <script>setTimeout(() => document.querySelector('button').removeAttribute('hidden'), 6000);</script>`);
   const created = page.waitForEvent('worker');
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   const worker = await created;
+  let workerClosed = false;
+  worker.once('close', () => { workerClosed = true; });
   await expect(web.locator('.rcb__console-meta')).toContainText('Preview ready');
-  const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
-  const closed = worker.waitForEvent('close', { timeout: 5_000 });
-  await preview.getByRole('button', { name: 'Busy worker' }).click({ noWaitAfter: true });
+  const frame = web.locator('iframe');
+  const inner = frame.contentFrame().locator('#preview');
+  const preview = inner.contentFrame();
+  const busy = preview.getByRole('button', { name: 'Busy worker' });
+  await expect(busy).toBeVisible({ timeout: 10_000 });
+  // Keep both the real pointer target and Stop clear of the sticky header. The
+  // Firefox CI trace previously scrolled this nested frame behind that header.
+  await web.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await busy.click({ trial: true });
+  const outerBounds = await frame.boundingBox();
+  const innerBounds = await inner.evaluate(element => ({ y: element.getBoundingClientRect().y, height: element.getBoundingClientRect().height }));
+  const buttonBounds = await busy.evaluate(element => ({ y: element.getBoundingClientRect().y, height: element.getBoundingClientRect().height }));
+  const headerBounds = await page.locator('#main-header').boundingBox();
+  expect(outerBounds).not.toBeNull();
+  const buttonTop = outerBounds!.y + innerBounds.y + buttonBounds.y;
+  expect(innerBounds.height).toBeGreaterThanOrEqual(buttonBounds.y + buttonBounds.height);
+  // Firefox reports fractional CSS pixels for the outer frame's layout box.
+  expect(outerBounds!.height + 1).toBeGreaterThanOrEqual(innerBounds.y + innerBounds.height);
+  expect(buttonTop).toBeGreaterThanOrEqual((headerBounds?.y ?? 0) + (headerBounds?.height ?? 0));
+  expect(buttonTop + buttonBounds.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  expect(workerClosed).toBe(false);
+  await busy.click({ noWaitAfter: true });
   await web.getByRole('button', { name: 'Stop', exact: true }).click({ timeout: 2_000 });
-  await closed;
+  // The listener is already attached; only the actual Stop-to-close interval is timed.
+  await expect.poll(() => workerClosed, { timeout: 5_000 }).toBe(true);
   await expect(web).toHaveAttribute('data-state', 'cancelled');
   await web.locator('.cm-content').fill('<p>Recovered preview</p>');
   await web.getByRole('button', { name: 'Run code', exact: true }).click();

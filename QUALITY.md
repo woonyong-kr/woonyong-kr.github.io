@@ -203,13 +203,27 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
   단위 테스트는 추가하지 않았고 실제 컴파일 결과와 사용자 JVM 인자를 확인했다.
 - 콘텐츠 담당 작업의 `f95b350`까지 보존하며, Wiki 본문을 직접 수정하지 않았다.
 
-최종 사이트 adapter는 `97efd5d7723157ceb6dce143fb71054523cc2846`이다.
+최종 사이트 adapter는 `832e2fbb381528f5b6587c3d3f847d78d24401af`이다.
 서버의 비동기 요청 실패를 처리하고 다음 요청을 받을 수 있게 하는 공통 경계를 포함한다.
 또한 Obsidian의 24px 접기 여백이 중첩된 실행 편집기에 들어와 활성 줄 배경을 끊는 문제를
 `.rcb` 범위 안에서 수정했다. 실제 host CSS를 넣은 회귀 검사는 수정 전에 실패했고,
 수정 후 줄번호와 코드의 배경·높이·경계가 이어지며 코드 안쪽 8px 여백을 확인했다.
-별도 실행의 원본 verify는 171개 Node/Vitest와 22개 Chromium E2E를 통과했다.
+별도 실행의 원본 verify는 171개 Node/Vitest와 24개 Chromium E2E를 통과했다.
 운영 서버 CLI의 hash는 UI 변경 전후 동일하며 추가 서버 재시작은 필요하지 않다.
+
+Run과 Stop은 하나의 버튼에서 전환되고, preview watchdog이 Worker를 종료해도 Run으로 복귀한다.
+복사 성공 아이콘은 1.5초 후 원래 아이콘으로 돌아온다. 원본 편집 동작은 선택적인 host callback을
+사용하므로 정본 편집을 제공하지 않는 웹 문서에는 표시하지 않는다. 편집기에 focus가 있을 때만
+활성 줄을 강조하고, host의 중복 테두리·스크롤바 여백과 더 이상 도달하지 않는 disabled CSS를 정리했다.
+원본의 실제 복사·자동 종료 후 재실행·host hover/focus 검사를 유지·확장했고 기준은 낮추지 않았다.
+
+사이트 CI `34224050915`의 Firefox 실패는 Worker 종료 실패가 아니었다. trace에서 종료를 기다리는
+5초 timer가 preview 버튼 준비 전 시작됐고, 중첩 iframe의 자동 scroll이 버튼을 sticky header 뒤로
+옮겨 Stop 호출 전에 timer가 만료됐다. 6초 후 버튼을 공개하는 독립 fixture로 기존 검사의 실패를
+재현했다. 수정 검사는 실제 pointer hit testing과 보이는 위치를 확인한 뒤 Run/Stop을 조작하고,
+미리 연결한 close listener로 Stop 이후 5초 경계만 검사한다. 임의 sleep·force click·재시도는 사용하지
+않는다. fractional CSS pixel 비교에만 1px 이내 반올림 오차를 허용한다. 수정본은 Chromium·Firefox·
+WebKit에서 모두 통과했다. 기존 취소·재실행 시나리오를 교체했으며 보호 검사를 삭제하지 않았다.
 
 최종 콘텐츠 기준은 담당 작업의 `1a195b1`이다. producer 대조에서 발견한 다음 배포용
 Socket·데이터 표현 두 문서는 담당 작업이 producer로 반영했고, 이번 검증이 끝날 때까지
