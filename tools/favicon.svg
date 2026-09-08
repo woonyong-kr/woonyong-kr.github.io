@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>DOC</title>
+  <g fill="#16a34a" fill-rule="evenodd">
+    <path transform="scale(.86 1)" d="M3 21h9c8 0 12 4 12 11s-4 11-12 11H3zm6 5v12h3c4 0 6-2 6-6s-2-6-6-6z"/>
+    <path transform="translate(4 0) scale(.82 1)" d="M36 20c8 0 12 5 12 12s-4 12-12 12-12-5-12-12 4-12 12-12zm0 6c-4 0-6 2-6 6s2 6 6 6 6-2 6-6-2-6-6-6z"/>
+    <path transform="translate(9 0) scale(.85 1)" d="M63 22v6c-2-2-4-2-6-2-4 0-6 2-6 6s2 6 6 6c2 0 4 0 6-2v6c-2 1-4 2-7 2-7 0-11-5-11-12s4-12 11-12c3 0 5 1 7 2z"/>
+  </g>
+</svg>

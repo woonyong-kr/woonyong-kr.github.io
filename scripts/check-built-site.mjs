@@ -93,6 +93,7 @@ export async function checkBuiltSite(root) {
     'assets/css/runnable-code-blocks.css', 'assets/css/runnable-code-blocks-host.css',
     'assets/css/wn-header-actions.css', 'assets/css/wn-docs-refinements.css',
     'assets/js/vendor/lunr.min.js', 'assets/js/just-the-docs.js', 'assets/js/search-data.json', 'favicon.ico',
+    'assets/js/runnable/THIRD_PARTY_NOTICES.txt',
   ];
   const meta = JSON.parse(await readFile(resolve(root, '.jekyll-cache/runnable-meta.json'), 'utf8'));
   for (const path of Object.keys(meta.outputs)) assets.push(relative(root, resolve(root, path)));

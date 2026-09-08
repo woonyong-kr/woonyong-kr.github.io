@@ -9,6 +9,10 @@ const server = createServer(async (request, response) => {
   // Deterministic runner fixture. Never forwards code to a real service.
   if (pathname.startsWith('/v1/')) {
     response.setHeader('Content-Type', 'application/json');
+    if (pathname === '/v1/cancel') {
+      response.end(JSON.stringify({ state: 'cancelled' }));
+      return;
+    }
     const fault = request.headers['x-test-response'];
     if (fault === 'headers') return;
     if (fault === 'body') { response.writeHead(200); response.write('{'); return; }

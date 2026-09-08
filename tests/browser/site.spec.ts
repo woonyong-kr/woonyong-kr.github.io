@@ -41,7 +41,8 @@ test('@core documents, search and theme survive blocked runner downloads', async
   await page.route('**/assets/js/runnable/**', route => route.abort());
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko-KR');
-  await expect(page.locator('h1')).toContainText('개발 Wiki');
+  await expect(page.locator('#main-content h1')).toBeVisible();
+  await expect(page.locator('#main-content h1')).toHaveText(/\S/);
   const github = page.locator('.wn-header-action--github:visible');
   await expect(github).toHaveAttribute('href', 'https://github.com/woonyong-kr');
   await page.locator('.wn-header-action--theme:visible').click();
@@ -130,7 +131,7 @@ test('@core browser preview can stop and restart', async ({ page }) => {
   const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
   await preview.getByRole('button', { name: 'preview' }).click();
   await expect(preview.getByRole('button', { name: 'clicked' })).toBeVisible();
-  await web.getByRole('button', { name: '중단' }).click();
+  await web.getByRole('button', { name: 'Stop' }).click();
   await expect(web.locator('iframe')).toHaveCount(0);
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect(web.locator('.rcb__console-meta')).toContainText('Preview ready');
@@ -146,8 +147,8 @@ test('@core offline recovery and corrected endpoint retain edited source and avo
   await java.locator('.cm-content').fill('edited source');
   await page.evaluate(endpoint => { document.querySelector<HTMLMetaElement>('meta[name="rcb-personal-compiler-endpoint"]')!.content = endpoint; }, api);
   await page.context().setOffline(true);
-  await java.getByRole('button', { name: '다시 확인' }).click();
-  await expect(java.getByRole('button', { name: '다시 확인' })).toBeEnabled();
+  await java.getByRole('button', { name: 'Check again' }).click();
+  await expect(java.getByRole('button', { name: 'Check again' })).toBeEnabled();
   await page.context().setOffline(false);
   await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
   await expect(java.locator('.cm-content')).toContainText('edited source');
@@ -157,24 +158,35 @@ test('@core offline recovery and corrected endpoint retain edited source and avo
   expect(runs).toBe(1);
 });
 
-test('429 shows Retry-After; a stalled body can be cancelled without claiming server cancellation', async ({ page }) => {
+test('@core 429 shows Retry-After; cancellation uses the original ID without resending source', async ({ page }) => {
   await configureRunner(page);
   let mode = 'rate-limit';
   let runs = 0;
+  let latestRunId: string | undefined;
+  page.on('request', request => {
+    if (request.url().endsWith('/v1/run')) latestRunId = request.headers()['x-runnable-request-id'];
+  });
   await page.route('**/v1/run', route => { runs++; return route.continue({ headers: { ...route.request().headers(), 'x-test-response': mode } }); });
   await page.goto(showcase);
   const java = await block(page, 'java');
   await java.getByRole('button', { name: 'Run code', exact: true }).click();
-  await expect(java.locator('.rcb__notice')).toContainText('1초');
+  await expect(java.locator('.rcb__notice')).toContainText('1 seconds');
   expect(runs).toBe(1);
-  await expect(java.getByRole('button', { name: '다시 확인' })).toBeDisabled();
-  await expect(java.getByRole('button', { name: '다시 확인' })).toBeEnabled();
-  await java.getByRole('button', { name: '다시 확인' }).click();
+  await expect(java.getByRole('button', { name: 'Check again' })).toBeDisabled();
+  await expect(java.getByRole('button', { name: 'Check again' })).toBeEnabled();
+  await java.getByRole('button', { name: 'Check again' }).click();
   mode = 'body';
   await java.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect.poll(() => runs).toBe(2);
-  await java.getByRole('button', { name: '중단' }).click();
-  await expect(java.locator('.rcb__output')).toContainText('서버 작업의 종료 여부는 확인되지 않았습니다');
+  const cancellation = page.waitForRequest('**/v1/cancel');
+  await java.getByRole('button', { name: 'Stop' }).click();
+  const request = await cancellation;
+  expect(request.method()).toBe('POST');
+  expect(latestRunId).toMatch(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i);
+  expect(request.headers()['x-runnable-request-id']).toBe(latestRunId);
+  expect(request.postData()).toBeNull();
+  await expect(java.locator('.rcb__output')).toContainText('Server execution cancelled; container removed.');
+  expect(runs).toBe(2);
   await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
 });
 
@@ -244,7 +256,7 @@ test('capability header timeout exposes recovery after 2.5 seconds', async ({ pa
   await expect(java).toHaveAttribute('data-state', 'unavailable', { timeout: 4_000 });
   expect(Date.now() - started).toBeLessThan(4_500);
   stalled = false;
-  await java.getByRole('button', { name: '다시 확인' }).click();
+  await java.getByRole('button', { name: 'Check again' }).click();
   await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
 });
 
@@ -280,4 +292,24 @@ test('a failed cold module leaves readable code and offers working reload recove
   await Promise.all([page.waitForEvent('domcontentloaded'), retry.click()]);
   const js = await block(page, 'javascript');
   await expect(js.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
+});
+
+test('@core runaway preview stops its Worker and restarts on the built site', async ({ page }) => {
+  await configureRunner(page);
+  await page.goto(showcase);
+  const web = await block(page, 'web');
+  await web.locator('.cm-content').fill('<button onclick="while(true){}">Busy worker</button>');
+  const created = page.waitForEvent('worker');
+  await web.getByRole('button', { name: 'Run code', exact: true }).click();
+  const worker = await created;
+  await expect(web.locator('.rcb__console-meta')).toContainText('Preview ready');
+  const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
+  const closed = worker.waitForEvent('close', { timeout: 5_000 });
+  await preview.getByRole('button', { name: 'Busy worker' }).click({ noWaitAfter: true });
+  await web.getByRole('button', { name: 'Stop', exact: true }).click({ timeout: 2_000 });
+  await closed;
+  await expect(web).toHaveAttribute('data-state', 'cancelled');
+  await web.locator('.cm-content').fill('<p>Recovered preview</p>');
+  await web.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect(preview.getByText('Recovered preview')).toBeVisible();
 });

@@ -20,7 +20,7 @@ Jekyll::Hooks.register [:pages, :documents], :post_render do |page|
 
   next unless page.output_ext == '.html'
   revision = page.site.config['github']&.[]('build_revision') || page.site.time.to_i
-  page.output = page.output.gsub(%r{((?:href|src)=["'])(/assets/(?:css|js)/[^"'?]+)(["'])}) do
+  page.output = page.output.gsub(%r{((?:href|src)=["'])(/assets/(?:css|js)/[^"'?]+|/favicon\.ico)(["'])}) do
     "#{Regexp.last_match(1)}#{Regexp.last_match(2)}?v=#{revision}#{Regexp.last_match(3)}"
   end
 end

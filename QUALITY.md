@@ -90,14 +90,60 @@ Wiki 상위 navigation은 Home과 9개 분류를 유지한다.
 LICENSE, lockfiles, footer override, sandbox·접근성 보호와 사용하는 legacy-modes는 유지했다.
 README의 생성 bundle `git add` 명령을 제거했다.
 
+## 추가 개선: 실제 실행 종료와 개인 파비콘
+
+이 추가 작업은 Wiki 본문·Vault·생성 Markdown을 수정하지 않았다. 사이트 `136b7e6`에서
+별도 worktree로 테마/실행기만 변경했다. 위쪽의 기존 검증 수치는 앞선 개선 시점의 기록이다.
+
+- 실행기 `454e268799ca10fc527e7ef9a9c02540214e3d5f`의
+  [원격 verify](https://github.com/woonyong-kr/obsidian-runnable-code-blocks/actions/runs/34207869072)가 통과했다.
+  Node/Vitest 158개, Chromium E2E 16개, 별도 Chromium/Firefox/WebKit 핵심 실행 검사 21개를 통과했다.
+  사이트 연결 검사에서 찾은 inline HTML handler 회귀를 후속 `31ee753`에서 보완했고,
+  최종 원본의 로컬 `npm run verify`와
+  [후속 원격 CI](https://github.com/woonyong-kr/obsidian-runnable-code-blocks/actions/runs/34209605335)는
+  Node/Vitest 158개와 Chromium E2E 17개를 통과했다.
+  Coverage는 statements 81.65%, branches 74.43%, functions 84.75%, lines 86.31%다.
+  기존 threshold는 유지하며 별도 iframe bundle entry만 Node coverage에서 제외하고 실제 브라우저에서 검증한다.
+- 취소 요청은 기존 UUID로 `POST /v1/cancel`을 보내며 source를 다시 전송하지 않는다.
+  컨테이너 생성 중 취소, 취소 후 늦은 POST, IP 변경 후 취소, 제거 실패, 늦은 취소 응답을 검사한다.
+  Docker 컨테이너의 강제 제거가 끝난 뒤에만 서버가 `cancelled`를 응답한다.
+- 운영 서버에서 실제 무한 반복 Python PID를 관찰한 뒤 취소를 요청했다.
+  534ms 후 취소 확인, 컨테이너 소멸, 원래 요청 409, 같은 UUID 재사용 거부와 새 실행 성공을 확인했다.
+  요청 ID와 운영 환경 경로를 포함하는 상세 receipt는 로컬에만 보관한다.
+- React 무한 반복의 기존 iframe 정지 실패를 실제 브라우저에서 먼저 재현했다.
+  사용자 JavaScript를 Worker로 이동해 Stop으로 실제 Worker close를 확인하며,
+  응답이 없는 Worker는 2초 watchdog이 종료한다. 동기 루프, 끝없는 Promise microtask,
+  native 정규식 반복을 각각 검사한다. 문서·테마 제어는 응답을 유지한다.
+- 실제 사이트의 `onclick` 예제가 Worker DOM의 attribute selector에서 대상 요소를 찾지 못하는
+  실패를 3브라우저에서 발견했다. 충돌을 피하는 class로 연결을 바꾸고, 클릭·누름 이벤트 및
+  `this`가 같은 요소를 가리키는지 실패→통과 재현으로 고정했다.
+- 작성자 script는 iframe 안에서 실행 가능한 script가 아니라 inert JSON으로 전달한다.
+  DOM 메시지의 크기·빈도·노드 수와 허용 opcode를 제한하고 executable element/attribute를 거부한다.
+  기존 sandbox, 네트워크 제한, 출력 상한과 React state/portal 및 TypeScript DOM 이벤트를 검증했다.
+- 실행기 HTML 문자열에 `unsafe-inline`을 요구하던 검사와 React 내부 module 이름 검사는 제거하고
+  실행 결과·실제 Worker 종료·재시작 검증으로 교체했다. 사이트는 실제 Jekyll 산출물에서
+  취소 RPC 연결과 preview 종료/복구를 확인한다. 공통 mock 시나리오는 원본 테스트가 담당한다.
+- 사용자 지정에 따라 보라색 JTD 글자 파비콘을 녹색 DOC로 교체했다.
+  폰트에 의존하지 않는 vector 원본은 `tools/favicon.svg`, 탭 아이콘은 16/24/32/64px ICO다.
+  기존 asset SHA revision을 파비콘 URL에도 적용하며 외부 이미지 요청은 추가하지 않는다.
+- 추가한 Worker DOM의 Apache-2.0 고지문은 배포 자산
+  `assets/js/runnable/THIRD_PARTY_NOTICES.txt`에 포함하고 최종 파일 allowlist/해시 검사에 연결한다.
+
+같은 fixture/build 조건의 실행기 초기 import 합계는 2,751 → 2,681 bytes,
+gzip은 1,519 → 1,482 bytes다. 새 preview Worker chunk는 84,310 bytes / gzip 23,110 bytes이며
+HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청하지 않는다.
+실행기 본체는 gzip 194,356 → 195,626 bytes다. CPU 종료를 위한 코드 비용은 실행 시에 지불한다.
+
 ## 전달과 남는 한계
 
 로컬·CI의 사이트 최종 명령은 `npm run verify`다. PR은 검증만 하고 검증된 main 산출물만 배포한다.
 배포 권한은 deploy job에 한정한다. adapter 원격 commit을 먼저 확인한 뒤 사이트 pointer를 전달한다.
 `build-info.json`은 공개 site SHA·adapter SHA·자산 해시만 포함한다. 배포 후 이 정보를 실제 자산과 대조한다.
 
-HTTP 취소는 응답 대기 취소이며 서버 실행 종료를 보장하지 않는다.
-현재 iframe 구조는 CPU 무한 반복의 강제 종료를 보장하지 않는다.
+아래 두 한계는 추가 개선으로 해소했다. 개인 서버는 요청 ID로 실제 Docker 작업을 취소하고,
+interactive preview의 사용자 코드는 종료 가능한 Worker에서 실행한다. 서버가 오프라인이거나
+이전 버전이라 취소를 확인할 수 없을 때에는 UI가 종료를 확인했다고 표시하지 않는다.
+Worker DOM은 완전한 browser DOM이 아니므로 Canvas/WebGL과 임의의 동기식 layout/browser API는 지원하지 않는다.
 개인 서버 offline은 브라우저 실행·본문·검색·테마의 장애와 구분한다.
 Obsidian 정식 release·설치, 실행 인프라 교체, 상시 monitoring은 수행하지 않았다.
 실패한 운영 반영은 직전 검증된 site/adapter 조합으로 revert하며 history를 재작성하지 않는다.
