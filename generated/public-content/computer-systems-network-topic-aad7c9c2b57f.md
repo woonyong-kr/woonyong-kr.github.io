@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aad7c9c2b57f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aad7c9c2b57f
-projection_sha256: 493de1734993f19e2406be0f58db43788a049303fd05375d5c28e6a8e6716bc0
+projection_sha256: 31223af63273b322efe45d7e0311cd963fc31bcf31f9978c1df06909b751c475
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -18,6 +18,11 @@ search_terms:
 - MAP_PRIVATE
 - msync
 - MapViewOfFile
+- MAP_FIXED
+- MAP_FIXED_NOREPLACE
+- MapViewOfFileEx
+- PROT_READ
+- FILE_MAP_READ
 grand_parent: OS
 ancestor: 시스템
 ---
@@ -42,6 +47,15 @@ ancestor: 시스템
 
 매핑이 항상 더 빠른 것은 아니다. Page Fault 처리와 주소 공간 관리에도 비용이 든다. 이미 RAM에 있는 파일 Page라면 새 디스크 읽기 없이 매핑할 수 있고, OS가 미리 읽거나 Page Table을 준비할 수도 있다. 따라서 “메모리를 처음 읽으면 반드시 디스크 I/O가 한 번 발생한다”는 식으로 접근 횟수와 I/O 횟수를 맞추면 안 된다.
 
+## 주소를 지정한다는 말의 차이
+
+Linux의 `mmap()`에서 `addr=NULL`이면 OS가 주소를 고른다. `MAP_FIXED` 없이 주소를 주면 그 값은 후보를 제안하는 힌트다. 반환값이 요청한 주소와 같다고 가정하면 안 된다. `MAP_FIXED`는 지정한 주소를 사용하지만 겹치는 기존 매핑을 제거할 수 있다. 이미 사용 중인 주소를 덮어쓰지 않고 실패하게 하려면 `MAP_FIXED_NOREPLACE`의 의미를 확인해야 한다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
+
+Windows의 `MapViewOfFileEx()`는 `lpBaseAddress=NULL`이면 OS가 View 주소를 선택한다. 주소를 지정하면 그 범위가 비어 있어야 하며, 사용할 수 없으면 호출이 실패한다. 파일 offset과 지정한 주소의 정렬 기준은 `GetSystemInfo()`가 알려 주는 allocation granularity다. 이것을 모든 환경에서 Page 크기나 `4096`바이트라고 바꾸어 읽으면 안 된다. [Microsoft MapViewOfFileEx](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffileex)
+
+이 위키에서 다루는 PintOS 구현은 정렬된 사용자 주소를 직접 받으며, NULL은 실패다. 주소를 고르는 편의 기능과 기존 영역을 바꿔 끼우는 기능을 제공하지 않는다. 같은 `mmap`이라는 이름을 보더라도 어느 OS의 인자와 반환 규칙인지 먼저 확인해야 한다.
+
+
 ## 매핑 정보와 Page Table의 역할
 
 Linux의 VMA는 주소 구간의 권한, 연결된 파일과 offset 등 그 구간의 의미를 담는다. Page Table은 현재 접근 가능한 가상 Page가 어느 물리 Frame에 연결되는지를 나타낸다. 파일 기반 매핑은 보통 Page Cache와 연결되므로 `read()`와 매핑을 통한 접근이 같은 파일 데이터의 캐시를 이용할 수 있다. 캐시와 저장 시점은 [Buffer Cache](/wiki/file-system-buffer-cache/)에서 함께 다룬다.
@@ -55,6 +69,8 @@ PintOS에서는 [보조 페이지 테이블](/wiki/computer-systems-network-topi
 ## 같은 파일을 읽어도 쓰기의 의미는 달라진다
 
 Linux의 `MAP_SHARED`는 변경을 파일과 같은 영역의 공유 매핑에 반영한다. `MAP_PRIVATE`는 Copy-on-Write 방식이며, 매핑을 통해 수정한 내용을 원본 파일에 기록하지 않는다. 읽기·쓰기·실행 권한을 정하는 `prot`과 공유 방식을 정하는 `flags`는 서로 다른 선택이다. `MAP_PRIVATE`라고 쓰기 권한까지 자동으로 생기지는 않는다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
+
+Linux에서 `PROT_READ`만 허용한 매핑에 쓰면 `SIGSEGV`가 발생할 수 있다. Windows의 `FILE_MAP_READ` View에 쓰는 경우에는 access violation이 발생한다. 이는 읽기 전용 View와 Copy-on-Write View가 서로 다른 선택이라는 뜻이기도 하다. 읽기는 허용하되 쓰기는 거절하는 정책과, 쓰기 때 사본을 만들어 허용하는 정책을 나누어 확인한다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html), [Microsoft MapViewOfFile](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile)
 
 다음 코드는 공유 데이터와 첫 쓰기 때 만드는 사본의 차이를 실행해 보는 작은 모델이다. Python의 `bytearray`로 정책을 표현하며, OS의 실제 `mmap()`이나 Page Fault를 실행하는 코드는 아니다.
 
@@ -84,6 +100,8 @@ assert bytes(backing) == b"SATA"
 Linux에서는 매핑을 만든 뒤 File Descriptor를 닫아도 매핑이 유지된다. `munmap()`은 주소 범위의 연결을 제거하며, 이후 그 주소로 접근할 수 있다는 보장은 사라진다. 다른 매핑이 그 주소를 다시 사용하지 않았다면 접근은 잘못된 메모리 참조가 된다.
 
 Windows에서도 파일 Handle을 닫는 것과 `UnmapViewOfFile()`로 View를 해제하는 것을 구분한다. 시스템은 마지막 View가 해제될 때까지 해당 파일을 열어 둔다. View가 사라진 뒤에는 그 주소 범위를 다른 할당에 사용할 수 있다. [Microsoft UnmapViewOfFile](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-unmapviewoffile)
+
+해제하는 범위도 API마다 다르다. Linux의 `munmap(addr, length)`는 시작 주소와 길이를 받아 기존 매핑의 일부를 해제할 수 있다. Windows의 `UnmapViewOfFile()`은 전달한 주소를 포함하는 View 전체를 해제한다. View 안쪽 주소를 넘겨도 그 지점 이후의 일부만 해제하는 호출이 아니다. PintOS의 `munmap(addr)`는 매핑 시작 주소를 받아 그 매핑 전체를 제거한다. 인자 개수만 보고 세 API의 동작을 같게 해석하지 않는다.
 
 파일 끝이 Page 경계와 맞지 않으면 마지막 Page의 남은 부분은 0으로 채워진다. 이 꼬리 부분의 수정은 파일 내용으로 기록되지 않는다. 파일 끝을 넘는 Page에 접근하거나 매핑 중 파일이 잘리는 상황은 별도로 다뤄야 한다. Linux에서는 파일 크기를 벗어난 Page 접근이 `SIGBUS`로 이어질 수 있다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
 

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-mmap-838e9b0f7e0a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mmap-838e9b0f7e0a
-projection_sha256: 593b3b66353a48de7984e5494d6551a02b92d584b27781357a8e3c858f43f893
+projection_sha256: deda5a9e400c2931deb8fc2c48ba5bb002ee54cf0e2418bbb65cdf5ab0899792
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -21,6 +21,22 @@ search_terms:
 - map_start
 - Dirty Page
 - QEMU
+- SYS_MMAP
+- SYS_MUNMAP
+- LSTAR
+- mmap-overlap
+- mmap-kernel
+- 주소 정렬
+- file_reopen
+- mmap-twice
+- mmap-shuffle
+- mmap-inherit
+- swap-file
+- mmap-ro
+- PTE_W
+- PF_W
+- PF_P
+- vm_handle_wp
 grand_parent: PintOS
 ancestor: 시스템
 ---
@@ -48,7 +64,143 @@ if (p != MAP_FAILED) {
 
 호출은 `lib/user/syscall.c`의 `syscall5()`에서 `userprog/syscall.c`의 `SYS_MMAP` 분기로 들어간다. 커널의 `mmap()`은 `fd`를 `struct file *`로 바꾼 뒤 `do_mmap()`을 부른다. 현재 코드에는 `SYS_MMAP`, `SYS_MUNMAP`, `struct file_page`와 실제 Page 연산이 구현되어 있다. [현재 syscall 코드](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c)
 
-입력 검사는 두 곳에 나뉜다. 커널의 `mmap()`은 NULL 주소, 0 길이, 주소·offset의 Page 정렬, 음수 offset, Console fd, 주소 덧셈의 wraparound, Kernel 주소, 유효한 파일과 빈 파일 여부를 검사한다. `do_mmap()`은 예정된 각 Page의 주소를 SPT에서 찾아 기존 영역과 겹치는지 검사한다. 아직 Page Fault가 나지 않은 SPT Entry도 이미 점유된 주소이므로, Present PTE만 확인해서는 안 된다.
+## 호출 번호가 반환값으로 바뀌는 과정
+
+현재 `include/lib/syscall-nr.h`의 번호는 `SYS_MMAP=14(0x0e)`, `SYS_MUNMAP=15(0x0f)`다. `mmap(0x10000000, 4096, 0, 3, 0)`을 호출하면 사용자 wrapper가 `RAX=14`, `RDI=0x10000000`, `RSI=0x1000`, `RDX=0`, `R10=3`, `R8=0`을 준비한다. 여섯 번째 인자까지 사용하는 wrapper의 위치는 `R9`지만 mmap은 다섯 인자를 사용한다.
+
+`RAX`는 Handler에 들어갈 때 호출 번호이고, 돌아갈 때는 결과다. 현재 `SYS_MMAP` 분기는 `mmap()`이 반환한 주소를 `f->R.rax`에 기록한다. 성공한 예에서는 `0x10000000`, 실패하면 `0`이다. 커널 함수로 전달하기 전에 fd 숫자를 `struct file *`로 해석하는 일은 CPU가 아니라 PintOS가 한다.
+
+x86-64의 `syscall`은 복귀할 명령 주소와 Flag를 `RCX`, `R11`에 보관하고, `LSTAR`로 설정한 Kernel 진입점으로 이동한다. 이런 사용 때문에 네 번째 syscall 인자에 `RCX` 대신 `R10`을 쓰는 규약을 확인해야 한다. PintOS의 `syscall_init()`은 `MSR_LSTAR(0xc0000082)`에 `syscall_entry`를 등록한다. [현재 wrapper](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/lib/user/syscall.c)
+
+이 저장소의 `syscall-entry.S`가 사용자 Stack Pointer를 보관하고 TSS의 Kernel Stack으로 바꾼 뒤 Register를 `intr_frame`으로 구성한다. Stack 전환까지 `syscall` 명령 하나가 자동으로 해 주는 것으로 읽지 않는다. Handler가 돌아오면 Assembly가 반환 Register와 사용자 상태를 복원하고 `sysretq`로 복귀한다. [현재 진입 Assembly](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall-entry.S)
+
+QEMU v10.0.0 TCG에서도 이 두 층은 나뉜다. `target/i386/tcg/emit.c.inc`의 `gen_SYSCALL()`은 Helper 호출 코드를 만들고, `target/i386/tcg/system/seg_helper.c`의 `helper_syscall()`은 Guest의 STAR·LSTAR·FMASK를 이용해 CPU 상태를 바꾼다. MSR 값을 저장하고 읽는 코드는 같은 `system` 디렉터리의 `misc_helper.c`에 있다. QEMU가 mmap 번호 14를 보고 직접 파일을 매핑하는 것은 아니다. 그 번호를 해석하는 코드는 이후 실행되는 Guest의 `syscall_handler()`다. [QEMU SYSCALL 변환](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/emit.c.inc), [QEMU Kernel 진입 Helper](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/seg_helper.c)
+
+## 주소 범위를 끝까지 확인한다
+
+`mmap()`은 새 파일을 연결하기 전에 요청 전체가 허용되는지 검사한다. 현재 구현의 순서는 간단한 값 검사, 주소 범위 검사, fd 조회와 파일 길이 확인, SPT 충돌 확인이다. `do_mmap()`만 직접 호출하면 syscall 쪽 검사를 모두 거친 것이 아니므로 두 함수의 책임을 함께 읽어야 한다.
+
+| 검사 | 현재 코드에서 거절하는 입력 | 막으려는 문제 |
+|---|---|---|
+| 시작 주소 | NULL 또는 Page 정렬이 아닌 주소 | Page 0 사용과 Page 경계 불일치 |
+| 길이와 offset | 길이 0, 음수 offset, 정렬되지 않은 offset | 빈 매핑과 잘못된 파일 구간 |
+| fd | 0·1·음수, fd Table에서 파일을 찾을 수 없는 값 | Console이나 없는 파일을 backing으로 사용 |
+| 파일 | 길이가 0인 파일 | 파일 바이트가 없는 매핑 |
+| 주소 범위 | 64비트 덧셈에서 되감기거나 Kernel 영역을 포함 | 검사한 범위와 실제 등록 범위 불일치 |
+| SPT | 요청이 차지할 Page 중 이미 등록된 주소 | 기존 매핑·Code·Data·Stack 덮어쓰기 |
+
+주소와 파일 offset은 `4096`바이트 경계에 맞아야 하지만, 길이는 Page 배수일 필요가 없다. `0x10001234`의 Page 내부 offset은 `0x234`이고, 파일 offset `0x1234`도 같은 나머지를 가지므로 거절한다. 반면 `offset=0x1000`은 정렬된 정상 사례다.
+
+현재 코드는 `offset >= file_length`만을 이유로 호출을 거절하지 않는다. `do_mmap()`은 이때 남은 파일 바이트를 0으로 계산한다. 이를 “파일 끝 이상의 offset은 반드시 거절한다”는 별도 정책으로 바꾸어 설명하지 않는다. 입력의 반환값과 실제 Page 내용·해제 동작은 해당 구현과 과제 요구를 함께 확인해야 한다.
+
+### 끝 주소가 작아 보이는 경우
+
+이 PintOS의 `KERN_BASE`는 `0x8004000000`이다. 요청 구간을 `[start, start + length)`로 쓰면 오른쪽 끝은 포함하지 않는다. 현재 Kernel 코드는 마지막으로 포함되는 바이트 `last = start + length - 1`을 검사한다. 길이 0을 먼저 거절해야 이 계산에서 1을 빼도 의미가 있다.
+
+다음 코드는 syscall에서 해석한 64비트 unsigned 주소와 길이를 모델링한다. SPT 충돌과 자원 할당은 뒤에서 따로 확인하므로 “등록 후보”는 실제 mmap 성공이라는 뜻이 아니다.
+
+```run-python
+PAGE = 4096
+KERNEL = 0x8004000000
+MASK = (1 << 64) - 1
+files = {3: 6000, 4: 0}  # fd -> 파일 길이
+
+def inspect(addr, length, offset=0, fd=3):
+    assert 0 <= addr <= MASK and 0 <= length <= MASK
+    if addr == 0 or length == 0 or addr % PAGE:
+        return "주소 또는 길이 오류"
+    if offset < 0 or offset % PAGE or fd < 2:
+        return "offset 또는 fd 오류"
+    last = (addr + length - 1) & MASK
+    if last < addr or addr >= KERNEL or last >= KERNEL:
+        return "주소 범위 오류"
+    if fd not in files or files[fd] == 0:
+        return "파일 없음 또는 빈 파일"
+    return "등록 후보"
+
+cases = [
+    ("정상", 0x10000000, 4096, 0, 3),
+    ("주소 정렬", 0x10001234, 4096, 0, 3),
+    ("offset 정렬", 0x10000000, 4096, 0x1234, 3),
+    ("중간 offset", 0x10000000, 4096, 0x1000, 3),
+    ("Console", 0x10000000, 4096, 0, 1),
+    ("없는 fd", 0x10000000, 4096, 0, 0x5678),
+    ("빈 파일", 0x10000000, 4096, 0, 4),
+    ("길이 0", 0x10000000, 0, 0, 3),
+    ("Kernel 바로 앞", KERNEL - PAGE, PAGE, 0, 3),
+    ("Kernel 침범", KERNEL - PAGE, PAGE + 1, 0, 3),
+    ("64비트 되감기", MASK + 1 - PAGE, 2 * PAGE, 0, 3),
+]
+for label, addr, length, offset, fd in cases:
+    print(f"{label}: {inspect(addr, length, offset, fd)}")
+
+start = KERNEL - PAGE
+length = (-KERNEL + PAGE) & MASK
+exclusive_end = (start + length) & MASK
+last = (start + length - 1) & MASK
+print(f"mmap-kernel의 긴 범위: 끝(exclusive)={exclusive_end:#x}, 마지막 바이트={last:#x}")
+assert exclusive_end == 0 and last == MASK
+assert inspect(start, length) == "주소 범위 오류"
+assert inspect(KERNEL - PAGE, PAGE) == "등록 후보"
+assert inspect(KERNEL - PAGE, PAGE + 1) == "주소 범위 오류"
+```
+
+마지막 긴 범위는 `start + length`가 64비트에서 0이 된다. 하지만 현재 코드처럼 1을 뺀 마지막 바이트를 계산하면 `0xffffffffffffffff`이므로 `last < start`는 거짓이다. 이 경우에는 Kernel 영역 검사로 거절한다. 끝 주소를 포함하는 표현과 포함하지 않는 표현을 섞으면 어느 조건이 실패를 잡는지 잘못 설명하게 된다. [mmap-kernel 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-kernel.c)
+
+### 아직 읽지 않은 주소도 이미 사용 중이다
+
+`length=6000`이면 요청한 바이트 구간은 `[0x10000000, 0x10001770)`이고, 점유하는 Page 구간은 `[0x10000000, 0x10002000)`이다. 두 구간의 오른쪽 끝은 서로 다르다. 첫 주소가 비었다고 끝낼 수 없으며 `0x10000000`, `0x10001000` 모두 검사해야 한다.
+
+현재 `do_mmap()`은 `spt_find_page()`로 모든 후보 Page를 확인한 뒤 등록을 시작한다. 별도의 `pml4_get_page()` 검사는 이 함수에 없다. 이 방식은 VM의 유효한 사용자 Page가 SPT에 등록되어 있다는 구조를 전제로 한다. Present PTE만 검사하는 방식으로 바꾸면 아직 한 번도 읽지 않은 매핑을 놓친다. `mmap-overlap`은 첫 매핑을 읽기 전에 같은 주소로 다시 요청해 이 차이를 드러낸다.
+
+다음 모델은 기존 Page와의 겹침을 확인하고, 등록 도중 할당 실패가 발생하면 이번 호출에서 만든 항목만 되돌린다.
+
+```run-python
+PAGE = 4096
+existing = {0x10000000: "기존 매핑", 0x10001000: "기존 매핑"}
+
+def pages_for(base, length):
+    if base % PAGE or length <= 0:
+        raise ValueError("정렬된 시작 주소와 양의 길이가 필요합니다.")
+    return [base + i * PAGE for i in range(1 + (length - 1) // PAGE)]
+
+for label, base, length in [
+    ("오른쪽에 인접", 0x10002000, 4096),
+    ("뒤 Page와 겹침", 0x10001000, 4096),
+    ("왼쪽에서 걸침", 0x0ffff000, 8192),
+]:
+    requested = pages_for(base, length)
+    collision = [va for va in requested if va in existing]
+    print(label, "충돌:", [hex(va) for va in collision])
+
+def register(base, length, fail_after=None):
+    requested = pages_for(base, length)
+    if any(va in existing for va in requested):
+        return False
+    created = []
+    try:
+        for va in requested:
+            if fail_after is not None and len(created) == fail_after:
+                raise MemoryError("할당 실패 모델")
+            existing[va] = "새 매핑"
+            created.append(va)
+        return True
+    except MemoryError:
+        for va in created:
+            del existing[va]
+        return False
+
+before = dict(existing)
+assert not register(0x20000000, 6000, fail_after=1)
+assert existing == before
+print("두 번째 Page 할당 실패 후:", {hex(va): owner for va, owner in existing.items()})
+assert register(0x10002000, 4096)
+print("인접 영역 등록:", [hex(va) for va in sorted(existing)])
+```
+
+실제 `do_mmap()`에서는 aux 할당·파일 재열기·SPT 등록 중 실패하면 `do_munmap(start_addr)`로 앞서 등록한 Page를 되돌린다. 입력을 검사하는 단계에서 기존 영역을 건드리지 않는 것과, 등록 중 실패했을 때 새 자원을 회수하는 것은 각각 필요한 조건이다.
+
+`mmap-over-code`, `mmap-over-data`, `mmap-over-stk`는 각각 `test_main()`의 Code Page, 정적 변수의 Data/BSS Page, 지역 변수의 Stack Page 위에 파일을 매핑하려 한다. 모두 이미 다른 용도로 등록된 사용자 주소다. 파일을 읽을 수 있다는 사실만으로 그 주소를 다시 사용할 수는 없다.
 
 ## 파일 위치를 기억하는 두 단계
 
@@ -126,6 +278,64 @@ assert access_file_offset == 0x2388
 
 예제 끝에서 매핑 시작 offset을 `0x1000`으로 바꾸면 두 번째 Page의 파일 offset은 `0x2000`, `p[5000]`의 파일 위치는 `0x2388`이다. 이 경우에도 `4096 + 1904`바이트를 모두 파일에서 읽으려면 파일이 최소 `0x1000 + 6000 = 10096`바이트여야 한다. 파일 길이가 여전히 `6000`바이트라면 매핑 시작점 뒤에 남은 실제 파일 데이터는 `1904`바이트뿐이다. 매핑 길이와 파일 길이를 같은 값으로 놓고 시작 offset을 빠뜨리면 마지막 Page 계산이 틀어진다.
 
+## 읽을 수 있는 매핑에 쓰면 어떻게 될까
+
+`mmap-ro`는 `mmap(0x10000000, 4096, 0, fd, 0)`으로 파일을 매핑한 뒤, 먼저 읽지 않고 `*((int *)map) = 0`을 실행한다. 세 번째 인자 `writable=0`은 사용자 쓰기를 허용하지 않는다는 뜻이다. 이 권한은 `do_mmap()`에서 `vm_alloc_page_with_initializer()`로 전달되고 공통 `struct page`의 `writable`에 저장된다. `struct file_page`의 별도 필드를 찾는 것이 아니다.
+
+아직 Frame과 PTE가 없는 첫 접근에서는 SPT의 권한이 판단 근거다. 이미 Page를 적재했다면 PTE의 쓰기 권한도 그 의미를 반영해야 한다. 그래서 “PTE가 없으니 일단 Page를 만들면 된다”는 처리만으로는 읽기 전용 매핑을 보호할 수 없다.
+
+| 값 | 담고 있는 의미 |
+|---|---|
+| `page->writable` | OS가 이 Page에 쓰기를 허용했는가 |
+| PTE의 `PTE_W` | 현재 하드웨어 주소 변환이 쓰기를 허용하는가 |
+| Fault의 `PF_W` | 실패한 접근이 쓰기였는가 |
+| Fault의 `PF_P` | 일반적인 데이터 접근에서 Page 부재인가, 권한 위반인가 |
+
+`PTE_W`와 `PF_W`는 둘 다 `0x2`지만 서로 다른 값의 비트다. 하나는 접근을 허용하는 설정이고, 다른 하나는 이미 발생한 접근을 설명한다. `page_fault()`는 CR2에서 접근한 주소를 읽고 `f->error_code`를 `not_present`, `write`, `user`로 나눈다. 이 주소는 Fault를 일으킨 명령의 주소 `f->rip`와도 구분한다.
+
+현재 `vm_claim_spt_page()`는 쓰기 요청인데 `page->writable=false`이면 claim하지 않고 실패한다. 이후 Stack 확장을 검사하는 경로가 있지만, `mmap-ro`의 `0x10000000`은 해당 후보 범위 밖이다. 이미 적재한 읽기 전용 Page에 쓰면 쓰기 보호 처리로 들어가고, `vm_handle_wp()`가 같은 `writable=false` 조건으로 거절한다. 처리할 수 없는 사용자 Fault는 `page_fault()`의 종료 경로로 이어진다. [현재 Fault 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [예외 Handler](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/exception.c)
+
+다음 모델은 SPT에 등록된 Page에 대한 정상적인 사용자 데이터 접근에서 낮은 세 Fault 비트만 비교한다. 실제 CPU 예외를 발생시키는 코드는 아니며, Reserved Bit·실행 권한 등 다른 Fault 원인은 포함하지 않는다.
+
+```run-python
+PF_P, PF_W, PF_U = 0x1, 0x2, 0x4
+PTE_P, PTE_W, PTE_U = 0x1, 0x2, 0x4
+
+def inspect(code, logical_writable):
+    not_present = not bool(code & PF_P)
+    write = bool(code & PF_W)
+    user = bool(code & PF_U)
+    if write and not logical_writable:
+        decision = "쓰기 거절"
+    elif not_present:
+        decision = "Page 적재 후보"
+    else:
+        decision = "권한 복구 가능 여부 확인"
+    return not_present, write, user, decision
+
+for label, code, writable in [
+    ("아직 적재하지 않은 읽기 전용 Page에 쓰기", 0x6, False),
+    ("읽기 전용 Page를 처음 읽기", 0x4, False),
+    ("적재된 읽기 전용 Page에 쓰기", 0x7, False),
+    ("논리적으로 쓰기 가능한 Page의 쓰기 보호", 0x7, True),
+]:
+    absent, write, user, decision = inspect(code, writable)
+    print(f"{label}: code={code:#x}, not_present={absent}, "
+          f"write={write}, user={user} -> {decision}")
+
+frame_base = 0x12340000
+readonly_pte = frame_base | PTE_P | PTE_U
+print(f"읽기 전용 PTE: {readonly_pte:#x}, PTE_W={bool(readonly_pte & PTE_W)}")
+assert readonly_pte == 0x12340005
+assert inspect(0x6, False)[3] == inspect(0x7, False)[3] == "쓰기 거절"
+assert inspect(0x4, False)[3] == "Page 적재 후보"
+```
+
+첫 접근부터 쓰면 이 모델의 Fault 값은 `0x6`, 먼저 읽어서 적재한 뒤 쓰면 `0x7`이다. 원인은 다르지만 읽기 전용이라는 OS의 결정은 유지된다. 반면 Copy-on-Write에서는 논리적으로 쓰기가 허용된 Page의 PTE를 일부러 읽기 전용으로 둘 수 있다. 따라서 `PTE_W=0`이나 `PF_P=1`만으로 모든 쓰기 Fault를 곧바로 종료 처리하는 것도 맞지 않는다. 현재 `vm_handle_wp()` 역시 논리적 쓰기 권한과 Frame을 확인한 뒤 COW 처리로 이어진다.
+
+QEMU TCG는 Page Table 계층의 권한을 조합해 사용자 쓰기가 허용되는지 판단하고 Fault 비트를 만든다. 그 주소가 `mmap()`으로 등록됐는지, SPT에 어떤 권한이 남아 있는지는 PintOS가 판단한다. 이 역할 구분은 [페이지 폴트](/wiki/computer-systems-network-topic-5cebdbc10ddf/)를 읽을 때도 유지한다. [QEMU v10.0.0 권한 검사](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/excp_helper.c)
+
+
 ## Dirty Page를 구분해야 하는 이유
 
 읽기만 한 Frame과 수정한 Frame을 같은 방식으로 파일에 쓰면 안 된다. 매핑을 읽은 뒤 일반 `write()`가 원본 파일을 바꿨는데, `munmap()`이 예전 Frame을 무조건 기록하면 새 파일 내용이 사라진다. `mmap-clean`은 바로 이 경우를 검사한다. [mmap-clean 테스트 소스](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-clean.c)
@@ -173,6 +383,10 @@ assert file_bytes[5000] == ord("X") and ord("Z") not in file_bytes
 
 `do_munmap(addr)`은 SPT에서 Page를 하나씩 찾으며 `map_start == addr`인 동안만 제거한다. 연속된 주소에 다른 파일 매핑이 있어도 시작 주소가 다르면 순회가 멈춘다. 아직 접근하지 않은 `UNINIT(FILE)`은 aux의 `map_start`를 보고, 초기화된 `VM_FILE`은 `page->file.map_start`를 본다.
 
+예를 들어 `0x10000000`부터 `0x3000`바이트를 매핑하면 Page 시작 주소는 `0x10000000`, `0x10001000`, `0x10002000`이다. 그 뒤 `0x10003000`에 다른 매핑을 만들었더라도 첫 매핑의 `munmap()`은 세 Page까지만 제거해야 한다. 현재 구현에서 첫 매핑의 중간 주소 `0x10001000`을 넘기면 `map_start`가 인자와 일치하지 않아 제거하지 않고 끝난다. Linux의 `munmap(addr, length)`처럼 일부 구간을 해제하는 API가 아니다.
+
+별도의 `mmap_region`에 시작 주소·Page 수·파일 참조를 모아 두는 설계도 가능하다. 그 방식에서는 Region의 수명과 공유 파일 참조를 함께 관리해야 한다. 현재 저장소는 각 Page에 `map_start`를 보관하고 파일 참조도 Page별로 재열기한다. 별도 Region List가 구현되어 있다고 설명하거나, 같은 파일 참조 하나를 모든 Page에서 각각 닫는 형태로 두 설계를 섞어서는 안 된다.
+
 현재 연산 타입과 최종 Page 타입은 구분해야 한다. `page_get_type()`은 UNINIT의 경우 나중에 사용할 `page->uninit.type`을 반환한다. 따라서 `page_get_type(page) == VM_FILE`만으로는 `page->file`을 읽어도 되는지 알 수 없다. 실제 `destroy(page)`의 분기는 현재 `page->operations`가 정한다.
 
 | 상태 | 현재 연산 타입 | Frame | 파일 정보와 정리 경로 |
@@ -184,6 +398,8 @@ assert file_bytes[5000] == ord("X") and ord("Z") not in file_bytes
 Frame이 없다는 조건만으로 UNINIT이라고 판단하면 세 번째 상태를 놓친다. 반대로 PTE만 지우고 SPT Entry를 남기면 다음 접근의 Page Fault가 매핑을 다시 살릴 수 있다. 해제는 주소 변환과 SPT의 등록 정보를 함께 정리해야 끝난다.
 
 접근하지 않은 Page에는 저장할 Frame 바이트가 없다. `uninit_destroy()`가 열린 파일 참조와 aux를 정리하면 된다. 초기화된 Page는 `file_backed_destroy()`가 write-back을 시도하고 파일 참조를 닫는다. 실제 Frame 정리와 Page 메모리 해제는 바깥의 `vm_dealloc_page()`가 이어서 수행한다. 프로세스 종료 때도 SPT의 Page를 정리하는 경로가 사용된다.
+
+`pml4_clear_page()`를 호출하면 Dirty 비트까지 반드시 사라지는 것은 아니다. 현재 `threads/mmu.c`는 PTE의 Present 비트만 끄고, `pml4_is_dirty()`는 Present 여부와 별도로 Dirty 비트를 읽는다. 다만 PTE 자체를 해제하거나 재사용한 뒤에는 이전 상태를 근거로 삼을 수 없다. write-back에 필요한 PML4·Frame·파일 참조의 수명을 보장하는 것이 핵심이며, 현재 `vm_dealloc_page()`는 `destroy(page)` 뒤에 Frame을 정리한다. [PTE 상태를 다루는 코드](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c)
 
 파일 참조를 aux에서 `page->file`로 옮겼다면 aux를 해제하면서 그 파일까지 닫으면 안 된다. aux의 저장 공간은 버려도 파일 참조는 이후 Page-in과 write-back에 필요하다. 타입 전환 뒤에는 `page->uninit.aux`를 다시 읽지 않고, 각 상태의 소유자가 한 번씩 정리한다.
 
@@ -235,6 +451,82 @@ Page 교체는 Page 자체를 없애는 일이 아니다. 현재 `vm_evict_frame
 
 현재 코드에서 확인되는 한계도 있다. Eviction은 `swap_out()` 실패 시 Frame 회수를 중단하지만, `file_backed_destroy()`는 그 반환값을 확인하지 않고 파일을 닫는다. 또한 `vm_do_claim_page()`는 PTE 설치 실패를 정리하지만, 뒤의 `swap_in()` 실패에는 같은 정리 분기가 없다. 두 실패 경로까지 정상이라고 단정할 수 없으며, 파일 쓰기·읽기 실패를 주입하는 검증이 별도로 필요하다. 이 문서의 코드 대조는 해당 실행 시험을 통과했다는 뜻이 아니다.
 
+## 같은 파일을 두 번 매핑하면 무엇이 같을까
+
+같은 파일의 offset 0을 `0x10000000`과 `0x20000000`에 매핑할 수 있다. 파일과 offset은 같아도 가상 주소와 SPT Entry, Page의 수명은 각각 다르다. 현재 SPT의 Hash key는 Page 경계로 내린 가상 주소다. 파일 offset을 key로 쓰면 두 요청을 구분하지 못한다.
+
+`file_reopen()`은 같은 inode를 가리키는 새 `struct file`을 만든다. 원본 파일의 바이트를 복제하는 함수가 아니다. 현재 위치 `pos`와 닫을 책임은 새 객체에 있고, `file_read_at()`·`file_write_at()`은 지정한 offset으로 접근하므로 `pos`를 바꾸지 않는다. 파일의 식별과 열린 파일 객체의 수명은 [File Descriptor](/wiki/pintos-file-descriptors/)에서도 구분한다. [열린 파일 구현](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/filesys/file.c)
+
+현재 구현에서 6000바이트 매핑을 성공적으로 만들면 Page가 두 개이고, 매핑을 위해 재열기한 파일 참조도 두 개다. 한 Page를 읽고 다른 Page를 읽지 않았더라도 각 참조는 해당 Page의 정리 경로에서 한 번씩 닫혀야 한다. Region 하나가 파일 참조 하나를 소유하는 대안이라면 매핑 전체의 close는 한 번이다. “매핑당 close 한 번”을 모든 설계의 공통 규칙으로 삼으면 현재 Page별 소유권을 잘못 검사하게 된다.
+
+다음 모델은 두 매핑의 SPT key, 파일 offset, 파일 참조를 비교한다. A는 128 KiB로 32 Page를 차지하고, B는 같은 파일의 앞 6000바이트를 별도 주소에 매핑한다. Page Fault와 파일 I/O는 생략하고 등록 정보와 참조의 수명만 실행한다.
+
+```run-python
+PAGE = 4096
+FILE_LENGTH = 128 * 1024
+spt = {}
+refs = {}
+
+def register(base, length):
+    assert base % PAGE == 0 and 0 < length <= FILE_LENGTH
+    count = 1 + (length - 1) // PAGE
+    addresses = [base + i * PAGE for i in range(count)]
+    assert not any(va in spt for va in addresses)
+    for i, va in enumerate(addresses):
+        offset = i * PAGE
+        read_bytes = min(PAGE, length - offset, FILE_LENGTH - offset)
+        ref_id = len(refs)
+        refs[ref_id] = {"inode": "sample", "closed": False}
+        spt[va] = {"map_start": base, "ofs": offset,
+                   "read_bytes": read_bytes, "file_ref": ref_id}
+
+def unmap(base):
+    va = base
+    closed = 0
+    while va in spt and spt[va]["map_start"] == base:
+        page = spt.pop(va)
+        ref = refs[page["file_ref"]]
+        assert not ref["closed"]
+        ref["closed"] = True
+        closed += 1
+        va += PAGE
+    return closed
+
+a, b = 0x10000000, 0x20000000
+register(a, 128 * 1024)
+register(b, 6000)
+assert spt[a]["ofs"] == spt[b]["ofs"] == 0
+assert spt[a]["file_ref"] != spt[b]["file_ref"]
+print("등록 Page:", len(spt), "재열기한 파일 참조:", len(refs))
+va = a + 17 * PAGE
+print(f"A의 Page 17: VA={va:#x}, file offset={spt[va]['ofs']:#x}")
+assert spt[va]["ofs"] == 0x11000
+assert unmap(a + PAGE) == 0  # 시작 주소가 아닌 입력
+print("A 해제에서 닫은 참조:", unmap(a))
+assert set(spt) == {b, b + PAGE}
+assert all(not refs[p["file_ref"]]["closed"] for p in spt.values())
+print("남은 B의 Page:", [hex(va) for va in spt])
+print("B 해제에서 닫은 참조:", unmap(b))
+assert not spt and all(ref["closed"] for ref in refs.values())
+```
+
+출력에서 A의 Page 17은 가상 주소 `0x10011000`, 파일 offset `0x11000`에 대응한다. A를 해제하면 32개 참조가 닫히지만 B의 두 Page와 참조는 남는다. 같은 파일을 가리키는 것과 한 매핑의 자원을 함께 정리하는 것은 서로 다른 관계다.
+
+파일 내용의 일관성은 이 소유권 모델만으로 보장되지 않는다. 같은 inode라도 이미 적재한 Frame이 서로 다르면 다른 매핑의 변경이 즉시 보이는지는 별도 정책이다. KAIST 과제는 서로 다른 프로세스가 같은 파일을 매핑할 때 데이터 일관성까지 요구하지 않는다. 실제 공유 방식은 앞서 본 [메모리 매핑](/wiki/computer-systems-network-topic-aad7c9c2b57f/)의 `MAP_SHARED`·Copy-on-Write와 나누어 이해한다. [KAIST mmap 요구사항](https://casys-kaist.github.io/pintos-kaist/project3/memory_mapped_files.html)
+
+### 여러 실행 흐름이 같은 영역을 바꾼다면
+
+별도 Region List와 동시 접근을 지원하도록 확장한다면, List에 추가·제거하는 연산과 Page Fault가 참조하는 객체의 수명을 함께 보호해야 한다. I/O 전에 List Lock을 풀더라도 그 사이 Region이나 파일 참조가 해제되지 않도록 참조를 확보하거나 해제 중 상태를 관리해야 한다. 단순히 “List Lock 밖에서 I/O를 한다”만으로 수명이 보장되지는 않는다. Frame·파일 시스템 Lock을 얻는 순서도 맞춰야 한다. 이는 현재 구현에 없는 Region List를 추가할 때의 설계 조건이다.
+
+## fork와 exec 사이의 매핑
+
+현재 `supplemental_page_table_copy()`는 `page_get_type(src_page) == VM_FILE`이면 복사하지 않고 다음 Page로 넘어간다. 아직 `VM_UNINIT` 상태여도 최종 타입이 `VM_FILE`이면 같은 분기에 들어간다. 따라서 이 구현의 파일 매핑은 fork 직후부터 자식 SPT에 복사되지 않는다. `process_exec()`는 별도로 현재 주소 공간을 정리하고 SPT를 다시 초기화한 뒤 새 실행 파일을 적재한다. fork에서 무엇을 복사하는지와 exec에서 무엇을 없애는지는 각각 확인해야 한다. [현재 SPT 복사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [현재 exec](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c)
+
+`mmap-inherit`는 부모가 `0x54321000`에 읽기 전용 매핑을 만든 뒤 fork하고, 자식이 `child-inherit`를 exec하게 한다. 자식은 같은 주소에 쓰기를 시도하며, 부모는 자식의 종료 코드와 자신의 매핑 내용이 유지되는지 확인한다.
+
+이 테스트의 자식이 쓰기에 실패했다는 사실만으로 SPT Entry가 없었다고 단정할 수는 없다. 잘못 남은 읽기 전용 매핑에서도 쓰기는 실패할 수 있기 때문이다. 주소 공간에서 매핑이 제거됐는지까지 확인하려면 exec 이후 SPT와 PTE를 확인하거나, 해당 주소의 읽기도 실패하는 별도 검증이 필요하다. fork 직후 상태를 확인하는 테스트도 따로 있어야 한다. [mmap-inherit 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-inherit.c)
+
+
 ## 파일 offset에서 디스크 요청까지
 
 write-back은 `file_write_at()` → `inode_write_at()` → `disk_write()`로 이어진다. mmap만을 위한 별도의 디스크 장치를 쓰는 것이 아니다. 전체 Sector를 바꾸면 직접 쓰고, 일부만 바꾸면 기존 Sector를 Bounce Buffer로 읽어 나머지 바이트를 보존한 뒤 쓴다.
@@ -282,6 +574,21 @@ print f->R.r8
 
 `RAX`는 호출 번호이고, 순서대로 `RDI=addr`, `RSI=length`, `RDX=writable`, `R10=fd`, `R8=offset`이다. `print` 명령은 실제로 해당 중단점에서 멈춘 뒤 실행한다.
 
+정렬 검사에서 offset의 하위 비트를 보려면 같은 중단점에서 `print/x f->R.r8 & 0xfff`를 실행할 수 있다. `pg_ofs()` 같은 inline 함수를 디버거가 호출할 수 있다고 가정할 필요가 없다. 주소 범위는 현재 구현과 동일하게 포함되는 마지막 바이트를 계산해 확인한다.
+
+쓰기 보호를 확인할 때는 `vm_try_handle_fault()` 진입에서 이미 전달된 인자를 읽을 수 있다. 아래 `print`는 중단점에서 멈춘 뒤 실행한다.
+
+```gdb
+break vm_try_handle_fault
+print/x addr
+print/x f->error_code
+print not_present
+print write
+print user
+```
+
+SPT 권한은 `vm_claim_spt_page()`에서 `spt_find_page()`가 반환한 뒤 `page`가 NULL이 아닌 것을 확인하고 `print page->writable`로 읽는다. PTE는 `pml4_set_page()`의 대입이 끝난 직후 `print/x *pte`, `print/x *pte & 0x2`로 확인한다. Fault 값과 PTE 값 중 어느 쪽을 읽었는지 함께 구분한다.
+
 aux 전환은 `uninit_initialize()` 진입에서 먼저 `page->operations->type`을 확인하고, UNINIT 상태일 때만 `print *(struct lazy_load_arg *) page->uninit.aux`로 읽는다. `file_backed_initializer()`가 끝난 뒤에는 아래의 `page->file` 필드로 옮겨서 확인한다. 디버거가 두 Union 멤버를 모두 출력할 수 있어도 둘이 동시에 유효하다는 뜻은 아니다.
 
 `file_backed_swap_out()`에서는 `page`가 유효한지, resident Frame이 있는지부터 확인한다. 다음 조회는 초기화된 `VM_FILE` Page이며 `page->frame`이 NULL이 아닐 때 사용한다.
@@ -306,17 +613,43 @@ Dirty 값은 `pml4_is_dirty()` 내부의 `pte` 계산 뒤에서 확인하면 실
 |---|---|
 | `mmap-read` | 매핑으로 읽은 바이트와 파일 내용, 마지막 Page의 zero fill |
 | `mmap-write` | 매핑을 수정한 뒤 해제했을 때 파일에 남는 내용 |
+| `mmap-ro` | 읽기 전용 매핑에 첫 접근부터 쓴 뒤 정상 실행이 이어지지 않는지 |
 | `mmap-clean` | 수정하지 않은 Frame이 일반 파일 쓰기를 덮어쓰지 않는지 |
 | `mmap-off`, `mmap-bad-off` | 0이 아닌 정렬된 파일 offset과 정렬되지 않은 offset |
 | `mmap-close`, `mmap-remove` | fd를 닫거나 파일 이름을 제거한 뒤에도 매핑의 파일 참조가 유지되는지 |
 | `mmap-unmap` | 해제한 영역의 SPT 등록까지 제거되어 이후 접근이 허용되지 않는지 |
+| `mmap-overlap` | 아직 접근하지 않은 매핑과 겹치는 요청도 거절하는지 |
+| `mmap-over-code`, `mmap-over-data`, `mmap-over-stk` | 기존 Code·Data/BSS·Stack 영역을 덮어쓰지 않는지 |
+| `mmap-kernel`, `mmap-misalign` | Kernel을 포함하는 범위와 정렬되지 않은 시작 주소를 거절하는지 |
+| `mmap-bad-fd`, `mmap-zero` | 없는 fd와 길이 0인 매핑 뒤 접근의 실패 경로 |
 | `mmap-exit` | 명시적 `munmap()` 없이 종료해도 변경이 기록되는지 |
-| `swap-file` | 파일 기반 Page를 메모리 압박 아래에서 교체해도 내용이 유지되는지 |
+| `mmap-twice` | 같은 파일을 두 가상 주소에서 각각 읽을 수 있는지 |
+| `mmap-shuffle` | 128 KiB 매핑의 초기화와 반복 Shuffle 뒤 Checksum |
+| `mmap-inherit` | 자식의 exec 후 쓰기 실패와 부모 매핑 내용의 유지 |
+| `swap-file` | 작은 메모리 설정에서 큰 파일 읽기와 마지막 Page의 zero fill |
+
+`mmap-ro.ck`는 쓰기 직전 메시지까지 확인하며 `IGNORE_EXIT_CODES=1`을 사용한다. 정확히 `exit(-1)`을 출력했는지까지 검사하는 것은 아니다. 또한 먼저 읽어 적재한 뒤 쓰는 경우는 이 테스트에 없다. 그 경로는 별도 변형으로 확인해야 한다.
+
+테스트 이름만으로 확인 범위를 넓혀 읽으면 안 된다. `mmap-zero`는 빈 파일에 **길이 0**으로 매핑을 요청하고 이후 접근에서 실패하는지 확인한다. 따라서 이 테스트만 통과했다고 “길이는 양수지만 파일이 비어 있는 경우”까지 검증한 것은 아니다. `mmap-bad-fd`의 기대 출력은 NULL 반환과 프로세스 종료 경로를 모두 허용하지만, 현재 syscall 코드는 없는 fd에 NULL을 반환한다. 테스트가 허용하는 범위와 현재 코드가 선택한 동작을 나누어 읽는다.
+
+`mmap-unmap`의 해제 전 두 번째 식은 `*(int *)ACTUAL + 0x1000`이다. 이는 첫 위치에서 읽은 값에 상수를 더하는 식이므로 두 번째 Page를 미리 읽은 증거가 아니다. 해제 뒤의 접근은 `*(int *)(ACTUAL + 0x1000)`이어서 두 번째 Page를 실제로 가리킨다. 괄호 위치까지 확인해야 아직 접근하지 않은 Page도 함께 제거하는지 해석할 수 있다. [mmap-unmap 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-unmap.c)
+
+`mmap-twice`는 두 매핑을 읽어 비교하지만, 한쪽을 `munmap()`한 뒤 다른 쪽을 다시 읽는 순서는 포함하지 않는다. 앞의 실행 모델은 그 수명 차이를 보여 주지만 실제 Kernel의 해당 경로는 따로 시험해야 한다. `mmap-shuffle`도 매핑 안에서 초기화하고 열 번 섞으며 Checksum을 출력한다. 파일을 다시 열어 저장된 결과를 읽는 테스트는 아니므로, 이 Checksum만으로 write-back 완료까지 확인했다고 해석하지 않는다.
+
+`swap-file`의 현재 `Make.tests` 설정은 `MEMORY=8`, `SWAP_DISK=10`이다. 소스 첫 주석에는 128 MB와 Anonymous Page 채우기가 적혀 있지만, 테스트 본문에는 그 채우기 단계가 없다. 실제로는 큰 파일을 매핑해 내용을 비교하고 마지막 Page의 남는 부분을 확인한다. `file_backed_swap_out()`·`file_backed_swap_in()`이 몇 번 실행됐는지는 중단점이나 실행 중 집계로 확인할 일이다. 테스트 이름이나 주석만으로 교체 횟수를 만들어 적지 않는다. [VM 테스트 설정](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/Make.tests), [swap-file 본문](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-file.c)
 
 저장소 루트에서, x86-64 Linux와 PintOS용 Compiler·QEMU가 준비된 환경이라면 다음처럼 VM 테스트를 선택할 수 있다. 웹의 Python 실행기는 이 Kernel 테스트 환경을 대신하지 않는다.
 
 ```bash
-make -C pintos/vm check TESTS='tests/vm/mmap-read tests/vm/mmap-write tests/vm/mmap-clean tests/vm/mmap-off tests/vm/mmap-bad-off tests/vm/mmap-close tests/vm/mmap-remove tests/vm/mmap-unmap tests/vm/mmap-exit tests/vm/swap-file'
+make -C pintos/vm check \
+  TESTS='tests/vm/mmap-read tests/vm/mmap-write tests/vm/mmap-clean
+         tests/vm/mmap-off tests/vm/mmap-bad-off tests/vm/mmap-close
+         tests/vm/mmap-remove tests/vm/mmap-unmap tests/vm/mmap-exit
+         tests/vm/swap-file tests/vm/mmap-overlap tests/vm/mmap-over-code
+         tests/vm/mmap-over-data tests/vm/mmap-over-stk tests/vm/mmap-kernel
+         tests/vm/mmap-misalign tests/vm/mmap-bad-fd tests/vm/mmap-zero
+         tests/vm/mmap-twice tests/vm/mmap-shuffle tests/vm/mmap-inherit
+         tests/vm/mmap-ro'
 ```
 
 위 명령은 재현할 테스트 범위를 제시한다. 이 글에서 직접 실행한 것은 Python 모델이며, 이 명령의 실행 결과나 QEMU 디버깅 화면을 측정 결과로 제시한 것은 아니다. 과제의 요구사항과 코드의 실제 구현, 실행으로 확인한 결과를 구분해서 읽는다. [KAIST PintOS Memory Mapped Files](https://casys-kaist.github.io/pintos-kaist/project3/memory_mapped_files.html)
