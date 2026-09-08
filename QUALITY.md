@@ -181,11 +181,27 @@ HTML/Web/React 실행 때만 요청한다. 일반 문서는 이 chunk를 요청�
   macOS의 세 브라우저에서는 native WebGL 지원과 실제 shader 출력을 별도로 확인했다.
   브라우저 제한 때문에 WebGL 검사를 통째로 삭제하거나 무조건 건너뛰지 않는다.
 - showcase의 오래된 HTTP/CPU 취소 불가 설명을 현재 동작으로 고쳤다. Wiki 본문은 수정하지 않았다.
-- 최종 adapter `9745b806bb14108a9f4245a3e04fe8ac9f10bbe7`은 같은 실행기와
+- 공통 UI revision `9745b806bb14108a9f4245a3e04fe8ac9f10bbe7`은 같은 실행기와
   공통 SVG 버튼·접근성 이름·상하 여백 개선을 포함한다. 원본의 170개 Node/Vitest와
   22개 Chromium E2E를 다시 통과했고 360px·1280px에서 실제 복사와 toolbar 여백을 확인했다.
   사이트 전용 UI 복사본은 추가하지 않는다. WebGL을 비활성화한 Chromium에서도
   앞선 사이트 검사의 2D 출력·지원 안내·중단 경로가 통과했다.
+
+## Kotlin 컴파일 시작 비용과 최종 UI
+
+- 최종 사이트 adapter는 `6b503ecfcadfa4d2e11da1b9f6bd6cb5aa8f53da`다.
+  Obsidian host CSS가 실행 버튼의 색상을 덮는 문제도 공통 selector에서 보완했다.
+  사이트별 버튼 구현은 추가하지 않았다.
+- 운영 확인 중 부하가 있는 호스트에서 간단한 Kotlin 코드도 15초를 넘기는 사례를 다시 기록했다.
+  같은 코드·1 CPU·512 MiB·15초 조건으로 기존/수정 방식을 번갈아 세 번 비교했다.
+  `kotlinc`에만 `-J-XX:TieredStopAtLevel=1`을 적용한 중앙값은 13.36초 → 9.37초였다.
+  사용자 프로그램의 JVM 기본 설정은 유지하며 시간·자원 제한을 늘리지 않는다.
+- 실제 Docker에서 컬렉션 출력·사용자 JVM 기본값·컴파일 오류·15초 timeout·정상 회복을 확인했다.
+  마지막 회복은 7.57초에 정상 출력했고 전체 원본 verify 170개 Node/Vitest·22개 Chromium E2E도 통과했다.
+  호스트 부하나 큰 코드로 deadline에 도달하는 경우는 여전히 명시적인 timeout으로 종료한다.
+- 코드 변경 전에 운영 실패와 교차 비교를 기록했다. JVM flag 문자열을 그대로 기대값으로 복제하는
+  단위 테스트는 추가하지 않았고 실제 컴파일 결과와 사용자 JVM 인자를 확인했다.
+- 콘텐츠 담당 작업의 `f95b350`까지 보존하며, Wiki 본문을 직접 수정하지 않았다.
 
 ## 전달과 남는 한계
 
