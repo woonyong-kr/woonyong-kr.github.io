@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-cors-dd387fc45dd4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-cors-dd387fc45dd4
-projection_sha256: cd10dc7fd7340f781731d5c8d8b832e9ec800878bdda39f9d68a3bbd753db99b
+projection_sha256: c6215760cfb3902d5d6a8b5e9cda4dc3ada911c830f5f2806cafde865e112b96
 parent: 애플리케이션 보안
 content_status: planned
 public_parent_id: Wiki/security/application-security

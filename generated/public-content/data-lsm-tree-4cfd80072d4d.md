@@ -6,7 +6,7 @@ permalink: /wiki/data-lsm-tree-4cfd80072d4d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-lsm-tree-4cfd80072d4d
-projection_sha256: 0e5c2b29ea643417ada2388217290c8df8b5d4526ae08f5cfb0b4be09e050dac
+projection_sha256: 868e1c55f67a910c981e438232fda58731f76a829c6c449254d917d87562273e
 parent: 저장 엔진
 content_status: planned
 public_parent_id: Wiki/data-storage/storage-engine

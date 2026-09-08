@@ -6,7 +6,7 @@ permalink: /wiki/frontend-grid-a6b5120d8384/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-grid-a6b5120d8384
-projection_sha256: dc4a3d894211afb329b55caadd2a5cec544c1cf289eb12bfae0159b1157716e5
+projection_sha256: 1ecfea5f53224b73f43e8d4cf0cd39e80f1eb5c43ee6cb32547e31f6f8dab172
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f

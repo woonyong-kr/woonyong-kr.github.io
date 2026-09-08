@@ -6,7 +6,7 @@ permalink: /wiki/data-quality/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/data-quality
-projection_sha256: 6e35ec1d046dc3a6c92aec1c1c15275dedd3cd101165e2f9b7d6d8987797571d
+projection_sha256: 6929541f0d000018ea858d3211b8bfe3da26868191a34986c805e073c7725583
 parent: 데이터 관리
 content_status: planned
 public_parent_id: Wiki/data/data-foundation

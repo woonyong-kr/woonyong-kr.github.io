@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-ec9c7f24782e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-ec9c7f24782e
-projection_sha256: a678384aa067280f620c9529cecadc227a777f40e9e5d546785b91fe55f659cc
+projection_sha256: 0bc963c17086dc48c9cbef7d716690c002be0d1aba8233f6ae9535913c2ead26
 parent: 이산수학
 content_status: planned
 public_parent_id: Wiki/computer-science/discrete-math

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-48a8fbd81d66/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-48a8fbd81d66
-projection_sha256: f67a78fb07e1cd5b1ff192a4c6dc42dd1cad3635f83e5bdd2dfaf8cf70594083
+projection_sha256: 2c28384fc82fab4f3e85e1bc7b7cf1120007a457508cccfb8ea1134d58a55714
 parent: 데이터 관리
 content_status: planned
 public_parent_id: Wiki/data/data-foundation

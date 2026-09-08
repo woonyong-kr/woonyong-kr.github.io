@@ -6,7 +6,7 @@ permalink: /wiki/linear-algebra/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science/linear-algebra
-projection_sha256: 807f92d3d4d09c2c1f4b753be9a2c53a2f631bebc647aa57a72e29f3e3875c7a
+projection_sha256: 17c6923ae80f8a6a57323dca52581c3bc5f878b124c6e6bdfaacb340f9927270
 parent: 수학
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-9fc1075ed9f5

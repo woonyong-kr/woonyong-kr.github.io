@@ -6,7 +6,7 @@ permalink: /wiki/docker/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/docker
-projection_sha256: f693ce2cd16d8cfa71801105251893a0598cd127574e8676b73650009e837b35
+projection_sha256: 3e3703d8e0f472240b93e1e986a66a494c957c2c0650c9f4eaa63c7cdd77ed6d
 parent: 플랫폼
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations

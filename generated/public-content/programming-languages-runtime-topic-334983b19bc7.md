@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-334983b19bc7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-334983b19bc7
-projection_sha256: a6367774df4ffb3c5b15b7e476a876acd918b4614d92366544311e6864085e86
+projection_sha256: 0812b179201773f2a544a828695274736f9cea42a46c9e37b192fb5fc1939a32
 parent: Kotlin
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/kotlin

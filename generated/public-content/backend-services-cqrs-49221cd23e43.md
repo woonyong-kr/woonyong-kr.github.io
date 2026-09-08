@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-cqrs-49221cd23e43/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-cqrs-49221cd23e43
-projection_sha256: ff9b4da6658e304ca5a0197a9604e5197aa5b1e58c0b4cb7db49134ff2a832fc
+projection_sha256: 44c14b567a5ddf925d8225c633d486ec16939aa7993e18236777981fdc43742c
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture

@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-mvc-56f95a81226d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-mvc-56f95a81226d
-projection_sha256: 6f08e1c795fd5b7bcf449f4aba4fd7b362eec7ef36ac106dda485b13ac2e1ce0
+projection_sha256: ab67a889df1919b8c256c6b3e9c98f51a2ce58f7bb458beda602d33d40630cbf
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture

@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-55bdd34773d4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-55bdd34773d4
-projection_sha256: d92b1b2063d2807539255b6a57d5ce41ccc9710626cb13f63f53579c38d5a041
+projection_sha256: 8a3e2c80eea09be91ce4f6d57798eecfe2e9502ad14a8e3b9d5b8a0815697d74
 parent: WebAssembly
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-webassembly-a234a3a8d09d

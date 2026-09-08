@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-f4a76ee730d3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-f4a76ee730d3
-projection_sha256: 3c31a06093f8e8c75e73dc0af297590d283beeaa4e770a080dd0cdb6535cf4c3
+projection_sha256: 539ad9ee79ef6880fb58d7d7c80afafb6a987ef9474ad03c52fd389c02a4bd38
 parent: 데이터 거버넌스
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-48a8fbd81d66

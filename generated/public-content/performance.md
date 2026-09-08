@@ -6,7 +6,7 @@ permalink: /wiki/performance/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/performance
-projection_sha256: 815ff7c26792527ec46adfeb942c86458d0e656f7b58584b1307cadcbfd542e4
+projection_sha256: 2cd658d6db3aec40debeee48a107986e40419d3ae43ad330da06919a299a3c67
 parent: 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network

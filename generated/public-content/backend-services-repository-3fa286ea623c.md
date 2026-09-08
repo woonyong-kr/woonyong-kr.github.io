@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-repository-3fa286ea623c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-repository-3fa286ea623c
-projection_sha256: 0133e31aafa274398d458f308657da0d9536860bb202f7de79d32d1719aff640
+projection_sha256: 89fd611f6fc0e058c4bf0f5bbf41a4cec796a92b087a62f524cabe85cb9c5ae8
 parent: Spring Data
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-data-7ac93db31ea5

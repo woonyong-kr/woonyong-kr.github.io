@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-mlops-6f82b86db75f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-mlops-6f82b86db75f
-projection_sha256: 638e97a151267321c7ef084b9b1d9da689b6d8a5fd7b023cae79cc1fc1619731
+projection_sha256: 3a49c09d091e086987b25cc897316c6274dbf9fbbed14bfcccd364d2b3982700
 parent: 모델 운영
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/mlops

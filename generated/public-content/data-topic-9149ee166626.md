@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-9149ee166626/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-9149ee166626
-projection_sha256: 67984cd49fb0ba158cca824b69b493ea391f6d0e5f08dd9b7b8410603417e627
+projection_sha256: fb6568df32e3fa8f227a9633769585e3f9f1e2287ea525443eebc0ea1be5e051
 parent: Kafka
 content_status: planned
 public_parent_id: Wiki/data/kafka

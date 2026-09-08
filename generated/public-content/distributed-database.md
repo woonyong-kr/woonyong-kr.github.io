@@ -6,7 +6,7 @@ permalink: /wiki/distributed-database/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/distributed-database
-projection_sha256: 605e7661e4c65556a404502987dc98a41cb21a7f16f0e42ce975e7a4cf31e955
+projection_sha256: 70f4cc995646592589b5b3b878c734cd1027d24fb76ff8807a859d7954860676
 parent: Database
 content_status: planned
 public_parent_id: Wiki/data-storage

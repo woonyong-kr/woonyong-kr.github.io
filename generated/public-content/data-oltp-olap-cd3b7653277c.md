@@ -6,7 +6,7 @@ permalink: /wiki/data-oltp-olap-cd3b7653277c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-oltp-olap-cd3b7653277c
-projection_sha256: fe619f6fdd28635f1096a260252762c513d69104be8b100cacd52fecee79a226
+projection_sha256: 2135e3627bd550f5e87d05252eefc34012c84a3815cbb36972fff063cf7e5680
 parent: Data Warehouse
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-8d91d46d00e4

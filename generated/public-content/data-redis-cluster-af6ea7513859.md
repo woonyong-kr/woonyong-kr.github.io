@@ -6,7 +6,7 @@ permalink: /wiki/data-redis-cluster-af6ea7513859/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-redis-cluster-af6ea7513859
-projection_sha256: 00d300477c3e89948c6715f4b6aec4ddb2b4b6df11d4dec0f97ca5505114461c
+projection_sha256: aba92b704a4f923a828abfec00fdbcdda91960c2aa0f252ff8d28f443b2ac4d8
 parent: Redis
 content_status: planned
 public_parent_id: Wiki/data-storage/redis

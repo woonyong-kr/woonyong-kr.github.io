@@ -6,7 +6,7 @@ permalink: /wiki/data-debezium-68ad3730f511/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-debezium-68ad3730f511
-projection_sha256: 69214d6ece67ac1fb38d69e719a759ac01fd86b9e9f8f95abf06e8d7217940b5
+projection_sha256: e6111da93b1e4fbf29a5cf3cce0e7e40eb1e7dcdb562d3d80f7808e0ba0f4934
 parent: CDC
 content_status: planned
 public_parent_id: Wiki/data/cdc

@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-534ad4a2ef4f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-534ad4a2ef4f
-projection_sha256: cf439cdc9f55247230dc8df77d59f7a975121f24ba7451f296008a27c2ac65ea
+projection_sha256: cdc4dd99921bbc30c9610b0ee88bc97a5595fd9f85dd173c920218a8e11d9584
 parent: 자원과 운영
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-5e2c3573a662

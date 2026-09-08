@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-jpa-cef53656284c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-jpa-cef53656284c
-projection_sha256: 10dfecd3f0aff511f5be9ff259a3d9877a45e967237e7281d7c5d22851e5147c
+projection_sha256: 8768871ea493222fcae8b9d4cfc6ddda33a6abcdbbd0ce86609b30acf08d17cc
 parent: 영속성
 content_status: planned
 public_parent_id: Wiki/backend-services/persistence

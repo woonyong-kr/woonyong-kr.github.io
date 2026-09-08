@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-3162544d8123/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-3162544d8123
-projection_sha256: 80b1e44945d46ccc4fdcd8809c6955a26129c11e1f5879609d5fd4f2ca0c175e
+projection_sha256: a400e3099e981a6f90977ff506fe41c4ee95f2b4ba44b1cb69b64bd40ce14a09
 parent: Go
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/go

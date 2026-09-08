@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-6bf2a6b45f20/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-6bf2a6b45f20
-projection_sha256: a7dbfbd9275d46415d48e53334441a0c5adf165e83fc2c9e9a278b6bf7b4d014
+projection_sha256: 6d26c251adaf8552e138dbe31a521b6e5d6b3705a1e0dc5e2a2dc7c4419c13f1
 parent: 스트림 처리
 content_status: planned
 public_parent_id: Wiki/data/stream-processing

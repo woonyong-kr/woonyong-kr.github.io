@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-fc1f66906eab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-fc1f66906eab
-projection_sha256: d981824f8745e9ca3470a06b81c968e5749ab7a978155f3ab2dd29248bb781ac
+projection_sha256: 7afccbc63d0cedbca7a6c845813869b847f91ac49b84976ffa0cee8ee5b8ebb7
 parent: 데이터 접근
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-d44b749d4219

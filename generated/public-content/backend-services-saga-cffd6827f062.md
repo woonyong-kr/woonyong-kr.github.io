@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-saga-cffd6827f062/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-saga-cffd6827f062
-projection_sha256: 00876d68e696d3e195f7fa5bcd0986d9a39decea383deaa3a3e5cac142499d6b
+projection_sha256: 7153e12c36911790d3019acb593cd9fb78ca0b4d067898125d7a9cfe8478d8aa
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-bb2fd88dd975/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-bb2fd88dd975
-projection_sha256: 1ec48025f848a42356dc3f1db4adef11bf569ce2d66cca8ea63c6eb2fdded0c1
+projection_sha256: 2a1661ee0439fd9a1853d2db78b0b5b4f5a6d5867a7e32e385481a25c47429b3
 parent: Kafka
 content_status: planned
 public_parent_id: Wiki/data/kafka

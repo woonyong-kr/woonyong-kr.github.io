@@ -6,7 +6,7 @@ permalink: /wiki/spark/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/spark
-projection_sha256: 04f1b3af039875415553b25776c184f4e94c57407f9bf47c2d9c407c9c3aa9d8
+projection_sha256: ba2e1c4d5bfec8d398598c4ae8ec54d7cf5555f2500675877d8917f716061028
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

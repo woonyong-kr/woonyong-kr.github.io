@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-22bdf8e6c6fe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-22bdf8e6c6fe
-projection_sha256: 0a19b6841eb1aebb6bf950df6cc91f18a54feb7721881d6af0fe26eb24d67f89
+projection_sha256: 27165bd6f381f7b9ad127b7d96b1ea372dbb3206e30b766aa8026dab40d1fae9
 parent: 데이터 수집
 content_status: planned
 public_parent_id: Wiki/data/ingestion

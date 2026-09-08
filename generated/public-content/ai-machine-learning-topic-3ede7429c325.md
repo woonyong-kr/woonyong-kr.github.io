@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-3ede7429c325/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-3ede7429c325
-projection_sha256: df1f71afed5d0aacd29f524ece5521c1e0aa9b72a9f8e8c98fe4103fb9c44900
+projection_sha256: 461d61ec53d2abd75e4864f33fc6e3bf06f5f2f5bab8b5a43850db72439be582
 parent: AI 평가
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/evals

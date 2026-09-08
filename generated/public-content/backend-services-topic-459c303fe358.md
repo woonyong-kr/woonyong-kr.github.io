@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-459c303fe358/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-459c303fe358
-projection_sha256: 9e95fed4d922e30d74eed5e77f084306094378783814bef8244dfefce7597e30
+projection_sha256: f3c1fc215065b115857f929f42831b212bc2495342f9d6aab5eae68b235c0852
 parent: 메시징
 content_status: planned
 public_parent_id: Wiki/backend-services/messaging

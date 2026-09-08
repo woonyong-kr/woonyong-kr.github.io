@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-sql-injection-3d2e3a0d8df5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-sql-injection-3d2e3a0d8df5
-projection_sha256: 679764888d75cf5c9d11869937242aec2529602133d19b0fb1fcc783b082dad9
+projection_sha256: 6b494e0406ac635a96cc016855f748728e942462f92a5b2abeb5ad09b9b75010
 parent: 애플리케이션 보안
 content_status: planned
 public_parent_id: Wiki/security/application-security

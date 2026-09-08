@@ -6,7 +6,7 @@ permalink: /wiki/data-api-544c80546b5e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-api-544c80546b5e
-projection_sha256: f524303b932dab0d6c76a73251c7b8036f4e139a538d851169a79449d2a838e6
+projection_sha256: c0d77b902f073111d22b0a251e903c785797c93aeebc183d26845d649ccd64bc
 parent: 데이터 수집
 content_status: planned
 public_parent_id: Wiki/data/ingestion

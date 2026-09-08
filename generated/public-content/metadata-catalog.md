@@ -6,7 +6,7 @@ permalink: /wiki/metadata-catalog/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/metadata-catalog
-projection_sha256: ca7e92224f3ae6a1209c3683f25a54f7cd2688dbb6d0cef3917bcaf197b03a33
+projection_sha256: 81737eb1bb8b8646200d63324a03557695adeab828bbe182b1fd042d0a2f118f
 parent: 파일 시스템
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189

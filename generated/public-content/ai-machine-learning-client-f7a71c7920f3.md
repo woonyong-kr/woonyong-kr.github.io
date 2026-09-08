@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-client-f7a71c7920f3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-client-f7a71c7920f3
-projection_sha256: 30e84abfeed2570cd63b13f5a909f24e2ca7e7ced94ad21466a7e82d8d3f65c9
+projection_sha256: 2a41b6bac43cadf8eebbcf86b1a9b456a993eb01739a4e7c0ad966939115e4d9
 parent: MCP
 content_status: planned
 public_parent_id: Wiki/keywords/ai-machine-learning-mcp-fd1a7dc7dd96

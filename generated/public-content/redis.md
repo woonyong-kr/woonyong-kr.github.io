@@ -6,7 +6,7 @@ permalink: /wiki/redis/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/redis
-projection_sha256: 3aa9b847fa271d49163794740e899641ac4059d24871388698f441dbfabc0c8a
+projection_sha256: 2cf4d43065306b62842630c30c897a967052d78e58cff21acb6ca00e33f9f45a
 parent: Database
 content_status: planned
 public_parent_id: Wiki/data-storage

@@ -6,7 +6,7 @@ permalink: /wiki/frontend-aria-79d5b9808b8e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-aria-79d5b9808b8e
-projection_sha256: c00972223a8cf4375da084fcc9eccc2088da8f89f238f35b432e4760666bc776
+projection_sha256: ddd46c714278b6eff6e932d8f96802fc109b0ec784905a48f21f044e6100b28a
 parent: 접근성
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-8dd74e18eed3

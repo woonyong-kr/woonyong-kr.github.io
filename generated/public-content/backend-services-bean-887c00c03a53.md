@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-bean-887c00c03a53/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-bean-887c00c03a53
-projection_sha256: 8c5226a60b371cad78a5744b5de891edd0b602ad6440510b4e3c75bd2677622b
+projection_sha256: 521941ff79c0325dea8f622392f802c5caf7d83119d8236ca5161cb0b1d190ab
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de

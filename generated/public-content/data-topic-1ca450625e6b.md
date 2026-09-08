@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-1ca450625e6b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-1ca450625e6b
-projection_sha256: 0a0bcd783856895be9b3d291b32438a01d525cd25214739f1974da01a27fe52e
+projection_sha256: 5e165b5cd39419113c79ef1c51b288925ab5a43612ec5ac4b43a0418d2df2ff5
 parent: 데이터 분석
 content_status: planned
 public_parent_id: Wiki/data/analytics

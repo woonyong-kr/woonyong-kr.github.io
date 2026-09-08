@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-f9681dff8807/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-f9681dff8807
-projection_sha256: 140c03ac71a8f50d13db97d1e278ac58aeb0744dcaa18ee88a75372c4b70b8c4
+projection_sha256: 18b47a68e475e37907a0b614b2eaceb4eb15d072bdace391f4e5be2e9e92dcae
 parent: 데이터 거버넌스
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-48a8fbd81d66

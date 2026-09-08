@@ -6,7 +6,7 @@ permalink: /wiki/inference/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/ai-machine-learning/inference
-projection_sha256: 4b7748f2c4606e7b4d0c0670cf5d66dbb51a932e13f06561794407c48feead2c
+projection_sha256: 6f74f918b4da0ea160d8b01da91535b926f0b31efca22f207e55265c8f836482
 parent: AI
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning

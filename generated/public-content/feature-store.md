@@ -6,7 +6,7 @@ permalink: /wiki/feature-store/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/feature-store
-projection_sha256: b708e9c75b6c0a39994aceaf6614ee11f329ae219a432deb02d58de2757dd269
+projection_sha256: 27b373430374449cc38294d8e33ba26f9cf868ba84f5f6007979acd9943f188d
 parent: 데이터 제공
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-8704989ac790

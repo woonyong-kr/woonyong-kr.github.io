@@ -6,7 +6,7 @@ permalink: /wiki/os/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os
-projection_sha256: 66187f5e769414d1ebd911b91ce104af4042c26dcd1b74688702a76987e0b184
+projection_sha256: 8acce58504d8332ba60bc7fd2511396167a1a170066b9a7216051ce3ad4873a6
 parent: 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network

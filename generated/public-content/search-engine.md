@@ -6,7 +6,7 @@ permalink: /wiki/search-engine/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/search-engine
-projection_sha256: 90eaca4bdd1939328580b3a32eee2489a49dfcd461bf66f6eae2ed9344cbfadc
+projection_sha256: 86403443f03008b856857698e44c65aa9ed45c551639660bbf170491788c6d1a
 parent: Database
 content_status: planned
 public_parent_id: Wiki/data-storage

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-be33a4504642/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-be33a4504642
-projection_sha256: f3338f3ac7fb8ceb7bf8c481451ad943d2b0aaac6f3182c903d28d08913d7c14
+projection_sha256: 8ee28f2ea080a83765e495c9894de72b8b16afce579fe81d6f09bde18c5a9d96
 parent: 네트워크 기초
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91

@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-fc08995b7df9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-fc08995b7df9
-projection_sha256: 612ea21a26b95cdc8e21b446c1750dce40e3f631f02d1a768964120966e76e00
+projection_sha256: 1c2bbdcd8de372ba73d59b1170118dd9401e65ed93c08110d0e739a338729260
 parent: SRE
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/sre

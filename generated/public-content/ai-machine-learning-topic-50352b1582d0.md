@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-50352b1582d0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-50352b1582d0
-projection_sha256: 0b04c80d445f530116472fb20b42279d3a9de176978050db6b5991880c3b2add
+projection_sha256: 1659aea5da991627a41fc91b7cdeb9e5ed955181bb86b6c3f10dedb66d32a8b1
 parent: AI 애플리케이션
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/applications

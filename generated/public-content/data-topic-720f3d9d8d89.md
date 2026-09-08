@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-720f3d9d8d89/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-720f3d9d8d89
-projection_sha256: 8bae1a1f82b2330aa0d3a42506cea4c0a7cf03e2c30db5e3cad888d6de4c4fbf
+projection_sha256: 5b5871298bf6c8c1034ab66fc53c8f9c4def81d701fb9806f2801c1685345aad
 parent: 온라인 서빙
 content_status: planned
 public_parent_id: Wiki/data/online-serving

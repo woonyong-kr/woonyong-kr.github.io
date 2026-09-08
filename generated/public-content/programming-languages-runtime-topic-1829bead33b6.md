@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-1829bead33b6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-1829bead33b6
-projection_sha256: d18e4fc19f56c712400250f75a35d023751a73051e231d5bd1cb4b2c7c223d8f
+projection_sha256: e664eedb222c7ad23ca477c8877a47ede2398e9671518ebefa37878b5eae2cea
 parent: JVM
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/jvm

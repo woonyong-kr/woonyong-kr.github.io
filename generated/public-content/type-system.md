@@ -6,7 +6,7 @@ permalink: /wiki/type-system/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/type-system
-projection_sha256: 42e09add29067af0423a92e3d52eba689392e660dcb2588d33771d7048e5f0f4
+projection_sha256: d47344ab301b9b13f5b5b35544559a770aef5069366c426349c64e99f46a9fc5
 parent: 프로그래밍
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime

@@ -6,7 +6,7 @@ permalink: /wiki/data-contracts/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/data-contracts
-projection_sha256: 63973108870fc74eb0b609e388c907cb3b25350e7eb9268d842186b6d9ff919c
+projection_sha256: ad641048ce996ad7e7986c42f540fac39f9c20b30bec69ef551748f5ad75379d
 parent: 데이터 관리
 content_status: planned
 public_parent_id: Wiki/data/data-foundation

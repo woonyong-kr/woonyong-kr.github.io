@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-jvm-2593deba3087/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-jvm-2593deba3087
-projection_sha256: 2c3e73534473d675e6b725e41a5d49bf4d42ce93f367f3b6cbeed311ce70463c
+projection_sha256: 2da3113bf033009d29ea62344a522ccaf021d783670dd1cdea701b25c1a30287
 parent: JVM
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/jvm

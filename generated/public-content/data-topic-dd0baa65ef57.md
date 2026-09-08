@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-dd0baa65ef57/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-dd0baa65ef57
-projection_sha256: 2dd4afc1e2b96df6eaa6c1c97401ad7bee5f8e33cd4497f41c090046676afd62
+projection_sha256: 25fae32e9b76911bfa515dcd52313895d2b34f2dd5a360d5b748ca2fe718872d
 parent: 데이터 분석
 content_status: planned
 public_parent_id: Wiki/data/analytics

@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-220afa3ae605/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-220afa3ae605
-projection_sha256: 42c178c878e6d73dada9b3f7110cb38718b56e02ba1649a2eb74200ceb70060c
+projection_sha256: 5b9fe4ecbc318f2d1f33da9205bfaae34284bcb873eb58d9df2875587b0aa73c
 parent: FastAPI
 content_status: planned
 public_parent_id: Wiki/backend-services/fastapi

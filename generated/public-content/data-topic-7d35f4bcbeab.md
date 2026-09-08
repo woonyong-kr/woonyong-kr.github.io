@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-7d35f4bcbeab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-7d35f4bcbeab
-projection_sha256: b0057ad952adb23ee995fdc2314914382c80fc1cf58d3ca06a08661f6a1a0536
+projection_sha256: be006c6a1a97f15b66dd0c552782e8bd858c192bcd5a9b3cb0ca8bcdf2b0bdb4
 parent: 온라인 서빙
 content_status: planned
 public_parent_id: Wiki/data/online-serving

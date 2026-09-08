@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-6f12767bc717/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-6f12767bc717
-projection_sha256: 1401966a766fb5a4ecd4ea94c98bafed1a6a323933a2104ee039374fb67eedac
+projection_sha256: 12be84652a841e76d71bf4c4e2225ee0bf63a57b22ddd6e31223de48ab4b5990
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de

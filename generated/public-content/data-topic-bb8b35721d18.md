@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-bb8b35721d18/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-bb8b35721d18
-projection_sha256: ea89de8553e30aa3b577c3df9697eb8cc2f45e42df6c2acdafe033ac32e4ebb8
+projection_sha256: 4494a79e00ca8d920a726e786fbb3fcf03e23ee642c0fe0c674f6ffaf8c2c025
 parent: 저장 엔진
 content_status: planned
 public_parent_id: Wiki/data-storage/storage-engine

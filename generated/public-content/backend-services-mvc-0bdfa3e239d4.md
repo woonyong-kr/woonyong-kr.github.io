@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-mvc-0bdfa3e239d4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-mvc-0bdfa3e239d4
-projection_sha256: 977f2d2c9027dadba7a5df7f99c4c3c9a1c22d5936edebb4e71ca2e812aaa04c
+projection_sha256: 60aaf238317aab9dfac9232d305ad36d5966a4dac7c211c05e8dca958e946505
 parent: ASP.NET Core
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-asp-net-core-5d76e93b2fda

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-dns-c7fd180532b4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-dns-c7fd180532b4
-projection_sha256: f44e7bd52bfa394117843cfe2712f6eb0d69448f048ad9f239c62b0e33b6e1ab
+projection_sha256: 8c35220c03b2dd092ffa86fc771d236d34a0214c7ed7e1b822db44f3cd132fc8
 parent: 네트워크
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/network

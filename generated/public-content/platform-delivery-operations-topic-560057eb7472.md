@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-560057eb7472/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-560057eb7472
-projection_sha256: 3312ab5dbc3657b03533ba105d7c49ca476863a3614fb6185c079b400660c763
+projection_sha256: 206227d7e43572e9704a775809d7955b24e9a946e339082f7e293f0f23f8e5ae
 parent: CI/CD
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/ci-cd

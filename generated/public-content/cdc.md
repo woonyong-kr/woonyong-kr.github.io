@@ -6,7 +6,7 @@ permalink: /wiki/cdc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/cdc
-projection_sha256: ca4f0da9298dc8161d7e5b1fffeecb9cc525ec73db87096cac1b37d9a61e144f
+projection_sha256: 11b2be0e380298d8d4de6e61613f14479edd44695243714788299688526c29c1
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

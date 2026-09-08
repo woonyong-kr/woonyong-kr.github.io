@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-playwright-0b5dbbc8b1e3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-playwright-0b5dbbc8b1e3
-projection_sha256: 0338dd9c79bbf01b43d0cfb16802274d1b8c5c6ba1760fdc15695aaf6fda80fc
+projection_sha256: 01aa2fe541177fe17f039622412ea907c9cb3c190f4b120eaff99a2bc92dd4dc
 parent: E2E 테스트
 content_status: planned
 public_parent_id: Wiki/testing/e2e

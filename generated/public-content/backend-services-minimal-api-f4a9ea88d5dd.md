@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-minimal-api-f4a9ea88d5dd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-minimal-api-f4a9ea88d5dd
-projection_sha256: 7834625e537190f97b27f8b62c560fbc2d7ef51ce6bc053c4c6ad9e704b90b23
+projection_sha256: 73ef9d51ab164849863281dbe320c10bddfbbab45c224cdb3782167ee61ec7b4
 parent: ASP.NET Core
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-asp-net-core-5d76e93b2fda

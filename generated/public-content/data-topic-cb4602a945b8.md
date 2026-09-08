@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-cb4602a945b8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-cb4602a945b8
-projection_sha256: 67cc73b051bbd972a2c3b94c375a5d8c2a1fdb72bf947cf22be566fc3f56ef89
+projection_sha256: 096f069e61e3f54ce57a8e7e75c8bf41f77834b4ecc656bb5e09d6ce323af7d3
 parent: Kafka
 content_status: planned
 public_parent_id: Wiki/data/kafka

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-336a3c343ed4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-336a3c343ed4
-projection_sha256: 63efb901474b49b7b305c2d8ccc0ed086fc173ea7327063760ef2f23d50e83fb
+projection_sha256: c6c749f91975c64ca7cc443fbbe648ce19c8ddf5b58c12983270a74ed796c9bb
 parent: 분산 데이터베이스
 content_status: planned
 public_parent_id: Wiki/data-storage/distributed-database

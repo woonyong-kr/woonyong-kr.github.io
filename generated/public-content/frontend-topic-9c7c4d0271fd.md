@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-9c7c4d0271fd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-9c7c4d0271fd
-projection_sha256: 00dfcd0be8087ef900ae01badc935422dc616437f4a60ef2c73105c6e468e876
+projection_sha256: 970bfe05f6b6408e9088d499f6cf94ddfeee35911ff587d5b8d24a7d36619726
 parent: 접근성
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-8dd74e18eed3

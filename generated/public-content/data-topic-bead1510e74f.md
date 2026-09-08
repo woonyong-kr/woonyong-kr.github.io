@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-bead1510e74f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-bead1510e74f
-projection_sha256: 9faae16e94b22064d11c8fdce4be06a435171ae35cce0d8b7c8e8393ff8985d4
+projection_sha256: a10713ae69d5bfa62cce5e47d6f13ceab3cdb1f29752a5fdc2e8396528b5a834
 parent: Redis
 content_status: planned
 public_parent_id: Wiki/data-storage/redis

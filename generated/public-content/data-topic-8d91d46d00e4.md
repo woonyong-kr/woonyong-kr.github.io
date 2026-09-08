@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-8d91d46d00e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-8d91d46d00e4
-projection_sha256: b11108d562611e239857814612438df7023815bae9bbbbdaa637f31cf715c821
+projection_sha256: 00fb12218343cc328c79de1db4bc4c5c2d0d07006a08b295bb656dc9869db6ba
 parent: 분석용 저장소
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-fa218ee0857a

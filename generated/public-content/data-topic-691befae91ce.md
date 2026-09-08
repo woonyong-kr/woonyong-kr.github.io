@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-691befae91ce/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-691befae91ce
-projection_sha256: 77e46878edce8fcdcf1e0257e3723fdcca1ce257fdb95c41d131a19880c72bae
+projection_sha256: 4cb6be769cf87d39c66bae526807ebd6c8826e2c7a4186dc65884ba3fa0440d3
 parent: 스트림 처리
 content_status: planned
 public_parent_id: Wiki/data/stream-processing

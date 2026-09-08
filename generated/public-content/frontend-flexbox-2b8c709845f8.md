@@ -6,7 +6,7 @@ permalink: /wiki/frontend-flexbox-2b8c709845f8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-flexbox-2b8c709845f8
-projection_sha256: 0e9772c0f3cef1c43683d17decf6672ca2cb4d52702af6e0e798759287cad2a6
+projection_sha256: a626ba6b46b7bf57a6f9fcab39097e056798d22c439284ed3fd63ffcf1f6fc19
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f

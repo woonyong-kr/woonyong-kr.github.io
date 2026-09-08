@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-big-o-33c1cf0fde3d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-big-o-33c1cf0fde3d
-projection_sha256: 5d6c69c129a6bc8873ab4527766ee1065600c9bceec633000028e24fe15bebd5
+projection_sha256: 9fd36b35b43dca02cea67e846c5a15e5309f61965debe571606bccb429e1178c
 parent: 복잡도
 content_status: planned
 public_parent_id: Wiki/computer-science/complexity

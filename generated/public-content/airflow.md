@@ -6,7 +6,7 @@ permalink: /wiki/airflow/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/airflow
-projection_sha256: 3ea47a07c2e66b29480d4988d91c60f86770ba9596b420428bc644dbd9d893d9
+projection_sha256: 893c091770da0297469e268cb129e333711b351aa1c54bc996754671e685b9e8
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

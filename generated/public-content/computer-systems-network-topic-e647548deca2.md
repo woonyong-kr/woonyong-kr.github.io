@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-e647548deca2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e647548deca2
-projection_sha256: 04aa945fb465f5d0658997d11031bf46569154ee1e0076f1eba06da9a4b33b51
+projection_sha256: 81e3a5e2c4ed8647872e51bd49e7bb43d18c074b777a138757a5b95d61708a7f
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture

@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-actuator-84b3d9562fef/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-actuator-84b3d9562fef
-projection_sha256: 9dd7fa8cf745262c3dd2adba8975c2b66f37d8c228165e707101c92422db27b6
+projection_sha256: 9e75889d88fb9a00495527d1dfe3f50bf1a98d32ecb7d85e3404a76c860feb2d
 parent: Spring Boot
 content_status: planned
 public_parent_id: Wiki/backend-services/spring-boot

@@ -6,7 +6,7 @@ permalink: /wiki/javascript/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/javascript
-projection_sha256: aaca99660689a176a92b66a04ac413a23c566ec698e3c77a3c7a0bb1391fe7bc
+projection_sha256: 33dd429c43c3846873d1ba9bf8be496ec58011b478c63346046ffdd40acada09
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6

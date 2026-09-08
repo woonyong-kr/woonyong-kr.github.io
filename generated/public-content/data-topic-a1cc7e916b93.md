@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-a1cc7e916b93/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-a1cc7e916b93
-projection_sha256: 6baedf7b26e55e5b70a78a597a039f88639e6316d3d5240d224059e62a9c6a73
+projection_sha256: 804286ff9854f1c2b55a2a71e6bddc57161388a706b3c3272e5fa827e5e20366
 parent: 데이터 거버넌스
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-48a8fbd81d66

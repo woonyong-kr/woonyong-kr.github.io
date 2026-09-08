@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-3ff84a85618f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-3ff84a85618f
-projection_sha256: 752cf7a5aa8a893fb9860333be544d00bec2b1ff1852a07cc2d4d375085e22bb
+projection_sha256: 0cd49678afd17c6c566d11f6317932af71cd6c8889241e0163369c121eecbda1
 parent: 스트림 처리
 content_status: planned
 public_parent_id: Wiki/data/stream-processing

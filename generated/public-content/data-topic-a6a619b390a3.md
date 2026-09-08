@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-a6a619b390a3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-a6a619b390a3
-projection_sha256: a6d85ace74bbbd58d1111bf2360441b1a2a2f2db86c5e46a8fbfc3e8f2f944a2
+projection_sha256: 4a94668d8249d168e03921ef4b8ec9732f69c179cbdf51ebe258b431b16e2aba
 parent: 쿼리 최적화
 content_status: planned
 public_parent_id: Wiki/data-storage/query-optimization

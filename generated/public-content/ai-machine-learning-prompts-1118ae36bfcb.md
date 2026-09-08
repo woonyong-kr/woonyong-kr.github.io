@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-prompts-1118ae36bfcb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-prompts-1118ae36bfcb
-projection_sha256: 90c2012a90ec460351fc7c9e76dc954d6229d86da43e8b9cfacc310096211800
+projection_sha256: 01f87ff2ff1d7ac586f75ffe540a2b0527494f68bb4274448275e899068ff37d
 parent: MCP
 content_status: planned
 public_parent_id: Wiki/keywords/ai-machine-learning-mcp-fd1a7dc7dd96

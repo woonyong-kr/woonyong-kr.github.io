@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-7efa418f0eab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-7efa418f0eab
-projection_sha256: aac2160877470aa63b57433ac9373fa0a8e351aa207bf30762d7a1467d318c66
+projection_sha256: 9bdbd344749db4699f45a15a82e26f8624c7c4be4727eb4a3a6c10f23abe5e20
 parent: 모델 추론
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/inference

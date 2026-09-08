@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-d44b749d4219/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-d44b749d4219
-projection_sha256: 354454f1f89746bd475916d86aeea0b139ba3a4d48e1f0c5574d06013d702370
+projection_sha256: d171aec54351b2c88dc43fdd704c93b081aaccb1384c85834c84745e32ca72d6
 parent: 데이터 제공
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-8704989ac790

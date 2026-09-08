@@ -6,7 +6,7 @@ permalink: /wiki/architecture/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/architecture
-projection_sha256: 7ded2655cc82582aa7c2af04196971b1cfe503565eadfeeeb19c46e22428216b
+projection_sha256: 024b5deb28b42c3fed2687fd6fb6b74f8cdf744055dc863e314c11f26f7fece1
 parent: 백엔드
 content_status: planned
 public_parent_id: Wiki/backend-services

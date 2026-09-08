@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-a213dae4dfc5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-a213dae4dfc5
-projection_sha256: c7d3255fbf64613c622c31a60abd595cc1fbfc2eb0f69a42e704d22ce763abef
+projection_sha256: e0fe3ceb2c1b8b0959a486a67116ae90de1d44b067446f7f99c0df7644ce1640
 parent: 데이터 품질
 content_status: planned
 public_parent_id: Wiki/data/data-quality

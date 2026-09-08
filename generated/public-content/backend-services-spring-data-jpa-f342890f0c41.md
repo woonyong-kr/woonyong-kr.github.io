@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-spring-data-jpa-f342890f0c41/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-spring-data-jpa-f342890f0c41
-projection_sha256: 8f1ff996421dbae05b3d72361522095b277f003df7f8d44982c9da25c849be9c
+projection_sha256: aaecaec9c15a5e31d3295f300cca8af474418de1ff9db73ab4fc1cd52a02e2c3
 parent: Spring Data
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-data-7ac93db31ea5

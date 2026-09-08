@@ -6,7 +6,7 @@ permalink: /wiki/programming-paradigms/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/programming-paradigms
-projection_sha256: 03a230b6b8690ec961a37d38fd11729844d81ebe3742007e497be917415c3091
+projection_sha256: 5ea83423a29af4efae1a6502d49210d800f4b6637fdd9e8e7cc04973a2057982
 parent: 프로그래밍
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime

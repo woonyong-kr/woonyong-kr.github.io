@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-22f4c6131feb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-22f4c6131feb
-projection_sha256: b8c5cdb14188f3dac7e6534d0e38d31231898fbd5a114419029e705b1e71a565
+projection_sha256: ab22c9655c001ad0aedcf5c8371152a4e5e644aaaf602999c7c6db4465ff31ec
 parent: 데이터 계약
 content_status: planned
 public_parent_id: Wiki/data/data-contracts

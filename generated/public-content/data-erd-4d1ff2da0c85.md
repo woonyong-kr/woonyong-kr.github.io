@@ -6,7 +6,7 @@ permalink: /wiki/data-erd-4d1ff2da0c85/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-erd-4d1ff2da0c85
-projection_sha256: b99f64607f2a845e067c6e379ccc4ee80a2394ba7455c922b7ce10e1235ccb72
+projection_sha256: 8e8b6a40d34d3cc6ae76e99658c66bfbf0265d1e8e2975b979a6ed6190cb0cf1
 parent: 데이터 모델링
 content_status: planned
 public_parent_id: Wiki/data-storage/data-modeling

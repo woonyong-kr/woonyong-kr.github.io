@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-d031406d8def/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-d031406d8def
-projection_sha256: 4817adc3ebea21b5e2f15000d32f4b61b23b6dbc341f3cc0020d3fe9f5c833d5
+projection_sha256: 76ddbead24afc5913a0e0cd49091788ac01207ec2d03278f5ac4975513ed31cb
 parent: 암호학
 content_status: planned
 public_parent_id: Wiki/security/cryptography

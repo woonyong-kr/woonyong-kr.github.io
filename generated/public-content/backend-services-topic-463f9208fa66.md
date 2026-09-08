@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-463f9208fa66/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-463f9208fa66
-projection_sha256: d4e39bc841c95acd8ba12d7469195efd8cb7d02a9c806a8fc26b06944e9eb843
+projection_sha256: 95f02bff282d975b0443d79e89548e04e8945736e7f27f107bf9a2450f6a0af0
 parent: 암호학
 content_status: planned
 public_parent_id: Wiki/security/cryptography

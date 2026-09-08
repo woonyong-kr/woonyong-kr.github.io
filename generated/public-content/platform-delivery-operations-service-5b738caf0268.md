@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-service-5b738caf0268/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-service-5b738caf0268
-projection_sha256: ac257f5a65e574a1e0c9ab711351e559fe46b0226c50358950d8ba675eaf9359
+projection_sha256: c5036168d099aa86933f1e9cfa95ae6c92b5ac0c6ff7690fc28c4fd3205efc62
 parent: 서비스 연결
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-35da5f950b2b

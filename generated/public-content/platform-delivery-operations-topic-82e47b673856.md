@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-82e47b673856/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-82e47b673856
-projection_sha256: 9eb21c3cd0018a8bec4ee6d391f0c8cb79c41deded2e65740e20277d14610961
+projection_sha256: b9b2a4ce0ac2edace16f692c0e5ad1f2e957e071a42c5eae0148b9bff5e5f8e9
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud

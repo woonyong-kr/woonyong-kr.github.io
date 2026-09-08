@@ -6,7 +6,7 @@ permalink: /wiki/supply-chain-security/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/supply-chain-security
-projection_sha256: 96f9525ba7e03eeda7ed905b4cd7c95a81887b84b7c787f41a5b5e7fe89b95c1
+projection_sha256: feac924c4b1954a40cb889625f1ea9b4131270d2725bafc5ddbc944e9b429e94
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security

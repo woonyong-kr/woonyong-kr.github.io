@@ -6,7 +6,7 @@ permalink: /wiki/online-serving/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/online-serving
-projection_sha256: a621cafe164c82797b2d011d7e1f017d7e1c3765aeeea2c6acee45afa8f898c8
+projection_sha256: 4524e5364e159b5911267e4de32c07701d2212fff5a03c0ea5095516a3e97e05
 parent: 데이터 제공
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-8704989ac790

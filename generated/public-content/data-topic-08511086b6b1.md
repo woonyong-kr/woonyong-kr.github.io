@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-08511086b6b1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-08511086b6b1
-projection_sha256: 4e1afe9fd446f9cc378ef9f61af8b615d07849e71a1133e18abb62bea9c72148
+projection_sha256: 0d904bb77ddf4f57905ec39f5be90985f631b9243adf3211b94887c97ed79e4b
 parent: 데이터 모델링
 content_status: planned
 public_parent_id: Wiki/data-storage/data-modeling

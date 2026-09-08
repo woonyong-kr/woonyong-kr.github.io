@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-2c80cc125306/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-2c80cc125306
-projection_sha256: 86285b89117206beb22db46e95c50ae7775d68d7f9dc05346030dbe3746e842f
+projection_sha256: 3c5108712d0ddccd0850711a2c93f9b0fb2cd8ab480ae5bed80a37fd7be7f7e1
 parent: 배치 처리
 content_status: planned
 public_parent_id: Wiki/data/batch-processing

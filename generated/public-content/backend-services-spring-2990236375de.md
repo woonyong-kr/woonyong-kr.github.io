@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-spring-2990236375de/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-spring-2990236375de
-projection_sha256: 617f4dbd9ff3c920271848621e7a9deb0f4090df0826765d77e2dd5ffcef669f
+projection_sha256: 81d6f1eff60c76835335b3bd8c4e0d39770062e4c42e3885b6246a0f73294661
 parent: 서버 프레임워크
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-098a112bb921

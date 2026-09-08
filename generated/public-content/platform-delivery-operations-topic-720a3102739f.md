@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-720a3102739f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-720a3102739f
-projection_sha256: 52dff4674e49b46688f29ac75290e3d67ea84d84850af3897a5961cc9ed78b39
+projection_sha256: f4dcd22db79f2f7f6034d90c4f30c123e19a5f95599461aed1e70c40e288aac0
 parent: 장애 대응
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/incident-response

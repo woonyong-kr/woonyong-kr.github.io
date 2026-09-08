@@ -6,7 +6,7 @@ permalink: /wiki/analytics/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/analytics
-projection_sha256: 128b73870e7e60ee817ac854776eaf111967e21110c9b302e9cc52d03c5b6324
+projection_sha256: d6bc425226427175073806adce271a4a4ba8d5a5a5554cbb4d52da295ded026f
 parent: Data
 content_status: planned
 public_parent_id: Wiki/data

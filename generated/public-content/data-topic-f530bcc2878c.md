@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-f530bcc2878c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-f530bcc2878c
-projection_sha256: ef6b2bcb02e53ac8c8d306e0b0b0ee62c7da76ffb849dfa6c21c3c47411f3892
+projection_sha256: 1bb04e2c03d5e829687729253a176c93866e8470cd5f170c153994f4cebb0f40
 parent: 온라인 서빙
 content_status: planned
 public_parent_id: Wiki/data/online-serving

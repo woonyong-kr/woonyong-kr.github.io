@@ -6,7 +6,7 @@ permalink: /wiki/messaging/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/messaging
-projection_sha256: 6357b87c8935083b0a8ab0821a74704f7dc95eaae02157942364bb72f308a459
+projection_sha256: 5e45f6efa43d14296eaf87f98c6bb2c9b0e59c4d4e5e72c208dd0599a2d6f589
 parent: 백엔드
 content_status: planned
 public_parent_id: Wiki/backend-services

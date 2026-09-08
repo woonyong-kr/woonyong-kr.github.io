@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-api-server-63f8862ec36f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-api-server-63f8862ec36f
-projection_sha256: d90f5c404ddbc1a21ab54e5c075566b036d85912c527c31a761fe0259e053ee4
+projection_sha256: cc2dce57699ec22cb74f32e4c1e9dea1f47deb3ec3502b84722cff201e4a798d
 parent: Cluster
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-9cdb629d8fdf

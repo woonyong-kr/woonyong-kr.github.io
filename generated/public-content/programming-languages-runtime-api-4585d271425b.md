@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-api-4585d271425b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-api-4585d271425b
-projection_sha256: 222637161e0d4d8a1945b3d6e42be7f594257b3dc8e6450eb5000a3e897ae051
+projection_sha256: f29936658988050c5682402b278d4f6b719790d26a201b3ae4c0e6cce3743842
 parent: Java
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/java

@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-1ebf81b35ff7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-1ebf81b35ff7
-projection_sha256: 47744f937351dd24c1ef37ceb227a3e879f24f504df9e1147c428ee211fae8d9
+projection_sha256: 3a0c44e65aebfe4b799ce3540576114ed7363434818a061c58b635b2613cb43e
 parent: 메시징
 content_status: planned
 public_parent_id: Wiki/backend-services/messaging

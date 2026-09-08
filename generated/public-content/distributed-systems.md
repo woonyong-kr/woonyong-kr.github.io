@@ -6,7 +6,7 @@ permalink: /wiki/distributed-systems/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/distributed-systems
-projection_sha256: 30fae8f972b383ff3ba8aa82fe7f270272310a65a7d54f2d282ad6a004090b7f
+projection_sha256: 033d026eb4f7635896605c9cf50fc2839524dad4d163db64b44c30879d358c66
 parent: 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network

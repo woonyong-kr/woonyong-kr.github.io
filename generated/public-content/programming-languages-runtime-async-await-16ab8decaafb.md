@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-async-await-16ab8decaafb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-async-await-16ab8decaafb
-projection_sha256: 2164ee7dadee01d908fbb5afd99ab1cf5ad86e6126c10865bdd0e51e37c75e70
+projection_sha256: 66b9b29b6f963cdec4e606fd88737a91267eb5df3bcd278e9b2bec08aecc4677
 parent: JavaScript
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/javascript

@@ -6,7 +6,7 @@ permalink: /wiki/sre/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/sre
-projection_sha256: cb71ec5b2d463ace995247184a566cdacfcc82f7818c0104effe29a13bd44ebd
+projection_sha256: 3bea1c9646923cdc1c9a3b0fb9c7386011929483f2b88f2e17bb89ab2ff0ad9c
 parent: 플랫폼
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-60f47b6793ea/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-60f47b6793ea
-projection_sha256: b1d6d43455a162b62625358125a284f01e0b880a6c89f5f24e41b06fb151bd40
+projection_sha256: 3f98353d0c57d407554a335f9757d590280ccbd90f36301010004e98a58da49c
 parent: 데이터 계보
 content_status: planned
 public_parent_id: Wiki/data/lineage

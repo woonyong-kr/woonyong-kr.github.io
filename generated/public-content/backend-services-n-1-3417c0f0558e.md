@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-n-1-3417c0f0558e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-n-1-3417c0f0558e
-projection_sha256: 1d08029288fa538b01d1045cd7a67a1b74e01af6f45e15e5924bc62eeceade8a
+projection_sha256: c95991785b75c48b52480818f448548c5b8108d4da8c044748626bc59b19c803
 parent: 영속성
 content_status: planned
 public_parent_id: Wiki/backend-services/persistence

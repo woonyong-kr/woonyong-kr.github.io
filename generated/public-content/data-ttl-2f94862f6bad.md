@@ -6,7 +6,7 @@ permalink: /wiki/data-ttl-2f94862f6bad/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-ttl-2f94862f6bad
-projection_sha256: d6a0a45f2968e46b017db9a41c0ca6cdc21a13851770902bf6f918ec0096d9fd
+projection_sha256: 710a6630d6b10d710398b25835ffee9cc23626ea02770e6dcecfb6d08c15458b
 parent: Redis
 content_status: planned
 public_parent_id: Wiki/data-storage/redis

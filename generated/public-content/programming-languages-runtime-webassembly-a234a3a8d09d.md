@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-webassembly-a234a3a8d09d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-webassembly-a234a3a8d09d
-projection_sha256: 3d152da4f7ed0f3fbb324b48b91d52cba78ea355eb340bb61ab108eba5aad642
+projection_sha256: 0e396a1e1cbb7ee07b2f6e8cc32a78bba793137326e7d0a8e5fdd53fb7b7cad8
 parent: Runtime
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-a5b710f9d5d9

@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-id-4be4773e8e3f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-id-4be4773e8e3f
-projection_sha256: dd62b5170821eaa780b25451c83b6c04f351fb0a636b7eda29129bce4ad494a5
+projection_sha256: 94b7fb92d3cf2b644693c4cd75dc0753e482e72c9df362f6bc5d55595682b6fd
 parent: 색인
 content_status: planned
 public_parent_id: Wiki/keywords/ai-machine-learning-topic-06d83c687784

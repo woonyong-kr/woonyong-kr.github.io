@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-serviceaccount-fa3f5f56a1b4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-serviceaccount-fa3f5f56a1b4
-projection_sha256: ce8a0d11718b10f9d3f0ecd7e3540072941b17495846972f36255f638d108e95
+projection_sha256: 2e02ba8e13d1df85abdfc7e11a558bfd3cc8ff3260e1fd0118988a98c560e690
 parent: 설정과 권한
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-fdf6ab388ba3

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-d8e1e4be7dd0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-d8e1e4be7dd0
-projection_sha256: cbde18a1b09e9224153b7aaeeb3cd9585f02d365d8952c67e95db9007a0b8968
+projection_sha256: 36025f1eea28853965d126b10647180fbd8a66d9a97fbec4c10a239c4cba5e5c
 parent: 검색 엔진
 content_status: planned
 public_parent_id: Wiki/data-storage/search-engine

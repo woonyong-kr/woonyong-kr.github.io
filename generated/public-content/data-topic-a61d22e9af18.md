@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-a61d22e9af18/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-a61d22e9af18
-projection_sha256: 5d438a8ab91ac982a20c49398bdab1cee0ca48fe40014655638ba1bca1ac1a77
+projection_sha256: 7f69ed54edc566068212efd30fd0b121f8c74038a22ba6462971d819f8cb741e
 parent: PostgreSQL
 content_status: planned
 public_parent_id: Wiki/data-storage/postgresql

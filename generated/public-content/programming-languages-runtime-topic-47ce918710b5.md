@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-47ce918710b5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-47ce918710b5
-projection_sha256: c97a47804eea42831778d415662a67b03976b224f83bbd4d538e39ef0f2bc5d5
+projection_sha256: e224db1c290a630740989f959715f5cbc3f41f758de9019ff9a311c8d50c6664
 parent: 객체지향
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-0310918c6581

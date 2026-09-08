@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-backpressure-34ef3d6a6269/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-backpressure-34ef3d6a6269
-projection_sha256: 6e4700a18ed1db41e9d112bf0b013ccf01ae22bd8f79898eac8f72648ad45f5f
+projection_sha256: 2601e16ee376e5376b3fc8b4ed6f7d6ef2eed1a21656baca6835a5ecdeaf18cc
 parent: 서버 안정성
 content_status: planned
 public_parent_id: Wiki/backend-services/reliability

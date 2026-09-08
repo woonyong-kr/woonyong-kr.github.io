@@ -6,7 +6,7 @@ permalink: /wiki/mlops/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/ai-machine-learning/mlops
-projection_sha256: d049d0bfa60c0c6e9057c8dfa2bdcfcfe69df09025dfe36b71dc7881c547cfce
+projection_sha256: 5d2648c3955a7a3e52c13082742e1e5e4b994dc8f54f1fe3a2027a3a36a72f57
 parent: AI
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning

@@ -6,7 +6,7 @@ permalink: /wiki/data-apache-iceberg-ced90a2d5bc3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-apache-iceberg-ced90a2d5bc3
-projection_sha256: 8bd1a84a762320e6c4ac1cea3f856360d380c72d9fe9b21668815c310637e4a2
+projection_sha256: 07000f31e7f298272c510938669a82cbada90c1f46e63f357b5339697f57ad97
 parent: Lakehouse
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-27ab2421c766

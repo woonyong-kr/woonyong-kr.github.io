@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-4b37971f02a2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-4b37971f02a2
-projection_sha256: de025e9c8193d2a6881d12bd4e869fcfcd97a916b60fd108c62663b1f16d4ec0
+projection_sha256: 23191433215bfa8fce1d214c7540e1c9075279527bde0cc6ea8ecc2de3254ac7
 parent: 데이터 접근
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-d44b749d4219

@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-java-15aad14e0a57/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-java-15aad14e0a57
-projection_sha256: 2c88693fc4a89acee3a6dd5463ac09444dc29b2f06a3df17089322eca134d852
+projection_sha256: 1c0fc223f3da27e1f048732be7481a776a64d767ae2c5a49d4b6aa9e06b95812
 parent: Kotlin
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/kotlin

@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-6bb9084242c9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-6bb9084242c9
-projection_sha256: 90dbf8e941abc07900475d438cd7742d7411f3028a434121fe99f6585947066a
+projection_sha256: 5f68f1736dfeb6d630f5e2df30d34f27f49393eda1c3e4f97292e0fe035e365d
 parent: .NET
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-net-cc4b26d73ff5

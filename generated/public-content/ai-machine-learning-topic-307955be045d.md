@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-307955be045d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-307955be045d
-projection_sha256: 078a012929b80600579907ba9d74b68ab8f4764e6319dce192f7c63bb407e32e
+projection_sha256: ff58eb94947e20fb57de4fc4712f6ee8e69fdfb463fa26383b09b66397947aa5
 parent: AI 안전성
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/safety

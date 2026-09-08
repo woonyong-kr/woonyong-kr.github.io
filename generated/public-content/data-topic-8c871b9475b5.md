@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-8c871b9475b5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-8c871b9475b5
-projection_sha256: eeafa3528d7fd385bc9aa2d6c80187029a1b8c04c273a294a0e56e6ca5620917
+projection_sha256: 9d36900462f6a67611fe39cc3505d69f55f3b508f73d0f032de27d79415f0cf0
 parent: 데이터 품질
 content_status: planned
 public_parent_id: Wiki/data/data-quality

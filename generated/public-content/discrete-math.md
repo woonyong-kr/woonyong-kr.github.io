@@ -6,7 +6,7 @@ permalink: /wiki/discrete-math/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science/discrete-math
-projection_sha256: 762ef82b8c3b049ebfdaa57ac6f2c64647f16b71c604574cce05f5c6ad09b529
+projection_sha256: 0aedae01d0adf4894cf4a8b5867fd3a1623fd9559812fc70e3e7c8f2ed163012
 parent: 수학
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-9fc1075ed9f5

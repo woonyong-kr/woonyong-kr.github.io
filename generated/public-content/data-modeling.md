@@ -6,7 +6,7 @@ permalink: /wiki/data-modeling/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/data-modeling
-projection_sha256: b20cf6bb2d802156673ffa69c5c553d43d7ecaf010b0d6dda2ba04ceaddf08a6
+projection_sha256: 1d970427eae61fd727d76b717c74ba06fe37b944b8014cfb7f8fccd19cf5c830
 parent: Database
 content_status: planned
 public_parent_id: Wiki/data-storage

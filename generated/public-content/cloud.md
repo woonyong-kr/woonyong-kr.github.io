@@ -6,7 +6,7 @@ permalink: /wiki/cloud/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/cloud
-projection_sha256: 5c1948d0883349c28f9664496ddb6008266eb3ae9b948e42fc42808a12531f74
+projection_sha256: 13db1c281d393492e22af83914f211284722d3ea3e09838873dec9c1f8b3589d
 parent: 플랫폼
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations

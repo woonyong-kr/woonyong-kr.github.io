@@ -6,7 +6,7 @@ permalink: /wiki/spring-boot/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/spring-boot
-projection_sha256: 96d12b5c41814ff9162b74934a1835ccf430e9f47d0b9d78c8f575da54994f5f
+projection_sha256: 309ed1684f1543361a369b9852d137e3f36c0682fbb8348f831aaa7e609550a3
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de

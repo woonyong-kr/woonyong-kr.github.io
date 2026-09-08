@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-4a9423be930c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-4a9423be930c
-projection_sha256: 1c25dc993a30da5f89411b80036b057c7c2aa6cf6e129a16c083a6d435f869a6
+projection_sha256: 7761d5d42f9f28b6482b81c02b02a67b12e4b7ce00edfe8ffb8bd66896fdc733
 parent: 자료구조
 content_status: planned
 public_parent_id: Wiki/computer-science/data-structures

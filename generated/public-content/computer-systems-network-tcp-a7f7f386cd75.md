@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-tcp-a7f7f386cd75/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-tcp-a7f7f386cd75
-projection_sha256: 8e1a29d57ebbe83bbc3f450403c41d143668e298111c569f16f37b775aa5b146
+projection_sha256: 6e97b0e9be3d31c0a4ba8bde216ad46e7650fd217792bb51b3a188031e639f92
 parent: 전송 프로토콜
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918

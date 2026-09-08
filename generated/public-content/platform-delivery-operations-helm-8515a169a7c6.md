@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-helm-8515a169a7c6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-helm-8515a169a7c6
-projection_sha256: b9fd3e1883320092c0be0384ac1f88ddaf18e747bc188f7d6a06a2e2f07d9b4a
+projection_sha256: 5449ca96c3ef321530e0230d4ecf278abde5e41f80ba9926a25c0219bc9f64eb
 parent: 자원과 운영
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-5e2c3573a662

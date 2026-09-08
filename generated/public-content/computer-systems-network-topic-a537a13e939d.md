@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a537a13e939d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a537a13e939d
-projection_sha256: 2384031eaa26e4246f724c4ccaaeee3928fa703791cb3087bf12c9696f2f38f3
+projection_sha256: 53810da97d66b3ceb1f540a36f50c72f972d35d27317a5a1153a49d97b89cd79
 parent: 실시간 프로토콜
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-786ef1107f00

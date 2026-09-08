@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-dc8482350057/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-dc8482350057
-projection_sha256: f175a8c9fb51c4644d6a1e2ae2275af891f4bea60615bf997b6247d70d23f437
+projection_sha256: 5550a647c363e3a66f8cff15ef30e68da0e3c88fd86bc10bbdd382e01859a390
 parent: 확률과 통계
 content_status: planned
 public_parent_id: Wiki/computer-science/probability-statistics

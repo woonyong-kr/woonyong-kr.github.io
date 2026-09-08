@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-spring-data-7ac93db31ea5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-spring-data-7ac93db31ea5
-projection_sha256: f186a5d023d0f7ce45a1a70b6d8e473181fc121e4bf790906e43c5df912dc492
+projection_sha256: ff613eff8afdddf7619720993419a7ef03d82548789a8fa8a029c406636c6e9b
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de

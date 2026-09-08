@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-61f6a4594f0c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-61f6a4594f0c
-projection_sha256: ee53666c207530180d156765cd1081ce036a9185c09f38c0c359ac808fccf34d
+projection_sha256: e19d7f86860aa461316fe3621027a51e9974780ff98e9d438bd76667ff7bdb6a
 parent: HTTP
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-http-2fe226962c51

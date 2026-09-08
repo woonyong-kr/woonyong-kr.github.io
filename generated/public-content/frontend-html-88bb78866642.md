@@ -6,7 +6,7 @@ permalink: /wiki/frontend-html-88bb78866642/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-html-88bb78866642
-projection_sha256: 4c332c4b3c90ca25ba5b9762e7583da607bec5f5c08b39f73ff6663770a51884
+projection_sha256: e8d1c8898b45d93b707a9ab096b9903683b4eb2be434f24e935e7e981a4c3ebe
 parent: HTML
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-html-5414fdf42c76

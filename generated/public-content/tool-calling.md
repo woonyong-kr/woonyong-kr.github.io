@@ -6,7 +6,7 @@ permalink: /wiki/tool-calling/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/ai-machine-learning/tool-calling
-projection_sha256: 5b49776d4da78d93fec737a0fa63d8c407eb69f3c554ec96f45b71e586654696
+projection_sha256: 8fd75f1017510d4dce092aaa6715d0f6e501d2d133ff2f3ea1df9ed3fc9375fc
 parent: AI
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning

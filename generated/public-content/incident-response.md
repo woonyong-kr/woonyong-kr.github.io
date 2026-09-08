@@ -6,7 +6,7 @@ permalink: /wiki/incident-response/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/incident-response
-projection_sha256: ff3489a806ce6b994dfd28ce7a3616e595b83d12d1eacd3bd3ed5399329c6430
+projection_sha256: 9a16faaba43ef8dcaa41bb1fd7fbbce587f1133feab68f90a40dfb1b390dd39f
 parent: 플랫폼
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations

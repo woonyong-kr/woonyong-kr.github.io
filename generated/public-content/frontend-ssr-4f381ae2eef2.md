@@ -6,7 +6,7 @@ permalink: /wiki/frontend-ssr-4f381ae2eef2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-ssr-4f381ae2eef2
-projection_sha256: 92e853fbaef0921c2ae1a878f3a50006c66450b5bcd8386889e2203750404c71
+projection_sha256: 1c5df88ff79fa4acecc9d19d0d0a80d2414b0fe5c40fdf9834338bfe384396a2
 parent: Next.js
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-next-js-39390d365286

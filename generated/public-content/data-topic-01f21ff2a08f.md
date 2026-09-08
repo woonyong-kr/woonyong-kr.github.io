@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-01f21ff2a08f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-01f21ff2a08f
-projection_sha256: cc578193cd6067b651e051e237d732c4f9485e274e1ac7a39dc11401d793c3a0
+projection_sha256: 5e370dbf9337e1fd45def8e3b8d6a2f574b119d028e58728c984c4f2d65167d3
 parent: Array
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-06d25b0021e7

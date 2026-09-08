@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-2c787786a402/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-2c787786a402
-projection_sha256: 44b11f3dd686cf5e6f7780bdcedf30d5aa86fcefaa4ece0aded04f13741d4db5
+projection_sha256: 1af7eb4a80385bb690370fe8923678d4f7fa3035e44907177cba785671b1b97d
 parent: 저장 엔진
 content_status: planned
 public_parent_id: Wiki/data-storage/storage-engine

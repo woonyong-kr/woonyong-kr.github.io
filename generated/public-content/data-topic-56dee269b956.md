@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-56dee269b956/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-56dee269b956
-projection_sha256: bf583ffaec4378aaec6e11bc5b3559dd9261c95cbfeb5d5508c0450f8f6d3cdd
+projection_sha256: 44ded631d0f1a1fb65dd0f7bdf8c3aecacf163d683ce599c877fd7ef3e7e3d5f
 parent: 데이터 분석
 content_status: planned
 public_parent_id: Wiki/data/analytics

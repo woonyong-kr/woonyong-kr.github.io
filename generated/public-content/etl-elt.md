@@ -6,7 +6,7 @@ permalink: /wiki/etl-elt/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/etl-elt
-projection_sha256: 8253f4a2fb5d8e6c212cfd3272ee0101ddfc9eaac0202cbb758765a3bf770638
+projection_sha256: 9427d1c80485337c63fd62fe9189e6bf3dcb2e38e117492a18b6ee25a7498c33
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

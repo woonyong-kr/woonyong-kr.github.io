@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-df6b90399d8a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-df6b90399d8a
-projection_sha256: 09c7d3e464c5f7ab8f63d84c206cc3891b3e248f46b2f505ed87c93e0b0a7a35
+projection_sha256: de8725c979e58f4b0605f3dc5b9b602fad126fe485eebb9c9815b1c2cbc6fad6
 parent: 데이터 거버넌스
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-48a8fbd81d66

@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-aa96ebcc9fa0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-aa96ebcc9fa0
-projection_sha256: 2053f635c17dcfdb64ae2430f14cd882a3ed7dcaea2442d75740b34f1945570c
+projection_sha256: 6a9e79223deb9339e911a051cadb4185a72394444900dd20f104b2c6ead9e037
 parent: 데이터 관리
 content_status: planned
 public_parent_id: Wiki/data/data-foundation

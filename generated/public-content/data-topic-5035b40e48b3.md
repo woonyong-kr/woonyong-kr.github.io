@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-5035b40e48b3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-5035b40e48b3
-projection_sha256: 54187f3debc42e5a61092c9eea654ab474dc7edf47822e11e4f02de03e864fe8
+projection_sha256: d0233499a795788b86eedb922a014162bda62315bda9036d1d2ad276814b2669
 parent: 데이터 품질
 content_status: planned
 public_parent_id: Wiki/data/data-quality

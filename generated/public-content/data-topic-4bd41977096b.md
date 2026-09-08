@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-4bd41977096b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-4bd41977096b
-projection_sha256: 847ae04a1ba1a023cb9edcb2d2c8c2ce0c3d29fcd1b0bdad2d966538d48eaac5
+projection_sha256: 27e455c80784fde5f1bfefbc252984548c874b5ca5127d572f5ef809cbe3424e
 parent: Data Lake
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-9c65893594dd

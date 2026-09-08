@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-f69e285167ea/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-f69e285167ea
-projection_sha256: c72a9e12e0a91eb20e8199cffd0998b34d1f3716f113a8f896d197277bac95a4
+projection_sha256: a05745cf2989554dd191ec421eeb3b65210bb8cc03e007232ae3787d00937a24
 parent: lrn-sql
 content_status: planned
 public_parent_id: Wiki/projects/minidb

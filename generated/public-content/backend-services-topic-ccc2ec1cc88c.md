@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-ccc2ec1cc88c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ccc2ec1cc88c
-projection_sha256: 1968d0fc65d0c04dd42e432bc07648f229ae5f7d6b17adf1301c62f6c29bcc00
+projection_sha256: f7b157338d73d28d9096d88996d1bde9f460e23836990edf0b58cab0d023709b
 parent: 실시간 통신
 content_status: planned
 public_parent_id: Wiki/backend-services/realtime

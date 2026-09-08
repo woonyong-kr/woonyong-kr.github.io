@@ -6,7 +6,7 @@ permalink: /wiki/socket/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/network/socket
-projection_sha256: 8529b3bf737efafb0e4681ca60c5f3d643960167d7b82740a59d1296df82d447
+projection_sha256: d0e4f72301f7fc327c104eb7f09e9c9b7fdac8f18ea3fb68f5eead496e64c623
 parent: 네트워크
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/network

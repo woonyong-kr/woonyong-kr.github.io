@@ -6,7 +6,7 @@ permalink: /wiki/data-kafka-connect-5dcc86b3bbfe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-kafka-connect-5dcc86b3bbfe
-projection_sha256: 44fd5a5126952de803b04ec11bf462cb98a2d7a06d3d01e514166c62949dc645
+projection_sha256: f4ee039fdd5219dbffd7efd3ca498baec4643860418fb900fe688f78c3f45732
 parent: Kafka
 content_status: planned
 public_parent_id: Wiki/data/kafka

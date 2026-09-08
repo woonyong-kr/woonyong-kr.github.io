@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-60a99a60f2c4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-60a99a60f2c4
-projection_sha256: 74a5344de52749e4c970a996490fb9ce7971cb5b6f1fd7096afa1612534ebe81
+projection_sha256: c1a266717decfd631d9535714322edfbacdf2205744efaf3750929a229eeae89
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370

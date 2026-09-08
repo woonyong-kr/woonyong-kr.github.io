@@ -6,7 +6,7 @@ permalink: /wiki/data-dag-3dd2dcf7722d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-dag-3dd2dcf7722d
-projection_sha256: 0a63213c24370747f0660fa9cc974ae3d82fa246ef12b2f10021efd6dc29e879
+projection_sha256: 892584d7907065710c7fd76f63a87c0a9d4775ccdc3c56e9de32589e42f248f9
 parent: Airflow
 content_status: planned
 public_parent_id: Wiki/data/airflow

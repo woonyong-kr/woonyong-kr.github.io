@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-worker-2a61e1d46719/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-worker-2a61e1d46719
-projection_sha256: 4b5dbca4d2338bfdb5813d8152cce19e119b2251efa17a4613b95683f305faab
+projection_sha256: 1f0be15be8979caae0ef64deec58978e15c9f9d41e6357c5d388263a5f11da5b
 parent: 백그라운드 작업
 content_status: planned
 public_parent_id: Wiki/backend-services/background-jobs

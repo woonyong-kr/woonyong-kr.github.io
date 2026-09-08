@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-69ea91804bbb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-69ea91804bbb
-projection_sha256: c4e8040dfd3d4084b05d3eb31cdd1d686ba55043b0f850b92541a7f427f040c2
+projection_sha256: 142642cc7c668be1b62bb028e7e811cd542ffcea00097fcff5d0459b1f1dd28d
 parent: Python
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/python

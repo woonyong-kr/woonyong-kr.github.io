@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-818d235ed722/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-818d235ed722
-projection_sha256: ae122143c8ee4762043d456e6a45f094a4e16d8ba7ab51658d86fe7cbaffced9
+projection_sha256: 4d444169db12e6ff4f6976efdef06907b70f3395e98e8de9bfd52b99828336b0
 parent: 타입 시스템
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/type-system

@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-45ae9d5982ca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-45ae9d5982ca
-projection_sha256: d438612fa47d0573ec01e896ff4f9024c207b5c0b8fa768141a3c8c73fa246e0
+projection_sha256: 4d2c1bd812d8998e628427f2936b99759d51ec4e7f535e8c42e77c3c0ef2aabd
 parent: Linux
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/linux

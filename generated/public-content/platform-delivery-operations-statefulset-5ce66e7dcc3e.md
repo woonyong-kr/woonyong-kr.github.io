@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-statefulset-5ce66e7dcc3e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-statefulset-5ce66e7dcc3e
-projection_sha256: a22e6ce214c144c88beeea7bba4641e2e8a9c727b06d1e4b71241d8a57dafbfb
+projection_sha256: 1269026b388ea18f2e220cbcfb00ae00dc4c37904bf10993161f9cc38000511c
 parent: 워크로드
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a

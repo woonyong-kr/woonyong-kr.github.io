@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-quic-c275eb1349c6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-quic-c275eb1349c6
-projection_sha256: d7000087f1d0745181d9ad269aacd52a7c090bce462c56ad2ddef751c6cb4cba
+projection_sha256: a97cecf2a1ea8794ff2bec68f727920dbb920fc94323205733156b3609bc9621
 parent: 전송 프로토콜
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918

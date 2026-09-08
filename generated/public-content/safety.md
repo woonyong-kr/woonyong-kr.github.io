@@ -6,7 +6,7 @@ permalink: /wiki/safety/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/ai-machine-learning/safety
-projection_sha256: ee503d6bb4f2e45dce7c29acee8799266105c464caea2583de73d0da9bb54c40
+projection_sha256: 788e82a38c9f9b52115142e85cadeb4328ee21df2414a2af5a8ebd9fc13070f8
 parent: AI
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning

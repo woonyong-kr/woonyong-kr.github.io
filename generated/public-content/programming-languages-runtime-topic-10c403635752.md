@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-10c403635752/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-10c403635752
-projection_sha256: 2552759f0850f2ad8ec593a07840ce81aee58de181013e2d84b0da3fad3167c6
+projection_sha256: b0e5bf7ea736a69dc1644ed4c8edfa7d93cd462ab0beeaed2f435a56c4cb391b
 parent: C#
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/csharp

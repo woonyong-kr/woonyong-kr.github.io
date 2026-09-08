@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-5dba8e8987e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-5dba8e8987e4
-projection_sha256: 7bbdeb345593ac5ed43de96c1e70dccf302df752b91947b76f5794f78ad0ee2b
+projection_sha256: 4ee23d4c02cf9bf01ee470fbcf867ff229c020b9515690de65847d1a901d908b
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github

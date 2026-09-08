@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-a7c16caabe77/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-a7c16caabe77
-projection_sha256: 853f5641dd91eb3326a04dfa02108ad43d28256f93a63cb8c161b7926aaa321d
+projection_sha256: ce40421c9ccc11790cefd8a875f58a8366915b58e34c9fc4cd435ef1582ef438
 parent: 선형대수
 content_status: planned
 public_parent_id: Wiki/computer-science/linear-algebra

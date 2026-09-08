@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-53dba9f3569a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a
-projection_sha256: 52475f9d6c0819e23c4dbfc4289d075b5cc23bf7baeed592fde16e9b92eee120
+projection_sha256: 0a6145cfa574fdc4e8da21134fe9fa72bb0c12b24b4e2604a3533614561246f8
 parent: Kubernetes
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/kubernetes

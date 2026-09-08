@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-3d938e091977/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-3d938e091977
-projection_sha256: 518678533175aeaf9c726641cb7fd01b006fd0637930e72d486d58aa86746e47
+projection_sha256: 9d2b0828e0440bc59898f3a6ab79a950ac89474c67b063739cc3aa887e83279a
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f

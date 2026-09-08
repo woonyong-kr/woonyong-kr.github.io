@@ -6,7 +6,7 @@ permalink: /wiki/batch-processing/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/batch-processing
-projection_sha256: feb3a0e037e0c9448b36ee7ca303ecbb0150c43a40c2ff2ee1d7e27b44ffb3a7
+projection_sha256: 27e216ca69123cfeed3c08eac367b4a3aa874cb2f62da304214e2e2be15b658e
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

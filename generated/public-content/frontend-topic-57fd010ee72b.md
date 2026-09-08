@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-57fd010ee72b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-57fd010ee72b
-projection_sha256: c29da75343e2b8d784e35afecdb3db6e7b135ca853ce2ba1de5bfffeceec8fd1
+projection_sha256: b1c500d13e48f6e8a61b94fdaf1cdcbbd171ccfdbc057de7edb5ee21e7e94f6e
 parent: HTML
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-html-5414fdf42c76

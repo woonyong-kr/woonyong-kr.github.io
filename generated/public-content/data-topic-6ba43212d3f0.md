@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-6ba43212d3f0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-6ba43212d3f0
-projection_sha256: e11e24c12ca2cbdae8dc6c97b1b379c21b7fc329a956903ec262d8506bd2f210
+projection_sha256: 6154d9e00c5e3692c8faf89f0ea123dadb272e00a4a453a124f8d7ff9a91f841
 parent: 스트림 처리
 content_status: planned
 public_parent_id: Wiki/data/stream-processing

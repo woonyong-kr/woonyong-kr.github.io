@@ -6,7 +6,7 @@ permalink: /wiki/data-db-97cca95cda39/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-db-97cca95cda39
-projection_sha256: 011ad1ed1f09672eb18a4569a1ff0f34cf8196b6a4974f849da32e4786e2125e
+projection_sha256: 1631a00ecbb97382ff3ec32cd0655ecc8f6d0656ee5cfe4fbf100fea464f98a7
 parent: SQLite
 content_status: planned
 public_parent_id: Wiki/keywords/data-sqlite-f46cb4bc9867

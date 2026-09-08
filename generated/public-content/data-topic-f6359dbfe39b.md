@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-f6359dbfe39b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-f6359dbfe39b
-projection_sha256: 0556d4dc4f826280375feb294465c8fa9866f409539a5be3f227782b1bb7fb01
+projection_sha256: 3b76e74d32878142a8ed54f0c0b0c9725ca40c9d8e4aff6234bea9dfe58cf542
 parent: NoSQL
 content_status: planned
 public_parent_id: Wiki/keywords/data-nosql-019e082b0bea

@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-0f974c7dbb2b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-0f974c7dbb2b
-projection_sha256: 8bd5a0a8b4f55bbeed61ed1fbf45f215be20ada7a49550b958dbe6fe95ce45a3
+projection_sha256: ef172d69940a33a30969d81838297ca0957959273e2f2668e6e9d60e20ea9e1a
 parent: Next.js
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-next-js-39390d365286

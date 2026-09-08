@@ -6,7 +6,7 @@ permalink: /wiki/data-dataframe-0147e77cee7e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-dataframe-0147e77cee7e
-projection_sha256: ad2c97a7b8276734ef0d10730fb09df3ab2f8dd1818ce9d17b649f1a619f4cb9
+projection_sha256: 806e619f5144af285b08206dca250b99acae651e0044d1a3463509278bff83ce
 parent: Spark
 content_status: planned
 public_parent_id: Wiki/data/spark

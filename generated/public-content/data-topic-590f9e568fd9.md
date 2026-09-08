@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-590f9e568fd9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-590f9e568fd9
-projection_sha256: 76d7bd294fc48db13f32336e36cc25101f0c6c830166bd5571cb08ab39d96fe6
+projection_sha256: 742e6bb6fa882780d9032a731a405ec74dd4c9a359094a973b8adf492d8583c4
 parent: 온라인 서빙
 content_status: planned
 public_parent_id: Wiki/data/online-serving

@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-secret-4420c2faf721/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-secret-4420c2faf721
-projection_sha256: ec565c8d6701be77ebfc28e03045dd8207f8eb83070ae5e54fbb69e3d00fac6e
+projection_sha256: 16ecaeb1ff85b97a868557e66f7b16046743351f90b043974f1804bf6433ac0b
 parent: 설정과 권한
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-fdf6ab388ba3

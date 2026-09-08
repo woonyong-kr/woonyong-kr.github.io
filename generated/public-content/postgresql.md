@@ -6,7 +6,7 @@ permalink: /wiki/postgresql/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/postgresql
-projection_sha256: 046d42fa73f0bfced45892c99a4bc0356b3ff4f20b9866fcaf77fb086413f496
+projection_sha256: 71790320fedd2d1704754f09dc0ad110b73903b6a325a24250bb1e848dc86775
 parent: Database
 content_status: planned
 public_parent_id: Wiki/data-storage

@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-84929f4caac7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-84929f4caac7
-projection_sha256: 80ef48829aef924a4f81cecc8327b669f57c86d02022c96179756e037ae2d613
+projection_sha256: d8a0ee4430ca6b8909681f9512524f0d0e7c7d3cee558d949df0089c9495f79d
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design

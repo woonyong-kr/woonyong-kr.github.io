@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-server-6d0da64291fb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-server-6d0da64291fb
-projection_sha256: e557c207c231b09283510af0d2d96fd459f52264a42fe34c63f78077809d58f0
+projection_sha256: 161c3caed44203124738224b7f57ff0abd0cda2e71b41235db03e8783e59d899
 parent: MCP
 content_status: planned
 public_parent_id: Wiki/keywords/ai-machine-learning-mcp-fd1a7dc7dd96

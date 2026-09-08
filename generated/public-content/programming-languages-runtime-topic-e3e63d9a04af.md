@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-e3e63d9a04af/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-e3e63d9a04af
-projection_sha256: b12227d263cfcb3a9e1aab5949b6d4b0682d380f24b2a2e3b03d4e22ce0c8eff
+projection_sha256: c8fa81a330d128a6978e20bbaab2dfab26984d3684de52feb0b0f78d96e6f2c0
 parent: 절차적 프로그래밍
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-bbd59f3a69ee

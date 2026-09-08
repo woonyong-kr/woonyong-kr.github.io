@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-owasp-56e698b959bd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-owasp-56e698b959bd
-projection_sha256: 497b51d09ab53e7eb1dd43aa01297642ee98ec44422f9b21d3175d2db4a78aef
+projection_sha256: ff695684cadb842a88b866fa06b98621653c2eb742bcd7f2f1e4c99ff728f522
 parent: 애플리케이션 보안
 content_status: planned
 public_parent_id: Wiki/security/application-security

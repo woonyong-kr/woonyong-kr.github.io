@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-5b4b7da504e3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-5b4b7da504e3
-projection_sha256: 65e23ba5320a4b21fc533828ab526a43207eb1179a67de8ba3f821502749aac8
+projection_sha256: 60c0454e7478b28308785e8d52c34c7318c65e70f165b5da8096c846eb81777a
 parent: 테스트 자동화
 content_status: planned
 public_parent_id: Wiki/testing/automation

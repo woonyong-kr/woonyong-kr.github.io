@@ -6,7 +6,7 @@ permalink: /wiki/privacy/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/privacy
-projection_sha256: d835489a1fa355c9895bdb744f2876d2bbda1b269673b2da0f758d9378c7a5bc
+projection_sha256: 31bd81c485fecebe506eac180eeabd2f850a28df8cf0408d6fce288ceb37de1c
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security

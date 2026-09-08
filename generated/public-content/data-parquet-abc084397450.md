@@ -6,7 +6,7 @@ permalink: /wiki/data-parquet-abc084397450/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-parquet-abc084397450
-projection_sha256: 44339087e47c4a32a9c2107163ca898822fd0b67f447b50d20291d319d532890
+projection_sha256: 822ed3aa93e65fab8aa66bd214569f46f8608ff760046e5dcac6e497679f9a15
 parent: Data Lake
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-9c65893594dd

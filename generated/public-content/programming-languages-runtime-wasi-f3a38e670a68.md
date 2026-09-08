@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-wasi-f3a38e670a68/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-wasi-f3a38e670a68
-projection_sha256: a097b0ad4d280cecf6b89706a7be8de74e98ddfdca7c28ba8bc92ddb5db26289
+projection_sha256: e72f6e630e421326717f225a848a466aced3320ebc61d8eb6b705c4c11fd2f71
 parent: WebAssembly
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-webassembly-a234a3a8d09d

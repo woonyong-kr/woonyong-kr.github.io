@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-203d9ff21aea/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-203d9ff21aea
-projection_sha256: 4da3dc421cf977b599ac589c0932a9454e12ad94f267ded78649d9b9929502bd
+projection_sha256: b515f8ff3ed1a526f783318bdea674a6b453a8518a3dea3a5ca314cecd490727
 parent: 데이터 분석
 content_status: planned
 public_parent_id: Wiki/data/analytics

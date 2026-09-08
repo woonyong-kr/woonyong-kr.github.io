@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-4bb4ebbd4928/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-4bb4ebbd4928
-projection_sha256: 1a5aa813fd526aa15937f17c2b5cc56cf7c6b3c3d0789164084017e137a99866
+projection_sha256: e0bee4bd8567087f436207e3011e6c8749b589671ebcbb63839ca7d64e074e1f
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd

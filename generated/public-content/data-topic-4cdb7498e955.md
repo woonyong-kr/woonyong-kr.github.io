@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-4cdb7498e955/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-4cdb7498e955
-projection_sha256: 76d33b40113f5e3f3f6da7960841438d39bc7dcce5d6ab56b4377637b3b160db
+projection_sha256: d869399369f2200cd3cf8b889b35884f682df1990e1049cde0f628c43d36aea3
 parent: 쿼리 최적화
 content_status: planned
 public_parent_id: Wiki/data-storage/query-optimization

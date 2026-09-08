@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-230c7554fc7d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-230c7554fc7d
-projection_sha256: a21346b308dc033010feec8e65708946987361f46eb9d43ba71294b2aced069f
+projection_sha256: d5dedcfd34b16070758c928ac07b2c0df7d8394290afd8dccf8bf10c61b7decf
 parent: 모델 운영
 content_status: planned
 public_parent_id: Wiki/ai-machine-learning/mlops

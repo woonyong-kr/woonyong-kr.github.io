@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-resources-4a3bd4280b07/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-resources-4a3bd4280b07
-projection_sha256: f688e3c900563e837779a73a2ef75b7c4dd54a0897cc3921b8cc75fc6e4836bd
+projection_sha256: 4d4af68be0f1cfac1673c36bb364da2a3ed39f141e814c946cd844421fee60c8
 parent: MCP
 content_status: planned
 public_parent_id: Wiki/keywords/ai-machine-learning-mcp-fd1a7dc7dd96

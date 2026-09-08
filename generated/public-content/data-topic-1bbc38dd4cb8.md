@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-1bbc38dd4cb8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-1bbc38dd4cb8
-projection_sha256: e6bdad11d67dc7274bc877f1f99c703a6e0f5798cdea2565dff5604c37f02137
+projection_sha256: c1c446da481e9e08dfa64a4511564cd6033436757288c0affc35d97e1c625083
 parent: 검색 엔진
 content_status: planned
 public_parent_id: Wiki/data-storage/search-engine

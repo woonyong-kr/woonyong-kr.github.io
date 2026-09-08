@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-abac-c568241d6111/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-abac-c568241d6111
-projection_sha256: eccbfb6f63f556b8279dcd084f57ab19b9a46b5e50f3fc763c93f10546738910
+projection_sha256: 731eb9313b303d5f0573ba2a705cdebce1ed0054cc36d06e83f1de48e562d0e9
 parent: 인증·인가
 content_status: planned
 public_parent_id: Wiki/backend-services/auth

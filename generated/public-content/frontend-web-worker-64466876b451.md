@@ -6,7 +6,7 @@ permalink: /wiki/frontend-web-worker-64466876b451/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-web-worker-64466876b451
-projection_sha256: 4e30f6b9dec377b83fb071954c30ef752c196916be740d4c11f81847f425b710
+projection_sha256: 76d7e7641ee89423010146172d4b51cd470268e1a032a9a0d2ba90837e7efa48
 parent: Browser
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-7c6123c11353

@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-ebaf2222b3bc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-ebaf2222b3bc
-projection_sha256: 64070e9dd23757101e43d0645dd67f58f90a4757ee865e0468b7a18f3d5eac01
+projection_sha256: d64b9f323f723efee7ce2e1e5cd4831611bcfaffd81f746b5babe3c59f606b7d
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370

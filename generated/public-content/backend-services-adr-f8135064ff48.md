@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-adr-f8135064ff48/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-adr-f8135064ff48
-projection_sha256: cfe2d3d8d102a237e2b69e199b2cd115c278a48bb60a33c473ba7847cd91f93d
+projection_sha256: 478e31111b337da804d647b1891a63c01735e8bacaac3e3d3a84b24eb5478be1
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture

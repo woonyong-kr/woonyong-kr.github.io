@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-eeafec7d7f0f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-eeafec7d7f0f
-projection_sha256: c563404a93a68739611e59061229ae8c341a7611a7f2b831c4e6cbe925c73b5b
+projection_sha256: 01407864e444194e7a519349f1c9a5d59338560a4a1d603caf0b73a97c707978
 parent: 데이터 계보
 content_status: planned
 public_parent_id: Wiki/data/lineage

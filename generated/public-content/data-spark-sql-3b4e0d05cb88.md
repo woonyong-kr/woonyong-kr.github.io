@@ -6,7 +6,7 @@ permalink: /wiki/data-spark-sql-3b4e0d05cb88/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-spark-sql-3b4e0d05cb88
-projection_sha256: 730591bb9217229309949ceee39f2e043c6bbfcde19354af2f64f630a495a7e2
+projection_sha256: 962b7d8b715fc5e98db739beaf419be5c8838408c315486e40b88405dfdb0d8d
 parent: Spark
 content_status: planned
 public_parent_id: Wiki/data/spark

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-0a62f7f28b03/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0a62f7f28b03
-projection_sha256: 02f1e851b45c0bf48f3d4bb5a42db12cc86dbf6b20b4555ad0a5245b80500ecd
+projection_sha256: 3b012024bb47db33cabb7ec64d2259562b03f2fecd8ba93cef90a77625302ebd
 parent: 가상 메모리 구현
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f

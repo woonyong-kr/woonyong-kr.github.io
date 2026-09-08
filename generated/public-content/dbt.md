@@ -6,7 +6,7 @@ permalink: /wiki/dbt/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data/dbt
-projection_sha256: e45f63741aa59911dd7ab00dff46bf444440f1d78e1f2a7cd00be75ef011cbe5
+projection_sha256: 0fea6a73698151a8558d5d3024f757d637306a1b96ea052f4746311409abcb22
 parent: 데이터 파이프라인
 content_status: planned
 public_parent_id: Wiki/data/data-pipelines

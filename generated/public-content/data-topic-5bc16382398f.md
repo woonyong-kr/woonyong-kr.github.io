@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-5bc16382398f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-5bc16382398f
-projection_sha256: 7cb45e9f00ba04c8b3a853a9a39163260e1e411371306664dafd6194f1b978e2
+projection_sha256: cb3ac395db004e7082cc951b35d38db8328ef402ef0ee6c88bc1225e44bd5b91
 parent: 데이터 접근
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-d44b749d4219

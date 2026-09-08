@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-topic-9189e262a501/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-9189e262a501
-projection_sha256: aafd8bbd65c4f16b1e4ee078650e74181167f625b743c5ce52a603a0e33c6d74
+projection_sha256: d0ca980b95d2134fb55912d300173cc6eddf6cb89189e412d6199b1617d1cec2
 parent: 백그라운드 작업
 content_status: planned
 public_parent_id: Wiki/backend-services/background-jobs

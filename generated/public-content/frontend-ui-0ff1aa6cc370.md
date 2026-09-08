@@ -6,7 +6,7 @@ permalink: /wiki/frontend-ui-0ff1aa6cc370/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-ui-0ff1aa6cc370
-projection_sha256: 36815bc78372b8ea8ec96fea1e1eff841a84c6389796e9e38fb14d60ccba993f
+projection_sha256: 2468e73c8348eaaf316d072f58ef3216bb6532fcdce7f10cf5e3ddf8fd39153e
 parent: 프론트엔드
 content_status: planned
 public_parent_id: Wiki/frontend

@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-job-35934ef8b0ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-job-35934ef8b0ec
-projection_sha256: 16ea43988b38659d2746864447f9123a020c83356fbde09f40cae8d72b12da9d
+projection_sha256: 37549d70a6aa66dc3eae86bb69f4ace621d9e9cc610f8bbf8d758d0494fe54ba
 parent: 워크로드
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a

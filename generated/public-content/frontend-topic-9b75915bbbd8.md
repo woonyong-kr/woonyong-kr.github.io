@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-9b75915bbbd8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-9b75915bbbd8
-projection_sha256: a58462cac6073a618a93a3f7ba91b5f4c5cb5c3a668a70342cfb21874bf7697d
+projection_sha256: f4b230bdfe46819649b39179c501beab205da59d83fed9867d63e3a1c01b99ec
 parent: 웹 기초
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-bb15bf5ecb38

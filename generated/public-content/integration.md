@@ -6,7 +6,7 @@ permalink: /wiki/integration/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/integration
-projection_sha256: bbeced76a84f1295b72e37cb0268461a6e3f378a74bc028b30bec3948fd4bb5d
+projection_sha256: 91de8ea262058641d769b411faee3680a73d6498dd33832b34377649b9f3aad8
 parent: ASP.NET Core
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-asp-net-core-5d76e93b2fda

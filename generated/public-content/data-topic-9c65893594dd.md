@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-9c65893594dd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-9c65893594dd
-projection_sha256: 6c195c03bf8eb73d05184d73755de6f9564c10f7db08a576e7e9f67a369d0ffd
+projection_sha256: 8728613c0a375b029e2ba2dc332c954f06d0d881214177f1dc7c5b9ceb342b1c
 parent: 분석용 저장소
 content_status: planned
 public_parent_id: Wiki/keywords/data-topic-fa218ee0857a

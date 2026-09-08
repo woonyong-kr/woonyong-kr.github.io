@@ -6,7 +6,7 @@ permalink: /wiki/backend-services-entity-framework-core-57dabd4113c1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-entity-framework-core-57dabd4113c1
-projection_sha256: 9848828425081fdb8e84b4d32857ab7b847edfaebea8e9f9e175678595368350
+projection_sha256: 455989930aaab20a914a5e39f447743a350a84010b32ef16d77073fbf459b07d
 parent: 영속성
 content_status: planned
 public_parent_id: Wiki/backend-services/persistence

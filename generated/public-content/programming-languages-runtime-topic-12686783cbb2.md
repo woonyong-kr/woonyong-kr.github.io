@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-12686783cbb2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-12686783cbb2
-projection_sha256: 5020a306c7978d4ca19da0fb0ba685929538a439eabf43cb7042796e8bc2080d
+projection_sha256: 9fbf1c76320e0f0f198234232b904ef250afdd7ac37511294c548570a5291715
 parent: TypeScript
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/typescript

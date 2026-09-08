@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-82490fa205b1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-82490fa205b1
-projection_sha256: 01e1e35c98b43fbdc08007fe6555fba1f72067efa91e4303b69ad14ebbe97b12
+projection_sha256: a01c466421d63b1d10d22ecde84e798da36a3dd1e45a4aa4f04d7658ef3dde4d
 parent: Java
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/java
