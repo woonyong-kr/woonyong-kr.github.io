@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d38307e3894c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d38307e3894c
-projection_sha256: 57f64423a095426706a8d9f9261cf5926590ff7bf8c8fa003fe4e91e10b4cd3a
+projection_sha256: 49fe2e6fa94870926997c2a65f2ceb2bc7fe9c75c21f5f463fe3d863b0006428
 parent: 입출력
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d4ff1bb79941

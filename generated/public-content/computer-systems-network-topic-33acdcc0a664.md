@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-33acdcc0a664/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-33acdcc0a664
-projection_sha256: 273472de4259320d86f0dfa120e7ee02c515822ced18263fd4cdd6d1ec5040bd
+projection_sha256: 8ccd4ad2c33ae3d24a775dcfbcede818ade563006f088d9e5c492451ddefe950
 parent: 파일 시스템 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
@@ -150,3 +150,77 @@ hexdump -C -s 0x3000 -n 512 disk.raw
 ```
 
 파일의 논리 offset, Cluster 번호, 장치의 Sector 번호, 호스트 이미지의 바이트 offset은 서로 다른 위치 표현이다. 데이터가 예상한 곳에서 보이지 않을 때는 각 계층의 시작 위치와 단위를 순서대로 확인해야 한다.
+
+## 파일 offset과 Sector 경계를 함께 계산한다
+
+Sector `N`은 바이트 범위 `[N × 512, (N + 1) × 512)`를 나타낸다. 파일의 논리 offset은 여기에 바로 넣지 않는다. 현재 기본 inode에서는 데이터의 시작 Sector에 `파일 offset // 512`를 더하고, Sector 안의 위치는 `파일 offset % 512`로 구한다. 할당 방식이 바뀌면 앞의 Sector 매핑도 달라진다.
+
+예를 들어 파일 데이터가 Sector 30에서 시작하고 offset 3,000부터 100바이트를 읽는다고 하자. 시작 위치는 Sector 35의 440번째 바이트다. 그 Sector에 남은 공간은 72바이트이므로 다음 Sector 36에서도 28바이트를 읽어야 한다. “한 Sector에서 100바이트를 복사한다”는 계산은 경계를 넘는다.
+
+아래 코드는 요청을 Sector 경계와 파일 끝에서 나눈다. 현재 inode의 연속 배치 계산을 보여 주며, 실제 Disk Driver를 실행하지는 않는다.
+
+```run-python
+def split_read(data_start, file_length, offset, size, sector_size=512):
+    if min(data_start, file_length, offset, size) < 0 or sector_size <= 0:
+        raise ValueError("크기와 위치는 유효한 범위여야 한다.")
+    while size > 0 and offset < file_length:
+        block, within = divmod(offset, sector_size)
+        count = min(size, sector_size - within, file_length - offset)
+        yield data_start + block, within, count
+        offset += count
+        size -= count
+
+
+for length in (4096, 3050):
+    chunks = list(split_read(30, length, 3000, 100))
+    print(f"파일 길이={length}, 조각={chunks}, 읽기 길이={sum(c[2] for c in chunks)}")
+```
+
+파일 길이가 4,096이면 `(35, 440, 72)`, `(36, 0, 28)` 두 조각으로 100바이트를 읽는다. 길이가 3,050이면 파일 끝에서 멈추므로 `(35, 440, 50)`만 읽는다. Sector 읽기 횟수와 호출자가 요청한 바이트 수를 구분해야 Bounce Buffer의 동작도 설명할 수 있다.
+
+### Swap Slot 안의 한 바이트 찾기
+
+현재 PintOS의 Page는 4KiB이며 한 Swap Slot에는 512바이트 Sector 여덟 개가 들어간다. Slot 3은 Sector 24~31, 바이트 범위 `[0x3000, 0x4000)`에 대응한다. Page 안의 offset `0x888`은 다섯 번째 Sector의 `0x88` 위치이므로 전체 바이트 오프셋은 `0x3888`이다.
+
+다음 예제는 임시 Raw 파일에 그 바이트를 기록하고, Sector 단위로 다시 읽어 확인한다. 실행 중인 VM의 이미지에는 접근하지 않는다.
+
+```run-python
+from tempfile import TemporaryFile
+
+page_size = 4096
+sector_size = 512
+slot = 3
+page_offset = 0x888
+assert 0 <= page_offset < page_size
+
+sectors_per_page = page_size // sector_size
+sector_in_page, within = divmod(page_offset, sector_size)
+sector = slot * sectors_per_page + sector_in_page
+absolute_offset = sector * sector_size + within
+
+with TemporaryFile(mode="w+b") as image:
+    image.truncate((slot + 1) * page_size)
+    image.seek(absolute_offset)
+    image.write(b"\xfe")
+    image.flush()
+    image.seek(sector * sector_size)
+    block = image.read(sector_size)
+    assert len(block) == sector_size and block[within] == 0xfe
+    print("Sector:", sector, "Sector 내부:", hex(within))
+    print("Raw offset:", hex(absolute_offset), "읽은 값:", hex(block[within]))
+
+for number in range(slot * sectors_per_page, (slot + 1) * sectors_per_page):
+    print(f"Sector {number}: [{hex(number * sector_size)}, {hex((number + 1) * sector_size)})")
+```
+
+이 계산에서 4KiB는 현재 PintOS의 Page 크기다. 다른 OS의 모든 Page나 Swap I/O가 같은 크기라고 일반화하지 않는다. 또한 `0x3000`이라는 숫자가 Guest의 가상 주소나 물리 주소로 나왔다면 여기의 디스크 오프셋과는 다른 공간의 값이다.
+
+### LBA의 크기와 Linux의 Sector 단위
+
+LBA는 장치를 순서 있는 논리 Block의 배열로 접근하는 주소 방식이다. CHS의 Cylinder·Head·Sector 좌표와 구분된다. 512바이트를 기준으로 28비트 주소 공간의 크기는 `2²⁸ × 512 = 128GiB`, 48비트는 `128PiB`다. 십진 단위인 128GB·128PB와 같지 않다. 이는 주소 범위의 계산이며 개별 장치의 지원 용량을 보장하는 값은 아니다.
+
+`disk_sector_t`가 32비트라고 현재 PintOS의 ATA 경로가 32비트 LBA를 지원하는 것도 아니다. `select_sector()`는 장치 용량과 `2²⁸` 미만인지 모두 검사한다. Register에 주소를 나누어 넣는 과정은 [IDE 컨트롤러](/wiki/ide-controller/)에서 실행해 볼 수 있다.
+
+Linux의 Block Layer도 주소 필드의 단위를 따로 확인해야 한다. Linux v6.12의 `bvec_iter.bi_sector`는 **512바이트 단위**이며 장치의 논리·물리 Block 크기와 별개다. 이 값을 장치의 논리 Block 크기로 다시 곱하면 위치를 잘못 계산할 수 있다. [Linux v6.12 `bvec_iter`](https://github.com/torvalds/linux/blob/v6.12/include/linux/bvec.h)
+
+512e 장치는 논리 512바이트와 물리 4KiB를 조합하며, 4Kn은 논리 크기도 4KiB다. “4Kn의 논리 Sector를 항상 여덟 개씩 물리 Sector로 묶는다”는 설명은 맞지 않는다. 장치가 보고하는 크기와 정렬 조건을 확인하고, PintOS의 512바이트 인터페이스를 모든 장치에 적용하지 않는다.
