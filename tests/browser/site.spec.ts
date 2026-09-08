@@ -133,15 +133,18 @@ test('@core browser preview can stop and restart after page scrolling', async ({
   const previewFrame = web.locator('iframe');
   const preview = previewFrame.contentFrame().locator('#preview').contentFrame();
   await expect(preview.getByRole('button', { name: 'preview' })).toBeVisible();
-  // Reproduce a click reached while the main document is still smooth-scrolling.
+  // Scroll the host before interacting with the nested preview.
   await previewFrame.evaluate(frame => window.scrollTo({
     top: window.scrollY + frame.getBoundingClientRect().top - 280, behavior: 'instant',
   }));
-  await page.evaluate(() => new Promise<void>(resolve => {
-    window.addEventListener('scroll', () => resolve(), { once: true });
-    window.scrollBy({ top: -250, behavior: 'smooth' });
-  }));
-  // The inner button can be stable while smooth scrolling still moves its host.
+  const scrollTarget = await page.evaluate(() => {
+    const target = Math.max(0, window.scrollY - 250);
+    window.scrollTo({ top: target, behavior: 'smooth' });
+    return target;
+  });
+  // A scroll event marks movement, not arrival at the requested position.
+  await expect.poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - scrollTarget))
+    .toBeLessThanOrEqual(1);
   await previewFrame.scrollIntoViewIfNeeded();
   await preview.getByRole('button', { name: 'preview' }).click();
   await expect(preview.getByRole('button', { name: 'clicked' })).toBeVisible();
