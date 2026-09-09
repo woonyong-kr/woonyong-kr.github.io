@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-cc14ff5f728b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-cc14ff5f728b
-projection_sha256: 6911830d5ce02d17e2bbc9d6c6ad291501db23cd7167cb98d3b0c6931c52c417
+projection_sha256: a97f3532c50e26c79c4d9c937610a8cc882bf9f7e6e45facafc56de90413f7be
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
