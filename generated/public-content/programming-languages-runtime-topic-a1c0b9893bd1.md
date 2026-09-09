@@ -6,10 +6,16 @@ permalink: /wiki/programming-languages-runtime-topic-a1c0b9893bd1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-a1c0b9893bd1
-projection_sha256: 1b21966be1937112d8e9bc82d1e0b55c48c55f7a9a3823bc0f4939e58f527205
+projection_sha256: 8376d98d13d21387c8c3062ced159436e3727261faad22be49e0255f5575020c
 parent: C
 content_status: ready
 public_parent_id: Wiki/programming-languages-runtime/c
+search_terms:
+- 구조체 복사
+- 포인터 멤버
+- 얕은 복사
+- strdup
+- Use After Free
 grand_parent: 프로그래밍 언어
 ancestor: Programming
 ---
@@ -90,6 +96,30 @@ Memory Leak은 필요 없어진 할당을 회수하지 못하고 보유하는 �
 두 문제는 서로 반대되는 방향의 수명 불일치다. Dangling Pointer는 끝난 객체를 계속 사용하려 하고, 누수는 끝내야 할 할당을 남겨둔다. 지역 포인터의 수명이 끝나도 동적 할당이 자동으로 해제되는 것은 아니다.
 
 해제 뒤 `p = NULL`로 대입하면 그 변수로 같은 포인터를 다시 넘기는 실수를 줄일 수 있다. 그러나 `q = p`로 복사해 둔 별칭까지 바뀌지는 않는다. `free(p); p = NULL;` 뒤에도 q로 해제된 객체에 접근하면 잘못이다. Null 대입만으로 소유권 문제를 해결할 수는 없다.
+
+### 구조체를 복사해도 문자열 할당은 늘어나지 않는다
+
+포인터가 구조체의 멤버여도 같은 문제가 생긴다. 다음은 구조체 대입의 관계를 보여 주는 설명용 조각이다. `a`가 이미 초기화되어 있고, `a.name`은 살아 있는 동적 할당에 저장된 수정 가능한 문자열을 가리킨다고 가정한다.
+
+```c
+struct Node {
+    int id;
+    char *name;
+};
+
+/* a는 위 조건을 만족하도록 초기화된 struct Node 객체다. */
+struct Node b = a;
+```
+
+`b.id`와 `b.name`에는 a의 해당 멤버 값이 복사된다. 따라서 `b.id`를 바꿔도 `a.id`는 바뀌지 않지만, `a.name`과 `b.name`은 여전히 같은 문자열을 가리킨다. 문자열이 살아 있고 수정 가능한 동안 `b.name[0]`을 바꾸면 `a.name`으로 읽는 내용도 달라진다.
+
+구조체 대입은 멤버 값을 복사하지만 패딩 비트의 복사까지 보장하지는 않는다. 따라서 `memcpy()`처럼 객체 표현의 바이트를 그대로 옮기는 것과 완전히 같지는 않다. 포인터 멤버의 값이 복사되어도 그 포인터가 가리키는 문자열은 자동으로 복제되지 않는다. [C11 초안 N1570, 6.2.6.1 각주 51·6.5.16.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
+
+두 객체가 같은 할당을 공유한다면 해제 책임을 정해야 한다. `free(a.name)` 뒤에 `b.name`으로 문자열에 접근하면 Use After Free이고, `free(b.name)`까지 호출하면 같은 할당의 중복 해제다. 해제 후 접근과 중복 해제는 Undefined Behavior이므로 이후 출력이나 Crash 여부는 정해져 있지 않다.
+
+문자열을 각각 소유하게 하려면 종료 문자까지 담을 별도 공간을 확보하고, 할당 성공을 확인한 뒤 내용을 복사해야 한다. 실패하면 기존 소유 관계를 유지할지 작업을 실패로 돌릴지도 정해야 한다. 별도 복사가 성공했다면 각 할당은 각 소유자가 한 번씩 해제한다. POSIX 등 `strdup()`을 제공하는 환경에서는 이 함수로 종료 문자를 포함한 문자열의 복사본을 별도 할당에 만들 수 있다. 이때도 반환값이 `NULL`인지 확인하고 성공한 할당은 `free()`로 해제한다. [strdup의 할당·실패·해제 계약](https://man7.org/linux/man-pages/man3/strdup.3.html)
+
+포인터를 복사하는 것과 가리키는 객체를 복사하는 것의 구분은 [Python 기본 문법의 복사 설명](/wiki/programming-languages-runtime-topic-ced5bd855b7b/)과 연결되지만, C의 명시적 해제 책임을 Python의 참조와 동일하게 취급해서는 안 된다.
 
 ## 오류가 드러나는 위치
 

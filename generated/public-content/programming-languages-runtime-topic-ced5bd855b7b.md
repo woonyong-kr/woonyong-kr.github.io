@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-ced5bd855b7b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-ced5bd855b7b
-projection_sha256: 840c740bf8def6370e21c7852ada631c64d0efcd2da56a37c9a0c678a843d3ef
+projection_sha256: 2fced920194d196d52b670c32caead5b61ee21a8f79f553abaf5a59c5d1bcbef
 parent: Python
 content_status: ready
 public_parent_id: Wiki/programming-languages-runtime/python
@@ -21,6 +21,13 @@ search_terms:
 - 누락된 양의 정수
 - 고유한 값
 - 등장 횟수
+- 얕은 복사
+- 깊은 복사
+- Shallow Copy
+- Deep Copy
+- copy
+- deepcopy
+- 별칭
 grand_parent: 프로그래밍 언어
 ancestor: Programming
 ---
@@ -69,9 +76,86 @@ flags[0] = False
 print("미리 만든 상태:", flags)
 ```
 
-`[True] * len(values)`는 각 위치의 상태를 기록할 때 쓸 수 있다. 여기서 반복하는 `bool`은 불변 값이다. 안쪽 List처럼 변경 가능한 객체를 반복하면 같은 객체를 여러 위치에서 참조하므로 별도로 생성해야 한다. `values.copy()`는 바깥 List를 얕게 복사한다. [List의 변경과 복사](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists)
+`[True] * len(values)`는 각 위치의 상태를 기록할 때 쓸 수 있다. 여기서 반복하는 `bool`은 불변 값이다. 안쪽 List처럼 변경 가능한 객체를 반복하면 같은 객체를 여러 위치에서 참조하므로 별도로 생성해야 한다. 바깥 List와 안쪽 객체를 따로 복사하는 이유는 아래의 복사 예제에서 확인한다. [List의 변경과 복사](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists)
 
 Type Hint에는 `list[int]`, `list[tuple[int, int]]`처럼 대괄호를 쓴다. `list<tuple<int, int>>` 형태는 Python의 Type Hint 문법이 아니다. Python 3.9 이상에서는 내장 타입을 이렇게 표기할 수 있으며, 표기가 List의 항목 수를 미리 확보하거나 실행 중 타입을 강제하지는 않는다. 자세한 타입 표기는 [Type Hint](/wiki/programming-languages-runtime-topic-044a40a120f8/)에서 다룬다. [Generic Alias](https://docs.python.org/3/library/stdtypes.html#types-genericalias)
+
+## 복사본에서 무엇을 바꿨는가
+
+List를 복사한 뒤 복사본만 고쳤는데 원본까지 바뀌었다면, 새로 만들어진 객체의 범위를 확인해야 한다. Python의 대입은 이름을 객체에 연결한다. `alias = a`는 List를 복사하지 않고 같은 객체에 이름을 하나 더 붙인다. 두 이름이 같은 객체를 가리키는지는 `is`로 확인할 수 있다.
+
+`a = [[1, 2], 3]`을 얕게 복사하면 바깥 List만 새로 만들어지고 안쪽 List는 공유된다. 바깥 List의 항목을 교체하는 것과 그 항목이 가리키는 객체를 수정하는 것은 다른 작업이다.
+
+```text
+a[0] ───────→ 같은 안쪽 List [1, 2]
+shallow[0] ─→ 같은 안쪽 List [1, 2]
+deep[0] ────→ 별도로 복사된 List [1, 2]
+```
+
+표지에 본문 파일의 링크를 붙인 문서로 생각할 수도 있다. 표지만 복사하면 본문 링크는 그대로다. 복사한 표지의 링크를 바꾸는 일과 링크를 따라가 같은 본문을 고치는 일이 다른 것처럼, 바깥 List와 그 안쪽 객체를 구분해야 한다. 깊은 복사는 이 예제의 안쪽 List도 별도로 복사한다.
+
+```run-python
+import copy
+
+a = [[1, 2], 3]
+alias = a
+shallow = copy.copy(a)
+deep = copy.deepcopy(a)
+
+print("별칭:", alias is a)
+print("바깥 분리:", shallow is not a, deep is not a)
+print("안쪽 공유:", shallow[0] is a[0], deep[0] is a[0])
+
+shallow[0].append(99)
+shallow[1] = 100
+deep[0].append(7)
+print("원본:", a)
+print("얕은 복사:", shallow)
+print("깊은 복사:", deep)
+
+wrapped = ([1, 2],)
+wrapped[0].append(3)
+print("Tuple 안 List:", wrapped)
+
+shared = []
+original = [shared, shared]
+copied = copy.deepcopy(original)
+print("원본과 내부 분리:", copied[0] is not original[0])
+print("복사본 내부 공유:", copied[0] is copied[1])
+```
+
+처음 세 출력은 차례로 `True`, `True True`, `True False`다. 별칭은 바깥 객체까지 같고, 얕은 복사는 안쪽 List를 공유하며, 이 예제의 깊은 복사는 두 List를 모두 분리한다. 이후 결과는 다음과 같다.
+
+```text
+원본: [[1, 2, 99], 3]
+얕은 복사: [[1, 2, 99], 100]
+깊은 복사: [[1, 2, 7], 3]
+Tuple 안 List: ([1, 2, 3],)
+원본과 내부 분리: True
+복사본 내부 공유: True
+```
+
+`shallow[0].append(99)`는 원본과 공유하는 안쪽 List를 수정한다. 반면 `shallow[1] = 100`은 얕은 복사본의 바깥 항목만 교체하므로 원본의 두 번째 항목은 3으로 남는다. `deep`은 두 수정 전에 만들어졌으며, 그 안쪽 List에 7을 추가해도 원본은 바뀌지 않는다.
+
+다음 표는 위와 같은 내장 List를 복사하는 경우다.
+
+| 방법 | 바깥 List | 안쪽 객체 |
+| --- | --- | --- |
+| `alias = a` | 원본과 같음. 복사가 아닌 별칭 | 원본과 같음 |
+| `a[:]`, `list(a)`, `a.copy()`, `copy.copy(a)` | 새 List | 원본 항목의 객체를 그대로 참조 |
+| `copy.deepcopy(a)` | 새 List | 타입의 복사 규칙에 따라 재귀적으로 복사 |
+
+깊은 복사를 ‘모든 객체를 무조건 새로 만든다’고 외우면 안 된다. 함수나 Class는 그대로 반환되며 불변 객체도 공유될 수 있다. 사용자 정의 타입은 `__deepcopy__`로 복사 동작을 정할 수 있다. 또한 `deepcopy()`는 이미 처리한 객체를 기억하는 `memo`를 사용한다. 예제 마지막처럼 하나의 List를 두 위치에서 참조하면, 복사본에서도 새 안쪽 List 하나를 함께 참조한다. 원본과의 공유는 끊어졌지만 복사본 내부의 공유 관계는 남는다. [Python copy 모듈](https://docs.python.org/3/library/copy.html)
+
+### 수정할 범위만큼 분리하기
+
+바깥 항목만 교체할 생각이라면 얕은 복사로 충분할 수 있다. 중첩된 List나 Dict를 원본과 독립적으로 바꾸려면 해당 객체까지 복사해야 한다. 전체를 깊게 복사할 수도 있고, 실제로 수정할 부분만 따로 복사할 수도 있다.
+
+숫자나 문자열은 불변이지만, Tuple이라는 이유만으로 그 안까지 바뀌지 않는 것은 아니다. `wrapped = ([1, 2],)`에서 Tuple의 항목을 다른 객체로 교체할 수는 없어도, 그 항목이 가리키는 List에는 값을 추가할 수 있다. 마지막 코드의 `wrapped[0].append(3)`이 그 차이를 보여 준다. [Python 객체의 값과 가변성](https://docs.python.org/3/reference/datamodel.html#objects-values-and-types)
+
+복사 비용도 객체 구조와 타입의 동작에 따라 달라진다. 바깥 List의 참조만 복사하는 것보다 많은 객체를 방문하고 새 공간을 확보하면 시간과 메모리가 더 필요하다. 그러나 원소가 보이는 횟수마다 독립 객체가 하나씩 생기는 것은 아니므로 중첩 깊이만으로 비용을 단정하지 않는다. 실제 사용에서는 필요한 독립성부터 정하고, 비용이 중요할 때 대상 데이터로 측정한다. 비용을 표현하는 방법은 [시간 복잡도](/wiki/computer-science-topic-869aa2bd6535/)에서 이어진다.
+
+같은 객체의 수정과 이름의 재연결을 구분하는 관점은 함수 인자를 다룰 때도 이어진다. 함수의 매개변수 역시 전달받은 객체를 참조하는 지역 이름이기 때문이다. [Python 함수와 인자 전달](https://docs.python.org/3/tutorial/controlflow.html#defining-functions) C의 구조체가 포인터 멤버를 복사할 때는 별도로 [메모리 관리](/wiki/programming-languages-runtime-topic-a1c0b9893bd1/)에서 설명하는 객체의 수명과 해제 책임까지 확인해야 한다.
 
 ## `range`의 끝은 포함되지 않는다
 

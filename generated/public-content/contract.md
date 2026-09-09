@@ -6,8 +6,8 @@ permalink: /wiki/contract/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/contract
-projection_sha256: baff99a18e0ab027672294eaf7cfc8967519f2a14588786c109c3fba491cc549
-parent: Test
+projection_sha256: f80fd2e46bc59432719cd6983bdca18953de27a4858c4c810d1f181abfff2a82
+parent: 테스트
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
 grand_parent: Backend

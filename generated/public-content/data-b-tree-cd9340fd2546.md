@@ -6,8 +6,8 @@ permalink: /wiki/data-b-tree-cd9340fd2546/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-b-tree-cd9340fd2546
-projection_sha256: 5d4e4bd2ed28110bf951a0e98cd2ed16d8e0d9e82d15eaccce3f8bc498e2c5de
-parent: Index
+projection_sha256: 0d1137c091d5e04252f2ad4cdc4325854fa04f53200518093374584149c0d871
+parent: DB 인덱스
 content_status: ready
 public_parent_id: Wiki/data-storage/indexes
 grand_parent: Database

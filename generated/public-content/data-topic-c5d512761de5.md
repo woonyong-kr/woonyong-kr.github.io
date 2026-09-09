@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-c5d512761de5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-c5d512761de5
-projection_sha256: 1a73fc90adb7fb31e2a60cccbe304c7f89284e64dd10923d0142da5eaa4eff11
-parent: Index
+projection_sha256: 61fe1e03fe16108760bfb6bf0ae59464add1ec69662caafa9c3dd6e2b53e00b8
+parent: DB 인덱스
 content_status: planned
 public_parent_id: Wiki/data-storage/indexes
 grand_parent: Database

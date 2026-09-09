@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-ci-deddfaa2d827/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-ci-deddfaa2d827
-projection_sha256: cecbdc383a892c00fa0f8a53f02edb51c325a5f210a9826ef469318c626d8380
+projection_sha256: 5d5c9f050cdf70705149c68b6fb945551ae74d3abae0359c321cd705e67ebe83
 parent: 테스트 자동화
 content_status: planned
 public_parent_id: Wiki/testing/automation
-grand_parent: Test
+grand_parent: 테스트
 ancestor: Backend
 ---
 

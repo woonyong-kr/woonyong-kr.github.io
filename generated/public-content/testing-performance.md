@@ -6,8 +6,8 @@ permalink: /wiki/testing-performance/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/performance
-projection_sha256: 675fe6713298396d7ce00778c67531053e771422cd0b6a56d5625d39e82bcc78
-parent: Test
+projection_sha256: f73738a3ec0de215ce990a993b1e4e70d358029527497544da40e9c5a9d1108d
+parent: 테스트
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
 grand_parent: Backend

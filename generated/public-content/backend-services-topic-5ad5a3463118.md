@@ -6,8 +6,8 @@ permalink: /wiki/backend-services-topic-5ad5a3463118/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-5ad5a3463118
-projection_sha256: 5965c72a4414a019d86329cd428f38e9715854563e3af6547774dfd85d6ba8c7
-parent: Test
+projection_sha256: 935777dcc47b66ec7a9e2a5b5d4843fbdcd243b067c3e61248461c32663bb0a8
+parent: 테스트
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
 grand_parent: Backend

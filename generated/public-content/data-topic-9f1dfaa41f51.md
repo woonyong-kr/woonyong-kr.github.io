@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-9f1dfaa41f51/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-9f1dfaa41f51
-projection_sha256: 13507fd588fd7c1d607814260fd2d8c2c73fbf5c2d9e2889b7b9584dc2c8ec44
-parent: Index
+projection_sha256: a150a2e43cadb8a457ce8cabdc67637bbd1f26271b7bb579f26a06572aded951
+parent: DB 인덱스
 content_status: planned
 public_parent_id: Wiki/data-storage/indexes
 search_terms:

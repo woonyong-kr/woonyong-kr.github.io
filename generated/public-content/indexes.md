@@ -1,21 +1,26 @@
 ---
 layout: default
-title: Index
+title: DB 인덱스
 nav_order: 5
 permalink: /wiki/indexes/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage/indexes
-projection_sha256: 74e1af62df3ab8c832c17c64757792508aa12cebaf19c971a0d8ca397bf15139
+projection_sha256: b91e09abea4ae9285fa216746bde04c030cb05477a6e7bcf9f002d66bf391999
 parent: Database
 content_status: ready
 public_parent_id: Wiki/data-storage
 search_terms:
 - 인덱스
+- DB 인덱스
+- Database Index
+- 데이터베이스 인덱스
+- db-index
+- Index
 grand_parent: Data
 ---
 
-# Index
+# DB 인덱스
 {: .no_toc }
 
 회원 100만 명이 있는 `users` Table에서 이메일이 `a@b.com`인 행을 찾는다고 하자. 이메일로 찾을 경로가 없으면 DB는 Table을 훑으며 각 행이 조건에 맞는지 확인해야 한다. 이 접근을 Full Table Scan이라고 한다. 행이 늘면 확인할 데이터도 늘어나지만, 행 수가 두 배라고 실행 시간이 반드시 두 배가 되는 것은 아니다. 실제 시간에는 캐시와 저장 장치, 실행 계획도 영향을 준다.

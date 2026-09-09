@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: 084e04c9c446d0546ae431c536e14c9cdd9f929add5b6c85328aaec590134647
+projection_sha256: 0334176f8b098cbaeeb7f315fb4c58e14b3e8b704f6dee6c862b76a87163628f
 content_status: ready
 ---
 
@@ -33,6 +33,10 @@ content_status: ready
 - [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
 - [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
 - [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
+
+### Programming
+
+- [Kotlin](/wiki/kotlin/) — 문법, 객체의 동등성과 해시, 람다의 캡처와 호출 순서를 코드와 출력으로 확인하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-kotlin)
 
 ### Data
 
