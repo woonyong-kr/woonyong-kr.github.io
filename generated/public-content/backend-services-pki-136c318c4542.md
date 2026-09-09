@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-pki-136c318c4542/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-pki-136c318c4542
-projection_sha256: 5daa92ed9b19992a942f3f3bb14d3dc4d354a04786dfc339a4ddf5a8aadf443f
+projection_sha256: 9b214885dd2ca27e639cbc6a588535751db39b3a17c288bce66b82f363c67850
 parent: 암호학
 content_status: planned
 public_parent_id: Wiki/security/cryptography
 grand_parent: 보안
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # PKI

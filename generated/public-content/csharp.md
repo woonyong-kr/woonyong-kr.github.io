@@ -6,11 +6,11 @@ permalink: /wiki/csharp/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/csharp
-projection_sha256: 641d215ffd06e312b25fd0a22033701c2578821e0a9e9779670f1c865a976635
+projection_sha256: 5e6d2a2462a494e646c82685020ffab19df9e253d260dfe08480465bf1f9f052
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # C#

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-4ee7a0ead882/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-4ee7a0ead882
-projection_sha256: 7c1a1a854f6e6152d70da01500cd7f6b4a2377eb0f33de5cf1888f0e5df2df52
+projection_sha256: f29195474980f02306cef44bc7996207819b1308983533e43dbdad88d2cb08fd
 parent: Graph
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 간선

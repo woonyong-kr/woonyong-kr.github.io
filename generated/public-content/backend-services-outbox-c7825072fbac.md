@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-outbox-c7825072fbac/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-outbox-c7825072fbac
-projection_sha256: c99ba2075ec2dac7812241ce2ef84dc19919bae64de3878baefa96a0205435e6
+projection_sha256: ee8f605feab2affc84c0afeb8841473fa85d4321989cbd8ef94f6b6660520b09
 parent: 메시징
 content_status: planned
 public_parent_id: Wiki/backend-services/messaging
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # Outbox

@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-a6777b8a8e58/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-a6777b8a8e58
-projection_sha256: 75cfee780d6dcaedaa5394e7c71e3d263331914fab5e08535947e541dd4d3dd4
+projection_sha256: 5fee8ae73f386e338a0ec09c002216f8d848dbc21dbe93431295c61a07d1a5c8
 parent: 공급망 보안
 content_status: planned
 public_parent_id: Wiki/security/supply-chain-security
 grand_parent: 보안
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 취약점 검사

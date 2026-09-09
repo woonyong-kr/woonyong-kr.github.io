@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-01118e774b52/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-01118e774b52
-projection_sha256: 98aed024f491b4a607b659eb3bde07714711e6bde5587b8720c217c6b34a093e
+projection_sha256: 375584fadae183338002d1eee6a91b6ddd9d257cf8ac285a0eafe0146b3874af
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github
 search_terms:
 - 커밋
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Commit

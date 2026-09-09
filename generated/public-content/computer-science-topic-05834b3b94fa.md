@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-05834b3b94fa/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-05834b3b94fa
-projection_sha256: d5f2421a1d87bcd1f51c15617a7ff8e7f1c20c738463fa10bc6004e1c3a4990d
+projection_sha256: a30e9ad05638cf1697c72b19aa668952f5c1196a79e3847ce2399e6653ccc1ff
 parent: 탐색
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-88d3a3e31531
 search_terms:
 - 슬라이딩 윈도우
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # Sliding Window

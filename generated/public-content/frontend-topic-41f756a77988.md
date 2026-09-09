@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-41f756a77988/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-41f756a77988
-projection_sha256: ac682a1ae83be72e8316d8007b4c6d70412d4af71bef817e3fdb2362191db072
+projection_sha256: 8c8ad73e46cb15b0ecf477b4c10e8baea46e3d41583521554dd5d69632271476
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 앱 수명주기

@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-pull-request-83c55acfdd52/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-pull-request-83c55acfdd52
-projection_sha256: 27c5aa77707633a6bba9c6fd07dfc4f007884770a440c61777832aafeabb1950
+projection_sha256: b7e5fbdd5e2b5bab5089a0e8ffc69cfc2073a4cb65a819484743027b28bf2deb
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Pull Request

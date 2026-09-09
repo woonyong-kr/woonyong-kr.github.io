@@ -6,11 +6,11 @@ permalink: /wiki/nodejs/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/nodejs
-projection_sha256: ee6b1fdd0102bb73fbccaeab4d5ecb1e0c3537dee44b10ee8392366dd84c268b
+projection_sha256: 847d52ab27b6a418e1dd461c45dff8a530aacae2be616badd74c3ae000393367
 parent: Runtime
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-a5b710f9d5d9
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # Node.js

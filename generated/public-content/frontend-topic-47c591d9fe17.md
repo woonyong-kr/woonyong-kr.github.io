@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-47c591d9fe17/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-47c591d9fe17
-projection_sha256: 462e8f92f18a23da8a0ad34b40f112add1ccd22b723a17cb1852fff234e0d813
+projection_sha256: 15640862fc8b56075b69ee26293876308ff8f7f396d03b62cfc4e234e8212fee
 parent: Browser
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-7c6123c11353
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 렌더링 과정

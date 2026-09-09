@@ -6,11 +6,11 @@ permalink: /wiki/frontend-ssr-4f381ae2eef2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-ssr-4f381ae2eef2
-projection_sha256: 1c5df88ff79fa4acecc9d19d0d0a80d2414b0fe5c40fdf9834338bfe384396a2
+projection_sha256: 01b8b4f30e3236f18eeb0fb5220d66f6cfda2f475ed1051e393babe8f62ab1d6
 parent: Next.js
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-next-js-39390d365286
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # SSR

@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-0cdf3bc8888e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-0cdf3bc8888e
-projection_sha256: 04c5f22df3f4ce0d504ded33cae8c449e391fbdcb84f325f366f50f7ebcb8803
+projection_sha256: 45f8455384eee4144c7a84b47570121a3c0cd0c7cfd1b4bb336e908a51342d1f
 parent: 서버 성능
 content_status: planned
 public_parent_id: Wiki/backend-services/performance
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 캐시 전략

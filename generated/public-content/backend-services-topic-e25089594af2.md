@@ -6,14 +6,14 @@ permalink: /wiki/backend-services-topic-e25089594af2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-e25089594af2
-projection_sha256: 0222130581e3b4e1d42afd2d66df7f358990609efd77765c6d2e3b71a2de8069
+projection_sha256: d47788a3a33ac1aea71625c63d9f06ae4ee9ac8d4568264cd7a81d82d60a8a9d
 parent: 테스트 자동화
 content_status: planned
 public_parent_id: Wiki/testing/automation
 search_terms:
 - 커버리지
 grand_parent: Test
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # Coverage

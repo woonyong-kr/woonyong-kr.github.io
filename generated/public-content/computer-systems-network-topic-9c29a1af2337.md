@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-9c29a1af2337/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-9c29a1af2337
-projection_sha256: e3c5ff3340ab8bd762ed7656c8b94c9bbc424323043e765c85b6c40dd8c27429
+projection_sha256: 00a34183cfbcf5a55d6c5ac6dec97bbcaad4f70e03e825a36a7f82249a8ea93b
 parent: DNS
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-dns-c7fd180532b4
 search_terms:
 - 캐시
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Cache

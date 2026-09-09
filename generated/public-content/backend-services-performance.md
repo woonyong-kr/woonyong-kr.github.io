@@ -6,8 +6,8 @@ permalink: /wiki/backend-services-performance/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/performance
-projection_sha256: 81b19ae813d9ba938e8752a67ef024d9e2b2d26e5e4c70914db696d7b0242ed0
-parent: 백엔드
+projection_sha256: 00fc4628172f550851c39e103de0b28cd6eb0cb0603a98590beb968c101c4494
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

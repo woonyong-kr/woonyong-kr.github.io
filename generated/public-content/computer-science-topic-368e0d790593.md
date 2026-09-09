@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-368e0d790593/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-368e0d790593
-projection_sha256: d597b16d2a0e94f42071aea11314103b63e34e6bf7ab4af46b9dafe2a8683488
+projection_sha256: 515ecf8fca6d4149724b1b1dbdde01b2bd70f81b5b3f695561e6ee4eef38bc73
 parent: Heap
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-4a9423be930c
 search_terms:
 - 우선순위 큐
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # Priority Queue

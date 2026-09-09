@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-d9204ead4239/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d9204ead4239
-projection_sha256: bb93469f4f7e215db2b1c90e6857eee590b91eb12582cffe75e8fd0c5db8119e
+projection_sha256: 047cbe6139f1f730482f02258388a19dbbb643c2750c88c7b6b53eabb6fd8b96
 parent: 네트워크 기초
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 주소

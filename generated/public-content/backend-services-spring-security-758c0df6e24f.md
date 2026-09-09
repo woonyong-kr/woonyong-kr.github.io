@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-spring-security-758c0df6e24f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-spring-security-758c0df6e24f
-projection_sha256: 389d4ffbcb3b44f95280a67154dae126b588797ae08ce9a38b4778a14ee5e868
+projection_sha256: 68d218dc755d47e21c5595b4aa2e28d6adcc537319f33d1d4f7c21d5abb617c5
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de
 grand_parent: 서버 프레임워크
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # Spring Security

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-4bb4ebbd4928/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-4bb4ebbd4928
-projection_sha256: e0bee4bd8567087f436207e3011e6c8749b589671ebcbb63839ca7d64e074e1f
+projection_sha256: 799986f1f7a1d58258b8a57ad5e1c77167eb49d701b9430df3317db3e12785be
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 오프라인 동작

@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-ip-cf75ea1b870d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-ip-cf75ea1b870d
-projection_sha256: 6e465caabcdb7a7eb5f934acbe07f4c979e49cbe8a161001b8f6dc4e82374cac
+projection_sha256: eb928da5cd5cd1783b1769682dc5a69d608c7fa4797e4932531f758dd9a035c9
 parent: 네트워크
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/network
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # IP

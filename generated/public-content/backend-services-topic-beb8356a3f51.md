@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-beb8356a3f51/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-beb8356a3f51
-projection_sha256: f14db2652ed1577aba3f0f7a7f6ade7e494700a231234f481779d27abcc4efb0
+projection_sha256: 6c2cf23c2144fecee7ea694e4b5bfecece6f5c3254c6fec65264a4a6f4ff3353
 parent: 서버 안정성
 content_status: planned
 public_parent_id: Wiki/backend-services/reliability
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 지수 백오프

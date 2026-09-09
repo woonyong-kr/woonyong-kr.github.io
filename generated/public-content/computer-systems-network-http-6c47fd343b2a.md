@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-http-6c47fd343b2a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-http-6c47fd343b2a
-projection_sha256: b6dc59bac4b9af2357705f83c5a21641e22c914cb0a3ad3ee3e2d3613203776a
+projection_sha256: 0fe6ff3df64f111217c58bcdcde86bf5fba2eb010344506f746503f1a1562ca8
 parent: HTTP
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-http-2fe226962c51
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # HTTP 버전

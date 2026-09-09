@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-rbac-735f5783e578/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-rbac-735f5783e578
-projection_sha256: b8b404028b2f005b4d0785f8db7df4da1b2d3e5b5be39c56ff58a6febccb5c05
+projection_sha256: 43d8bcad6f212fec9d3ccfbd45746e4c2ec04d056cc9fec8922b7cf233c9fb85
 parent: 인증·인가
 content_status: planned
 public_parent_id: Wiki/backend-services/auth
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # RBAC

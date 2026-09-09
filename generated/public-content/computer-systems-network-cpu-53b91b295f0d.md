@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-cpu-53b91b295f0d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-53b91b295f0d
-projection_sha256: 1896afd77acb063a2ff0d8b4e1f6b9a447775ac55ed1a256c8d41bfa870d149e
+projection_sha256: aba8b5a9b1c86502799ebb096b8a66beaadb613b7b0d25844a2f21546c1fdfae
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # CPU 사용

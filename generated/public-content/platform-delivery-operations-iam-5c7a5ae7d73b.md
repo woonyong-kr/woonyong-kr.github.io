@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-iam-5c7a5ae7d73b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-iam-5c7a5ae7d73b
-projection_sha256: 8ce573c87ab1cb9ad8ba5146e45a345102f275e42012f41c69999407862478cd
+projection_sha256: 98685a1b71b4ee12094e3bfe0a212efc6aee5a5a74024fa35bc743092e674ebe
 parent: 클라우드
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # IAM

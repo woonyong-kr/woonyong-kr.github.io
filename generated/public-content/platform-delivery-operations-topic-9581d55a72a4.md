@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-9581d55a72a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-9581d55a72a4
-projection_sha256: 66f4e816625d1a6dfc48c18022d92a9ad8b4450fb5517e9a27bc35fea9e9858e
+projection_sha256: 751e29261da8fd0dfa62791804da2965e05a761e826869d82150a34bc06e6d72
 parent: IaC
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/iac
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 기존 자원 편입

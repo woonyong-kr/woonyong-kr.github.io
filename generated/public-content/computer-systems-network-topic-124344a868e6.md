@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-124344a868e6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-124344a868e6
-projection_sha256: 232dbe06271aa71349d04bbe4e7761f8fd7dc4b3622ec2aa6ec8f724e6de4474
+projection_sha256: e42eab9e9bc1d81ef2b67f7763b6eb384a63f8ee125c982ae4d50c9a25c22367
 parent: 입출력
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d4ff1bb79941
 search_terms:
 - 버퍼링
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Buffering

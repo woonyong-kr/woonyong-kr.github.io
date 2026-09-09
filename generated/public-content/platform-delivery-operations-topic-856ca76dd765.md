@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-856ca76dd765/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-856ca76dd765
-projection_sha256: 5bf58f7552d83b6c47e0a8b493724d62810aee07e6f47bf4f9a705f90cb5c20a
+projection_sha256: 2ca36f8ef138f3d42511b4daaa91824d348eb6f42a5cc08121507a64bed613b3
 parent: Docker
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/docker
 search_terms:
 - 레이어
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Layer

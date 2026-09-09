@@ -6,11 +6,11 @@ permalink: /wiki/c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/c
-projection_sha256: fd9045f80935ce098c99276cd5e9749b80f0c1591cd3b812c168d78d45eacc32
+projection_sha256: 58bbb400e3d94834d5af76338f9eae0a31c082dd1c6a9bec2052985484080031
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # C

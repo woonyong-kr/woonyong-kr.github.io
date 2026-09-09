@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-2c8dacd23b3a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2c8dacd23b3a
-projection_sha256: 9d9f713038814e02dfc4f676426fb9232d24cbe6bac65e642de190a7c76a9ee5
+projection_sha256: bab92a39c24d6ffd5d5a176c36b435396403e68668a5f5d4366526a460b13c65
 parent: 그래프 알고리즘
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-f8706f61ab70
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 최단 경로

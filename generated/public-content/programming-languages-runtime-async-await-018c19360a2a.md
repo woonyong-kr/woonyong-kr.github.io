@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-async-await-018c19360a2a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-async-await-018c19360a2a
-projection_sha256: 6c9ae0b76e0e28c69f1950d74e5ef4a5dcf7851f1e25d762b9713fbc60aeafb2
+projection_sha256: 9ce75fff899f7ce3546b5c677463178735ce11875ee248f3192c0a266b9c29df
 parent: C#
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/csharp
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # async와 await

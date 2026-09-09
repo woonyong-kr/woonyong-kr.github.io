@@ -6,13 +6,13 @@ permalink: /wiki/frontend-topic-6c685e4b798a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-6c685e4b798a
-projection_sha256: ea2dd1b27c820296806740e0b64bad022b22088593d3602fefb57c58227fde56
+projection_sha256: 4d1d243fd40b756af6866bcef4b702f8190c72400f68ba2e08e4e88139da5a02
 parent: React
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
 search_terms:
 - 컴포넌트
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Component

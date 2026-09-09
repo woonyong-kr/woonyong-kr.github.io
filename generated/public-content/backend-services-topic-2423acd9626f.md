@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-2423acd9626f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-2423acd9626f
-projection_sha256: d4d5f195f71f25ce232d857e4c50ddaece7f69a2e8010e23ee6227f7e13e8962
+projection_sha256: 12ab27ea261bb0a108c153c3e11c422a0a9b0f6b72ef2604abb95ecb6070a81b
 parent: 영속성
 content_status: planned
 public_parent_id: Wiki/backend-services/persistence
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 트랜잭션 경계

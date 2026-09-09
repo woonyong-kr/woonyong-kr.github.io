@@ -6,11 +6,11 @@ permalink: /wiki/frontend-dom-adc397a05558/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-dom-adc397a05558
-projection_sha256: 8cf9573e7342be1959efd05aefedc5e5c253e4ccd4768f47e54297409e80d057
+projection_sha256: cfeb198aeeb5a0e07ef3b6a77e66bb152036ec29af4e087be0ff572001628fe6
 parent: Browser
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-7c6123c11353
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # DOM

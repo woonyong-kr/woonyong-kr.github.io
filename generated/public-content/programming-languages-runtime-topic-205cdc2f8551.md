@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-205cdc2f8551/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-205cdc2f8551
-projection_sha256: 765a267bcaf606cccab6973c852a12622aeca65aab6cb1b8ce01a611b243cf25
+projection_sha256: 70b24013a75fa704e554cb63a712edf6072bd59b56eda7507555ebda202b4dc0
 parent: Kotlin
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/kotlin
 search_terms:
 - 람다
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Lambda

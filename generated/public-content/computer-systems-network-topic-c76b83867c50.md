@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-c76b83867c50/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
-projection_sha256: 75efc24d547a690ac3ce219122fcbe9b96fccd894c65139976de8bd3162d801d
+projection_sha256: 2a690ebdb62219e20659232a24af20ba70b568db3cb03b755151dc3d31393620
 parent: PintOS
 content_status: ready
 public_parent_id: Wiki/projects/pintos
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 파일 시스템 구현

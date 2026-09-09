@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d160fea60072/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
-projection_sha256: 434c4df9561c4d5e1a9acdd9faa35ab57aa0405d0d6d670e904b5f0637820b60
+projection_sha256: 90a60649392d51713e30f54c7c4d9977f898dce1ed3944cfb796cb297707470a
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -18,7 +18,8 @@ search_terms:
 - Slab Cache
 - Arena
 - 공간 이용률
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 메모리 관리

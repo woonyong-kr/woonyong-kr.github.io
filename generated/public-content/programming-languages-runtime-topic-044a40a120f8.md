@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-044a40a120f8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-044a40a120f8
-projection_sha256: a54d1682e2c43e7eeca2e34fa9f680b1f2eadbc297be21e7eda99a67d1e77235
+projection_sha256: 7e8df80696509ba65fd516bdca02001100e45965bff53c1cf3a4a5f3addffff3
 parent: Python
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/python
 search_terms:
 - 타입 힌트
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Type Hint

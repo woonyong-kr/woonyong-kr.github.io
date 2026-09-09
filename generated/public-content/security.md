@@ -6,8 +6,8 @@ permalink: /wiki/security/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security
-projection_sha256: a3e079cbe55f0377c37e647b600c811f92f1587bee1c9248b441c9267ca008c9
-parent: 백엔드
+projection_sha256: b0c2be7269c1c5797611ad86530f7b88953fccdf0bf0161ca8549bf7a5f60cab
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

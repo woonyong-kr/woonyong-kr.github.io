@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-914d0bd6e193/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-914d0bd6e193
-projection_sha256: b3c225c53affb660137d083bc378388f57107a57ca7dacef18323c6ff23083ca
+projection_sha256: c900ab022708c37d3db718eea189fe13e528899aff8e1f415d6e95baa708cd1a
 parent: Graph
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 인접 행렬

@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-766a45dd52db/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-766a45dd52db
-projection_sha256: dfe44b705f27994def261ad8777fd035e2ae0272ccd28c205fd45ab683f11c61
+projection_sha256: 0fa01726a88eae1665c8e0f08c35d57b0fae115a4c550b7e06f20e368f617034
 parent: Spring Data
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-data-7ac93db31ea5
 grand_parent: Spring
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 쿼리 메서드

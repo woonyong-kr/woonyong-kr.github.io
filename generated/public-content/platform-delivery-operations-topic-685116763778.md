@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-685116763778/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-685116763778
-projection_sha256: c1f85fe0bf438089ad20eb4b871270a3b2f60f5281117e053b9a1ca029f0792e
+projection_sha256: a59c52af90aaf46d059b068ceaa5942f796efb2b00cf73de85df04ee5ea00751
 parent: CI/CD
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/ci-cd
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 빌드 단계

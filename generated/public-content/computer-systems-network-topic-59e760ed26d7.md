@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-59e760ed26d7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-59e760ed26d7
-projection_sha256: 54dd562943658f37d9c89677d49586a1a87cfc3dcb08cca1525441432b19fac6
+projection_sha256: f54829d0027bc98496733cef46b3fb92f4fe1a5de4df1d3391537a9bef7ba67f
 parent: 네트워크 기초
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 계층 모델

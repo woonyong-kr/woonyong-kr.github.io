@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-43b47fbc7d26/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-43b47fbc7d26
-projection_sha256: 34e4e439c26c211aba5246257394c099d0792347471f41ada8822ebc532e1e66
+projection_sha256: e572d80dbb57f0c7168ff36d03eca144a8e4857c44dd36411f81050befb1653d
 parent: Trie
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-c6415ece8059
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 문자열 저장

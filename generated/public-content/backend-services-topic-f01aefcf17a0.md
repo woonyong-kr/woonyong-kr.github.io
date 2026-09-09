@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-f01aefcf17a0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-f01aefcf17a0
-projection_sha256: e8936a2310c341ea998304ca2106eb9e5bcdd4a76d10f6d1d1591e01e6c1f4c6
+projection_sha256: f51bfd17184782d6c93c843a80259520d9359894c14919ac7644d9e5e04bb177
 parent: 메시징
 content_status: planned
 public_parent_id: Wiki/backend-services/messaging
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 발행과 구독

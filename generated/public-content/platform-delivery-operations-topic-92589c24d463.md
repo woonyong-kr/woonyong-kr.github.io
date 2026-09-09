@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-92589c24d463/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-92589c24d463
-projection_sha256: 67dac9fcb5d71b69a5f55af7d331c3b31709dd0bd05cec72a9158dcb65082bbf
+projection_sha256: b1d0c8bdd0af217b99c74b040bba30665a49dde0a69153825f0a3eb8e84ec414
 parent: 클라우드
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/cloud
 search_terms:
 - 리전
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Region

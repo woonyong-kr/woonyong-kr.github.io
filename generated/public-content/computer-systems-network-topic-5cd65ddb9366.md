@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-5cd65ddb9366/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-5cd65ddb9366
-projection_sha256: 483a324792460218fefb62193cecf4b1da904ab53fceb8fcc8e770b9c70fe141
+projection_sha256: f4b93cd377a7709b0eb30f0d04b7fa3d138866df84f35988a06da23aa3a51173
 parent: 파일 시스템 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 경로 탐색

@@ -6,13 +6,13 @@ permalink: /wiki/computer-science-topic-c3f2953a97c2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
-projection_sha256: a6dce645665f65060dbeb12e96c66a21cca5454fa5fb40589edaf1b8c614e8dc
+projection_sha256: c75c20ca8b7a1918a0420121367d3bd73e10e789d64ba411f24ed95af57a6267
 parent: 자료구조
 content_status: planned
 public_parent_id: Wiki/computer-science/data-structures
 search_terms:
 - 해시 테이블
-grand_parent: 알고리즘·수학
+grand_parent: CS
 ---
 
 # Hash Table

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-6da09d32db82/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-6da09d32db82
-projection_sha256: fa7516c9c513472610d235e582d4b77dab47dc198fd4736d1407dbb38a76f126
+projection_sha256: a8ab196f34492961c54c77187a57bb58550cdaa31585a699825e4638acc8287f
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 네트워크 요청

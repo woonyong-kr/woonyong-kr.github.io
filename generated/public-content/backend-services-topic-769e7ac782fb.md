@@ -6,13 +6,13 @@ permalink: /wiki/backend-services-topic-769e7ac782fb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-769e7ac782fb
-projection_sha256: d772e8acf90b36ced0d4846f3ce9aaadadde7ac58df3c7da6797b34daab0f918
+projection_sha256: b1b5d847022b1225bf7339ead6101d7995927c362b71138bacf2976a11b3a848
 parent: 인증·인가
 content_status: planned
 public_parent_id: Wiki/backend-services/auth
 search_terms:
 - 세션
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # Session

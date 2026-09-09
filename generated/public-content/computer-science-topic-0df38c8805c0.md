@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-0df38c8805c0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-0df38c8805c0
-projection_sha256: 810695536ec3fcbbd9e78f9ae9bbd397561f6cc5fa5233190f6cef3a1d934ce4
+projection_sha256: ed2087a6f323b7208f22be7bb5f455f4f67b98e2e5cd1337ccb9199afa399cd2
 parent: Backtracking
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-a4b4b3ae6cc6
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 가지치기

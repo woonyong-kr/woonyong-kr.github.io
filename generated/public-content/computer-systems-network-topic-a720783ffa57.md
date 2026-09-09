@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-a720783ffa57/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a720783ffa57
-projection_sha256: 21bdaaf0c474829b6a04e6d8918dee615a75fe147c4148e44010e6264e1f8282
+projection_sha256: 6f0de400101dbc5959142daefdc87240a5dfe9244e9445a5fd4252b3df381047
 parent: 가상화
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-32f58d9d99d8
 search_terms:
 - 하이퍼바이저
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Hypervisor

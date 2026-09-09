@@ -6,7 +6,7 @@ permalink: /wiki/ide-controller/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/io/devices/ide-controller
-projection_sha256: 36e0125f3219a048b4866a461eaf446ce9901451c459eac0bc7fb03141b7394c
+projection_sha256: 9a95c636214b9719c06765d9089d7ba849b47fb5f7fec1eece05c8eb402e0ea4
 parent: 장치
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d38307e3894c
@@ -19,7 +19,7 @@ search_terms:
 - I/O Port
 - IDE Controller
 grand_parent: 입출력
-ancestor: 시스템
+ancestor: CS
 ---
 
 # IDE 컨트롤러

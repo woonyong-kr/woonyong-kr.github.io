@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-33acdcc0a664/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-33acdcc0a664
-projection_sha256: 2fb7937a6a7da19ba66e641367b9153e7b64a5f96933317d8a002454087159ee
+projection_sha256: f87d954197983f5e71284f338816ca00dfc153e24e48dfd45ff5c117ed9b87b0
 parent: 파일 시스템 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 저장 공간 관리

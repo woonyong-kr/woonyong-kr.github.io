@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-spring-mvc-4019bd2d4040/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-spring-mvc-4019bd2d4040
-projection_sha256: 7e282215359b9b90d5827199370a19683195d2cdf4f55c951d43a8f448eaa2c6
+projection_sha256: d5e15ed28b41586bcea89f0f2959ba58ce594f4a4ec8268ec9ea33f7bb1101ba
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de
 grand_parent: 서버 프레임워크
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # Spring MVC

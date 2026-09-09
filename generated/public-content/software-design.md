@@ -6,8 +6,8 @@ permalink: /wiki/software-design/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/software-design
-projection_sha256: 3553ed3b211b3ed2b3b09226037554d77deb118fcf9286900a9093131a47048c
-parent: 백엔드
+projection_sha256: 6a279b73b71f9014bdec6652275bb42909a20ad7237e6821411e190c45bd14e7
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

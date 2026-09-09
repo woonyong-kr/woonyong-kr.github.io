@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-88b0ddfd97a1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-88b0ddfd97a1
-projection_sha256: 0b8a652856b23bb02f2212cad7564eaacec176824d4f51efb12ac17f9f849306
+projection_sha256: 43de39a2777fbe2916ce7e8d6ca278783e934a0c4244db8a01754a968064d3cb
 parent: Next.js
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-next-js-39390d365286
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 서버 컴포넌트

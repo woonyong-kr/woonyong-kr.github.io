@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: 6609b1d1429a17f5a4feac7c889c3bd32b815030ec7a1cd6cc0ceffb52e9e4a4
+projection_sha256: d72d285001a1354e5bedec92291075f57e4534596cb6bdd0d701ecee5ed71b57
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # QEMU

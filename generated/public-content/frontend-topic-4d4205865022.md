@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-4d4205865022/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-4d4205865022
-projection_sha256: 7fb18f28ecd278ad9d26fd26b9f246ab0566d7af6ba602f692c9ff22019df995
+projection_sha256: 22fbf5951d46228fa9eaa8483a3b9981651a77d731609f3cc6ab0c1195a929db
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 글꼴

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-59fa7bda00a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-59fa7bda00a4
-projection_sha256: d8bf342edb5133aa221e74c5ad0deb8633e0b9ff904be3b893565cd5fc3877c4
+projection_sha256: a365d74904a669d3884078cd162322587404408dfaa05477fdbea72196ae7891
 parent: 웹 기초
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-bb15bf5ecb38
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 웹 표준

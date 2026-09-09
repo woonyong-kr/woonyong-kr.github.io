@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-oauth-2-0-dcd393e8a137/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-oauth-2-0-dcd393e8a137
-projection_sha256: 0fae5f6e28f39fa94d5132ae3a2ff99b85ab16fa52c5a3df709e3348cbe529b2
+projection_sha256: 24ffa2df915cfc15e2c46afa9aff3b7c64371aae9d69ffa5a4003bba62267cad
 parent: 인증·인가
 content_status: planned
 public_parent_id: Wiki/backend-services/auth
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # OAuth 2.0

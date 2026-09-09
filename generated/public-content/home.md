@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: d604a4e84b095c35e39a2dffe05e7633021ded076670d5b76950a6bdcc2e123a
+projection_sha256: d47e5862211e10931f85aede583d022ae15c35bebf88ad035a02e262337dcddf
 content_status: ready
 ---
 
@@ -17,20 +17,27 @@ content_status: ready
 
 기초 개념에서 시작해 구현과 운영으로 이어지도록 구성했다. 아래에서 관심 있는 분야를 고르거나 사이드바를 펼쳐 세부 주제로 이동할 수 있다.
 
-- [알고리즘·수학](/wiki/computer-science/)
-- [프로그래밍](/wiki/programming-languages-runtime/)
-- [시스템](/wiki/computer-systems-network/)
+- [CS](/wiki/computer-science/)
+- [Programming](/wiki/programming-languages-runtime/)
 - [Data](/wiki/data/)
-- [프론트엔드](/wiki/frontend/)
-- [백엔드](/wiki/backend-services/)
-- [플랫폼](/wiki/platform-delivery-operations/)
+- [Frontend](/wiki/frontend/)
+- [Backend](/wiki/backend-services/)
+- [Platform](/wiki/platform-delivery-operations/)
 - [AI](/wiki/ai-machine-learning/)
-- [프로젝트](/wiki/projects/)
+- [Projects](/wiki/projects/)
 
 ## 학습
 
-- [SQL](/wiki/lrn-sql/) — 저장과 조회가 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
-- [PintOS](/wiki/pintos/) — Thread Scheduling과 가상 메모리를 다루는 OS 구현. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
+- [SQL](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장으로 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
+- [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
+- AICE Associate — 시험 준비용 연습 환경. 학습 기록과 저장소는 비공개다.
+- [Kotlin](/wiki/kotlin/) — 언어 학습. 정리 중이며 학습 저장소는 비공개다.
+- [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
+- [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
+- [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
+- [MNIST](/wiki/deep-learning/) — 숫자 이미지 분류에서 데이터 분할, 학습과 저장까지의 흐름. [GitHub](https://github.com/woonyong-kr/lrn-mnist)
+- [GPT](/wiki/ai-machine-learning-topic-7c4a8b2afe4c/) — 토큰을 벡터로 바꾸는 입력과 언어 모델 구현. [GitHub](https://github.com/woonyong-kr/lrn-gpt)
+- [React](/wiki/frontend-topic-556b062c7529/) — 상태, Virtual DOM과 실제 DOM 갱신을 연결하는 작은 UI 런타임. [GitHub](https://github.com/woonyong-kr/lrn-react)
 
 ## 참고한 책
 

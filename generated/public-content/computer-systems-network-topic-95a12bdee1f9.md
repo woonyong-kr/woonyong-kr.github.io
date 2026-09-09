@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-95a12bdee1f9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-95a12bdee1f9
-projection_sha256: 91c3738ebd19837d54f5fee2bf46263377f2631c3978b6ec6dca8d28ec2db946
+projection_sha256: 44242c6c5e997c2c82cda90ca59a2a6af2b8bade000627156cbdf13f1970e926
 parent: Scheduling
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-80c365ceda9a
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 처리량

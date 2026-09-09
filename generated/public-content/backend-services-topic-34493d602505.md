@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-34493d602505/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-34493d602505
-projection_sha256: 28f0ec0b6140dee0a638a4aef80faf39bae5edba7db58658038bcf2e850a0e62
+projection_sha256: 86041a9f6f70f65172cae46f39308cbc97de0d6158c45226aea36bd030115aed
 parent: 실시간 통신
 content_status: planned
 public_parent_id: Wiki/backend-services/realtime
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 재연결

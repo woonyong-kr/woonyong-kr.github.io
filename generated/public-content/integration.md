@@ -6,12 +6,12 @@ permalink: /wiki/integration/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/integration
-projection_sha256: 91de8ea262058641d769b411faee3680a73d6498dd33832b34377649b9f3aad8
+projection_sha256: f0cc20a5beed20ef0f2fdc5e3e43033547942d871d40ae5d4e8a3283127b0830
 parent: ASP.NET Core
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-asp-net-core-5d76e93b2fda
 grand_parent: 서버 프레임워크
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 통합 테스트

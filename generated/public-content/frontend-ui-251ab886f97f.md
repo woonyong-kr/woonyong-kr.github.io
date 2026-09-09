@@ -6,11 +6,11 @@ permalink: /wiki/frontend-ui-251ab886f97f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-ui-251ab886f97f
-projection_sha256: 707c27b99bcbe839230a2937506ee7dfe8d4dab885c89f1b679ac7696b7ab6e5
+projection_sha256: 4b882183eb06083c2e5be590889ffcf5ef9d85817952e05461e474e2f175f88d
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # UI 상태

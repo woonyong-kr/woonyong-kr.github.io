@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-358ca614d473/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-358ca614d473
-projection_sha256: dda104826321b1806b003a2a452d869bc519a94fe288d0112187d3aa8fe3bd2d
+projection_sha256: fbfba7be6128a53d032189635fabfb65840e1c635f7e747de09700867b697598
 parent: Build
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/build-tools
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 증분 빌드

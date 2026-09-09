@@ -6,8 +6,8 @@ permalink: /wiki/frontend-css-d66740ffcb8f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-css-d66740ffcb8f
-projection_sha256: c33cebc844bc5e58d7f93880b90e0ad6b05d4b8662ea67d696d1baa22178b3f6
-parent: 프론트엔드
+projection_sha256: da91b817fc2e98f3d7349d757152e93c5374ae2d69a7a16bb69408ab15cf2281
+parent: Frontend
 content_status: planned
 public_parent_id: Wiki/frontend
 ---

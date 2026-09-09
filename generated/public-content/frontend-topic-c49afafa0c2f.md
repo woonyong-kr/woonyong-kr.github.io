@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-c49afafa0c2f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-c49afafa0c2f
-projection_sha256: 9bd128a6404df0108894896b8cc73dc6383f8eab31b1de8c9c8b9bf71806d3dc
+projection_sha256: 6ef91c457b9035c725de77a3c499d5b8c06bffd4b81080b587be089bb371f8f2
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 입력과 피드백

@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-3bf127fa7b72/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-3bf127fa7b72
-projection_sha256: c6d2ee4f3e733b69d0cbc9df62d2213654769aed18c2a6cd8695670c61d47366
+projection_sha256: 412abcb43bce3c7d359a37a1da0e639ddd59427cc2162eb4ed07a1cae618b1ee
 parent: 개발 환경
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-eb212956fe45
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 개발 환경 재현

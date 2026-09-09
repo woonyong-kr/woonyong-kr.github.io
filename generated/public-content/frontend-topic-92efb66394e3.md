@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-92efb66394e3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-92efb66394e3
-projection_sha256: 6929dec933bf43e512540ae0cc45617a0ee515b02e52605ea03d7caf4efb891f
+projection_sha256: e14baa84c5fd626b5842591cc2f4e3bc009f1a79fcd4ea238e5b2a42724ba843
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 모바일 테스트

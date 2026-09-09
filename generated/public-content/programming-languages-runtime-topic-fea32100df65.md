@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-fea32100df65/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-fea32100df65
-projection_sha256: 2337e8d4809e5c2c1bd80614aca2940054602db93177c6caff5f4e0297ac1abc
+projection_sha256: bf2628eff709fe3f502fe84ecb9a840715505a2b1178e6775e31b9d9cb0587a1
 parent: 의존성 관리
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-241d30e1b20f
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 가상 환경

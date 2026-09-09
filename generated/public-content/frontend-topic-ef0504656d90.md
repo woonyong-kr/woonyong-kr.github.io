@@ -6,13 +6,13 @@ permalink: /wiki/frontend-topic-ef0504656d90/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-ef0504656d90
-projection_sha256: e9d787efd1386c2195815fbb350fca1d8a4d1f06dcc3de796af7a828121dd5e5
+projection_sha256: 33912b28bdea22f6667494668effa8f92d10a8a2579f264d394bd9b8cf5d693f
 parent: React
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
 search_terms:
 - 폼
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Form

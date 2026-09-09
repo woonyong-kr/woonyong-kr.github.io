@@ -6,8 +6,8 @@ permalink: /wiki/persistence/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/persistence
-projection_sha256: 6b3a67b871983741e175ad755e00402d7bd6dd953d82016c1b7db7bed39650fe
-parent: 백엔드
+projection_sha256: 63c43485c94aa0cc906076a17133df78c287a2fa6f6b6c7b77cc8404208c3c8a
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

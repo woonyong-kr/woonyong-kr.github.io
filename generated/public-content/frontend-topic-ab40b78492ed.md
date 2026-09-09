@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-ab40b78492ed/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-ab40b78492ed
-projection_sha256: c704f3d4043b8699ebd78cdc8b655f12f0ae34327c0fccb82bc0e5ba4bd3917c
+projection_sha256: 6f40c72a4a498cabb34102a5e956cb8831ccfaab2e85881ce9b41b9fc03a38ce
 parent: React
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 상태 관리

@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-bd256ce1cad4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-bd256ce1cad4
-projection_sha256: 4acfec4aaf0782ddb41e2f811112e4418e9cfdcb8644453bda7dec5e282a3f49
+projection_sha256: e91d400fdc27a1b4688ec53a48c4c55b9b270eb057653bf8ed4da63c5fadb340
 parent: 교착 상태
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-41c6d9a5eb18
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 예방

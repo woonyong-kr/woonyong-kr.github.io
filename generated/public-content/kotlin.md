@@ -6,11 +6,11 @@ permalink: /wiki/kotlin/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/kotlin
-projection_sha256: d455398cfa8db92a7f192a770a8f7dbcb49270597fba967ee3295560b25e34ea
+projection_sha256: 5362be9b24682836d0a0cbe435bad134824adba62aa030baf89044b37b6ed84c
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # Kotlin

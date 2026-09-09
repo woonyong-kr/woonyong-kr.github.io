@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-0b6f59f3f75e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-0b6f59f3f75e
-projection_sha256: 6eae895c060331d8e4f300cae4a82b207da3db0cf0cecaefa271510f0a8f15b2
+projection_sha256: a81260a3640ea553018b1874697577d7b22ae66ad0406a2267428a31669b543c
 parent: C
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/c
 search_terms:
 - 헤더
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Header

@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-409660546355/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-409660546355
-projection_sha256: 1e893e25ee9c377d1e43c9a5cf5aa2dcc3a3cf31fb53d0818deb14a160894b2c
+projection_sha256: 88d09549e034babf4c624cf8640d2fcb21291768f35eb9f18aaefc628eb0b259
 parent: Python
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/python
 search_terms:
 - 패키지
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Package

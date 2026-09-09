@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-842cf28e5f50/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-842cf28e5f50
-projection_sha256: a3865f6e5d76adb07640b88d4694a94c3274b8250f3cb6e5fe9af95ee02d4513
+projection_sha256: 25a1cfce176d651ef171dc2e3164de04c43ecc4dc3d3c7f2d9c766c83ca4990e
 parent: 웹 성능
 content_status: ready
 public_parent_id: Wiki/keywords/frontend-topic-88f740e8afd2
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 렌더링 최적화

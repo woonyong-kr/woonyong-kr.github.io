@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-12fe6c161cab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-12fe6c161cab
-projection_sha256: 1a3dcc28b25f8c3f1e3be0e33309acd85605b41650b8e16845c16300d00dd0bf
+projection_sha256: 21c4bb22e6641e9185cf1f12b326c8914fd276187e1319363d767112a8ffccce
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 네트워크 단절

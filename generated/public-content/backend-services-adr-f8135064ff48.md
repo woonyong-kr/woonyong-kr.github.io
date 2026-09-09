@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-adr-f8135064ff48/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-adr-f8135064ff48
-projection_sha256: 478e31111b337da804d647b1891a63c01735e8bacaac3e3d3a84b24eb5478be1
+projection_sha256: 43f6cffa0622e5ab65d40b8c680ab89847ba2120784aa1809b8d43a34fbe55b9
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # ADR

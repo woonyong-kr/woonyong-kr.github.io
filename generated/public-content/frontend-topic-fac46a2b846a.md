@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-fac46a2b846a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-fac46a2b846a
-projection_sha256: cf13b2efb5521570108c9d3191da6d5903ffd34841de8c70bd454aa425e88908
+projection_sha256: ae60eaba6a9e1ae0a48224ffc26061e6b5ed1e99ce8bf7f11615a14f8a927820
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 화면 전환

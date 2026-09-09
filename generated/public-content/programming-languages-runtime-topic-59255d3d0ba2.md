@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-59255d3d0ba2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-59255d3d0ba2
-projection_sha256: 9053e19868d96fa2a6fa3da4ce9ed992b2aa93494db255ac7c18d3495d6d660a
+projection_sha256: 7b5f0414fc9f2294283c302939630d4063b29957df9524c24329f693a338025e
 parent: 의존성 관리
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-241d30e1b20f
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 잠금 파일

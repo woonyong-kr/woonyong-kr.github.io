@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-e0bc6c42e095/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e0bc6c42e095
-projection_sha256: afa7808e4e8dc1886280a49b3c41f2a5621b90d6572dd88cf6e9b5fab3da242c
+projection_sha256: 1abe4f5ce66dce9a10ff059e2fedf65f41c26cfccac8c448c47263521f5d9b7e
 parent: 교착 상태
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-41c6d9a5eb18
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 회피

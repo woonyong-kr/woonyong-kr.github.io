@@ -6,10 +6,11 @@ permalink: /wiki/computer-architecture/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/computer-architecture
-projection_sha256: 509415749670be4dce09b1e0fa1f9f8e214496a102d6117879f30e7b7f51e75d
-parent: 시스템
+projection_sha256: 7feffc1024e23fecd4d2eeadec9facfc4a1a3114f75519111f73172af7728310
+parent: Systems
 content_status: planned
 public_parent_id: Wiki/computer-systems-network
+grand_parent: CS
 ---
 
 # 컴퓨터 구조

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-mmap-838e9b0f7e0a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mmap-838e9b0f7e0a
-projection_sha256: df2712091e650e6a1e7734920d071f9bc3d76145e205293c3fb8ab73b85bb9df
+projection_sha256: eae27cdcc114e4dea5d4493fbe68c43aa9e569d9dc133324540b5a491f844caa
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -38,7 +38,7 @@ search_terms:
 - PF_P
 - vm_handle_wp
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # mmap

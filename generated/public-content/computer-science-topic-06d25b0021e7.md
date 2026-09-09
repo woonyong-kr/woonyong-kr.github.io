@@ -6,13 +6,13 @@ permalink: /wiki/computer-science-topic-06d25b0021e7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-06d25b0021e7
-projection_sha256: a7eaea0a33db2d0e01a38eed11b3026887607aaadb472378d10c51be3baee7c9
+projection_sha256: b221bef9a3db580c4d96a81e3a8df7e7d136d7c92316599a525aab3f6cbfe4f7
 parent: 자료구조
 content_status: planned
 public_parent_id: Wiki/computer-science/data-structures
 search_terms:
 - 배열
-grand_parent: 알고리즘·수학
+grand_parent: CS
 ---
 
 # Array

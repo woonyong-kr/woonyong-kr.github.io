@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-27ea49e16d8f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-27ea49e16d8f
-projection_sha256: 17af2d148eb8b61f188f1c3419ce9a9acd2ceba97837eef8b30140a22d7f58f3
+projection_sha256: 5aba7f006e664873bf29a557844d18f8a8b9ceb7f5be8645045e2be517ae78b8
 parent: Linux
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/linux
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 네트워크 명령

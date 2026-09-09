@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-53dba9f3569a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a
-projection_sha256: 0a6145cfa574fdc4e8da21134fe9fa72bb0c12b24b4e2604a3533614561246f8
+projection_sha256: e99fce946f076bfb289c4f653282febe64c747af02ae6f7cf4f9e8e4dd71f154
 parent: Kubernetes
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/kubernetes
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 워크로드

@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-5dba8e8987e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-5dba8e8987e4
-projection_sha256: 4ee23d4c02cf9bf01ee470fbcf867ff229c020b9515690de65847d1a901d908b
+projection_sha256: 1edadbe8ebd9404c8c41d707d06f2afe79988016dbc3a306f3e147af35c6cb24
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 코드 리뷰

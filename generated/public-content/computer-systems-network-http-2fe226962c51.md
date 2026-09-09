@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-http-2fe226962c51/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-http-2fe226962c51
-projection_sha256: 8cb2b26e3e4a0255c329cca8389f2b8fcb7b5df4775f05eb33f720b34882ed5f
+projection_sha256: 58efdc2dec85256fabc2ea5f01914d6745b0dffb20a0f2751cfb0eafd6d0abf6
 parent: 네트워크
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/network
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # HTTP

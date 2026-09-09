@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-gradle-01dbf944bf00/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-gradle-01dbf944bf00
-projection_sha256: 4ad9c8fd8f566c6005af9303fc3d081f2a6a6a5a57122302a33c15ce5d533672
+projection_sha256: 3532ec9aa53735bed5bd5e54047a2773b7ed520ca83200c812a55c453d55d9f0
 parent: Build
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/build-tools
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # Gradle

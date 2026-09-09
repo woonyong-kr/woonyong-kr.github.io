@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-secret-4420c2faf721/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-secret-4420c2faf721
-projection_sha256: 16ecaeb1ff85b97a868557e66f7b16046743351f90b043974f1804bf6433ac0b
+projection_sha256: 2171b39ff30f8a4f47d276285247a5190c4ee751d10ed1142b56c83e45949693
 parent: 설정과 권한
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-fdf6ab388ba3
 grand_parent: Kubernetes
-ancestor: 플랫폼
+ancestor: Platform
 ---
 
 # Secret

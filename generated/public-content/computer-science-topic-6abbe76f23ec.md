@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-6abbe76f23ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-6abbe76f23ec
-projection_sha256: 4fdd72c1cf0f13aca7074c34ae7ede16044cb0d240d59cabd35f9b3139967979
+projection_sha256: f88139be9037eae7cc9c88f94008f86315d815358155134493a49939f594c294
 parent: 그래프 알고리즘
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-f8706f61ab70
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 최소 신장 트리

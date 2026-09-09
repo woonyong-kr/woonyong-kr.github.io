@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-fb76e9d2f23a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-fb76e9d2f23a
-projection_sha256: 2620e26898afdc4e0781c8b0d3157f8417d5ba978caa3b6d325ffd594ac633a2
+projection_sha256: 18e1b5b4536511ee584bdb95dd64e082233ae148b0814c30a0bfe79a00f3c0ba
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 객체 저장소

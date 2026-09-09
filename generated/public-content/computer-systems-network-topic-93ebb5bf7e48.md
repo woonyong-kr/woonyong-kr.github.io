@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-93ebb5bf7e48/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-93ebb5bf7e48
-projection_sha256: 2720e230203492585c1648aaf6791c4de0cafbc014ce7d748c107e4d15c79522
+projection_sha256: 62dcbbef068fdf08d15296e1ffd63ab90319e17c263d0d7e8bf282bc7938a225
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -31,7 +31,7 @@ search_terms:
 - thread_root
 - orphan-reparent-wait
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 프로세스 종료

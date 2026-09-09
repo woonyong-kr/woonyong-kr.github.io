@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-9aaab645c320/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-9aaab645c320
-projection_sha256: fe64dabac9b399ad7da1a04b8e10bdb6a30b628eef1c4b801733241c2a04627c
+projection_sha256: d139cc8b13201b48aad7980029b76ba80af79434ee23ddbd781d2ee102232c61
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 권한

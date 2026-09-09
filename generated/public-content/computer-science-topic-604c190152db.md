@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-604c190152db/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-604c190152db
-projection_sha256: b526d550a1e48fb19417787404846539e42f10d7239f0aec62a39d6fbd4b34be
+projection_sha256: 5673f699446e47091d0639281c4ddbbfa6d0a5ca62c6e16527b9a96fc4f56aaf
 parent: 동적 계획법
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-7a70b4370929
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 테이블 채우기

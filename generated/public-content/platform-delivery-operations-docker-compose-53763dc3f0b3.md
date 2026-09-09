@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-docker-compose-53763dc3f0b3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-docker-compose-53763dc3f0b3
-projection_sha256: 212afc7154dc2a69a5512f124d5452f48ad84d7693fa2c45be4cccb582701e58
+projection_sha256: d545052f0ca34e64844d6046f0a1a8535df75f276614cf760dc82738f2e044a1
 parent: Docker
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/docker
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Docker Compose

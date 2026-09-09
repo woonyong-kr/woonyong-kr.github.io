@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: c470c7378bd2c97b1c6c74a68ef9ec45fbed29ed1fdc6ad93e7339aafc431383
+projection_sha256: e774e95de5a49c409826ce9ae794015372e6c1e6d779c1e84c751b63112a0b8f
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
 search_terms:
 - 페이징
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Paging

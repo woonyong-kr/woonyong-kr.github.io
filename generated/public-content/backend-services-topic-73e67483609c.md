@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-73e67483609c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-73e67483609c
-projection_sha256: 96f54fc044ef0f2b283dd854cfd0eed2f955660600498c470a997c3aea840706
+projection_sha256: c8d016f39d625357237e5aeb958d3f98939d036b1a4efa7b3f1a00d1abdd9e4b
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 결합도

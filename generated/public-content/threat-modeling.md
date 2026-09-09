@@ -6,11 +6,11 @@ permalink: /wiki/threat-modeling/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/threat-modeling
-projection_sha256: c9232dabf108b12f679d6af32c2ced55133df157fab3bbcdaa805f553ff1a2e9
+projection_sha256: 57f8116c70f7f7d670f82b39d523f556f005196ea70a1a8a31a3554a4d5bc00b
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 위협 모델링

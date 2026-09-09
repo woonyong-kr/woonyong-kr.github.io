@@ -6,8 +6,8 @@ permalink: /wiki/programming-languages-runtime-topic-241d30e1b20f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-241d30e1b20f
-projection_sha256: 8ffe1456da8df5c931e5305e4ae7f89f4f48650c694320c76d69ebcef3229ccd
-parent: 프로그래밍
+projection_sha256: 5f4f47dcb02869e33d2f214ea2d3666dd849cb99d62512a4b563d283f3abd36e
+parent: Programming
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime
 ---

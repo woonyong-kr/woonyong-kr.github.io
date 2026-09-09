@@ -6,13 +6,13 @@ permalink: /wiki/computer-science-topic-39fd55620efd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-39fd55620efd
-projection_sha256: 01aed0abd8b252b610a0afb03fdd405f2abd6ce5ffa00fd1135555c1e1601f4f
+projection_sha256: 59610a7fa1c80287f04a58bdf98c7a25a31fea6763bf4a698637d6c7329d2598
 parent: 자료구조
 content_status: planned
 public_parent_id: Wiki/computer-science/data-structures
 search_terms:
 - 스택
-grand_parent: 알고리즘·수학
+grand_parent: CS
 ---
 
 # Stack

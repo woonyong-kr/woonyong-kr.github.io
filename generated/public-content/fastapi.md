@@ -6,11 +6,11 @@ permalink: /wiki/fastapi/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/fastapi
-projection_sha256: f34cb3cf876dddde85288f06caf7452d867b181e795487e4fafccd0daf7f333c
+projection_sha256: 539c77d19833f4e49579f59f5d81a6ae1f94fed30d720bc61ff7cd7fb1b22d02
 parent: 서버 프레임워크
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-098a112bb921
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # FastAPI

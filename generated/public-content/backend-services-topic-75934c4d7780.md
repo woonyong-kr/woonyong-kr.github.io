@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-75934c4d7780/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-75934c4d7780
-projection_sha256: d85721966db19fc4a49451daaefc562b51315954f1c3e8d69ad412042b95f994
+projection_sha256: f75160012c4fdfba078e9d7c24c81caf20847e06d5924d24a68a8cc6d9b8f4ff
 parent: API
 content_status: planned
 public_parent_id: Wiki/backend-services/api
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 버전 관리

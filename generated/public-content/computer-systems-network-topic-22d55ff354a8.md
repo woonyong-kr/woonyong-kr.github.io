@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-22d55ff354a8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-22d55ff354a8
-projection_sha256: 4009b5032c5c3d0750ee49c5578872cf391de32b609c921fce608bb3ef7a3f15
+projection_sha256: e72557630fe142981a699d0cf7942f40718648544ac79479a3dd0a6e83781cf0
 parent: 파일 시스템
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
 search_terms:
 - 디렉터리
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Directory

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-51639c061720/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-51639c061720
-projection_sha256: 468a7b3e2f9c632d2d7ccd8a0881d7b44dd88a40312744e90c640e60c1de21b1
+projection_sha256: 16882e543dde246fbc1cd5940fed45ccc3e69983c2ade0cbecb618ab3a612292
 parent: 웹 성능
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-88f740e8afd2
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 이미지 최적화

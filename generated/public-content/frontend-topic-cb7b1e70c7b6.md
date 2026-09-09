@@ -6,13 +6,13 @@ permalink: /wiki/frontend-topic-cb7b1e70c7b6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-cb7b1e70c7b6
-projection_sha256: 2e9db5e7c62db5e18619bcef2d941ca42165aef05d2572707add21d06c778c0e
+projection_sha256: b4494187a30827fbc02d86d2a2dcfd95c67889662db27290e101565280f71e09
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370
 search_terms:
 - 디자인 시스템
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Design System

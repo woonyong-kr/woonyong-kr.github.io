@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-rest-c3f71fdaf43a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-rest-c3f71fdaf43a
-projection_sha256: 1564282b1f47dd1f13e11b80a8eb3248591f0c66f0917903045e968472833bf6
+projection_sha256: 9b0b87e77085c85912bc7761299bba3197598d397462c4e5a80fab546df657aa
 parent: API
 content_status: ready
 public_parent_id: Wiki/backend-services/api
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # REST

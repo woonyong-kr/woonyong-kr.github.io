@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-2ac2dfca2dd1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-2ac2dfca2dd1
-projection_sha256: 74b3ec23f3370b940dabf8340b55a217cdb515935e4c07aec76519bb1278367d
+projection_sha256: 2a0dca5669d538cfbad45192f1e3f6bd34be318632ed347f564b6ee51673304a
 parent: C
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/c
 search_terms:
 - 배열
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Array

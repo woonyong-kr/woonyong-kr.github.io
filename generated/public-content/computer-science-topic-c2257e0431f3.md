@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-c2257e0431f3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-c2257e0431f3
-projection_sha256: d6c41b3c56f5e9b0314c8c65780892d00796f5567445c3d566319cf00b472021
+projection_sha256: fd20ee90a7568f106251fee33d0fcbd2891662254d7fd177d5739bf4396fb991
 parent: 분할 정복
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-64c2c07b654e
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 결과 결합

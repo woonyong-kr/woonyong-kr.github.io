@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-e8bae755299d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e8bae755299d
-projection_sha256: 6654b209bf552a53152d1c757e92773ee176b234c728bcbdfdeb562382cfd9ac
+projection_sha256: 78f2920754d43af464fbdb0bb8562071baf32b334f7509eeae1436b0e29da518
 parent: 트래픽 처리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-7b8f000c7073
 search_terms:
 - 프록시
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Proxy

@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-a6bfda9c5452/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-a6bfda9c5452
-projection_sha256: c89f9d02a57f2421cf515750f3eeaee95c97d1333e1b930819031e1943e9f8bb
+projection_sha256: c0d35267260f76ca3d6c2f16dfe0e0fb58b00dd2ceb6aebd719033e857647946
 parent: 위협 모델링
 content_status: planned
 public_parent_id: Wiki/security/threat-modeling
 grand_parent: 보안
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 신뢰 경계

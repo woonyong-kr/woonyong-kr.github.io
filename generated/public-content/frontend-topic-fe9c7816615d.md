@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-fe9c7816615d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-fe9c7816615d
-projection_sha256: 47251849bbd3e7c9383d2370d010b347f94cb7d66a2eb9409bd423d730d32f6f
+projection_sha256: d86b8c795acf79e4dde2e4ddcf439da4a70dea44b7405eb0cedcaabe4bb35d9b
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 빈 화면

@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-7fa73776f015/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-7fa73776f015
-projection_sha256: c6091ddeb96ac56a1a9076b090a6b1b3c4060f426c86996707841f25e284c952
+projection_sha256: 64fad6c638c011a82675327bb18f044c4f29cb85dbf2925566659c72110d8cfa
 parent: Monitoring
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/observability
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 관측성

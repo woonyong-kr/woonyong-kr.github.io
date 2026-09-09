@@ -6,11 +6,11 @@ permalink: /wiki/probability-statistics/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science/probability-statistics
-projection_sha256: 1259ba2a03c8ea110b87c32780e7c7cb01d49172b4a3ab54a65b0bf25fd65b2f
+projection_sha256: 1b0668386890174ff069a90252afa2cf9701a1f2e07380258b1a3281d7c49592
 parent: 수학
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-9fc1075ed9f5
-grand_parent: 알고리즘·수학
+grand_parent: CS
 ---
 
 # 확률과 통계

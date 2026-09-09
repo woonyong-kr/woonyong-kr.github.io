@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-f2342b96a407/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-f2342b96a407
-projection_sha256: 3d42eb300f202d22a9075e9e82a527bc7e659573dd261ab695dbdc11672fe2f2
+projection_sha256: 4e270e92ff48de027711b90251b1c70fe70f8fc1da9e3ec29f5b1953b6ce2920
 parent: Linux
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/linux
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 서비스

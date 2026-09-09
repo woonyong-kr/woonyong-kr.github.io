@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-eb54fbfc1efb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-eb54fbfc1efb
-projection_sha256: 0fd0d87a83409929ae70e1a39a2a0c857983f47666908fc98552353533f36e1f
+projection_sha256: d33cfa016946727de109a53aad3e010c7324555747d0a30d77fcd75baf29e07c
 parent: 동기화
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-cd8cd4ad9254
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 조건 변수

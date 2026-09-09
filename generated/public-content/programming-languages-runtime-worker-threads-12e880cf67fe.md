@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-worker-threads-12e880cf67fe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-worker-threads-12e880cf67fe
-projection_sha256: d4ec55d0ef95398e57b3acbdc9e0dfcb5ebaebf9bc11fa27ea3ec8c1e1ce13f8
+projection_sha256: eea8a421facd1a60ba61be66d2195ab7c3275c913ba0f3ff3a2166345c92b175
 parent: Node.js
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/nodejs
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Worker Threads

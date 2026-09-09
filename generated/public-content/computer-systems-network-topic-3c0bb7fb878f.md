@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-3c0bb7fb878f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3c0bb7fb878f
-projection_sha256: 9ba54b56c74c6216ce796f82b872bb65fc11152dd0a9795ebb728a3f35bfbfb3
+projection_sha256: 9999aa2d567b0cc53663df466aabcccf45f5b3a5078912103dc56e690de39354
 parent: 네트워크 기초
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
 search_terms:
 - 포트
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Port

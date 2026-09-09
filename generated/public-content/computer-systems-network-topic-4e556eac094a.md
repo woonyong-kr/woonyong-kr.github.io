@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-4e556eac094a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4e556eac094a
-projection_sha256: 5bac3d2c46a4582388d330eb216e7ea1c6deea97ca31172144a0eb2b8f1607c7
+projection_sha256: 6d38049bc036e07b29428872406bc879fe7b439bdce1757497981409c5c70dfd
 parent: 프로세스와 스레드
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63b969bafddd
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 프로세스 간 통신

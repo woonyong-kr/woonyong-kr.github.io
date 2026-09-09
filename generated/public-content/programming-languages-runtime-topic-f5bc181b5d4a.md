@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-f5bc181b5d4a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-f5bc181b5d4a
-projection_sha256: b95b36a5fe277100c09e4a754234ba8b2b09d745fc271a07a628b834d7b519db
+projection_sha256: 22003fdfaf3ce114e72c2eae7e0a3a4f6ed0ecf43de0c57bc7383e848f58a87e
 parent: 의존성 관리
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-241d30e1b20f
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 버전 범위

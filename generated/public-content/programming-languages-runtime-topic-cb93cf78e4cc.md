@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-cb93cf78e4cc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-cb93cf78e4cc
-projection_sha256: e6b85571444aa4206a2ba7ccd8b798c7ce7f5a6d1db4819a093a17f448d56955
+projection_sha256: a66dc90dad745c275402cbdbab3993242e1d00f22568cedc15d3ab2eefbe09bd
 parent: C++
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/cpp
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 이동 의미론

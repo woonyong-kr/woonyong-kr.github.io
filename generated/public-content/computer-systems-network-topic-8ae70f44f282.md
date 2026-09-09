@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-8ae70f44f282/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-8ae70f44f282
-projection_sha256: b43b0269f0229cc94befc86097fcb1055474b5261f34e734533db883a2bbf079
+projection_sha256: 730804cec2a3fd3651b1beb95dae7a9da641f7c750d651a6f5a7bde265ce33d5
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 사건 순서

@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-7f27e1886255/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-7f27e1886255
-projection_sha256: e1f43d5c5642802b5a1bec68126a4024a12423cd92030002dc046cab52494252
+projection_sha256: ffea91cb15cb77b2141bf746cfa4ae58ab63fc3dba03ccd292e8a7ea575efcd7
 parent: TypeScript
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/typescript
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 타입 선언

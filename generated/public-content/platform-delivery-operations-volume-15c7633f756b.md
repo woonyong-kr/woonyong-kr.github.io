@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-volume-15c7633f756b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-volume-15c7633f756b
-projection_sha256: 39251df21f57826aa7a15218576d42e62cd4d9b32c3811777eea7403e6f7479a
+projection_sha256: 466ce03de9362eebf4d693b73a5a154665dc1e6ee348933fe80fcf77b548c89d
 parent: 저장소
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-7c23b03b190e
 grand_parent: Kubernetes
-ancestor: 플랫폼
+ancestor: Platform
 ---
 
 # Volume

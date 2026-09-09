@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-51039849aae2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-51039849aae2
-projection_sha256: d0db0cdcd5756fd25d474f3c2cfa71cf60425b2f6b31f9629df35aa480860e77
+projection_sha256: 9f44d9bb95017c8d23942ada94f800455f231dfa31acdd6df8cb282cd0b54c73
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 로컬 저장

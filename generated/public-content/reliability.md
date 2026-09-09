@@ -6,8 +6,8 @@ permalink: /wiki/reliability/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/reliability
-projection_sha256: cc397cd54f74747d3f013c20fcc1b2d1ea0e1e26810ed9a47909599a8db24d46
-parent: 백엔드
+projection_sha256: a36101eec354ebccf7a9928bb449233280ae7ea601e386d8ab19bb5acb822a53
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

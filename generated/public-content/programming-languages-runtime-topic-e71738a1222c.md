@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-e71738a1222c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-e71738a1222c
-projection_sha256: a7bc3a307a2fe395ca4950d7bd5cc7bb0232f0e15cc58675d135001a95a169fa
+projection_sha256: 4100ed120a04fdde5731bf760751389a02e70b4ca1026a917ce220aea283c4f0
 parent: Go
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/go
 search_terms:
 - 인터페이스
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Interface

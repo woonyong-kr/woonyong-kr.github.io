@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-0f01fff82221/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0f01fff82221
-projection_sha256: 78feb71b421c30cc9544f97891261ba897176a40e958d63cdd447954ef940d55
+projection_sha256: 0f166233611a3190f4da2bb6c39a54719864b715e39f8e9b82a3a1a902e193e5
 parent: 네트워크 기초
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 지연

@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-5f6207ab8b4e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-5f6207ab8b4e
-projection_sha256: a0072fdef7067e3d9af172f04e2da7e5dcddbff98af48aea3b19d2b634698256
+projection_sha256: 7f516ab9771efe1d78a78a0b75007963f3f357077c6662fdf9ba964f4c97e362
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 이벤트 기반 구조

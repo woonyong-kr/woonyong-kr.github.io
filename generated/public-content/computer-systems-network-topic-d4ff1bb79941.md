@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-d4ff1bb79941/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d4ff1bb79941
-projection_sha256: 0e638b1fd5cbb8cbe2d2971190b842add1999005ed57ad9ba754e737beeaf893
+projection_sha256: eb1ed8c20527a73de7f1194bb0cc7e3c261b7e991a3a29aa31e53f24dabbef94
 parent: OS
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/os
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 입출력

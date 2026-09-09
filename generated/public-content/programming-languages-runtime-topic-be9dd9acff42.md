@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-be9dd9acff42/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-be9dd9acff42
-projection_sha256: a76dd326665835f24977213b60872df3c8fad1cba04c2d83ce887640f62872df
+projection_sha256: 74728dbeda5dba16ab6a93aa7c9340100ce2d261500db8a7e956fe04c9e847b8
 parent: 프로그래밍 기초
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/programming-basics
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 변수

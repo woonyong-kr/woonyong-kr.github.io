@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-267e22a4a5bc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-267e22a4a5bc
-projection_sha256: fd129941205e58f209f9d5ecef397746f42ba1ae7c0755c142a31521bdcfb965
+projection_sha256: 7f28ced80aa5434de727cd20d4bd6b8edffa7ce0f8d94513581e79047d55700f
 parent: Node.js
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/nodejs
 search_terms:
 - 스트림
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Stream

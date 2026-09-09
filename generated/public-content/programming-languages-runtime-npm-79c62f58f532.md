@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-npm-79c62f58f532/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-npm-79c62f58f532
-projection_sha256: 57d45244efd9c11c16656e5b84d2d4241e4387f1f0266bf5fbfb043003b5145d
+projection_sha256: 3b5f86cff89dd92836f727473d1054d4f3e589a13f76772f2955481adc831bbb
 parent: 의존성 관리
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-241d30e1b20f
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # npm

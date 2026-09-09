@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-b1fdeea20de4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-b1fdeea20de4
-projection_sha256: 2eaad4d695c2232e0bbc4f49fe97d21b505bb57d44c54d1fd17123eddc4a9e1d
+projection_sha256: 72d42e71d46f3432255f22a22885db6451c6d3431d558a87eb6930cefdf9e339
 parent: 단위 테스트
 content_status: planned
 public_parent_id: Wiki/testing/unit
 grand_parent: Test
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 경계값

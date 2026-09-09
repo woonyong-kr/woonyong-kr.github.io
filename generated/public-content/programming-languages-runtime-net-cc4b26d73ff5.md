@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-net-cc4b26d73ff5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-net-cc4b26d73ff5
-projection_sha256: 25cb7d9b60ae80f0936dc440096705a9cc4883d4d5bfb764118198c3a045d254
+projection_sha256: 9d53e89c988ec102ab0b746589c49b8e0c86a39838615fbffc641c253ca31a14
 parent: Runtime
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-a5b710f9d5d9
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # .NET

@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-230ba2ebb94e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-230ba2ebb94e
-projection_sha256: cc8787ec4f4e8d193acb6f189bf0b549feae653df0d99774e81ad991da4b4dc3
+projection_sha256: 3b12e6f378f99e629d4a9036607cd89d4c12659f2e788cf1b7b1f7ba5be120dd
 parent: Node.js
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/nodejs
 search_terms:
 - 버퍼
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Buffer

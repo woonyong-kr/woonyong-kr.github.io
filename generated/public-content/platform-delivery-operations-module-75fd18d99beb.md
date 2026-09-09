@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-module-75fd18d99beb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-module-75fd18d99beb
-projection_sha256: dac74a339fdbddb9e9ee4ae801d3fa083928f893be9515455216e69a3ffb9cde
+projection_sha256: e6c5b2d8503167c12e52187ecd41417ebfb73432bafae9a0fb9e0a82903a6bf6
 parent: IaC
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/iac
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Module

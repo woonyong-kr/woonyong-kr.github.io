@@ -6,13 +6,13 @@ permalink: /wiki/backend-services-topic-9c143c2b7f93/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-9c143c2b7f93
-projection_sha256: fba7668400a3a2bdf560e616d26b5ff01eead17309de0f43dd555d24f3ab19bf
+projection_sha256: 8c68313717e2cb7c7720a366bb224732d4ee87a125445c84cbf79ffba9820568
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
 search_terms:
 - 레거시 코드
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # Legacy Code

@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-ingress-479e807b124b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-ingress-479e807b124b
-projection_sha256: b9599f5b0a4b272dc56541bb878782b468dfa9342685630cae0695b433957751
+projection_sha256: 477abdd82f3c95f06ee7cfa352cff4732886595294e18637c3c59b50b24237a3
 parent: 서비스 연결
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-35da5f950b2b
 grand_parent: Kubernetes
-ancestor: 플랫폼
+ancestor: Platform
 ---
 
 # Ingress

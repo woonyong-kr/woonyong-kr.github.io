@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-40163fbc4250/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-40163fbc4250
-projection_sha256: d07cd503ec5a31f2cd45d4146bbe6f77dcc29e7e9cafb8fad5ec4af126dbf82e
+projection_sha256: 7fdb35a772f22cba6c414175b17e9d56bba94ab4ca79ca6ace9e4994086f3b4e
 parent: 재귀
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-1df2006f50cf
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 종료 조건

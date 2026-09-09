@@ -6,11 +6,11 @@ permalink: /wiki/privacy/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/privacy
-projection_sha256: 31bd81c485fecebe506eac180eeabd2f850a28df8cf0408d6fce288ceb37de1c
+projection_sha256: 8b3d547bd277fff585f130df9c8a0ae9dcf3bd752bb18c228119904f4aadd86c
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 개인정보 보호

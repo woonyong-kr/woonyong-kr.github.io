@@ -1,16 +1,20 @@
 ---
 layout: default
-title: 시스템
-nav_order: 4
+title: Systems
+nav_order: 100
 permalink: /wiki/computer-systems-network/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network
-projection_sha256: ce1b3b751ab1b3bce2cb3f7fae57b1ad6fce04e68bb82e63ed8a34769e69aa84
+projection_sha256: 308e7b47b36d302cfe080c94e62c9b587a35e58ce9dd80f0f017689b67ff907b
+parent: CS
 content_status: overview
+search_terms:
+- 시스템
+- Systems
 ---
 
-# 시스템
+# Systems
 {: .no_toc }
 
 코드가 실행되려면 CPU와 메모리, OS가 함께 동작해야 한다. 여러 컴퓨터가 통신하는 서비스에서는 네트워크 지연이나 일부 장비의 장애도 결과에 영향을 준다.

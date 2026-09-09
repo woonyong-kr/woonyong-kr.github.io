@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-147829d97f4a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-147829d97f4a
-projection_sha256: c9618049fab567b71b3895b05bf8032a9328f02038a02e4cc56a2d13f7233563
+projection_sha256: 4ab00ea9d18cb12eeeb9966107fc68bb42e3da6f5b51d1b942d6552fbc447c78
 parent: 프로그래밍 기초
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/programming-basics
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 범위

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-80decc10a6cf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-80decc10a6cf
-projection_sha256: e7b970cf87ede73d3714e555618b595cea23636bca8669130dcf640a64d84b9a
+projection_sha256: 7860c9271e1179da28484348478ee8c304a8ba57cff465fb2df4fd5e57f051ea
 parent: 확률과 통계
 content_status: planned
 public_parent_id: Wiki/computer-science/probability-statistics
 grand_parent: 수학
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 분포

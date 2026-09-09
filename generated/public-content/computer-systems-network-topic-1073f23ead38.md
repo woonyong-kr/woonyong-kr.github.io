@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-1073f23ead38/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-1073f23ead38
-projection_sha256: 47dbf590988fc42e5d29c22182ba4ccd5e4614e6369922525035228b047f6d4a
+projection_sha256: e62aab8a305113497a4fac0bda681ebcdf59958be103a32e139f9aef1982309b
 parent: 컴퓨터 구조
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/computer-architecture
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 메모리 계층

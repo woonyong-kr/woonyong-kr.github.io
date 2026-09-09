@@ -6,11 +6,11 @@ permalink: /wiki/frontend-fetch-api-6d2ea11b533d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-fetch-api-6d2ea11b533d
-projection_sha256: f19ce334cd6d57e638322f82ec7150cc4c7607aa3fc7fbeadaf47ae54422aae5
+projection_sha256: 60f4e5d2b68f39f6ce14017002cf22eb8c8a9a8b2372e36c7c32e92307878aea
 parent: Browser
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-7c6123c11353
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Fetch API

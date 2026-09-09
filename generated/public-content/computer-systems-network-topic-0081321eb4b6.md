@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-0081321eb4b6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0081321eb4b6
-projection_sha256: ac59d7ec03521c7da2a8c38cbff9bcfa6ac591df4293df3b1b9ee8e090e53e11
+projection_sha256: 571e51dd125216c5ed64573f2cb73fd58bfccac66430a4e53eabfb4fc489e3dc
 parent: 프로세스와 스레드
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63b969bafddd
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 시스템 호출

@@ -6,8 +6,8 @@ permalink: /wiki/realtime/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/realtime
-projection_sha256: 559c97168041e4511b26932abe74b0690ddb73368ef247f2869e9c697324a8db
-parent: 백엔드
+projection_sha256: fc64bf00b54a225a244bcaa02f01d162d40da9638e1ee4de0f3c58bb8704dccb
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

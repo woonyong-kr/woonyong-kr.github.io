@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-0310918c6581/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-0310918c6581
-projection_sha256: a12aae2033ef56909635045cde81751c04dca3969e018f36b555cb607033c499
+projection_sha256: 55351d95d4672afb22447869aa0d406e20efaeeda0d652f1e5539a5b320bc426
 parent: 프로그래밍 패러다임
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/programming-paradigms
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 객체지향

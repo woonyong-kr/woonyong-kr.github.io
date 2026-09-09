@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-15fd0a7f1d72/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-15fd0a7f1d72
-projection_sha256: dca8254e20948df270e0b4b20ef6d60850e03008b93094cfde764a436e14f60a
+projection_sha256: a5a6b336ce954ead496a1e03ce56477787dc5853cd0cf0913587419870424af6
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 분산 잠금

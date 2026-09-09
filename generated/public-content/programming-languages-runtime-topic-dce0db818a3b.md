@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-dce0db818a3b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-dce0db818a3b
-projection_sha256: 7229f9664872a6d353276ef4df983663155c4e3ab1e6fb29e840dbd5816c9099
+projection_sha256: 47069aa79bb2954d93630a2a2872f60aef614daf303066858a1a84490a343103
 parent: 언어 구현
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-d46c68f1e1ae
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 구문 분석

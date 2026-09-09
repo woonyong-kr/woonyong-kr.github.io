@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-20d844dbabc6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-20d844dbabc6
-projection_sha256: 6dc58f7827d8af672dd0ea9325cc3198a06153f25e986e640f35b148b50411bf
+projection_sha256: 33114062a356a75a964b0d4acff5aba02ace045a00c23ddfdf6f52a300829d16
 parent: 메시징
 content_status: planned
 public_parent_id: Wiki/backend-services/messaging
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 전달 보장

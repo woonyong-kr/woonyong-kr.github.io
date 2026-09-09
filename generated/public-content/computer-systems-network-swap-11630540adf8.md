@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-swap-11630540adf8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-swap-11630540adf8
-projection_sha256: 20f5ca12c95c1d05c74881973e340f7197096be9c404370e4ba73bd49c10cb3a
+projection_sha256: c99171e8499633a9017b9ea27e65fbf2c7099b196781041ef4f19ad5d78cf7eb
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -20,7 +20,7 @@ search_terms:
 - SECTORS_PER_PAGE
 - bitmap_scan_and_flip
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Swap

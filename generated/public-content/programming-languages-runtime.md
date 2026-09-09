@@ -1,16 +1,19 @@
 ---
 layout: default
-title: 프로그래밍
+title: Programming
 nav_order: 3
 permalink: /wiki/programming-languages-runtime/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime
-projection_sha256: 6fde8beaa3aa44de9144f699ed06ec80a0eb412540227f41dcda8c432e58a474
+projection_sha256: 773de642cff2fa253a89fc874924a2d3503891e8267c2f4919b243311c1644ab
 content_status: overview
+search_terms:
+- 프로그래밍
+- Programming
 ---
 
-# 프로그래밍
+# Programming
 {: .no_toc }
 
 처음에는 작은 프로그램을 직접 실행하며 값이 어디에 저장되고 어떤 순서로 바뀌는지 따라간다. 함수와 타입, 객체를 익힌 뒤에는 언어마다 같은 문제를 어떻게 표현하는지 비교할 수 있다.

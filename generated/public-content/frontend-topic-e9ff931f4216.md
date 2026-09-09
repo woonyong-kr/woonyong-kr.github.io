@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-e9ff931f4216/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-e9ff931f4216
-projection_sha256: 510000acf0c80972036e5c082e810ce4c1a9f2388a542c752b7c1ec96a2bdf1b
+projection_sha256: 6364614237dd490a5215c7eae46c7098f3632ce7c0f6b8d243aca191a910b2fe
 parent: 접근성
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-8dd74e18eed3
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 접근 가능한 이름

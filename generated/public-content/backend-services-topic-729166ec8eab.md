@@ -6,13 +6,13 @@ permalink: /wiki/backend-services-topic-729166ec8eab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-729166ec8eab
-projection_sha256: 9b3e91e065bf3d891b156456b94b2fbd003ea966a91261018ddd50542f5245fc
+projection_sha256: 586ca22062b1cb451cba2695eca25187aab930badd4fe2a9b489d766b120e6d7
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
 search_terms:
 - 디자인 패턴
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # Design Pattern

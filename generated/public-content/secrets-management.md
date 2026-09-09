@@ -6,11 +6,11 @@ permalink: /wiki/secrets-management/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/secrets-management
-projection_sha256: ccc1b66c5837600c593366cc651dcda813ef7a2ab4d774c7490bf4eee27c367d
+projection_sha256: 2c3b2ee24e2b7382768ea4ba332af3276af295f2fd78e81e7db648969b3b31a4
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 시크릿 관리

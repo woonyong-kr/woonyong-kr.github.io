@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-c13a224e8594/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-c13a224e8594
-projection_sha256: c48f8239a8761180d514712e5fdf5692a865de559a4f940ce466875101a1d9e6
+projection_sha256: c090a584cb41678f451ecae4ccedd35da5439d7d00e57ba5541716a6866b426a
 parent: 개발 도구
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-dd9189189d5c
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 버전 관리

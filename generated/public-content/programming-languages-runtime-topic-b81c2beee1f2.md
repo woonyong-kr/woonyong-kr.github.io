@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-b81c2beee1f2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-b81c2beee1f2
-projection_sha256: 9f0e845c454a5874b52f21b3606b34cfaed33f3d5a1dd2a2eae58d8589201474
+projection_sha256: 99c43bf167ead6e44ff6207a16cb9eef8bfdac700a481ceac04a88f9ca8078dd
 parent: 함수형 프로그래밍
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-ef01c2623b5b
 grand_parent: 프로그래밍 패러다임
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 불변성

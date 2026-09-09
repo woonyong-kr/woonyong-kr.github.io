@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-60a99a60f2c4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-60a99a60f2c4
-projection_sha256: c1a266717decfd631d9535714322edfbacdf2205744efaf3750929a229eeae89
+projection_sha256: 4a3ea7d6ffeab95ba0d7cbdff33b8795c78216e27fe88518063b4f5bb365d74a
 parent: UI 설계
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-ui-0ff1aa6cc370
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 시각적 위계

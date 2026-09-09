@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-3814a84cbae1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-3814a84cbae1
-projection_sha256: c526992800321ef00cd531b6fe9ed247ae6ad0b73da271800357cc1928d94e23
+projection_sha256: 7dba68c09ad88baae6b8eab83ab4504a23e472441973a8572188014807c5c6ae
 parent: 서버 성능
 content_status: planned
 public_parent_id: Wiki/backend-services/performance
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 요청 프로파일링

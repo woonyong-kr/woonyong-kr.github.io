@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-cc14ff5f728b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-cc14ff5f728b
-projection_sha256: a97f3532c50e26c79c4d9c937610a8cc882bf9f7e6e45facafc56de90413f7be
+projection_sha256: 5a1fe6aa91ac4515681670c61c24da9d4e4fa6c01981cc8931e980a6606b2d5a
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 부팅

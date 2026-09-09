@@ -6,13 +6,14 @@ permalink: /wiki/computer-systems-network-topic-9a29b9676105/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-9a29b9676105
-projection_sha256: c703939715bdfe59714bf2f506495c6c6a9a773e900edf6734179fdc43d9ae5e
+projection_sha256: 25076329834c491c89c548b86c3174528b3317f3875ea96fbe36293cb3ee79e7
 parent: 컴퓨터 구조
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/computer-architecture
 search_terms:
 - 파이프라인
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # Pipeline

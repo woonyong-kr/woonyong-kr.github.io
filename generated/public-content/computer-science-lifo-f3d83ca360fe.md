@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-lifo-f3d83ca360fe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-lifo-f3d83ca360fe
-projection_sha256: 1504592ef26e2f137865b0751dbc1b80c3bbf8bd3de9ca520706047e17542a0e
+projection_sha256: 287ed4fc98234e5b4e059e456f5904421deabb08332b0f366b4f96112a2a2d0e
 parent: Stack
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-39fd55620efd
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # LIFO

@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-5cebdbc10ddf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-5cebdbc10ddf
-projection_sha256: 6b5bd56a617c6880e4fce0c0381a3fdfde97da77238677457ba9e39296d3e967
+projection_sha256: 5d8abad38ae28661077fad3aca4f55dbd6fe69dfb9eb3f34c686c0c56f367512
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 페이지 폴트

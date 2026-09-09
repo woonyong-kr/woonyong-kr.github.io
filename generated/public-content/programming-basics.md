@@ -6,8 +6,8 @@ permalink: /wiki/programming-basics/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/programming-basics
-projection_sha256: f21804dfee1792ecf91f530ce99a59d70a36df87587e1c948cb4a22361cbd895
-parent: 프로그래밍
+projection_sha256: 4d0cec0e682ffb1d1a6b4a64b3431308b6cc4d037e4a5ea97f370234058f5a63
+parent: Programming
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime
 ---

@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-58dd5ae3cb96/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-58dd5ae3cb96
-projection_sha256: 85607b1e0be0e40a70ce12abaf4055f848d55c098a393058e6e605f8ab6482b1
+projection_sha256: f063da983811d0da470f92e6b3f231f00aa94b95780c3380c5acfef01a5e2e12
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 입출력 대기

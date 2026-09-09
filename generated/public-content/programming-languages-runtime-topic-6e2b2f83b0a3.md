@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-6e2b2f83b0a3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-6e2b2f83b0a3
-projection_sha256: 171fe35fff0def92382709e6f5e11cafd9c711f4efefb5328f79e44e27d3123d
+projection_sha256: 9ea51142ee51c8d22f41f87099b305a676ec86c747a3ffc7f24e6653b7a8d8b8
 parent: 객체지향
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-0310918c6581
 grand_parent: 프로그래밍 패러다임
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 캡슐화

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-dcf8f02e7b81/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-dcf8f02e7b81
-projection_sha256: a284b1d135bf370ac08e9434e84d57d3df3acfea450b19038202a6e1933f794b
+projection_sha256: ed2d3190155c739d3f5d90ceec366b165c97a287dfed6a8bc6e12e36b326774c
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 알림

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-86797cd221ae/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-86797cd221ae
-projection_sha256: 19a441a8914dae55b0a30d4dfe7c46bbbcc0b7ec524e24e656010a14ca41e892
+projection_sha256: 707a15693a9daec4211f2c77e9bc4b426551617b544a21b6268ff6d2cdf64c14
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 상속

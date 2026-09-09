@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-ea4f541c4819/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-ea4f541c4819
-projection_sha256: 1b2067080d044b6a1607d8171f8eebd6c93af7f4d7b9058cef7271c4db148bdc
+projection_sha256: 11dfc3dc7f99c06c977035e51487c9c667fb2161e7a45279a4cd0eb39311ee57
 parent: 타입 시스템
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/type-system
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 널 안전성

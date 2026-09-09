@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-94da34d33d2e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-94da34d33d2e
-projection_sha256: fbb6850ad90188dcbf345457b54e64222b62d7f78ad15f627dac856b9b933f27
+projection_sha256: 1d1967d15a0d18e98bbffde0b262fcb2a1fc21913920df2032a7658b979de079
 parent: TypeScript
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/typescript
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 타입 좁히기

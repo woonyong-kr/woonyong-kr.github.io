@@ -6,8 +6,8 @@ permalink: /wiki/web-server/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/web-server
-projection_sha256: 919008b96cc3c01c69b97ee80f331fcf6d90a86a32799fe4a5713e59829982f4
-parent: 백엔드
+projection_sha256: 6836a47352e3d2ba7f88496cd8bcb2d2786356dcbae56c6a9a520ebf1c99a236
+parent: Backend
 content_status: ready
 public_parent_id: Wiki/backend-services
 ---

@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-stl-4a8bcce7261a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-stl-4a8bcce7261a
-projection_sha256: de57ba902162028632433cb45a12a0453c913fa3050d3d229ed35f87dc1fa077
+projection_sha256: b9c35a5f755c9604e3eb74fc580f6d30dff413d5e6e247fcdf043a765ea825d0
 parent: C++
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/cpp
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # STL

@@ -1,16 +1,19 @@
 ---
 layout: default
-title: 프론트엔드
+title: Frontend
 nav_order: 6
 permalink: /wiki/frontend/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/frontend
-projection_sha256: b0b45068177517b6e91089960236de9cee9716546ed8c943959dea5f9f0b0fcf
+projection_sha256: 8098c7a7d96b7f0530fc91b6bbbe07e5dc86e9aedc14cf4091b5c3aa6d4f1760
 content_status: overview
+search_terms:
+- 프론트엔드
+- Frontend
 ---
 
-# 프론트엔드
+# Frontend
 {: .no_toc }
 
 브라우저에서 버튼을 누르면 화면이 바뀌고 서버에 요청이 전달된다. 사용자가 보는 이 짧은 과정에는 문서 구조, 스타일, 상태 관리와 네트워크 처리가 함께 들어 있다.

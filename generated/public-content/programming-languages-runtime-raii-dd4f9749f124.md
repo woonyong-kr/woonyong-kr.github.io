@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-raii-dd4f9749f124/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-raii-dd4f9749f124
-projection_sha256: caac5018d578e773a90ccbd60afcb2d80f3953dfe6ff81f244d7d57001f6af0d
+projection_sha256: 181876e6dfb0ed6c89ef2ab62c9f5e5d098c93c166fa09fdb86dabcfa2004510
 parent: C++
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/cpp
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # RAII

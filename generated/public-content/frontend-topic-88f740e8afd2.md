@@ -6,8 +6,8 @@ permalink: /wiki/frontend-topic-88f740e8afd2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-88f740e8afd2
-projection_sha256: 7f0433bee8fbf037b93f6dcaa2af5afc2ac4c14bdb3a6d8f5a3c6123dea86f18
-parent: 프론트엔드
+projection_sha256: a8c17f2364e88e0f583ccc1a35c4d16818f366f5d513694068dc88e6606b82bf
+parent: Frontend
 content_status: planned
 public_parent_id: Wiki/frontend
 ---

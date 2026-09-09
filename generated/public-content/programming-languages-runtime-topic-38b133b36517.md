@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-38b133b36517/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-38b133b36517
-projection_sha256: bda21c6036fcd803849df938435c3f2595437efc0d4bc9987962d8d754f446c1
+projection_sha256: 44d92b63292a64d3a4a37ee108606e7731b91d65de6ae449d13acdd4fb7efbfe
 parent: 동시성
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/concurrency
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 비동기 처리

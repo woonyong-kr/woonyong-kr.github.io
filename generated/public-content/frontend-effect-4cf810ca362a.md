@@ -6,11 +6,11 @@ permalink: /wiki/frontend-effect-4cf810ca362a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-effect-4cf810ca362a
-projection_sha256: 9640d5d88bdf572314fea5e899b194723d8a18a8b8e582580f1a6f6d2fcab890
+projection_sha256: 19ae17b62f344d77fc6624a1f5da8d74785193a978a7adf9b6aca717ea08dc0b
 parent: React
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Effect

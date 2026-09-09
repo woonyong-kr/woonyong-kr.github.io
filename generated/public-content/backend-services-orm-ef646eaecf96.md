@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-orm-ef646eaecf96/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-orm-ef646eaecf96
-projection_sha256: bb62e2d484196153f3f0f168ee7e3abc9e9ccb2cd96d706727f976cf50906a5c
+projection_sha256: ed17915b1563456225b16cc53455ecd1e59602b9d08d9161386dee12a0d36d69
 parent: 영속성
 content_status: planned
 public_parent_id: Wiki/backend-services/persistence
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # ORM

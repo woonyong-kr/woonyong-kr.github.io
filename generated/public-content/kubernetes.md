@@ -6,8 +6,8 @@ permalink: /wiki/kubernetes/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/kubernetes
-projection_sha256: e40e2718214cfb80de634c1c98428ef81d7d5780e264e583a81cccc90d308eec
-parent: 플랫폼
+projection_sha256: 175a35821aea0372425c1413ff296d940389e0bee42d9aa05a4acff73db0846c
+parent: Platform
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 ---

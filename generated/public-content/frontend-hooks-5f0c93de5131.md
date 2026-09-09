@@ -6,11 +6,11 @@ permalink: /wiki/frontend-hooks-5f0c93de5131/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-hooks-5f0c93de5131
-projection_sha256: eed10cb5e51db196c4cfc668d71206d209e76aef9ebdf50768d97c1e130dd933
+projection_sha256: 6818e6792f184462588bd3bafa0011c177a4fc770d93e8a0793cd3b4af60fca1
 parent: React
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Hooks

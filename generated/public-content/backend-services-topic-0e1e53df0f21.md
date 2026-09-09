@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-0e1e53df0f21/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-0e1e53df0f21
-projection_sha256: b8725eafb4869c1b465665e7b8c9993ed411a0efa232c6f3684e0ce860c8a408
+projection_sha256: 613e55c973df1af0d53d416bba1edf26c5a76538a0918e71a9d911a2ac48ac24
 parent: 단위 테스트
 content_status: planned
 public_parent_id: Wiki/testing/unit
 grand_parent: Test
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 검증문

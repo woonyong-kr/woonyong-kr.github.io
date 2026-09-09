@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-865714037e6e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-865714037e6e
-projection_sha256: ec9979849095f119135d090616b002c7a522c6494a25adc16fb86234354fb9ed
+projection_sha256: 99585c4179821492a45bc1fe12661a96860a6e088fb3bf845455a92c7bb1c059
 parent: 언어 구현
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-d46c68f1e1ae
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 코드 생성

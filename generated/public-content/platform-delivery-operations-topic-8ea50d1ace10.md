@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-8ea50d1ace10/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-8ea50d1ace10
-projection_sha256: b66eb0f88c81f2eebb1561531598a24c3e54191784293bfc46946eaee22636e8
+projection_sha256: 09db51b28318da940cad2ece561a17a09df2e6a79565754c73308f083176b7e0
 parent: CI/CD
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/ci-cd
 search_terms:
 - 파이프라인
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Pipeline

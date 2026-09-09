@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-55bdd34773d4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-55bdd34773d4
-projection_sha256: 8a3e2c80eea09be91ce4f6d57798eecfe2e9502ad14a8e3b9d5b8a0815697d74
+projection_sha256: f64040da01bf3df48d26bda0de89dafa8e7ff2befc835c23368fe1178d46923c
 parent: WebAssembly
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-webassembly-a234a3a8d09d
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 선형 메모리

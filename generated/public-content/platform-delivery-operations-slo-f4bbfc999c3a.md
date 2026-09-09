@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-slo-f4bbfc999c3a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-slo-f4bbfc999c3a
-projection_sha256: 5c3e23b7285d8263e2c744910e6ee68dce577f7ad5b5a0835ea337ca79afc1c3
+projection_sha256: a5d9cc36ef23ba14b9c1025bde031c28d6368a037a50dbf90e3a488963b93840
 parent: SRE
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/sre
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # SLO

@@ -6,8 +6,8 @@ permalink: /wiki/frontend-react-8bebe766ebac/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-react-8bebe766ebac
-projection_sha256: b089b20f8490a236e0f903742e6f239dab87e64340adaf9de48d482b637ed110
-parent: 프론트엔드
+projection_sha256: 8dc785864b975f88a1f8482d162cffeb3096c99349ebba682c52a72b0ba311c9
+parent: Frontend
 content_status: planned
 public_parent_id: Wiki/frontend
 ---

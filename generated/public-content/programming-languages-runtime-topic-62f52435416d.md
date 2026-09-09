@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-62f52435416d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-62f52435416d
-projection_sha256: 6ee1e7b90cf0241586fc69aa9516ad189b8d122af06b44723ffb8c1b073b4292
+projection_sha256: c61b2366546e9097e31eb2448e84d4424be39e45e7c16dbf2c7a760c04faa2e9
 parent: Python
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/python
 search_terms:
 - 데코레이터
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Decorator

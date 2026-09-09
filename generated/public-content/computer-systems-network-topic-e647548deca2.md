@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-e647548deca2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e647548deca2
-projection_sha256: 81e3a5e2c4ed8647872e51bd49e7bb43d18c074b777a138757a5b95d61708a7f
+projection_sha256: 488ae8bd5b15bf985527112aadd1f73b41bdb68b90ba02ed301221226c18b4d2
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 데이터 표현

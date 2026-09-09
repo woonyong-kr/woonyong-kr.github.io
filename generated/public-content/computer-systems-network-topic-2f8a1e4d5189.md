@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-2f8a1e4d5189/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
-projection_sha256: 7ed19f9e3c00e94931ac58dbfa498ef4a99b84f96a18a02e068dbea5e0214e9a
+projection_sha256: 1c0a386d8fa248ec99f3a4a5397a58f178728afdbce5e2d61f06eabd15de7df0
 parent: OS
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/os
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 파일 시스템

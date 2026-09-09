@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-71412f5d6520/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-71412f5d6520
-projection_sha256: 8ac47449e5edead52ea26ea07c6edc25f8f2ebbd5a919abfe6baa9ce8c8da75b
+projection_sha256: aa77b76af0570535937794c07738f9824ffcd185e068f6765c70744e82b8a61e
 parent: API
 content_status: planned
 public_parent_id: Wiki/backend-services/api
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 호출 제한

@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-c24543868922/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-c24543868922
-projection_sha256: 507da2a6a72e6a5dcb80c41773b4457c9989b38e69d90cd4a488dfe05d77c06d
+projection_sha256: cdf7f97bd60fc61c78fa91b8c1786368afcd2643b2163a9f7a9c6cd2fa4fa863
 parent: SRE
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/sre
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 오류 예산

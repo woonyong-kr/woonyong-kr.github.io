@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-d214087bdb5a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-d214087bdb5a
-projection_sha256: 0b750a2eeb63b7609230c8732ca5302a21166170b6812829c6b8b2e9c9dfeb27
+projection_sha256: bf22fac2b84ba78fb7cf4396dc535a064227529daa8be5ca982356324953e9a4
 parent: 동시성
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/concurrency
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 공유 상태

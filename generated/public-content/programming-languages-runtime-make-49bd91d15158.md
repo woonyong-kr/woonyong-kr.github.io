@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-make-49bd91d15158/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-make-49bd91d15158
-projection_sha256: 406571cbd4c72afdecbff401f571a4d18e0bea41b61729cbe1a0df581b130cd4
+projection_sha256: 056ff4ae50591badd7c6e46a5ddfe0903eb5de3301f3477899ec5421bbbdd2de
 parent: Build
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/build-tools
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # Make

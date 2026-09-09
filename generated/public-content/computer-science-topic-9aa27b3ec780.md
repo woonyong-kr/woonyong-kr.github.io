@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-9aa27b3ec780/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-9aa27b3ec780
-projection_sha256: 10eb16a21be4ba8e1440c02481bd2f54722e5e9594b54b6180232938794c79be
+projection_sha256: 502b6ee4391c48cc2e1f45945d533585e24391e8763f74bcaf6e994f35eba67c
 parent: Backtracking
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-a4b4b3ae6cc6
 grand_parent: 알고리즘
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 상태 공간

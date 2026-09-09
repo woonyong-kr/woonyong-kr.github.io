@@ -6,14 +6,14 @@ permalink: /wiki/programming-languages-runtime-topic-11f8261f34b0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-11f8261f34b0
-projection_sha256: 5bbe0576bbdb72437dc7b0fbfd9ff32904b246f5aedfed9382dfdae3cef11319
+projection_sha256: fc9bb52376308e21adfb3d23adfc9913014637acee5012c094ffa15023cc815b
 parent: Python
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/python
 search_terms:
 - 클래스
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # Class

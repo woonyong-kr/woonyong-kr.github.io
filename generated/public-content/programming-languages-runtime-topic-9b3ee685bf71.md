@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-9b3ee685bf71/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-9b3ee685bf71
-projection_sha256: 0c2077814fda426a40cd46250d21575e41c22731c770297f117241cb870d6119
+projection_sha256: 925064a346937355c735bedcef32a9edbfd3107d726a1ce803e76aa96b77638e
 parent: 타입 시스템
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/type-system
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 구조적 타입

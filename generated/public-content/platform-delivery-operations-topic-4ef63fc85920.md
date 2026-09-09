@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-4ef63fc85920/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-4ef63fc85920
-projection_sha256: fa9a811f309d21be783daf4e1c9fa82136f804d8444c3e947b5ef0e485d717ba
+projection_sha256: 5b434c6fd755e7c16496db71783dddd515f2a4bb610d977dd66caa067bccd861
 parent: 장애 대응
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/incident-response
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 탐지

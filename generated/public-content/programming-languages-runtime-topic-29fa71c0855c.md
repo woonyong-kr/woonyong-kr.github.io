@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-29fa71c0855c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-29fa71c0855c
-projection_sha256: 21d4afcd74795b5dadf2718d4e5abe9de95041e74316604de2a0411e4c72b08a
+projection_sha256: c68699e746f30e93a4f9a1b991af42559f439abe102d492ed66ff77e59e43058
 parent: 타입 시스템
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/type-system
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 변성

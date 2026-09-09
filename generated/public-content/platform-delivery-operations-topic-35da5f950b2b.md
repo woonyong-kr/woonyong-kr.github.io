@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-35da5f950b2b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-35da5f950b2b
-projection_sha256: 782398d9abcd4bd4defeaab9f5ae95e1afea367a0441f67f94a6234295425302
+projection_sha256: 598d836fd3c17fc8fc0b4dfbea615d0325e3c8fd489d6020a50023df88691535
 parent: Kubernetes
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/kubernetes
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 서비스 연결

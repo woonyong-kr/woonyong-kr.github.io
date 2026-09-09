@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-grpc-b2fbe9ed68c9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-grpc-b2fbe9ed68c9
-projection_sha256: 39707ab3ce25fb594d196bdd67187bfb335b6c6b02a6806a2ce06f6aa421a2b8
+projection_sha256: 06bcab2248ffe26f37035632f0fe48faaa9f25430ef175c2a97c5095611d28d6
 parent: API
 content_status: planned
 public_parent_id: Wiki/backend-services/api
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # gRPC

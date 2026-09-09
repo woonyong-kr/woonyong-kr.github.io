@@ -6,11 +6,11 @@ permalink: /wiki/frontend-flexbox-2b8c709845f8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-flexbox-2b8c709845f8
-projection_sha256: a626ba6b46b7bf57a6f9fcab39097e056798d22c439284ed3fd63ffcf1f6fc19
+projection_sha256: dc29313e0e754e3ac21ddd832b4cfcb1e7c89ffddfcb99d8f714855377313e09
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Flexbox

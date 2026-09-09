@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-c52601bb62cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-c52601bb62cb
-projection_sha256: 24a38bf0f17fe3ffda8009275d76bd360a3d199beaad67d6fc6deea202ecba6d
+projection_sha256: 732d1c685ffd1c10dad4ae789fc0f97c6acdfe878e3d6b9beba640a05fc511f5
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 반응형 화면

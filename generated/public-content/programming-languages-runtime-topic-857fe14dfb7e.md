@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-857fe14dfb7e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-857fe14dfb7e
-projection_sha256: 58bbeab4f29508a52477cfdfaf6b2a0148d5b19cb1a77ae9d886038c57727e3f
+projection_sha256: 5078d3c543128eef3498abebaa1462aaf54eca935944a0f4da7bf4b7027fc8f3
 parent: Kotlin
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/kotlin
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 함수

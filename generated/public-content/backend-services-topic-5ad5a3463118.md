@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-5ad5a3463118/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-5ad5a3463118
-projection_sha256: 46c890d789e5d05b6089c959b31b9c7fa9ce729dc184eaab92e65728c97eb679
+projection_sha256: 5965c72a4414a019d86329cd428f38e9715854563e3af6547774dfd85d6ba8c7
 parent: Test
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 테스트 피라미드

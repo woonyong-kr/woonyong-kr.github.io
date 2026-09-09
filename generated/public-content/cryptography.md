@@ -6,11 +6,11 @@ permalink: /wiki/cryptography/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security/cryptography
-projection_sha256: 2163b93f9cca47960a1adfc7748c7a92051748bfc83f49ad4b486917d33da426
+projection_sha256: 3e05faca7458db30fc879aca01adb47bbd030b5590db481ef57c04f8f0a31c24
 parent: 보안
 content_status: planned
 public_parent_id: Wiki/security
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 암호학

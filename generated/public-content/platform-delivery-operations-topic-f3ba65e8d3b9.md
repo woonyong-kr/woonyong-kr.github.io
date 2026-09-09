@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-f3ba65e8d3b9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-f3ba65e8d3b9
-projection_sha256: d6ff7ca26e8ae8846c626a0289f4615b6ce97713e7c66ce44d3414e136b172a8
+projection_sha256: d934f8e0f047b216057ef00ad6d657b1a92ab8c2bf6d5459936d103816b5f41e
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # 컴퓨팅

@@ -6,8 +6,8 @@ permalink: /wiki/computer-science-topic-9fc1075ed9f5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-9fc1075ed9f5
-projection_sha256: feb1e7e4d977717f3e14e167a42a03722276adfce358bc3bd938f1b20693524c
-parent: 알고리즘·수학
+projection_sha256: 8eebc306d8d6349fcc22eca07896e2d27f0d0d124ef47e234f271b96a4c28ef6
+parent: CS
 content_status: planned
 public_parent_id: Wiki/computer-science
 ---

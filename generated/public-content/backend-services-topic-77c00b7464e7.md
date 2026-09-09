@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-77c00b7464e7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-77c00b7464e7
-projection_sha256: 8daea195dc8fb4c0091ad9e7c93bb402b0784e79031869755e423f45045ac648
+projection_sha256: 9a59617bcdca667199223964b058209399835bcb682a8b6d484c4f4285a0c365
 parent: 서버 안정성
 content_status: planned
 public_parent_id: Wiki/backend-services/reliability
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 자원 격리

@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-03864c770683/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-03864c770683
-projection_sha256: d6ce43931bfd33041ca1661f5c9145fa2c73492e0165efe58a00735643c178b8
+projection_sha256: 62f7ad0d412c1f3692ac8cb6a21fa8f4607d6cb0ae853a6dcd40cd28009a4219
 parent: 백그라운드 작업
 content_status: planned
 public_parent_id: Wiki/backend-services/background-jobs
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 작업 예약

@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-4eaa3536196a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-4eaa3536196a
-projection_sha256: ac67f5c9e21321f2361991bd08dae4cec79108e1341e21b73e80065a781c38e5
+projection_sha256: f46501e0586f80e1eba6e5becb1d00928e4b54ec9bf81159d2e6a5c6895f055e
 parent: Hash Table
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
 search_terms:
 - 리해싱
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # Rehashing

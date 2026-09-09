@@ -6,8 +6,8 @@ permalink: /wiki/frontend-next-js-39390d365286/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-next-js-39390d365286
-projection_sha256: bfada459218356d8a37b31e6bbcf8f7e43342d8ba9f3b84c8b99ef1b2b9b9cc1
-parent: 프론트엔드
+projection_sha256: 2c259187e4d5d78bc805a3eceddf128ca7da67a38d58d2714ab5eefa656cf217
+parent: Frontend
 content_status: planned
 public_parent_id: Wiki/frontend
 ---

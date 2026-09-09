@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-ast-9b6743cad47b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-ast-9b6743cad47b
-projection_sha256: 0564f3e646a49812b58f58a61b9835ca51312463ae5ba8cd48078542f5b851eb
+projection_sha256: b10cd34078b767b9a34038c9819ce68affc1f13e44cd6b9496bba583f3de40a4
 parent: 언어 구현
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-d46c68f1e1ae
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # AST

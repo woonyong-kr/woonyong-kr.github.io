@@ -6,11 +6,11 @@ permalink: /wiki/programming-languages-runtime-topic-21fc4c53481d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-21fc4c53481d
-projection_sha256: 263734c7503e99f9400e5ff5cf5e14cf32ea1f1c9078020d977e6ba859a2ce0a
+projection_sha256: ae5f34dea898614e284faa32b239eefa5cac3daf587ea7b1cb7e7eea12a2895c
 parent: 언어 구현
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-d46c68f1e1ae
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # 중간 표현

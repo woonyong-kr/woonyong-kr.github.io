@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-2f692fc9bbdb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-2f692fc9bbdb
-projection_sha256: 0cc18113d822ba421c4cc59b7e2a5dc09a7c2b245c68102c6d7a9df7f1087817
+projection_sha256: fecd72ebe76f30623e558950903916b9d66ba416ca84518dda189d900af8a882
 parent: .NET
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-net-cc4b26d73ff5
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 관리 코드

@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-84929f4caac7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-84929f4caac7
-projection_sha256: d8a0ee4430ca6b8909681f9512524f0d0e7c7d3cee558d949df0089c9495f79d
+projection_sha256: 6dc4884ed9b66dfe43e68b7f240cdb2441a33999f7ca2bdc7e6f9bf5c283dcaa
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 책임 분리

@@ -6,12 +6,12 @@ permalink: /wiki/amazon-bedrock/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/cloud/amazon-bedrock
-projection_sha256: d1e6eab34252aff2e43c0e21a2dbb5e25092e62bf3d83e9838d699d246f66f3a
+projection_sha256: 2c8a56a7e623eccf52059344005f84e9e6331f5382c6f827cfef9baf37d6e73d
 parent: 관리형 서비스
 content_status: ready
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-f5955687c1b2
 grand_parent: 클라우드
-ancestor: 플랫폼
+ancestor: Platform
 ---
 
 # Amazon Bedrock

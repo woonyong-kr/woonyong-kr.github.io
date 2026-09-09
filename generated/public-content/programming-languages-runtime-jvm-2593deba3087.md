@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-jvm-2593deba3087/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-jvm-2593deba3087
-projection_sha256: 2da3113bf033009d29ea62344a522ccaf021d783670dd1cdea701b25c1a30287
+projection_sha256: df2fbb1c1c7ebc6a8e366b3ddfadb3a1aee98a9ee50535e18c23339922c7c8e4
 parent: JVM
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/jvm
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # JVM 메모리

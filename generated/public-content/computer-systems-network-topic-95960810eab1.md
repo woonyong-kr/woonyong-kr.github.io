@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-95960810eab1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-95960810eab1
-projection_sha256: 27dcc86472f0893f1883938009016a9ee25b12cbb484f8dd58cc714e4936151a
+projection_sha256: 4ec47f395b52e1ed342ae579f2768c8bd923de3f30116f1152e7feeeb55c0146
 parent: Scheduling
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-80c365ceda9a
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 공정성

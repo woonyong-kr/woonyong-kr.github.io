@@ -6,8 +6,8 @@ permalink: /wiki/build-tools/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/build-tools
-projection_sha256: 894b098f36ed482cf453f436a6fee882a4a90cd40ffc9c006c7bdbaadd5b8e3a
-parent: 프로그래밍
+projection_sha256: f0e82c15d5d9cb83b44eae66ae983ce13f9a8f31bf8698917d379d83356041e5
+parent: Programming
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime
 search_terms:

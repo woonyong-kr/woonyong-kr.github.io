@@ -6,8 +6,8 @@ permalink: /wiki/linux/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/linux
-projection_sha256: 395e9b8d48de38ca737dab31890bc322cef4857b4d01485a64a9a59d4de92902
-parent: 플랫폼
+projection_sha256: 74c1fca7ce2155eb729d026ec6bfde84c390a40fef1a730182dd4d609dac5236
+parent: Platform
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 ---

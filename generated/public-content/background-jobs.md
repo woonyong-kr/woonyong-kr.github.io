@@ -6,8 +6,8 @@ permalink: /wiki/background-jobs/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/backend-services/background-jobs
-projection_sha256: 87caeec073d96eb70a51ced9d983a2769aa4eac58ea134a380e17d4d62ea8d6f
-parent: 백엔드
+projection_sha256: 52175176d74fd7f1366cb0bc37fae363ef125d1b5ee7faf58652abd6fcdb77b9
+parent: Backend
 content_status: planned
 public_parent_id: Wiki/backend-services
 ---

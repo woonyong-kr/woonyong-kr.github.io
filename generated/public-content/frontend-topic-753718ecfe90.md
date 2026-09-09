@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-753718ecfe90/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-753718ecfe90
-projection_sha256: 766b7140bd87518c6515c3bd30f98e6942a2acb36f5b30b22a3c9c436c70438e
+projection_sha256: d1eb42a428de2986215824d4ddaebe6eee1525237ce164605ccd5daa1019d56a
 parent: 모바일
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-topic-005264b34dcd
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 앱 배포

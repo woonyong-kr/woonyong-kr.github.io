@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-bean-887c00c03a53/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-bean-887c00c03a53
-projection_sha256: 521941ff79c0325dea8f622392f802c5caf7d83119d8236ca5161cb0b1d190ab
+projection_sha256: 32e67a11527b7c2fc352f3701e10f988c973a7de6a7f90d395df30c1a2094beb
 parent: Spring
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-spring-2990236375de
 grand_parent: 서버 프레임워크
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # Bean

@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-e6236374085c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-e6236374085c
-projection_sha256: d653a7fe11635237bd54ef4ea50c3c2dd6297155139786c065d89d1f3e8bff09
+projection_sha256: 200854fb4114de79fc56aa377f8302e5931d7c71959cef56e651fa9e42943451
 parent: 단위 테스트
 content_status: planned
 public_parent_id: Wiki/testing/unit
 grand_parent: Test
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 격리

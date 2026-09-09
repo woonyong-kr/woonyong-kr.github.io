@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-59c9462df354/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-59c9462df354
-projection_sha256: 8563431ff98e364393b3f601055761304330fd6de5644b37341d8222dfab0e7d
+projection_sha256: 250dc41d62311b17cbc1190a277bbe5926d837d6597014db6de3d9dc53b5d2e0
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 계층형 구조

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-664b5a18219a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-664b5a18219a
-projection_sha256: 62c7270717fa7a757e19e5ca153de877527d50a84c1879bccbf8f30cd83c8a98
+projection_sha256: 55c7d2c30ea774847158c8ad6280c7363f7dcab413553c4bb2a384a460468783
 parent: 서로소 집합
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-5962577d796a
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 경로 압축

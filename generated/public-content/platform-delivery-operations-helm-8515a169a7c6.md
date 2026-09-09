@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-helm-8515a169a7c6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-helm-8515a169a7c6
-projection_sha256: 5449ca96c3ef321530e0230d4ecf278abde5e41f80ba9926a25c0219bc9f64eb
+projection_sha256: 6887194f70bf51a67dfe49b7e25b2a0d72ab95084ec4881c9e0aa9944f188af2
 parent: 자원과 운영
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-5e2c3573a662
 grand_parent: Kubernetes
-ancestor: 플랫폼
+ancestor: Platform
 ---
 
 # Helm

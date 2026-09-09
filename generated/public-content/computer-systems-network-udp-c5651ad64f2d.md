@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-udp-c5651ad64f2d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-udp-c5651ad64f2d
-projection_sha256: 494e328430fedb14fd88c3d7a768812c4aaaebafda133fbc437c43484d842590
+projection_sha256: cc8c085225c51ba163a76baa6fc0b97745d9b57c8a3a968e346fed90753e6ffb
 parent: 전송 프로토콜
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # UDP

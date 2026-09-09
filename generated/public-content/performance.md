@@ -6,10 +6,11 @@ permalink: /wiki/performance/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/performance
-projection_sha256: 2cd658d6db3aec40debeee48a107986e40419d3ae43ad330da06919a299a3c67
-parent: 시스템
+projection_sha256: c12291a5325bee967139dc3bf9b26f5a244ea51d4b9f3660f9ae60e9b417694c
+parent: Systems
 content_status: planned
 public_parent_id: Wiki/computer-systems-network
+grand_parent: CS
 ---
 
 # 성능 분석

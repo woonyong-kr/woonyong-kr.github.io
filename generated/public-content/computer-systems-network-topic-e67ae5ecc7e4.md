@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-e67ae5ecc7e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e67ae5ecc7e4
-projection_sha256: dc26b0e65e63f500e4ea8daf0f9f764aed149356f1ef0047b48a044c5e00b175
+projection_sha256: 10560918a48946194596c464650ca8d4aae07a61aa3d3eb1a2aee9820e91c7a1
 parent: HTTP
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-http-2fe226962c51
 search_terms:
 - 헤더
 grand_parent: 네트워크
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Header

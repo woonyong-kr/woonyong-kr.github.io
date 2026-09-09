@@ -6,11 +6,11 @@ permalink: /wiki/java/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/java
-projection_sha256: d075f6465b297d17a693b88ab18565a62aaa549bfac40dbfcfc1be7985cd0c85
+projection_sha256: dd936c570ed3772f64b1767325db1918b9fd7be0645f920597b95d11f11b6337
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # Java

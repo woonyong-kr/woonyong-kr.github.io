@@ -6,8 +6,8 @@ permalink: /wiki/observability/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/observability
-projection_sha256: 7046e3494131318fdcc6a39e871bd7231d5202222e5765f4aaffb4a6cd8b264b
-parent: 플랫폼
+projection_sha256: 8de28acb8d2bf5870fada113723371a2ab7662706dd8c91d5a1693a46b3c0923
+parent: Platform
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 search_terms:

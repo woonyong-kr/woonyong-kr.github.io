@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-jwt-d09d862aafdc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-jwt-d09d862aafdc
-projection_sha256: d220ad2533c6a27976b80a936e8da99d3653832e69a45f260235c169eb5df32b
+projection_sha256: 7993415ae1692d980ad7fedbe823c1cd985bf1aed4f1f07f3c2c3dae15211cce
 parent: 인증·인가
 content_status: planned
 public_parent_id: Wiki/backend-services/auth
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # JWT

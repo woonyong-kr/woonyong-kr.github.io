@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-mlfqs-db815d97f954/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mlfqs-db815d97f954
-projection_sha256: 2fa034b30810c8fdec243cbcb9d6e3cb9251af95ded1040066bd71cce0c9a787
+projection_sha256: 345f3a01fa2211ac3336003f369bbd7fae1ef8cc86daad67afaba6f743fb36a5
 parent: 스레드 구현
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-936b351311c8
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # MLFQS

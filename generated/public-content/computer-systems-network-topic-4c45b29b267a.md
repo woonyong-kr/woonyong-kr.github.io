@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-4c45b29b267a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4c45b29b267a
-projection_sha256: ba39b62cddca9104004ff7848cf7fc4e36edcfe0ff6ba8f7f7855e5f90953588
+projection_sha256: 297623f8c5fb9eb2526b8a717521aeeff2d3c5344db0c57d806cec0354f61360
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 병목

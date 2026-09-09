@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-9046fd0746f6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-9046fd0746f6
-projection_sha256: 19dbe98c1efb4319bb2c48afec1732c0550665013e44a791c5de9a0de175bcaa
+projection_sha256: e81d59601f6e6edbde41f366bafae08c4f96908bc516001b59a91ecbd2477acb
 parent: 서버 성능
 content_status: planned
 public_parent_id: Wiki/backend-services/performance
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 일괄 처리

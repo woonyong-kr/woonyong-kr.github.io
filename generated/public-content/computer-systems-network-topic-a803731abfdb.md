@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-a803731abfdb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a803731abfdb
-projection_sha256: e199be335b9caeba27f6b321ee03c553e5aa57f70ea9e517cbe48fb7f644d573
+projection_sha256: b63db45bfb0585e94e444363f3ce02824a291815e1fe022655e29905382ae66e
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 파일 접근

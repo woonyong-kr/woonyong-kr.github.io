@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-7b8f000c7073/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-7b8f000c7073
-projection_sha256: cfbd18cb78a097e4f90359281fa9e0bac8556057c8671c7c2fdd1b3097a604ff
+projection_sha256: 0a0b1dbf8cd38400411357e0c6e60fdd27136712cd6c0adc13e780f1a7320669
 parent: 네트워크
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/network
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 트래픽 처리

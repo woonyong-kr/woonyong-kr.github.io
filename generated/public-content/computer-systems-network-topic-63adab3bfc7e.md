@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-63adab3bfc7e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-63adab3bfc7e
-projection_sha256: 0202cf4390b2ca3bed9e3f9c43ab360663af58ba75002435ae96a55d31522fff
+projection_sha256: ed344b4984a06c2ba6ac0eda886767a20faffa5d90e928963aff8bd7eb45329e
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
 search_terms:
 - 저널링
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # Journaling

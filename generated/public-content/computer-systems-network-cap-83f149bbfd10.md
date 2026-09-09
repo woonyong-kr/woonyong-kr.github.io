@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-cap-83f149bbfd10/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cap-83f149bbfd10
-projection_sha256: d7a76e4bd56dc38551753fcba2a27c596295f6b645f84ea36d171716b427563a
+projection_sha256: 019c0f5c87f8dd9d33753c43899219a5ef1a771c38ad835d94b19e324ab79491
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # CAP

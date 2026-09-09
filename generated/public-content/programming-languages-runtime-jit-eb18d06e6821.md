@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-jit-eb18d06e6821/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-jit-eb18d06e6821
-projection_sha256: 502369390b8dcb6a6f98da537a45aef6048dffb9709791a2dcac2743cb2b501e
+projection_sha256: c6f6f9e384fdd6d274ceee7a519dc9421f804df340ca626462c241f44c1b7276
 parent: JVM
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/jvm
 grand_parent: Runtime
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # JIT

@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-0f198737c9d2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-0f198737c9d2
-projection_sha256: 0300cab70fcda94c68a07a363f00a1eecac1d4b74f2f90191cff81629ec035a1
+projection_sha256: 8822f20c80cdc0904c91a29ced1d9697c58669355fcc8463049b1d5b69667a45
 parent: HTML
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-html-5414fdf42c76
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 미디어

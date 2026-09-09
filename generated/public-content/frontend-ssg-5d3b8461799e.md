@@ -6,11 +6,11 @@ permalink: /wiki/frontend-ssg-5d3b8461799e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-ssg-5d3b8461799e
-projection_sha256: 5d859dd837a29df26bdb72d3161e6550f4e47bc8d2921b1bf31f3b9096eca2ff
+projection_sha256: 7a7591f9b2525f279b1e5ea4a79f4f8c3f6252f564e6a4c41a1f8911f860187e
 parent: Next.js
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-next-js-39390d365286
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # SSG

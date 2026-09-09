@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-8ab1810f5bd3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-8ab1810f5bd3
-projection_sha256: df108efc0b7d2ed34a403c44a75b5ed26c3f4654b37d7fbaf7fba71aa006ecb0
+projection_sha256: 2fef3c33ef1506b32a5022df6d9391cbbb1d9dae8d26cb0d7e41e6303728c82d
 parent: JavaScript
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/javascript
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 객체

@@ -6,13 +6,13 @@ permalink: /wiki/frontend-topic-57fd010ee72b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-57fd010ee72b
-projection_sha256: b1c500d13e48f6e8a61b94fdaf1cdcbbd171ccfdbc057de7edb5ee21e7e94f6e
+projection_sha256: e783694754ddccde0e72013eb639bb824b7033d5fd64262b5973fe20b3ff55f5
 parent: HTML
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-html-5414fdf42c76
 search_terms:
 - 폼
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # Form

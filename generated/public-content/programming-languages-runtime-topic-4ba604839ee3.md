@@ -6,12 +6,12 @@ permalink: /wiki/programming-languages-runtime-topic-4ba604839ee3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-4ba604839ee3
-projection_sha256: de4a4db2eb8f891dabdc30e2af025c22a6b627c7ae6a9de81ab02c44402219b6
+projection_sha256: 543f67a369f2fc5d4b1fe96f7a952a7bdb26ba5dcdac5e91a93c6f46ec46d9df
 parent: C++
 content_status: planned
 public_parent_id: Wiki/programming-languages-runtime/cpp
 grand_parent: 프로그래밍 언어
-ancestor: 프로그래밍
+ancestor: Programming
 ---
 
 # 객체 수명

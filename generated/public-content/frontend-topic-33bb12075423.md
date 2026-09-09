@@ -6,11 +6,11 @@ permalink: /wiki/frontend-topic-33bb12075423/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-33bb12075423
-projection_sha256: 42397936d556d0c069d52d498394358d212b5dd5e802c696c5e8cba9b65209b2
+projection_sha256: 77f27b0b953c1b5145f969cedfca8d2b42f793f41edf6d30d46c285bf32e9a4a
 parent: CSS
 content_status: planned
 public_parent_id: Wiki/keywords/frontend-css-d66740ffcb8f
-grand_parent: 프론트엔드
+grand_parent: Frontend
 ---
 
 # 박스 모델

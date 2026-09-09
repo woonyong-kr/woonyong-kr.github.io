@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-c8385a381186/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-c8385a381186
-projection_sha256: cf062f2e29357a4487b94a4cd2d3dec927577d56dd08d961053aeadbab31dfd6
+projection_sha256: 75f8c7989a793ac8d8a72cf4a60e8e345c575edb54dcdb2a023db986928caf05
 parent: 시크릿 관리
 content_status: planned
 public_parent_id: Wiki/security/secrets-management
 grand_parent: 보안
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 교체

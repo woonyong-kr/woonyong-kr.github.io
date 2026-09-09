@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-saga-cffd6827f062/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-saga-cffd6827f062
-projection_sha256: 7153e12c36911790d3019acb593cd9fb78ca0b4d067898125d7a9cfe8478d8aa
+projection_sha256: 7a1deca3aadc781b6a025daf0f7f9ce7707c53f8dc1df7b38a8777c85f91c539
 parent: Architecture
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # Saga

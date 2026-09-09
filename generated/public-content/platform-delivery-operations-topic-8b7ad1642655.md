@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-8b7ad1642655/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-8b7ad1642655
-projection_sha256: c83e3ab875aad20be3c650ca40fdee102ada581800ef639db9d1e69abb883730
+projection_sha256: 3bdee3fedb5a09c772f45056faa16a3e4032886c42bbb8d166921729bd719f1c
 parent: 개발 도구
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-dd9189189d5c
 search_terms:
 - 플러그인
-grand_parent: 플랫폼
+grand_parent: Platform
 ---
 
 # Plugin

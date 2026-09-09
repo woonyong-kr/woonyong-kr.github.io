@@ -6,11 +6,12 @@ permalink: /wiki/computer-systems-network-topic-f41bf3d41ad0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-f41bf3d41ad0
-projection_sha256: 1d7bda5732c9ee3ff6d726cc7024ce706b77fec2953db898d486a9c032cdf856
+projection_sha256: 3ca1014e320970b5e82264292cc82d515406fb2ddc04609faad59ec9005466e0
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
-grand_parent: 시스템
+grand_parent: Systems
+ancestor: CS
 ---
 
 # 리더 선출

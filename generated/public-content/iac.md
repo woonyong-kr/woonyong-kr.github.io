@@ -6,8 +6,8 @@ permalink: /wiki/iac/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/iac
-projection_sha256: 2ce0eccd178774db6e6e4891c9d4cae5ec285c9cbe9ad32b1e57af2a6eb1ccac
-parent: 플랫폼
+projection_sha256: bfb7efd54443c661f3668cd77d912003be325bcc104b980381040cdb6afdf4cf
+parent: Platform
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 ---

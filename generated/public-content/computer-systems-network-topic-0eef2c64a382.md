@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-0eef2c64a382/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0eef2c64a382
-projection_sha256: 5b32cce81f687819df29e55f2b5f9d88862fbca3ea41ec43ecc9aa683621021c
+projection_sha256: 66535aa643f72c9ee23819287bc520c0540f9cc09d86464532d2ed3aa9dc90bf
 parent: 스레드 구현
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-936b351311c8
 grand_parent: PintOS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 우선순위 기부

@@ -6,11 +6,11 @@ permalink: /wiki/cpp/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/programming-languages-runtime/cpp
-projection_sha256: 554fde5afc248d39b0990f2cc4ba56d123878a88719d04ff3e1a33de3594b03a
+projection_sha256: 8e5e84f096f42835274de57ff3a0125b427f23ba04062af523f0f46a1754bd00
 parent: 프로그래밍 언어
 content_status: planned
 public_parent_id: Wiki/keywords/programming-languages-runtime-topic-91f4e521b7e6
-grand_parent: 프로그래밍
+grand_parent: Programming
 ---
 
 # C++

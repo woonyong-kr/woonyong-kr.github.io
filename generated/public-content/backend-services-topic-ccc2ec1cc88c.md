@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-ccc2ec1cc88c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ccc2ec1cc88c
-projection_sha256: f7b157338d73d28d9096d88996d1bde9f460e23836990edf0b58cab0d023709b
+projection_sha256: e73e21d3d8e9eb669a31953662f5d994bb46788a1a91ee30fafd6dc78b2788c4
 parent: 실시간 통신
 content_status: planned
 public_parent_id: Wiki/backend-services/realtime
-grand_parent: 백엔드
+grand_parent: Backend
 ---
 
 # 느린 소비자 처리

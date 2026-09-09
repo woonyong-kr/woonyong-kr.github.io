@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-ae5415749c60/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-ae5415749c60
-projection_sha256: 26453d3239fdcaadadf76c925223afc9d20051b030e80473befcdb680ffd6d6a
+projection_sha256: 9f60fdb72875d454a467283f447da8b5b370964ad6a92eccc5908c1b9ab04ea0
 parent: Graph
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
 grand_parent: 자료구조
-ancestor: 알고리즘·수학
+ancestor: CS
 ---
 
 # 인접 리스트

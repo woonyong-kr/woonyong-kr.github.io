@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-8086ec466d32/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-8086ec466d32
-projection_sha256: 82594aa1678c36d48032feda04be946d0c3144581fe50aa2b65729a159e782ea
+projection_sha256: c8d90c48fd812ed5cb6aefcd00da78e7a4e30d24a1bf90e2f645de6c152770c5
 parent: 교착 상태
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-41c6d9a5eb18
 grand_parent: OS
-ancestor: 시스템
+ancestor: CS
 ---
 
 # 탐지

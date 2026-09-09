@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-ad84bfdf95c4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ad84bfdf95c4
-projection_sha256: 60d2c3e99ea8322291fd7bca8fa646a7e528ade701d980511404d866e88c8251
+projection_sha256: f465b154b66917b547be4297f6880dfdbf1e5880034fa7dbce7204b8fb0d1dad
 parent: 위협 모델링
 content_status: planned
 public_parent_id: Wiki/security/threat-modeling
 grand_parent: 보안
-ancestor: 백엔드
+ancestor: Backend
 ---
 
 # 위험 평가
