@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
 
-import { validatePublicProjection } from "./check-public-projection.mjs";
+import { readPublicProjection, readPublicProjectionBundle, validatePublicProjection } from "./check-public-projection.mjs";
 
 const CONFIG = `content_root: generated/public-content
 input_owner: Obsidian Vault
@@ -145,5 +145,52 @@ test("rejects duplicate projection identity at different URLs", async () => {
   await withFixture(publicDocument(), async (root) => {
     await writeFile(resolve(root, "generated/public-content/second.md"), publicDocument().replace("/wiki/example/", "/wiki/second/"));
     await assert.rejects(validatePublicProjection(root));
+  });
+});
+
+function publicRedirect() {
+  return `---
+layout: null
+permalink: /wiki/old-example/
+redirect_target: /wiki/example/
+nav_exclude: true
+search_exclude: true
+sitemap: false
+---
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>문서가 이동했습니다</title>
+<link rel="canonical" href="{{ page.redirect_target | absolute_url | escape }}">
+<meta http-equiv="refresh" content="0; url={{ page.redirect_target | relative_url | escape }}">
+</head>
+<body><p><a href="{{ page.redirect_target | relative_url | escape }}">문서 열기</a></p></body>
+</html>
+`;
+}
+
+test("public redirects stay outside document identities and counts", async () => {
+  await withFixture(publicDocument(), async root => {
+    await writeFile(resolve(root, "generated/public-content/old-example.html"), publicRedirect());
+    assert.equal((await readPublicProjection(root)).length, 1);
+    assert.equal((await readPublicProjectionBundle(root)).redirects.length, 1);
+    assert.equal((await validatePublicProjection(root)).redirects, 1);
+  });
+});
+
+for (const [name, change] of [
+  ['external destination', text => text.replace('redirect_target: /wiki/example/', 'redirect_target: https://example.com/')],
+  ['missing target', text => text.replace('redirect_target: /wiki/example/', 'redirect_target: /wiki/missing/')],
+  ['self redirect', text => text.replace('redirect_target: /wiki/example/', 'redirect_target: /wiki/old-example/')],
+  ['unknown metadata', text => text.replace('layout: null', 'layout: null\nprojection_id: private/item')],
+  ['search inclusion', text => text.replace('search_exclude: true', 'search_exclude: false')],
+  ['arbitrary HTML', text => text.replace('</head>', '<script>alert(1)</script></head>')],
+]) test(`rejects redirect ${name}`, async () => {
+  await withFixture(publicDocument(), async root => {
+    await writeFile(resolve(root, "generated/public-content/old-example.html"), change(publicRedirect()));
+    await assert.rejects(readPublicProjectionBundle(root));
   });
 });

@@ -10,7 +10,7 @@ require_relative '../_plugins/wiki_visibility'
 class WikiVisibilityTest < Minitest::Test
   def page(id, status, parent = nil)
     OpenStruct.new(data: { 'projection_id' => id, 'content_status' => status,
-                          'public_parent_id' => parent })
+                          'public_parent_id' => parent, 'permalink' => "/wiki/#{id}/" })
   end
 
   def test_preview_keeps_every_planned_keyword
@@ -37,5 +37,17 @@ class WikiVisibilityTest < Minitest::Test
   def test_retained_parent_cycle_fails
     site = OpenStruct.new(config: {}, pages: [page('a', 'ready', 'b'), page('b', 'planned', 'a')])
     assert_raises(RuntimeError) { WNDocs.apply_visibility(site) }
+  end
+
+  def test_redirect_visibility_follows_target_including_retained_planned_ancestors
+    branch_redirect = OpenStruct.new(data: { 'redirect_target' => '/wiki/branch/' })
+    hidden_redirect = OpenStruct.new(data: { 'redirect_target' => '/wiki/future/' })
+    site = OpenStruct.new(config: { 'wiki_show_planned' => false }, pages: [
+      page('branch', 'planned'), page('ready', 'ready', 'branch'),
+      page('future', 'planned'), branch_redirect, hidden_redirect
+    ])
+    WNDocs.apply_visibility(site)
+    assert_includes site.pages, branch_redirect
+    refute_includes site.pages, hidden_redirect
   end
 end

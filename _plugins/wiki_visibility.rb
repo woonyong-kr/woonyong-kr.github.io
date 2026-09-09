@@ -20,8 +20,13 @@ module WNDocs
         parent = by_id[parent].data['public_parent_id']
       end
     end
+    retained_urls = retained.keys.to_h { |id| [by_id[id].data['permalink'], true] }
     site.pages.reject! do |page|
-      page.data['projection_id'] && !retained[page.data['projection_id']]
+      if page.data['redirect_target']
+        !retained_urls[page.data['redirect_target']]
+      else
+        page.data['projection_id'] && !retained[page.data['projection_id']]
+      end
     end
   end
 end

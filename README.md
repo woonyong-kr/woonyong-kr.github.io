@@ -7,6 +7,11 @@ Obsidian Vault에 있고, 이 저장소는 승인된 projection과 테마·웹 �
 
 - `generated/public-content/`는 Vault producer의 결과입니다. 생성 Markdown과
   `projection_sha256`를 사이트에서 수동 수정하거나 재계산하지 않습니다.
+- 공개 문서를 통합할 때는 대표 정본의 `public_redirect_from`에 확인된 이전 공개 slug를
+  명시합니다. Producer가 기존 URL에서 대표 문서로 이동하는 HTML을 생성하며, 문서 ID나
+  본문을 복제하지 않습니다. 다른 활성 URL과의 충돌·외부 목적지는 거절하고, 비공개 문서의
+  이름이나 별칭에서 공개 URL을 추정하지 않습니다. 이 파일은 navigation·검색·sitemap에서
+  제외하며, `wiki_show_planned`에 따른 대표 문서의 표시 여부를 함께 따릅니다.
 - 공개 검사는 YAML parser와 schema, ID·permalink 유일성, 파일 유형을 검사합니다.
   Jekyll 빌드 후에는 정규화한 렌더링 URL, 검색·sitemap, 전체 배포 파일 목록도 검사합니다.
 - `docs/`에는 기존 URL의 [실행 showcase](https://docs.woonyong.com/docs/ui-components/runnable-code-blocks/)만

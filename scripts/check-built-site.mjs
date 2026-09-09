@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { parse } from 'parse5';
 import { filesUnder, siteConfig } from './site-policy.mjs';
-import { readPublicProjection } from './check-public-projection.mjs';
+import { readPublicProjectionBundle } from './check-public-projection.mjs';
 
 function decode(value) {
   let result = value;
@@ -32,7 +32,7 @@ export function publicUrl(value, base) {
   return url;
 }
 
-export function inspectRenderedHtml(html, pageUrl) {
+export function inspectRenderedHtml(html, pageUrl, forbiddenNavigationPaths = new Set()) {
   const document = parse(html);
   const nodes = [];
   function walk(node) {
@@ -49,7 +49,14 @@ export function inspectRenderedHtml(html, pageUrl) {
       if (['href', 'src', 'action', 'formaction', 'poster', 'data', 'cite', 'background'].includes(name)) {
         // Inline image data has no remote/local location. HTML data URLs are rejected.
         if (name === 'src' && /^data:image\/(?:png|jpeg|gif|webp|avif);base64,[a-z0-9+/=\s]+$/iu.test(value)) continue;
-        urls.push(publicUrl(value, base));
+        const url = publicUrl(value, base);
+        if (name === 'href' && forbiddenNavigationPaths.has(url.pathname)
+            && url.origin === new URL(pageUrl).origin) {
+          for (let ancestor = node.parentNode; ancestor; ancestor = ancestor.parentNode) {
+            if (ancestor.tagName === 'nav') throw new Error('Redirect alias in navigation');
+          }
+        }
+        urls.push(url);
       } else if (name === 'srcset') {
         for (const candidate of value.split(',')) urls.push(publicUrl(candidate.trim().split(/\s+/u)[0], base));
       } else if (name === 'srcdoc') urls.push(...inspectRenderedHtml(value, base));
@@ -66,6 +73,28 @@ export function inspectRenderedHtml(html, pageUrl) {
   return urls;
 }
 
+export function inspectRenderedRedirect(html, targetUrl, pageUrl) {
+  const elements = [];
+  function walk(node) {
+    if (node.tagName) elements.push(node);
+    for (const child of node.childNodes ?? []) walk(child);
+  }
+  walk(parse(html));
+  const attr = (node, name) => node.attrs?.find(item => item.name === name)?.value;
+  const canonical = elements.filter(node => node.tagName === 'link' && attr(node, 'rel') === 'canonical');
+  const refresh = elements.filter(node => node.tagName === 'meta' && attr(node, 'http-equiv') === 'refresh');
+  const robots = elements.filter(node => node.tagName === 'meta' && attr(node, 'name') === 'robots');
+  const anchors = elements.filter(node => node.tagName === 'a');
+  if (canonical.length !== 1 || refresh.length !== 1 || anchors.length !== 1
+      || robots.length !== 1 || attr(robots[0], 'content') !== 'noindex'
+      || !/^0; url=/u.test(attr(refresh[0], 'content') ?? '')
+      || elements.some(node => ['script', 'iframe', 'base', 'form'].includes(node.tagName))) {
+    throw new Error('Invalid rendered redirect structure');
+  }
+  const urls = inspectRenderedHtml(html, pageUrl);
+  if (urls.length !== 3 || urls.some(url => url.href !== targetUrl)) throw new Error('Rendered redirect destination differs from its canonical target');
+}
+
 export function checkFileList(actual, expected) {
   const extras = actual.filter(name => !expected.has(name));
   const missing = [...expected].filter(name => !actual.includes(name));
@@ -75,7 +104,7 @@ export function checkFileList(actual, expected) {
 export async function checkBuiltSite(root) {
   const output = resolve(root, '_site');
   const config = await siteConfig(root);
-  const documents = await readPublicProjection(root);
+  const { documents, redirects } = await readPublicProjectionBundle(root);
   const byId = new Map(documents.map(doc => [doc.projection_id, doc]));
   const retained = new Set(documents.filter(doc => config.wiki_show_planned === true || doc.content_status !== 'planned').map(doc => doc.projection_id));
   for (const id of [...retained]) {
@@ -87,7 +116,11 @@ export async function checkBuiltSite(root) {
     }
   }
   const docs = documents.filter(doc => retained.has(doc.projection_id));
-  const pages = ['index.html', '404.html', 'docs/ui-components/runnable-code-blocks/index.html', ...docs.map(doc => `${doc.permalink.slice(1)}index.html`)];
+  const retainedUrls = new Set(docs.map(doc => doc.permalink));
+  const visibleRedirects = redirects.filter(item => retainedUrls.has(item.redirect_target));
+  const projectedUrl = permalink => new URL(`${(config.baseurl ?? '').replace(/\/$/u, '')}${permalink}`, config.url).href;
+  const redirectPaths = new Set(redirects.map(item => new URL(projectedUrl(item.permalink)).pathname));
+  const pages = ['index.html', '404.html', 'docs/ui-components/runnable-code-blocks/index.html', ...docs.map(doc => `${doc.permalink.slice(1)}index.html`), ...visibleRedirects.map(item => `${item.permalink.slice(1)}index.html`)];
   const assets = [
     'assets/css/just-the-docs-default.css', 'assets/css/just-the-docs-head-nav.css', 'assets/css/just-the-docs-woon-dark.css',
     'assets/css/runnable-code-blocks.css', 'assets/css/runnable-code-blocks-host.css',
@@ -108,18 +141,23 @@ export async function checkBuiltSite(root) {
   const retiredUrls = new Set(JSON.parse(await readFile(resolve(root, 'tests/fixtures/retired-urls.json'), 'utf8')));
   const retired = path => retiredUrls.has(path) || (path.startsWith('/docs/') && !path.startsWith('/docs/ui-components/runnable-code-blocks/'));
   for (const page of pages) {
-    const urls = inspectRenderedHtml(await readFile(resolve(output, page), 'utf8'), new URL(page, config.url).href);
+    const urls = inspectRenderedHtml(await readFile(resolve(output, page), 'utf8'), new URL(page, config.url).href, redirectPaths);
     for (const url of urls) if (url.origin === new URL(config.url).origin && retired(url.pathname)) throw new Error(`${page}: retired demo link`);
     links += urls.length;
+  }
+  for (const redirect of visibleRedirects) {
+    inspectRenderedRedirect(await readFile(resolve(output, `${redirect.permalink.slice(1)}index.html`), 'utf8'), projectedUrl(redirect.redirect_target), projectedUrl(redirect.permalink));
   }
   const search = JSON.parse(await readFile(resolve(output, 'assets/js/search-data.json'), 'utf8'));
   for (const item of Object.values(search)) {
     const url = publicUrl(item.url, config.url);
     if (retired(url.pathname)) throw new Error('Retired demo in search index');
+    if (redirectPaths.has(url.pathname)) throw new Error('Redirect alias in search index');
   }
   const sitemap = await readFile(resolve(output, 'sitemap.xml'), 'utf8');
   for (const [, location] of sitemap.matchAll(/<loc>([^<]+)<\/loc>/gu)) {
     if (retired(publicUrl(location, config.url).pathname)) throw new Error('Retired demo in sitemap');
+    if (redirectPaths.has(publicUrl(location, config.url).pathname)) throw new Error('Redirect alias in sitemap');
   }
   const initial = new Set();
   function initialImports(path) {

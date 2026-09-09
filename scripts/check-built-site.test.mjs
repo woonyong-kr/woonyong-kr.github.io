@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { inspectRenderedHtml, checkFileList } from './check-built-site.mjs';
+import { inspectRenderedHtml, inspectRenderedRedirect, checkFileList } from './check-built-site.mjs';
 import { parseYaml } from './site-policy.mjs';
 
 const base = 'https://docs.example.com/wiki/example/';
@@ -39,4 +39,15 @@ test('rendered Markdown reference links, HTML entities, relative URLs and srcset
 test('unexpected deploy files and missing approved pages fail independently', () => {
   assert.throws(() => checkFileList(['index.html', 'private.html'], new Set(['index.html'])), /unexpected \[private.html\]/u);
   assert.throws(() => checkFileList([], new Set(['index.html'])), /missing \[index.html\]/u);
+});
+
+test('redirect canonical, immediate refresh and fallback share one target', () => {
+  const target = 'https://docs.example.com/preview/wiki/example/';
+  const html = `<html><head><meta name="robots" content="noindex"><link rel="canonical" href="${target}"><meta http-equiv="refresh" content="0; url=/preview/wiki/example/"></head><body><a href="/preview/wiki/example/">Open</a></body></html>`;
+  assert.doesNotThrow(() => inspectRenderedRedirect(html, target, base));
+  assert.throws(() => inspectRenderedRedirect(html.replace('0; url=', '5; url='), target, base), /structure/u);
+  assert.throws(() => inspectRenderedRedirect(html.replace('href="/preview/wiki/example/"', 'href="/wiki/other/"'), target, base), /destination/u);
+  assert.throws(() => inspectRenderedRedirect(html.replace('</body>', '<script>location="/other/"</script></body>'), target, base), /structure/u);
+  assert.throws(() => inspectRenderedHtml('<nav><a href="/wiki/old/">Old</a></nav>', base, new Set(['/wiki/old/'])), /navigation/u);
+  assert.doesNotThrow(() => inspectRenderedHtml('<main><a href="/wiki/old/">Historical link</a></main>', base, new Set(['/wiki/old/'])));
 });
