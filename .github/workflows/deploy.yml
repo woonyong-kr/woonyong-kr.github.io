@@ -16,11 +16,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout source and adapter
         uses: actions/checkout@v6
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
@@ -33,23 +37,36 @@ jobs:
         run: |
           npm ci
           npm --prefix vendor/runnable-code-blocks ci
-          npx playwright install --with-deps chromium firefox webkit
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
           bundler-cache: true
-      - name: Verify production build
+      - name: Select verification scope and confirm prior full evidence
+        id: verification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/select-ci-verification.mjs
+      - name: Install browser engines for full verification
+        if: steps.verification.outputs.mode != 'documents'
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Verify full production build [${{ steps.verification.outputs.environment }}]
+        id: full
+        if: steps.verification.outputs.mode != 'documents'
         run: npm run verify
+      - name: Verify changed publication inputs, build, files and links
+        id: publication
+        if: steps.verification.outputs.mode == 'documents'
+        run: npm run verify:publication
       - name: Save browser failure evidence
-        if: failure()
+        if: failure() && steps.verification.outputs.mode == 'full'
         uses: actions/upload-artifact@v6
         with:
           name: browser-evidence
           path: test-results/
           retention-days: 7
       - name: Upload verified Pages artifact
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && (steps.full.outcome == 'success' || steps.publication.outcome == 'success')
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site

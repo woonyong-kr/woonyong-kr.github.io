@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import browserPages from '../fixtures/browser-pages.json' with { type: 'json' };
 
 for (const { path, language, excerpt } of [
-  { path: '/wiki/platform-delivery-operations-topic-82e47b673856/', language: 'run-python', excerpt: '겹치는 Subnet:' },
-  { path: '/wiki/file-system-fsync/', language: 'gdb', excerpt: 'break inode_write_at' },
+  { path: browserPages.vpc, language: 'run-python', excerpt: '겹치는 Subnet:' },
+  { path: browserPages.fsync, language: 'gdb', excerpt: 'break inode_write_at' },
 ]) {
   for (const javaScriptEnabled of [true, false]) {
     test(`@core ${language} source stays readable after resize with JavaScript ${javaScriptEnabled}`, async ({ browser, baseURL }) => {

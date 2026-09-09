@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import retiredUrls from '../fixtures/retired-urls.json' with { type: 'json' };
+import browserPages from '../fixtures/browser-pages.json' with { type: 'json' };
 
 const showcase = '/docs/ui-components/runnable-code-blocks/';
 const api = 'http://127.0.0.1:4177';
@@ -93,7 +94,7 @@ test('@core no-JS documents retain GitHub and system theme', async ({ browser })
 test('plain documents request no editor/runtime or personal service; viewport loading defers React and TypeScript', async ({ page }) => {
   const requests: string[] = [];
   page.on('request', request => requests.push(request.url()));
-  await page.goto('/wiki/home/');
+  await page.goto(browserPages.home);
   await page.waitForLoadState('networkidle');
   expect(requests.filter(url => /runnable-runtime-|virtual_react|\/esm-|\/v1\//.test(url))).toEqual([]);
   expect(await page.locator('link[rel="stylesheet"][href*="just-the-docs-"]:not(#jtd-head-nav-stylesheet)').count()).toBe(2);
@@ -278,7 +279,7 @@ test('capability header timeout exposes recovery after 2.5 seconds', async ({ pa
 });
 
 test('@core expanded navigation reports its state and toggles with the keyboard', async ({ page }) => {
-  await page.goto('/wiki/pintos/');
+  await page.goto(browserPages.pintos);
   const expanded = page.locator('#site-nav li.nav-list-item.active > button.nav-list-expander');
   expect(await expanded.count()).toBeGreaterThan(0);
   for (const button of await expanded.all()) await expect(button).toHaveAttribute('aria-expanded', 'true');

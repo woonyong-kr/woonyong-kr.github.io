@@ -11,7 +11,8 @@
     "check:built": "node scripts/check-built-site.mjs",
     "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
     "test:browser": "playwright test",
-    "verify": "npm run check:types && npm test && npm run check:playground && npm run build && npm run check:built && npm run check:links && npm run test:browser"
+    "verify": "npm run check:types && npm test && npm run check:playground && npm run build && npm run check:built && npm run check:links && npm run test:browser",
+    "verify:publication": "npm run build && npm run check:built && npm run check:links"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

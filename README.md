@@ -94,6 +94,15 @@ git add vendor/runnable-code-blocks
 ```
 
 PR은 검증만 실행합니다. 검증된 main 산출물만 Pages에 배포하며 Pages·OIDC 권한은 deploy job에 한정합니다.
+
+`npm run verify`는 수동 전체 검증입니다. CI는 기존 생성 Markdown의 본문·`projection_sha256`만 바뀌고,
+동일한 코드·테스트 입력과 runner image/Node/Ruby 환경의 성공한 전체 CI가 확인될 때만
+`npm run verify:publication`으로 projection·production build·배포 파일·내부 링크/fragment를 검사합니다.
+이 경로에서는 브라우저 설치도 생략하며, 선택 이유와 재사용한 run을 CI summary에 표시합니다.
+문서 추가·삭제·이동, metadata 또는 `tests/fixtures/browser-pages.json`에 등록된 검사 문서의 본문 변경,
+코드·의존성·빌드·테스트·CI 변경, 수동 실행·재실행, 비교/성공 근거가 불확실한 경우는 전체 검증입니다.
+같은 입력·환경의 최근 전체 검증이 실패했다면 더 오래된 성공 결과로 대체하지 않습니다.
+변경 문서와 새 Run의 실제 배포 수용은 두 경로 모두 별도로 수행합니다.
 `build-info.json`에는 site SHA, adapter SHA, 공개 자산 해시만 포함합니다. private receipt나 Vault 경로는 없습니다.
 배포 후 live build 정보·자산을 대조하고 홈·Wiki·showcase, 테마, 브라우저 실행과 개인 서버 실행을 확인합니다.
 개인 서버 offline은 문서 사이트 장애와 구분해 기록합니다.
