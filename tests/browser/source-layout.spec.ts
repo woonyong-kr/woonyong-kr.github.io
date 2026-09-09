@@ -19,8 +19,12 @@ for (const { path, language, excerpt } of [
         await source.scrollIntoViewIfNeeded();
         const pre = source.locator('..');
         await pre.hover();
+        const sourceOffset = () => source.evaluate(element =>
+          element.getBoundingClientRect().left - element.parentElement!.getBoundingClientRect().left);
+        const beforeOffset = await sourceOffset();
         await page.mouse.wheel(2000, 0);
-        await expect.poll(() => pre.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+        // Observe the code moving inside its container after the real wheel input.
+        await expect.poll(sourceOffset).toBeLessThan(beforeOffset - 1);
         await expect(page.locator('.rcb')).toHaveCount(0);
       } finally { await context.close(); }
     });
