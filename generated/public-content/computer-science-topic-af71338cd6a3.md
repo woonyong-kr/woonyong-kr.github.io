@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-af71338cd6a3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-af71338cd6a3
-projection_sha256: 8fae349cf326b5cbe8d60dc9655f73d5b2b74ec6b7f59d73853c2fbb0801d538
+projection_sha256: 76ee11230d52cf51372ddbb912aeb98a88e5d28b1da0d411c01ae7999d33ae00
 parent: 그래프 알고리즘
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-f8706f61ab70
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 위상 정렬

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-pop-20d90ce4dee9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-pop-20d90ce4dee9
-projection_sha256: 9c809ef6a518d8dd61ac518da4f0e9e6e283f5c4ed58ad05eb8bbd56ca0f8f80
+projection_sha256: fd8164914dfc7bf3ac7a61f91678a9cb559209bd7bee2e7925cce3922d195ba4
 parent: Stack
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-39fd55620efd
 grand_parent: 자료구조
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # pop

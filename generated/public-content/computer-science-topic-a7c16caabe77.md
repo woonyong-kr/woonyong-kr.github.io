@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-a7c16caabe77/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-a7c16caabe77
-projection_sha256: ce40421c9ccc11790cefd8a875f58a8366915b58e34c9fc4cd435ef1582ef438
+projection_sha256: 124827cda383a8d8d5999daa726eafb97e41ed1f3b7b5d82e2afca7840356d64
 parent: 선형대수
 content_status: planned
 public_parent_id: Wiki/computer-science/linear-algebra
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 고유값

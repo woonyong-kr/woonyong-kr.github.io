@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-2349e944bbc9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2349e944bbc9
-projection_sha256: ef58e0e61d771dfb1469898b32e1886dfaabbf8b3abdc4434d14586f825441a2
+projection_sha256: 8e543c04737d730f458c586d55f8baed50810c18dcc1514a6422ee3de100699b
 parent: 미적분
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-16d05fc6ce0b
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 연쇄 법칙

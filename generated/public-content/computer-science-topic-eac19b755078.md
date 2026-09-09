@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-eac19b755078/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-eac19b755078
-projection_sha256: dbbe1ff3eed43c78aead83272b3d0c0824c52403f3a3b314310aa0d19d2df329
+projection_sha256: e2d77ee6c884ea5168e682fa836ad816b460da10f232533aa0c01a025c0864b8
 parent: Greedy
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-20932461ee68
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 반례

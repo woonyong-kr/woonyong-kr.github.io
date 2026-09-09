@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-84cc10349ebb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-84cc10349ebb
-projection_sha256: 5c18c24e5878868d526462c8d32c7173508b72f4732d6bbd76e97adbf5607d55
+projection_sha256: 5f9699251cd08ceda66e1c6d2b72ba8ce20e18baa803850a4a76d1c4ccb4ec4e
 parent: Graph
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
 search_terms:
 - 방향 그래프
 grand_parent: 자료구조
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # Directed Graph

@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-f8706f61ab70/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-f8706f61ab70
-projection_sha256: bde672cf0f9d774c6404fcf713215f23b9d4c349a86ebf278d89ff9e581db2d5
+projection_sha256: a2e1b3b18aa481b8b2016973891f00c1651e7a7da8675101c3ea73ec053b3568
 parent: 알고리즘
 content_status: planned
 public_parent_id: Wiki/computer-science/algorithms
-grand_parent: CS
+grand_parent: 알고리즘·수학
 ---
 
 # 그래프 알고리즘

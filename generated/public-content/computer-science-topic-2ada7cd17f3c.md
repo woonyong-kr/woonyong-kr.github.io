@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-2ada7cd17f3c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2ada7cd17f3c
-projection_sha256: 605e2beabcb7aafbb7385be14d267ed24566e6686e7a4507a8939b6fe527c0c9
+projection_sha256: fa009aa0362fcb51e9f33cba4d2cc6889a85de96e12d80b4b312be8b37975787
 parent: 정렬
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-04dc82eee0a0
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 병합 정렬

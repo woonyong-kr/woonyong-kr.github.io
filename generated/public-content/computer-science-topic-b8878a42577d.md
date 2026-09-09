@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-b8878a42577d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-b8878a42577d
-projection_sha256: e5e1b4925234deb2935f8d1ba7c4146f96b1891a891019899fb062b908734018
+projection_sha256: e6da2ad35e66e007959cdf69834cabcc3516cccd2aeb6888543f9397719710e2
 parent: 서로소 집합
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-5962577d796a
 grand_parent: 자료구조
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 집합 병합

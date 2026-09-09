@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-attention-820ced4d5b89/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-attention-820ced4d5b89
-projection_sha256: 55c80a3ef5b3c683bbaac71335ef82be009807121e4ee4776d89dbd0b40f8c1a
+projection_sha256: 1551554b0762c1494842fd313d6772f260547160fef434312a6238a2db86e326
 parent: LLM
 content_status: ready
 public_parent_id: Wiki/ai-machine-learning/llm

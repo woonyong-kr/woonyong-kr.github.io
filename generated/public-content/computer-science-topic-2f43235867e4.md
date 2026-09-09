@@ -6,13 +6,13 @@ permalink: /wiki/computer-science-topic-2f43235867e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2f43235867e4
-projection_sha256: 275c5c2fe56c2e4eff0cc444223469cd71a2674d7763fdc9910fe23ad11b15b1
+projection_sha256: a2527e6d4fb18157926c413b126bfa14a8802ada636bc43092effa00289dcfa7
 parent: 자료구조
 content_status: planned
 public_parent_id: Wiki/computer-science/data-structures
 search_terms:
 - 연결 리스트
-grand_parent: CS
+grand_parent: 알고리즘·수학
 ---
 
 # Linked List

@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-transformer-924ea08dd69a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-transformer-924ea08dd69a
-projection_sha256: 07c0074009285cab597e86c3aa373426dc52feb068d8b92a09715356eb84294a
+projection_sha256: 0e2d9cfd924dea1909effc17c845ed67769ac09b0f52598fab10262c5412f084
 parent: LLM
 content_status: ready
 public_parent_id: Wiki/ai-machine-learning/llm

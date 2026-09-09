@@ -6,14 +6,14 @@ permalink: /wiki/data-topic-01f21ff2a08f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-01f21ff2a08f
-projection_sha256: 5e370dbf9337e1fd45def8e3b8d6a2f574b119d028e58728c984c4f2d65167d3
+projection_sha256: d54962bb8301d1a2804efc333d72df3760948a55cb0da1167a3c2fca058a13f0
 parent: Array
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-06d25b0021e7
 search_terms:
 - 인덱스
 grand_parent: 자료구조
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # Index

@@ -1,16 +1,22 @@
 ---
 layout: default
-title: CS
+title: 알고리즘·수학
 nav_order: 2
 permalink: /wiki/computer-science/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science
-projection_sha256: 40f427c252942f8f494c1bc2c31d74c292e4c1c0a0b0f75315d2fbf3e4aa8769
+projection_sha256: 6e8da5ffddf839f408d303a45180cfcad20c315d7d24d7d02c14cdab21b58478
 content_status: overview
+search_terms:
+- CS
+- 자료구조
+- 알고리즘
+- 복잡도
+- 수학
 ---
 
-# CS
+# 알고리즘·수학
 {: .no_toc }
 
 프로그램을 작성하다 보면 같은 결과를 내는 코드라도 데이터가 많아질수록 실행 시간이 크게 달라진다. 자료를 어떻게 저장하고 처리하는지 살펴보면 이런 차이를 설명할 수 있다.

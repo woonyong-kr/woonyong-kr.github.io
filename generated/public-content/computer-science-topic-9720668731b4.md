@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-9720668731b4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-9720668731b4
-projection_sha256: e8b239f07b99ef9c1b04b124437d353b7b12442126ba5e4e2f39accb113993ec
+projection_sha256: 6d7a9302eea1f856b51dc5f7e07b8e62590c83909be82d11e6ee1622e73affd2
 parent: 동적 계획법
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-7a70b4370929
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 상태 정의

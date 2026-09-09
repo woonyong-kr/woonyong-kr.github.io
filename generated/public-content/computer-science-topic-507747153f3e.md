@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-507747153f3e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-507747153f3e
-projection_sha256: 282845293e3af67b6dc89fa55060b3c62b0478baf6c8fc0af9454f5ed789eb07
+projection_sha256: 83fdefe2164cf9e4f7d9ebee63aa689c194aad2b9ee60660dd2ca36f8f8470c6
 parent: 확률과 통계
 content_status: planned
 public_parent_id: Wiki/computer-science/probability-statistics
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 분산

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-0b05bc71f0fc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-0b05bc71f0fc
-projection_sha256: b9f9107b434a06633236b840139681f785a9e1e345732246a74e55e19ed034cf
+projection_sha256: 0beae3d0fffdd96a859e2df0b7beddaa4759d6173025958faedcb74347041465
 parent: Greedy
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-20932461ee68
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 선택 기준

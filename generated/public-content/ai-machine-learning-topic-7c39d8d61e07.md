@@ -6,7 +6,7 @@ permalink: /wiki/ai-machine-learning-topic-7c39d8d61e07/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/ai-machine-learning-topic-7c39d8d61e07
-projection_sha256: 5d170e0fa27bb54d834fe9842e48fef9c2d5cfcacbe13e2d4343424982837477
+projection_sha256: d56c3ae54f5c524966656aee3bee93de860568622ac78155fcd2be86254825d3
 parent: 딥러닝
 content_status: ready
 public_parent_id: Wiki/ai-machine-learning/deep-learning

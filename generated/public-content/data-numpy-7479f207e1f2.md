@@ -6,7 +6,7 @@ permalink: /wiki/data-numpy-7479f207e1f2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-numpy-7479f207e1f2
-projection_sha256: 4ccf5a69f6c4722eae4e017dbe8e102a10eb366c01d7eff39206b1bb23ed147b
+projection_sha256: 19626dd131a8e961446c3a3320487dd5e355bdaaf6340746733dfd96c6a46c63
 parent: 데이터 분석
 content_status: ready
 public_parent_id: Wiki/data/analytics

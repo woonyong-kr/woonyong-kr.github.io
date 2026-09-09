@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-369901609ac7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-369901609ac7
-projection_sha256: 03020767648ab2ce764e008f2a9fdf4e7c7a34f99b699ad8a196f309beb24269
+projection_sha256: a002d7505dd3ba1d80c54603926608b422c81b5b2495e4ee3e907b1764b04872
 parent: 이산수학
 content_status: planned
 public_parent_id: Wiki/computer-science/discrete-math
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 증명

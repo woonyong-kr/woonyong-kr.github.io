@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: d83da024db7c2e8a759ea0190c355ecd58e6fe4b2ad26f6b7cfa550d66b03822
+projection_sha256: d604a4e84b095c35e39a2dffe05e7633021ded076670d5b76950a6bdcc2e123a
 content_status: ready
 ---
 
@@ -17,7 +17,7 @@ content_status: ready
 
 기초 개념에서 시작해 구현과 운영으로 이어지도록 구성했다. 아래에서 관심 있는 분야를 고르거나 사이드바를 펼쳐 세부 주제로 이동할 수 있다.
 
-- [CS](/wiki/computer-science/)
+- [알고리즘·수학](/wiki/computer-science/)
 - [프로그래밍](/wiki/programming-languages-runtime/)
 - [시스템](/wiki/computer-systems-network/)
 - [Data](/wiki/data/)

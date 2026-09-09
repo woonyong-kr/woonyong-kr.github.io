@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-22064069cac6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-22064069cac6
-projection_sha256: 389e77e0e10af40799d42649289bde4a9f38d49a033e4a72aeca68b8c670749f
+projection_sha256: d2248a7c9da8fe24b2729c319f2cdf1046c4158d34d68621dad790c7dcd28501
 parent: 이산수학
 content_status: planned
 public_parent_id: Wiki/computer-science/discrete-math
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 조합

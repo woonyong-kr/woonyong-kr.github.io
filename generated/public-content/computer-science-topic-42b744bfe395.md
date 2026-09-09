@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-42b744bfe395/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-42b744bfe395
-projection_sha256: 97db1523d9c68ce2c358cf52cb063bcdd2f0d84560b263ff111e6a05547361a3
+projection_sha256: 8845e0834a4a507ccebdcf2442bfe5acf400a254b4d2d0e3f3a5515ecc8e30da
 parent: 이산수학
 content_status: planned
 public_parent_id: Wiki/computer-science/discrete-math
 grand_parent: 수학
-ancestor: CS
+ancestor: 알고리즘·수학
 ---
 
 # 집합
