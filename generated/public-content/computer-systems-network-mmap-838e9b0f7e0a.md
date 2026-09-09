@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-mmap-838e9b0f7e0a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mmap-838e9b0f7e0a
-projection_sha256: eae27cdcc114e4dea5d4493fbe68c43aa9e569d9dc133324540b5a491f844caa
+projection_sha256: 0e9069ab7a3d166cb818a6cb0f970eb0033bb37667fbe57f57597d506528133c
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -37,6 +37,10 @@ search_terms:
 - PF_W
 - PF_P
 - vm_handle_wp
+- file position
+- file_read_at
+- file_write_at
+- 명시적 offset
 grand_parent: PintOS
 ancestor: CS
 ---
@@ -231,6 +235,57 @@ print("인접 영역 등록:", [hex(va) for va in sorted(existing)])
 `file_backed_initializer()`는 aux를 별도 인자로 받지 않고 `page->uninit.aux`에서 지역 포인터로 꺼낸다. 이어서 `page->operations`를 바꾸고 파일 정보를 `page->file`로 옮긴다. Metadata를 옮기는 곳은 이 initializer이고, `lazy_load_file()`은 읽기를 시도한 뒤 aux 메모리를 해제한다.
 
 실행 파일의 `load_segment()`도 파일·offset·read/zero 길이를 aux에 담지만, 현재 VM 코드에서는 목표 타입을 `VM_ANON`으로 등록한다. mmap의 `VM_FILE`처럼 나중에 원본 실행 파일로 쓰기를 돌려주는 Page가 아니다. 같은 초기 파일 읽기를 사용한다고 이후 backing과 정리 정책까지 같은 것은 아니다. [실행 파일 적재](/wiki/computer-systems-network-topic-a6a32eb78db0/)에서 이 차이를 다룬다.
+
+## 파일을 다시 열어도 offset은 기억해야 한다
+
+`file_reopen()`은 원래 fd와 파일 참조의 수명을 분리하지만, 순차 읽기에 의존하는 구현까지 고쳐 주지는 않는다. 새 `struct file`의 `pos`는 0에서 시작한다. 파일 offset `0x1000`에 대응하는 Page를 적재하면서 `file_read()`를 호출하면 두 번째 Page 대신 첫 번째 Page를 읽는다.
+
+이 잘못된 읽기가 `pos`를 `0x1000`으로 옮기면, 뒤의 `file_write()`는 우연히 두 번째 Page에 쓸 수 있다. 쓰기 위치가 맞았다는 사실로 처음 읽은 내용까지 맞았다고 판단할 수 없는 이유다. 재적재하거나 Page 접근 순서를 바꾸면 순차 위치도 달라진다. 현재 `mmap-off` 테스트는 매핑에서 읽은 내용과 해제 후 파일 내용을 각각 검사한다. [열린 파일의 위치 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/filesys/file.c), [mmap-off](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-off.c)
+
+다음 예제는 두 Page에 각각 `A`, `B`를 채워 순차 위치와 명시적 offset을 비교한다. `BytesIO`의 현재 위치를 `file->pos`에 대응시킨 Python 모델이며, 아래의 `read_at()`과 `write_at()`은 범위가 유효한 고정 길이 버퍼만 다룬다.
+
+```run-python
+from io import BytesIO
+
+PAGE = 4096
+OFFSET = PAGE
+original = b"A" * PAGE + b"B" * PAGE
+
+# 잘못된 구현: 새 파일 객체의 현재 위치 0에서 읽는다.
+cursor = BytesIO(original)
+wrong_frame = cursor.read(PAGE)
+print(f"순차 읽기: {wrong_frame[:1].decode()}, 읽은 뒤 위치: {cursor.tell():#x}")
+cursor.write(b"X" * PAGE)
+print("두 번째 Page에 쓰기:", cursor.getvalue()[OFFSET:] == b"X" * PAGE)
+print("같은 객체에서 다시 순차 읽기:", len(cursor.read(PAGE)), "B")
+assert wrong_frame != original[OFFSET:OFFSET + PAGE]
+assert cursor.getvalue()[:PAGE] == original[:PAGE]
+
+# offset API 모델: 명시한 바이트 범위만 읽고 쓰며 현재 위치를 바꾸지 않는다.
+def read_at(file, size, offset):
+    with file.getbuffer() as data:
+        return bytes(data[offset:offset + size])
+
+
+def write_at(file, data, offset):
+    with file.getbuffer() as target:
+        target[offset:offset + len(data)] = data
+
+
+fixed = BytesIO(original)
+frame = read_at(fixed, PAGE, OFFSET)
+print(f"offset 읽기: {frame[:1].decode()}, 현재 위치: {fixed.tell():#x}")
+write_at(fixed, b"X" * PAGE, OFFSET)
+for offset in (OFFSET, 0, OFFSET):
+    loaded = read_at(fixed, PAGE, offset)
+    print(f"재적재 offset={offset:#x}: {loaded[:1].decode()}, 현재 위치={fixed.tell():#x}")
+    assert loaded == (b"A" if offset == 0 else b"X") * PAGE
+assert frame == b"B" * PAGE and fixed.tell() == 0
+```
+
+첫 읽기의 결과는 `A`지만 매핑이 읽어야 할 값은 `B`다. 순차 API로 두 번째 Page에 `X`를 기록한 뒤 다시 읽으면 현재 위치가 파일 끝이어서 0바이트를 얻는다. 반면 명시적 offset을 쓰면 `0x1000 → 0 → 0x1000` 순서로 다시 읽어도 각 Page의 바이트를 가져오며 현재 위치는 0을 유지한다.
+
+Kernel에서 같은 경계를 확인하려면 `file_read_at()` 또는 `file_write_at()`의 인자가 유효한 중단점에서 `file_ofs`와 `file->pos`를 함께 읽는다. 호출 전후에도 같은 파일 객체의 `pos`가 유지되는지 비교한다. 앞의 Python 실행은 이 관찰 기준을 설명하며 실제 PintOS의 I/O·Page Fault를 실행한 결과는 아니다.
 
 ## 6000바이트 파일의 마지막 Page
 
