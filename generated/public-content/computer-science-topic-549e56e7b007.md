@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-549e56e7b007/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-549e56e7b007
-projection_sha256: aa1736bee4d5af7a84d6cc24e1ec2fb81ffb23797ff47f52dfaf85e0206ed353
+projection_sha256: 5b675d29e65624c9b418cd550aa6fcea1e122c678ab60ec5c0b3331d7a93779f
 parent: Backtracking
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-a4b4b3ae6cc6
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 선택과 복원

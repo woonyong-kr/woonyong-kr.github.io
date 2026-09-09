@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-plan-f0a3042e181e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-plan-f0a3042e181e
-projection_sha256: 415e2237b41246a914d466280e658cb87d277203b9484d04bd716693fe282bf1
+projection_sha256: 3b2181db8c7b087209c0b9c87d7e520191a8843fbfd108e53841946d9eba8645
 parent: IaC
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/iac
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Plan

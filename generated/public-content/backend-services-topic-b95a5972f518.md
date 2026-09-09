@@ -6,12 +6,11 @@ permalink: /wiki/backend-services-topic-b95a5972f518/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-b95a5972f518
-projection_sha256: 99054dc6059d57ae17d71247831519eefcf29594bca825e4fe358e587278dc22
+projection_sha256: d209f835260744eeb71fb120cafc6512e729bf0da155135adc9cd5f0dadf9710
 parent: 애플리케이션 보안
 content_status: planned
 public_parent_id: Wiki/security/application-security
-grand_parent: 보안
-ancestor: Backend
+grand_parent: Backend
 ---
 
 # 입력 검증

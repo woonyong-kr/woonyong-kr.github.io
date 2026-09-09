@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-41d3aa5e9035/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-41d3aa5e9035
-projection_sha256: 6e1f41941f973244429cb69d6d6234ebc3376f78157b0854386231efad2a3bd8
-parent: lrn-sql
+projection_sha256: dad3bd3aca3b3d0fb63b8310435af8220018fcdd3cfe4ece1c1e281fe818167f
+parent: SQL 엔진 구현
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

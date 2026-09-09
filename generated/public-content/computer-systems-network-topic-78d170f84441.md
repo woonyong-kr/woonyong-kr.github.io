@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-78d170f84441/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-78d170f84441
-projection_sha256: 4ade34241ed71a1c6384dfc8fba005e4188bfa377f42e433745305f489e3cac7
+projection_sha256: a01cdb43912af43a9c21eb974aaa250aa84011e2ee730e26beece7e5bef52532
 parent: Scheduling
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-80c365ceda9a
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 우선순위

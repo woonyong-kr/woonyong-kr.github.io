@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-fa439d7ff78f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-fa439d7ff78f
-projection_sha256: 4a6ca3965a2b714e5ff2fe535b70b7486c2ae7c3026b8ad3aa1639af5e771b42
+projection_sha256: 12aa5b4ec21a06875d9fc9fc217ca87c8508bc45ed279c4cce70f8f52dffece3
 parent: Array
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-06d25b0021e7
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 다차원 배열

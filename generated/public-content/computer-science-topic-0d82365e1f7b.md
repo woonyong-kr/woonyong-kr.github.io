@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-0d82365e1f7b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-0d82365e1f7b
-projection_sha256: 68dfe93938552005694a405e08e9976c64a5a504f900e15c90070e92e1b538fb
+projection_sha256: 75bb058a80648317214295c68849c802fccf38782fa80a553b7fc9e0b9670dfc
 parent: Heap
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-4a9423be930c
 search_terms:
 - 최대 힙
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Max Heap

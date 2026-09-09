@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-16b53895ae32/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-16b53895ae32
-projection_sha256: 4ae6dbdfb38d40ba9b01c75bfd7d30f5d619e92d2d54b99ccc025bdbbfc7d8e4
+projection_sha256: d1a975e185c1c13575f3f9adae6a9c0246ced1d65c4d12d911cc57b8b142d934
 parent: Hash Table
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
@@ -17,7 +17,7 @@ search_terms:
 - djb2
 - strcmp
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Chaining

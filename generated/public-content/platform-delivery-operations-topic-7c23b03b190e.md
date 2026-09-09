@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-7c23b03b190e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-7c23b03b190e
-projection_sha256: 54a9bd96762a36c7c6589edd8099bb70d3c79ee7a6c9d5c56e3c56e1125c76d2
+projection_sha256: 691a1d56264dca24e658ebc5a4dea54a2f492e9284faad6b719858b9e441eb62
 parent: Kubernetes
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/kubernetes
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 저장소

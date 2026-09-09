@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-7935898cbbd6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-7935898cbbd6
-projection_sha256: 2c61d6367c8496a57e7fa048e162322321ccfae8c312c5e71558afda1ff55def
+projection_sha256: 4a99b19dcd8f58c5684de597d1a59d9b5a9aef8ea6ed9b2a84a3ddc46152167b
 parent: Greedy
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-20932461ee68
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 최적성

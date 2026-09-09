@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-7a70b4370929/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-7a70b4370929
-projection_sha256: b470e2fcf2eda39db93a756624da4c175587e80687f7929c3fa22cd734901476
+projection_sha256: 421f2e6fc83dad5f90b27e76692b9e03989db2786175547125f4842ef85e20e1
 parent: 알고리즘
 content_status: planned
 public_parent_id: Wiki/computer-science/algorithms
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 동적 계획법

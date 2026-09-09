@@ -6,11 +6,11 @@ permalink: /wiki/automation/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/automation
-projection_sha256: 3f44ef6ee88cd76ef0451d5c8a8a1989ed542d6caa52151adbaf25116d165597
+projection_sha256: 1c99265a69f433dfceec5e41d066fc367b70eacad597ef61f8ffe33e53a69f5f
 parent: 테스트
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
-grand_parent: Backend
+grand_parent: Programming
 ---
 
 # 테스트 자동화

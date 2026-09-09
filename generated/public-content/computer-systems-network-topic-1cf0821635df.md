@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-1cf0821635df/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-1cf0821635df
-projection_sha256: dd285669284e54c7be47d95492a2a0ed4ce289b40641dfde39ab9719a389f72f
+projection_sha256: 7e965d53b8fc20b3818bf1e424168eaff645af5bcbc32d067e72f6a452c8cecc
 parent: 메모리 관리
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 가상 메모리

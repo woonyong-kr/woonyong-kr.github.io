@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-2d043afd0f9f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2d043afd0f9f
-projection_sha256: 7307e628df7e9870f54b172f0fc4e52967eaab9b1508ed8e49d079821f3a2c3d
+projection_sha256: f081d1419496bd1435925518cd6b9d3acfcd847e3bd062db755899bec35a7beb
 parent: Linked List
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-2f43235867e4
@@ -18,7 +18,7 @@ search_terms:
 - list_elem
 - Intrusive List
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Doubly Linked List

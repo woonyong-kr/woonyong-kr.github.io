@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-ca679af07bbd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-ca679af07bbd
-projection_sha256: 71bc0a7eefe9c5a765b194e38d78e9f69f3d6a8eb35349322e6a7f10bde10961
+projection_sha256: 3d9b485c1857a3d6973859c6b212f7a29462ee9325237ff9ca413da695692009
 parent: 전송 프로토콜
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 혼잡 제어

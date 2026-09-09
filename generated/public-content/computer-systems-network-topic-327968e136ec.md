@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-327968e136ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
-projection_sha256: c264aedb312fa92e3a87f6621064f9228b3caae706c1c8266b5e6dc9fcb7bd89
+projection_sha256: d037a3e0046c8f0523bc883130feb589e0cde10a9973db6bf47e881f02a00ce9
 parent: PintOS
 content_status: planned
 public_parent_id: Wiki/projects/pintos
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 개발 환경

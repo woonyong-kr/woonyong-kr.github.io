@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-cd8cd4ad9254/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-cd8cd4ad9254
-projection_sha256: 65a0b7310d88d7761fb843b43aaa591ff69244c8aace25da4b90842f2239f2e0
+projection_sha256: f58bd1796bb50363d6f3a3df1ce544df4c5f030b719b2fe608b5bba29f749fa1
 parent: OS
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/os
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 동기화

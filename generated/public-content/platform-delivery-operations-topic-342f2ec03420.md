@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-342f2ec03420/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-342f2ec03420
-projection_sha256: b48ce8b628406f4088176d8e76cac69a97bedba0b334d2a1e7c1c3ec74a80a7c
+projection_sha256: 483181d2225e8dd273adf43bb404ebfc1475e80809ce687bc37d7f015dcbfdc4
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 비용 관리

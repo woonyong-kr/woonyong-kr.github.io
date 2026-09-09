@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-82f82ace72ca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-82f82ace72ca
-projection_sha256: 5601c538b5ddfeee9fb973d2981aa360173a32dd2cfe8f204ab326d469f0b824
+projection_sha256: c10e37a8947f11289154b098fb87446c869d8b8b729045fa2c53fd0fa8a311ca
 parent: 선형대수
 content_status: planned
 public_parent_id: Wiki/computer-science/linear-algebra
 grand_parent: 수학
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 행렬 분해

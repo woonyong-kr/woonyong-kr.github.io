@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-ef3c4b0d07ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ef3c4b0d07ec
-projection_sha256: 91459f5783599e194033968ebd1b67dd9ab131de84de34c51bd47dcfb17550db
+projection_sha256: 1af0f13346aad06dc8f37ede83cbd5071cb9e2e4aea14a33db0d5c56eb68ce22
 parent: 클라우드 보안
 content_status: planned
 public_parent_id: Wiki/security/cloud-security
-grand_parent: 보안
-ancestor: Backend
+grand_parent: 클라우드
+ancestor: DevOps
 ---
 
 # 저장소 보호

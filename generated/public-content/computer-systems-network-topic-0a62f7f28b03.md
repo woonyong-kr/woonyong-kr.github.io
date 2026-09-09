@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-0a62f7f28b03/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0a62f7f28b03
-projection_sha256: 7054dcfd3f8486bd8d367917e5cc1d8510f4f9f4081e3ff343e22d3eb2c09830
+projection_sha256: c6df5b48fab9b3e0cc85dc883ba82350f0784001852ebb239fa117e197596be9
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -18,7 +18,7 @@ search_terms:
 - spt_copy_uninit_page
 - page_initializer
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 지연 적재

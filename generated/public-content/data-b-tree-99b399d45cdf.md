@@ -6,8 +6,8 @@ permalink: /wiki/data-b-tree-99b399d45cdf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-b-tree-99b399d45cdf
-projection_sha256: 772dfbf476c5947f14b71d987e8c7cdd170cfe65cc2f7834f4a324a47193075c
-parent: lrn-sql
+projection_sha256: 66b26d5c58e255a19f081b91cfa727134c2a6d844b3e0dec2e96b94c1188dcce
+parent: SQL 엔진 구현
 content_status: ready
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

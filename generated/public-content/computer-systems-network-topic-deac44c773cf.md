@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-deac44c773cf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-deac44c773cf
-projection_sha256: 02ae37120343ed756374b4c9e46594860f1111c4c0e83e571b35691c1624b462
+projection_sha256: 930522abf11cb0fe8cc80cc7bfdec5511f671dbbc1e557612a3c7a54af4997af
 parent: 가상화
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-32f58d9d99d8
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 가상 머신

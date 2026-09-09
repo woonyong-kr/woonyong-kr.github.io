@@ -6,11 +6,11 @@ permalink: /wiki/distributed-systems/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/distributed-systems
-projection_sha256: e7614af08932371aa8ede391a606e6eb315daac53236cbff2a48168f8d887d07
+projection_sha256: b7919e18f4b0ca4530a3d3b691f64a92debe5f40a429c8ff43d68620900e133c
 parent: Systems
 content_status: planned
 public_parent_id: Wiki/computer-systems-network
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 분산 시스템

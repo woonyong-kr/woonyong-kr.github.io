@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-869aa2bd6535/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-869aa2bd6535
-projection_sha256: 8cd5c9f29496c620ebd2e15dd3c5ee8c4577736b9db0a6a4c6a073356c4f4119
+projection_sha256: e8f80dda1484bd8977bdeb59468a8a5bda7551a05eb5230c5d90745c5906dda6
 parent: 복잡도
 content_status: ready
 public_parent_id: Wiki/computer-science/complexity
@@ -17,7 +17,7 @@ search_terms:
 - 비교 횟수
 - 평균
 - 최악
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 시간 복잡도

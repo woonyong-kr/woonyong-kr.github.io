@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-64c2c07b654e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-64c2c07b654e
-projection_sha256: 832ba1f2bd19c322123b15fda0b4bb354e05c8ff788d296090e54a52783e8c5f
+projection_sha256: 24f1365c278144988d7e7c8ff33c7b5563444ada45a0f5d2eeed090d495ab05e
 parent: 알고리즘
 content_status: planned
 public_parent_id: Wiki/computer-science/algorithms
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 분할 정복

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: 06f127a5cf03928281248547b5936d0b76b132df839e086e4f1f764226d22b42
+projection_sha256: 5bd2820fbd352d1ba03a7be4b49947da0a65542cbb2848c7f9e213adca3a0622
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -24,7 +24,7 @@ search_terms:
 - page_get_type
 - spt_copy_uninit_page
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 프로세스 생성

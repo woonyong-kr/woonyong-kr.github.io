@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-e00dfaa7306e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-e00dfaa7306e
-projection_sha256: 38e4df0e53cdab46222cc4f6ca83623c9760023a553ae8cc7a90661dc91fa54d
+projection_sha256: 4056e122560487c35f8ec95ba2194531fbff92cd0df58475fed8c91989cea8ad
 parent: Linked List
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-2f43235867e4
@@ -16,7 +16,7 @@ search_terms:
 - next
 - node_at
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Singly Linked List

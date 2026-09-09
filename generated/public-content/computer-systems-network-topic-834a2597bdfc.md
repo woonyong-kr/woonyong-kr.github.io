@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-834a2597bdfc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-834a2597bdfc
-projection_sha256: 78bdef160872e7a9c41fef014b220043c8b1c48fede0154a357ae97349630eb6
+projection_sha256: f91a0edf7713bbc288010b7ac12724371cc01829c122aea38f7af3f5a91bd95c
 parent: HTTP
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-http-2fe226962c51
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 상태 코드

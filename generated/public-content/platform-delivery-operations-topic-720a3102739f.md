@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-720a3102739f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-720a3102739f
-projection_sha256: 7f536cafaa6117ed5702ad44f45fa68321eb50dfc836f066a151bc023f084aa1
+projection_sha256: bee7104a79b936e95d3fd1d6af6de44950d25333c115c9605fd9c249f6c2fcbe
 parent: 장애 대응
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/incident-response
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 원인 조사

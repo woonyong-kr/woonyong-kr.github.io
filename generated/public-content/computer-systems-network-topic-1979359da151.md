@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-1979359da151/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-1979359da151
-projection_sha256: 6b8f715997be900a6c7d6d3ba6dc05cab4dd6c97f90b03c954be03c607b40a18
+projection_sha256: 0b5c29122b6656ddf7c4d0c98c8ec34187dcfa25629bb7b43cbf8ca5d0cf7074
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 시계

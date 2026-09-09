@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-931a857d1d9a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-931a857d1d9a
-projection_sha256: f4b6d3c13df39aa75d67f000b9df686c5c4bba63a9f11beffe03fa42c248189e
+projection_sha256: 6db528e34e0db5aedf8e4bb7f93e2a28e783ecddb3c5babb5fddd4ac614bdaf6
 parent: 재귀
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-1df2006f50cf
@@ -20,7 +20,7 @@ search_terms:
 - Tail Call
 - PintOS
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 재귀와 반복

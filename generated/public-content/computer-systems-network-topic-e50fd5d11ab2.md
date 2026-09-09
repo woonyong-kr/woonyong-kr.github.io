@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-e50fd5d11ab2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e50fd5d11ab2
-projection_sha256: f71333130a2ffffb74b90e49544b24ff912121824159ed19a0c61414d3c69311
+projection_sha256: 35b37a88cd59f0fed1e493840a6dee8a260626137f837bb625e459429f0fdd4d
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -18,7 +18,7 @@ search_terms:
 - Stack Property
 - Page Fault
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 페이지 교체

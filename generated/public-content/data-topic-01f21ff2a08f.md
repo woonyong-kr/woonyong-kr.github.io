@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-01f21ff2a08f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-01f21ff2a08f
-projection_sha256: cf5828adc1d9d2d0961bc01ca6362a883d2b86eafa3bb13a7e3b7a35af7903b8
+projection_sha256: ea7d969ee88b5fc78ce8bfd7893aa2a44765e122a339693507d7188fe70bd18e
 parent: Array
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-06d25b0021e7
@@ -16,7 +16,7 @@ search_terms:
 - Array Index
 - Index
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 배열 인덱스

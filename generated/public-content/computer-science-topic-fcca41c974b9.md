@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-fcca41c974b9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-fcca41c974b9
-projection_sha256: f7442399ab52f8518306f41db9863f23c33fe4dd2c627a7b0a661c78fb202abe
+projection_sha256: 5346daf69c4af7aa796f58a7ccee523ac208a8fec7dfc65ee79a840b85f9999a
 parent: 미적분
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-16d05fc6ce0b
 grand_parent: 수학
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 기울기

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-ee80c643f1f0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-ee80c643f1f0
-projection_sha256: ccba13cace47e816e17d609503be29e90ebb3c16e9e27cffe13d47380da3e944
+projection_sha256: 0f647457ccad1ba3113c03322fc4b93b846cfd541cb13ae53efcfa99c2245a8c
 parent: 분할 정복
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-64c2c07b654e
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 부분 문제

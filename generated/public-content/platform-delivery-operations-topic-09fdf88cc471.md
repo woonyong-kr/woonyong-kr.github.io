@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-09fdf88cc471/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-09fdf88cc471
-projection_sha256: 8388dbd6f1114c9f2142e6783606328f3294854a3b42c5d84241cdea1b778563
+projection_sha256: b12e17420d9b293586c13fcfc4ba5c59cd0c8887cb703ffe37300fb72cbc16fb
 parent: 개발 도구
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-dd9189189d5c
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 도구 배포

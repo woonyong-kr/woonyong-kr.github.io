@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-ffc435cf50fc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ffc435cf50fc
-projection_sha256: eba032fefcea798369fb771809df7d3d06678a26ab34deef96b2086e155a1751
+projection_sha256: 82a4de54573c12e089e626ede3c954f150ec8f8c28eba57a2e842b53d6eae428
 parent: 계약 테스트
 content_status: planned
 public_parent_id: Wiki/testing/contract
 grand_parent: 테스트
-ancestor: Backend
+ancestor: Programming
 ---
 
 # 소비자 계약

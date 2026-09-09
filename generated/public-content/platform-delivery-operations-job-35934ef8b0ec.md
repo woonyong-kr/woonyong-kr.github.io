@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-job-35934ef8b0ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-job-35934ef8b0ec
-projection_sha256: c3aba561c523e1c3e0ef7f12eee371dfa963effd227170c8428d85879a2b0841
+projection_sha256: fc7b99a99d804b5926e2278c95d507ce7e176d3da32f441778704523ca7e297c
 parent: 워크로드
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # Job

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-16ffadb31203/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-16ffadb31203
-projection_sha256: e4995695ef2f27d33fe877700e164148cddb09546ca96a6727600d75465e7ae7
+projection_sha256: d9ec3d066ca82a1cd97ecab370c4660ac22b0810f95d413e28dd383f05309b1c
 parent: 정렬
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-04dc82eee0a0
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 안정 정렬

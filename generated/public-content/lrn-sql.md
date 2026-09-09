@@ -1,12 +1,12 @@
 ---
 layout: default
-title: lrn-sql
+title: SQL 엔진 구현
 nav_order: 15
 permalink: /wiki/lrn-sql/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/projects/minidb
-projection_sha256: c486db0815a50f71fc39e4e04bf325ea1a32b4ca817b03e79f8e11424f960366
+projection_sha256: 7d59c47c7185a5bcfc408801842b357acb64241c38cc2ab39e857489f59245bf
 parent: Database
 content_status: ready
 public_parent_id: Wiki/data-storage
@@ -15,10 +15,12 @@ search_terms:
 - lrn-sql
 - MiniDB
 - minidb
+- SQL 엔진 구현
+- SQL Engine
 grand_parent: Data
 ---
 
-# lrn-sql
+# SQL 엔진 구현
 {: .no_toc }
 
 `SELECT`로 요청한 행이 파일에서 돌아오기까지는 문장 해석, 실행 계획, Index 탐색과 Page 읽기가 이어진다. lrn-sql은 이 경로를 C로 구현한 학습 저장소다. SQL 문법 자체는 [SQL](/wiki/sql/)에서 다루고, 여기서는 문법이 저장 구조와 만나는 지점을 살펴본다.

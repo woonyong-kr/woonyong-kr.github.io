@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-68b9ba7d1d5b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-68b9ba7d1d5b
-projection_sha256: 85077ecdc07c216aceef77fefaab11902fabb2b3dc2aa651e6e99d602f9dae4d
+projection_sha256: 11ba105612b02bf19af973ed4e6f09118ddedd09d0b65f42d90b5918fc518bb5
 parent: Heap
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-4a9423be930c
 search_terms:
 - 최소 힙
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Min Heap

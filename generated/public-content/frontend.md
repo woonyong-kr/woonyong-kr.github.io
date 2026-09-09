@@ -6,11 +6,12 @@ permalink: /wiki/frontend/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/frontend
-projection_sha256: 8098c7a7d96b7f0530fc91b6bbbe07e5dc86e9aedc14cf4091b5c3aa6d4f1760
+projection_sha256: cba0bbb5301998cb6e4526a0024aab5101698db12d5bd32b3ab7960afe08c0a5
 content_status: overview
 search_terms:
 - 프론트엔드
 - Frontend
+- 프런트엔드
 ---
 
 # Frontend

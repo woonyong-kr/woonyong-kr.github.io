@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-sdk-5c4b956c1bf4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-sdk-5c4b956c1bf4
-projection_sha256: 5c61969d936124cb83777cfb878f21588098783cec91427599a722ecaac79138
+projection_sha256: 12b8abe975cefef1f4298efc6b3d396893969f38c9ca022358d96e937c1839de
 parent: 개발 도구
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-dd9189189d5c
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # SDK

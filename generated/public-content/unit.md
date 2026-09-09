@@ -6,11 +6,11 @@ permalink: /wiki/unit/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/testing/unit
-projection_sha256: 1724b261b4c13740c7173552d1b41ae593155d2fb286fefeadb6fd58a77745dc
+projection_sha256: e37363a4e5f95b9e6a58266d9ffab54735d94d53bdfe64aab99c698d3e06c56c
 parent: 테스트
 content_status: planned
 public_parent_id: Wiki/keywords/backend-services-topic-00bb17ac14d2
-grand_parent: Backend
+grand_parent: Programming
 ---
 
 # 단위 테스트

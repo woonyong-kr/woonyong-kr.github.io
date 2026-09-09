@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-beb55415c2d3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-beb55415c2d3
-projection_sha256: 1126b935ef253b400cb52434b6b70f4397f80ac9677db874ec80b4e3a5657639
+projection_sha256: a9516ef47b1e6a394653d348eaa7d27646177b060761710ff4d8c55918f95a2d
 parent: Hash Table
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
@@ -16,7 +16,7 @@ search_terms:
 - 선형 탐사
 - Tombstone
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 개방 주소법

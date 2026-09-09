@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-ae5415749c60/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-ae5415749c60
-projection_sha256: 1d2d9671ffe2e2a518ae859044cf3a0ef8045a7661261850c76fe4c022f607c6
+projection_sha256: 1109fcb4591090d500a6742c7e083770f355548f8186b50540598a0defb1a321
 parent: Graph
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
@@ -16,7 +16,7 @@ search_terms:
 - degree
 - 희소 그래프
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 인접 리스트

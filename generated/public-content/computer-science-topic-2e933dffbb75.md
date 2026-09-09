@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-2e933dffbb75/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-2e933dffbb75
-projection_sha256: cfd771b3b0fe0134a1192d5544481add94f85cd792af9a911104defb621b8a70
+projection_sha256: d6823dad79372b9bb357a1f689632b6356abf08768101bec7597d14dafb5632f
 parent: 정렬
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-04dc82eee0a0
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 삽입 정렬

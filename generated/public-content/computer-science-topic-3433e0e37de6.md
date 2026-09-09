@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-3433e0e37de6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-3433e0e37de6
-projection_sha256: 975088c5dde3b631df3541f0b00caf477094408da23f79d802f3a61416b602c5
+projection_sha256: d15fdee5278d0891f377d528fc7628f5885efed500507f2107df7f9f9e364b57
 parent: Trie
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-c6415ece8059
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 접두사 탐색

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-163345dd1b02/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-163345dd1b02
-projection_sha256: 090aec851c43353d13851a9e9bc9d621c84d4ef0c460caff07c59c087f9ba3a4
+projection_sha256: ecf0f61d36a5ec90be9cf81bc80d2d04754f2aa9b2e027018b7183319ee82366
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -20,7 +20,7 @@ search_terms:
 - pml4_is_accessed
 - file_backed_swap_out
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 페이지 교체

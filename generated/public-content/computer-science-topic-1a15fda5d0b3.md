@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-1a15fda5d0b3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-1a15fda5d0b3
-projection_sha256: 855455dd16f08e3ed33a28e193dc894a997fad681dc18ae545961b9ddf16376c
+projection_sha256: 31167b78cf227ba71583de378bd6ec1183206fa0973f4f4897a420cf685a65f9
 parent: 복잡도
 content_status: planned
 public_parent_id: Wiki/computer-science/complexity
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 최악의 경우

@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-e07b0a05d6bc/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-e07b0a05d6bc
-projection_sha256: e183dc3ce127939238c30da842d5076f40dd60c23bc099250bef52d4184fa9a5
+projection_sha256: 8091a41343e1946b4335ca3c9e1ed7371986d39f96ab5c339edf8bd0952639d6
 parent: 위협 모델링
 content_status: planned
 public_parent_id: Wiki/security/threat-modeling
 grand_parent: 보안
-ancestor: Backend
+ancestor: CS 기초
 ---
 
 # 공격 표면

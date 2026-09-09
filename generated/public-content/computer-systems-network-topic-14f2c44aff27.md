@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-14f2c44aff27/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-14f2c44aff27
-projection_sha256: 9a83d387474fe6cf5fd53196af506ad4a318406f755966880c8c53f4c2299e7b
+projection_sha256: ac0d2701c72051c654c5244b7ae63cc5ba8f0b85331b7670229f5c6eab505e45
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 장애 감지

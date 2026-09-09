@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-merge-750215495e89/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-merge-750215495e89
-projection_sha256: fd815c57ddb5b8b3c90ece8835383073ac6c0cb8c9f71d3206e97d5f7cf22a21
+projection_sha256: 3568b2da07eb8425d3dd72ec4366c67a522cbf3517e04e99f2ce8840557e48a6
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Merge

@@ -6,11 +6,11 @@ permalink: /wiki/network/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/network
-projection_sha256: b8abc0088773533c8b2ad129af798abdfe440b4a7e3e913ccab5fcfc26911618
+projection_sha256: 345b9145d35ddb0a2379135571a899ac58703c47cd5b8f6aa8479930cac79c70
 parent: Systems
 content_status: ready
 public_parent_id: Wiki/computer-systems-network
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 네트워크

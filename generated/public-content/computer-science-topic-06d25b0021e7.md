@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-06d25b0021e7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-06d25b0021e7
-projection_sha256: b761155ea2ef717734b1ce04981158e5805ffc10bf21e8c9a90b17f0d08b5073
+projection_sha256: a218fda7ae45b30de35bbedc557f93e3846d9a2dd509d9703ddec64afe58321b
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -16,7 +16,7 @@ search_terms:
 - 인덱스
 - Dynamic Array
 - 분할 상환
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Array

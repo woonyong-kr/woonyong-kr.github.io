@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-397b3056d4c7/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-397b3056d4c7
-projection_sha256: 2d635cca9e4365007b6964e2afc4c5fde4ad54512f4b89816a2bd51e6d5ffc52
+projection_sha256: 03a98c5eab2a07edccfdeb2057cf29bb9957a1a8b26d7a6052c6f75a63c0a724
 parent: CI/CD
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/ci-cd
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 산출물

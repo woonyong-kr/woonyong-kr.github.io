@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-bbc093178a91/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
-projection_sha256: 74fbfc4e38fa12ccd3ece12bffed96d08c48e2100dbc401cd58cfe67b32adbd0
+projection_sha256: cbddea52c5160f786dbf11b538f7e50c2fb8f1fc1c3e5a10b3ad682c73776497
 parent: 네트워크
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/network
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 네트워크 기초

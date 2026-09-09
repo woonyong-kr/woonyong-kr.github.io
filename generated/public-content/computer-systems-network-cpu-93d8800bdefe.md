@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-cpu-93d8800bdefe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-93d8800bdefe
-projection_sha256: 7e4d3efd091ec52e81e9d99102804f79018b6d2546f59ba7fcf5afe06cb08d5b
+projection_sha256: 7ed49b4f9cc404cb6f1597ee1b64b028c35ca8eb2093b1bfd86b547bf21fd31c
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # CPU 캐시

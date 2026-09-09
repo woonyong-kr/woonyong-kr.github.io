@@ -4,10 +4,10 @@ title: 자료구조
 nav_order: 2
 permalink: /wiki/data-structures/
 publication_state: publish
-has_toc: true
+has_toc: false
 projection_id: Wiki/computer-science/data-structures
-projection_sha256: 330c2254526c65cbeded52f56f623d209955122cd41cd7023d0eac3308cd95e0
-parent: CS
+projection_sha256: 3bda72623cca9ac7ad4e7a2471fdde87fb298bfa9b013d9a59062a57dfd7ed87
+parent: CS 기초
 content_status: ready
 public_parent_id: Wiki/computer-science
 ---

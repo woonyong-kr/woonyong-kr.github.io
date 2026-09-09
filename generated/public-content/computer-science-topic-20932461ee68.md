@@ -6,13 +6,13 @@ permalink: /wiki/computer-science-topic-20932461ee68/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-20932461ee68
-projection_sha256: 0a8c3f4317282d2af1fb8501a7f8f66667adfe608688bff2ea613bc12a7193ff
+projection_sha256: 5c267b362bf7502b9413e995bfdc516e3358ed02d20850aff69fa59b11ce75b0
 parent: 알고리즘
 content_status: planned
 public_parent_id: Wiki/computer-science/algorithms
 search_terms:
 - 그리디
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Greedy

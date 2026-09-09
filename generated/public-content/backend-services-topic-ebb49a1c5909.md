@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-ebb49a1c5909/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-ebb49a1c5909
-projection_sha256: 686ab69687fbd4e286e1977bde3e4cc5807e745089bddf22ec1fddc58be29aef
+projection_sha256: bfcbe9dac0b4884df00010c55f75451e0613d08ad0edb6fce600dd90e244d98c
 parent: 개인정보 보호
 content_status: planned
 public_parent_id: Wiki/security/privacy
 grand_parent: 보안
-ancestor: Backend
+ancestor: CS 기초
 ---
 
 # 익명화

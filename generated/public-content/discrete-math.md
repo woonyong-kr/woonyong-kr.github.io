@@ -6,11 +6,11 @@ permalink: /wiki/discrete-math/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science/discrete-math
-projection_sha256: 0aedae01d0adf4894cf4a8b5867fd3a1623fd9559812fc70e3e7c8f2ed163012
+projection_sha256: b2fa30f47cd0e9cea1622a38019ef4fa91916c988fb7437f1ec3ed26d1ef5872
 parent: 수학
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-9fc1075ed9f5
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 이산수학

@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-04dc82eee0a0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-04dc82eee0a0
-projection_sha256: 61b6917f66775b34523d67e394420f746e12cce2d86a51a65e7d8aed571bcbca
+projection_sha256: c4b1402e05bc079587b75b179c3b5962eee96a86eafb0ecc439e2b5222a47952
 parent: 알고리즘
 content_status: planned
 public_parent_id: Wiki/computer-science/algorithms
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 정렬

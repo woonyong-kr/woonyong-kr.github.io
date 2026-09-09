@@ -6,13 +6,13 @@ permalink: /wiki/backend-services-topic-864d4d675ceb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-864d4d675ceb
-projection_sha256: 25a0d4d1bbd8fffb2b2f0b8cd56370d36116cf9822fe6b1bca5495c440936776
+projection_sha256: d0fa61f31b279de5f5869900448489fce8c9e0dc5f8c81432f6e7e3471a89a93
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
 search_terms:
 - 모듈
-grand_parent: Backend
+grand_parent: Programming
 ---
 
 # Module

@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-4c4d0e1e7c8b/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4c4d0e1e7c8b
-projection_sha256: 8b175109d55ed43f8d0fb3cf45690ab6b7fdb221e7d8972a1c848a434855960b
+projection_sha256: 1f0499550e9728376b60c7762f1029bdd849a184995eea733bbe5f9dd1380aa6
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
 search_terms:
 - 프로파일링
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Profiling

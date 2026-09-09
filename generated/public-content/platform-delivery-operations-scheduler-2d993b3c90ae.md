@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-scheduler-2d993b3c90ae/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-scheduler-2d993b3c90ae
-projection_sha256: c7b0969870aa3b8aa5c6b77fe8a2e4edb1e2062ffb9553f7566b4da171c94c4e
+projection_sha256: 31388a572c4f73674fb0b4008b3787012b2b74c5afefb1ab55c6b6938c5150bb
 parent: Cluster
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-9cdb629d8fdf
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # Scheduler

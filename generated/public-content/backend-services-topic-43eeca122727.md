@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-43eeca122727/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-43eeca122727
-projection_sha256: 032187c0f08584598a74c95750c31cb65dee3b6fbfce54d6eba4053670cffb5c
+projection_sha256: 38803dd528f65c5f9bb5a93c8fedee7880249a8c86cee9f7c311d7bb00878926
 parent: 계약 테스트
 content_status: planned
 public_parent_id: Wiki/testing/contract
 grand_parent: 테스트
-ancestor: Backend
+ancestor: Programming
 ---
 
 # 제공자 검증

@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-topic-53ab35ec6b15/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-53ab35ec6b15
-projection_sha256: c8d89e3d0948185aa2b8c347443955310cf51389aa3679c5bfc097386af8ec45
+projection_sha256: e77484a3c111ea95703959ad5aa7d31843b4c4712937f8d4dde772156592aaff
 parent: 자원과 운영
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-5e2c3573a662
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # 자원 제한

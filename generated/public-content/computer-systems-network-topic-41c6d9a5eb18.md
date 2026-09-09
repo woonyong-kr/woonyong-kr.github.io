@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-41c6d9a5eb18/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41c6d9a5eb18
-projection_sha256: 4444a9b0a3e1e1199f513aac80e129ab232e5982024b6db4ad030b9893723773
+projection_sha256: 2cd942a611ddf37a40e29c72fe31752105d046da9e9c2c45c57e2f8c7f54852c
 parent: OS
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/os
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 교착 상태

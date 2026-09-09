@@ -6,11 +6,11 @@ permalink: /wiki/computer-science-topic-580b14bc9c8f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-580b14bc9c8f
-projection_sha256: 8623711caf47dd2920643d757e208b82cbae1be9cd85e7e456d872ed0b21c430
+projection_sha256: 64cea47c65066f3842961ee832ae20865d0663f124e019a1c9d48d9ace194773
 parent: 복잡도
 content_status: planned
 public_parent_id: Wiki/computer-science/complexity
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # 공간 복잡도

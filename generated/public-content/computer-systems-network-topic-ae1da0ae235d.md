@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-ae1da0ae235d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-ae1da0ae235d
-projection_sha256: 191b4761afd1b8e822a51623110aeb017411a8ce5601a5e9c43fc06d716c047d
+projection_sha256: ba72d465c25b59954056cb6671b075ba0c1fa5c2ba32b64f0c35a29aff078bdb
 parent: 컴퓨터 구조
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/computer-architecture
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 입출력

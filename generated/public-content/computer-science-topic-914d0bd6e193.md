@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-914d0bd6e193/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-914d0bd6e193
-projection_sha256: 64aac4419e51c7df690afa19eae5776c4286024e2031c253a770a498b93e6d41
+projection_sha256: 718be33aed2143e75392d8cfc1cfe748717f89a2cfe5486b51dfadde7a11b756
 parent: Graph
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-1a8e559de264
@@ -16,7 +16,7 @@ search_terms:
 - 가중치
 - 직접 연결
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 인접 행렬

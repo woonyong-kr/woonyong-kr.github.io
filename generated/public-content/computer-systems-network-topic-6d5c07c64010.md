@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-6d5c07c64010/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-6d5c07c64010
-projection_sha256: c33c80be18dca3532a2b4d10697d9a6cb11a4fc96c9535485184229406d6e968
+projection_sha256: 1b7369b074589dd0b996c9989fcb5256ab7652495232c0042866fadfdbf12877
 parent: 프로세스와 스레드
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63b969bafddd
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 문맥 교환

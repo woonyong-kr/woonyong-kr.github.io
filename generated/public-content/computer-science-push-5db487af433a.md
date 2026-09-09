@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-push-5db487af433a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-push-5db487af433a
-projection_sha256: 4872386da889b531f03574d037ce03b2b576a92d9598360c372da8c994264fc2
+projection_sha256: 8dc1879979980ee6eb8f929b405590d9865fceae17f648c2240e4f9db8838306
 parent: Stack
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-39fd55620efd
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # push

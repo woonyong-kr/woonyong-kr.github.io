@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-63b969bafddd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-63b969bafddd
-projection_sha256: b523f82ab612e3304dd9dd13786e017b421e9dcc202dee69046a4a09939f6ff7
+projection_sha256: 8119ff99d1925f4eba8123fa8d6f7166b8fa8e7785cef031d9f718abc4d43aa3
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 프로세스와 스레드

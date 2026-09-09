@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aa5da5d73167/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aa5da5d73167
-projection_sha256: 375cf58f60203e10339ef8a694f8b2ead1465afe5e3cb291e59cb841b88c93c4
+projection_sha256: 32e9f7b5da01522280f84924043e00937f93d523918dc3d0652bbdf3e4589554
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -18,7 +18,7 @@ search_terms:
 - CR3
 - Swap Entry
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 보조 페이지 테이블

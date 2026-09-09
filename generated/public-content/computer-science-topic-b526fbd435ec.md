@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-b526fbd435ec/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-b526fbd435ec
-projection_sha256: 9973f062a96b5998fb1d4dff81900e3bfb7a14b62c849a2c075e4c863c47e611
+projection_sha256: 5934c9e85887483cc34f7540d9aaae93f7c7e894cfe547565abbd768447a41d4
 parent: 정렬
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-04dc82eee0a0
 search_terms:
 - 힙 정렬
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Heap Sort

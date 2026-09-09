@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-2fd28f2da199/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-2fd28f2da199
-projection_sha256: 27d08649d3dddf972b3afd171cb3d772a0f5a019da40e37d4a56121e79453552
+projection_sha256: 275fdb8cbd5f5788b844b2c8465b08cf02422e6594cc3010fc2ec6e2e2926e10
 parent: 위협 모델링
 content_status: planned
 public_parent_id: Wiki/security/threat-modeling
 grand_parent: 보안
-ancestor: Backend
+ancestor: CS 기초
 ---
 
 # 악용 사례

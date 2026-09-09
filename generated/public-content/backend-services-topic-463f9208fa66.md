@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-463f9208fa66/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-463f9208fa66
-projection_sha256: c029317fdd36c97d2063afdffec79faaf0525f352a53a44951726d39b322723c
+projection_sha256: bfa544c779dfeac9a345fcbe157809e0b6ce5f91e223bdf7f937c3e4ce7b843a
 parent: 암호학
 content_status: planned
 public_parent_id: Wiki/security/cryptography
 grand_parent: 보안
-ancestor: Backend
+ancestor: CS 기초
 ---
 
 # 공개키 암호

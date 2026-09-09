@@ -6,11 +6,11 @@ permalink: /wiki/os/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os
-projection_sha256: d34247c98364b8163ff1fa5687c89a39d6152aff3c3d19eaf5db5fd2ea1e5f3f
+projection_sha256: 5b677ac2e91ade1bed0c1fffb1aa9e4adcbdaab28ee598ab9b74ea5d28b04a25
 parent: Systems
 content_status: planned
 public_parent_id: Wiki/computer-systems-network
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # OS

@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-d7694af82c8f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d7694af82c8f
-projection_sha256: 5d9395b1a92c581a99d616b8aa07aa2f64e08a7e57799f2333265275aad51cc7
+projection_sha256: 781d6bcc6788632455f46909f1891e36f72aabbbbfbb00cd10a135829674eeed
 parent: TLS
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-tls-7fbfe5b737cd
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 인증서 검증

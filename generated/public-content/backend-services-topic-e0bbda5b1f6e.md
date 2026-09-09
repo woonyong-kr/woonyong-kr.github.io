@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-e0bbda5b1f6e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-e0bbda5b1f6e
-projection_sha256: ac58831bc861af560d08bab79dca5c7dfaed517ea6258b9cb5e2be5aad5567d8
+projection_sha256: b3410ade865edd5d009927b31402bbc2273cfc6220d369f4c9cf41748f53a9e3
 parent: E2E 테스트
 content_status: planned
 public_parent_id: Wiki/testing/e2e
 grand_parent: 테스트
-ancestor: Backend
+ancestor: Programming
 ---
 
 # 브라우저 자동화

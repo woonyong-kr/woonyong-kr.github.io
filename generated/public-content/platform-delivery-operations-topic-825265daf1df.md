@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-825265daf1df/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-825265daf1df
-projection_sha256: 8128df7bbb7349fe63fca7d039970e1c7d1addeaacfe334c0cb415d9e149c0b8
+projection_sha256: 6b39bf31fb18bf7129fc44a2054dec96cd8f7518c928850f4ec46b21c27300a0
 parent: CI/CD
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/ci-cd
 search_terms:
 - 롤백
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Rollback

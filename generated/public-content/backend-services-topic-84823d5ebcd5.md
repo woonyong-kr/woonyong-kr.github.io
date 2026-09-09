@@ -6,12 +6,11 @@ permalink: /wiki/backend-services-topic-84823d5ebcd5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-84823d5ebcd5
-projection_sha256: 99b622064e191de53e5a126b01651d74847ebb1dba645ea5f49dea6f73f91991
+projection_sha256: 9fe230ba9dfd790c56c826cd09251dbc3ea7415f177bf356083b5f541012ebe0
 parent: 공급망 보안
 content_status: planned
 public_parent_id: Wiki/security/supply-chain-security
-grand_parent: 보안
-ancestor: Backend
+grand_parent: DevOps
 ---
 
 # 산출물 서명

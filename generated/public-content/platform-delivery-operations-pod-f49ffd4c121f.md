@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-pod-f49ffd4c121f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-pod-f49ffd4c121f
-projection_sha256: c0c7a23e67d34ec859836074e1f946acd6a08f2062a72a2f8a7ec87269e5cac3
+projection_sha256: 3c1ecf307f4cdcd89723b75fb42359d03351f9bdddfa66577e5d6a6293b5065e
 parent: 워크로드
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-53dba9f3569a
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # Pod

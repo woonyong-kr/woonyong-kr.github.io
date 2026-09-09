@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-82e47b673856/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-82e47b673856
-projection_sha256: ebeb91d9e5222cd0c9ce581dd02648ebfd9c98b04f5b73246c7cf9d3330dfbbe
+projection_sha256: bdac17e4e1c528b943ac8569cde5303c6f99595c26e263d68bb37c4de7f7cf33
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 가상 네트워크

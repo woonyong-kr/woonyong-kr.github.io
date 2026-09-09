@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aad7c9c2b57f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aad7c9c2b57f
-projection_sha256: 0f1d9e377aab7172cf0b75357775edc16565e2e5d53b21c94f1f89913c8837da
+projection_sha256: effb5a25138e36d940291d4abc09925d6c8d050b5eaa9782e1e502594897dc71
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -24,7 +24,7 @@ search_terms:
 - PROT_READ
 - FILE_MAP_READ
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 메모리 매핑

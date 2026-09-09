@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-d2347b1cd139/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d2347b1cd139
-projection_sha256: 2ba85b228a3c3be4f3e5a994d321945c3a4fb3373eb3d67f43f61e2bf18e3eab
+projection_sha256: a11cb285a3ed7f386dabcd8877b696ea32ae3acf20ebc063854d69d15708bcf8
 parent: 동기화
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-cd8cd4ad9254
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 원자적 연산

@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-5e2e0f80cece/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-5e2e0f80cece
-projection_sha256: ba1f2e9cffd2f0c973da5ace0d7b9bdc2335c9a626ab4e1a9b95915c7f896d6a
+projection_sha256: aa7e1dcbad3e56dac4a6bfaee5574340b6adac2bfb818dd2377d15f3055319d4
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 메모리 사용

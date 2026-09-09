@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-6295090885b6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-6295090885b6
-projection_sha256: bea00d87283ee1249cb118059e8d642c9c32f0a89b58f82ac9c59c2c725d3e91
+projection_sha256: a322f1561b659c4905088260571bd85d8ce0d2e39febeadf320a22f5ad8e0b98
 parent: 동기화
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-cd8cd4ad9254
 search_terms:
 - 뮤텍스
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Mutex

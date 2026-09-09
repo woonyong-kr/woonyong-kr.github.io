@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-c8b2bcfb0bb0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-c8b2bcfb0bb0
-projection_sha256: 2d68d37a6045aab3ecb6d9d1c260a7effee66adf2fc501b5a32339ba3518d78f
+projection_sha256: 4dbe4da23e7e767a2e200f12890ea9b010d7a4bfc3105d57a83f8fd125b619ac
 parent: 클라우드 보안
 content_status: planned
 public_parent_id: Wiki/security/cloud-security
-grand_parent: 보안
-ancestor: Backend
+grand_parent: 클라우드
+ancestor: DevOps
 ---
 
 # 네트워크 격리

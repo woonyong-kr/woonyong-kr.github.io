@@ -6,12 +6,14 @@ permalink: /wiki/computer-systems-network/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network
-projection_sha256: 308e7b47b36d302cfe080c94e62c9b587a35e58ce9dd80f0f017689b67ff907b
-parent: CS
+projection_sha256: d59676381fa04ad43c290baa03d1c4a7f7452f497d93408f7d2d0941ac579a5e
+parent: CS 기초
 content_status: overview
 search_terms:
 - 시스템
 - Systems
+- Computer Systems
+- 컴퓨터 시스템
 ---
 
 # Systems

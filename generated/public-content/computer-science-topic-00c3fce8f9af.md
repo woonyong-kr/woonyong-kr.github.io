@@ -6,14 +6,14 @@ permalink: /wiki/computer-science-topic-00c3fce8f9af/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-00c3fce8f9af
-projection_sha256: 7a8f3a6139b1087f660f33ac5d0e900d67a0f31fcdc1ab194cfc8d775d83e44f
+projection_sha256: 2b132fb73a05c414ef70585cecabcffb03fdfa383cf52491e7dde6ca8397d3c0
 parent: 탐색
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-88d3a3e31531
 search_terms:
 - 투 포인터
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Two Pointers

@@ -6,8 +6,8 @@ permalink: /wiki/platform-delivery-operations-topic-eb212956fe45/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-eb212956fe45
-projection_sha256: 5ea9473120927d72b111e7cb8293e02cdb0bf42a35d9514a20e7e58cb70b1a8a
-parent: Platform
+projection_sha256: ef503c086755815e7d8f8aeb8d85b3b5fccd2cb997e9001dcef76481c5f2fcd9
+parent: DevOps
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 ---

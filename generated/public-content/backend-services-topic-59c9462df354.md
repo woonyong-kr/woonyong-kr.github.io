@@ -6,8 +6,8 @@ permalink: /wiki/backend-services-topic-59c9462df354/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-59c9462df354
-projection_sha256: 250dc41d62311b17cbc1190a277bbe5926d837d6597014db6de3d9dc53b5d2e0
-parent: Architecture
+projection_sha256: 9a823fdc94b94cbf8763008c5692ea9165cc57a27634775e1186e311062b1ea5
+parent: 애플리케이션 아키텍처
 content_status: planned
 public_parent_id: Wiki/backend-services/architecture
 grand_parent: Backend

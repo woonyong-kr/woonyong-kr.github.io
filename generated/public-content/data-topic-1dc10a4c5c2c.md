@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-1dc10a4c5c2c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-1dc10a4c5c2c
-projection_sha256: acaad5d247b669edd1df2a7f18602c5eea15750a3d1b9b0aff9c9e753e6c4f99
-parent: lrn-sql
+projection_sha256: f6336adcd5bef93b4e430a6fa9f08e188f1ce76440d5d90aae01f4bdc8126b3b
+parent: SQL 엔진 구현
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

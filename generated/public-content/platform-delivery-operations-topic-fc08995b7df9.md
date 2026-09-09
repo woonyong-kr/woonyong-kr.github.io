@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-fc08995b7df9/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-fc08995b7df9
-projection_sha256: 82418e2e807bb1e39c867c9e8344a7135eb19bf42b99b7bae40a3e50dd6a3a4c
+projection_sha256: 88d1d78422f1597cf40249cc0b853b50d66fda21ca25bfc01089db3c16d58924
 parent: SRE
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/sre
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 반복 운영 작업

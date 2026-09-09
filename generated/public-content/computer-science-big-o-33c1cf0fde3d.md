@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-big-o-33c1cf0fde3d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-big-o-33c1cf0fde3d
-projection_sha256: 993eacda282a2be1532ec37f8609a50eb2b54ed7541a30fff07992b7ff2d342b
+projection_sha256: e3f5da927b9c4f248c824fef8bd61ac6ee73252e18538484f33c3a4cfd491473
 parent: 복잡도
 content_status: ready
 public_parent_id: Wiki/computer-science/complexity
@@ -16,7 +16,7 @@ search_terms:
 - 지배항
 - 상수 비용
 - 최악
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Big O

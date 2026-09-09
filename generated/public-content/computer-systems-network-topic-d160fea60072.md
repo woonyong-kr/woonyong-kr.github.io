@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d160fea60072/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
-projection_sha256: f36cb164f47ee545163152f54bd883e071e075b3e74026e4ac7a94060c6721bd
+projection_sha256: 09da32c5bb0f18b51509d93b3a861e639d25921349dfd22f3d8abf0c2e457c00
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -19,7 +19,7 @@ search_terms:
 - Arena
 - 공간 이용률
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 메모리 관리

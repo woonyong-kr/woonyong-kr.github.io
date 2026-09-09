@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-a4ead10ed55a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-a4ead10ed55a
-projection_sha256: cd9834d77c32c7ba739e07901d7fff23cdced583473ea032ac0e2acfca108ae0
+projection_sha256: 3d96766fcc5c88d2a36ccf111ecd2f9d059900649dc87d921589baa34ae9e18a
 parent: Hash Table
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
@@ -16,7 +16,7 @@ search_terms:
 - Hash 값
 - Bucket
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Hash Function

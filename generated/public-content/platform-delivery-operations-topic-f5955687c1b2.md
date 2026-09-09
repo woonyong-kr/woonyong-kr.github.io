@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-f5955687c1b2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-f5955687c1b2
-projection_sha256: ea63b4c16ef517eaadc7a65718fa46de2b144cf4610a067b2f7ad33f900cbb1e
+projection_sha256: d99f188b2c76fd328135a4f79f4caf9e2022b338c9dbd586639fa04a28f368e9
 parent: 클라우드
 content_status: ready
 public_parent_id: Wiki/platform-delivery-operations/cloud
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 관리형 서비스

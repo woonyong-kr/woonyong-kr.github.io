@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: 0334176f8b098cbaeeb7f315fb4c58e14b3e8b704f6dee6c862b76a87163628f
+projection_sha256: 86aae1beb2ced84106e261ff8e81be5bd9f758df33445496712246130bfb15af
 content_status: ready
 ---
 
@@ -17,18 +17,18 @@ content_status: ready
 
 기초 개념에서 시작해 구현과 운영으로 이어지도록 구성했다. 아래에서 관심 있는 분야를 고르거나 사이드바를 펼쳐 세부 주제로 이동할 수 있다.
 
-- [CS](/wiki/computer-science/)
+- [CS 기초](/wiki/computer-science/)
 - [Programming](/wiki/programming-languages-runtime/)
 - [Data](/wiki/data/)
 - [Frontend](/wiki/frontend/)
 - [Backend](/wiki/backend-services/)
-- [Platform](/wiki/platform-delivery-operations/)
+- [DevOps](/wiki/platform-delivery-operations/)
 - [AI](/wiki/ai-machine-learning/)
 - [Projects](/wiki/projects/)
 
 ## 학습
 
-### CS
+### CS 기초
 
 - [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
 - [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
@@ -40,7 +40,7 @@ content_status: ready
 
 ### Data
 
-- [SQL](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장으로 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
+- [SQL 엔진 구현](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장까지 연결하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-sql)
 - [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
 
 ### Frontend

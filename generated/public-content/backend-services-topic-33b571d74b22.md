@@ -6,11 +6,11 @@ permalink: /wiki/backend-services-topic-33b571d74b22/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-33b571d74b22
-projection_sha256: 924c48c253f7c72d9070998f9e569c46edce59ea099e02e13070b8e4253ab0a0
+projection_sha256: 08d10247d69e69d3495fedae77cf4650ab0cb53229c732dd845f8702aa33b058
 parent: 소프트웨어 설계
 content_status: planned
 public_parent_id: Wiki/backend-services/software-design
-grand_parent: Backend
+grand_parent: Programming
 ---
 
 # 응집도

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-c39ffbeb57c5/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-c39ffbeb57c5
-projection_sha256: 64da1987330c17b6c4b8f10cde278789e0d62816d9efe8efb23b456be32696d5
+projection_sha256: de6544d97b8e5d31ea9a87ea68e5b327aebe6f06d528e52ee8ad3e283585e3fa
 parent: 탐색
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-88d3a3e31531
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 이진 탐색

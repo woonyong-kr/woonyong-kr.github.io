@@ -1,15 +1,18 @@
 ---
 layout: default
 title: 보안
-nav_order: 15
+nav_order: 101
 permalink: /wiki/security/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/security
-projection_sha256: b0c2be7269c1c5797611ad86530f7b88953fccdf0bf0161ca8549bf7a5f60cab
-parent: Backend
+projection_sha256: 7f5d0c7bbd50ba303657bad054d1cf6a1a53c919d1d561d12954a96c28a1730b
+parent: CS 기초
 content_status: planned
-public_parent_id: Wiki/backend-services
+public_parent_id: Wiki/computer-science
+search_terms:
+- 보안
+- Security
 ---
 
 # 보안

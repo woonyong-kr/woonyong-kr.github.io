@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-2109813d6346/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-2109813d6346
-projection_sha256: e76d649eede9a34ebf2db3f62e19ce0fc096a59d9cd76d7a8996368dff2f54d4
-parent: Monitoring
+projection_sha256: 1c68dd7dd4c1971c5cea362eb2479473734a424f6725d1d1132d78044ee8241b
+parent: Observability
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/observability
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 분산 추적

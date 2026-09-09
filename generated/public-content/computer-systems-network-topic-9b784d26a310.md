@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-9b784d26a310/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-9b784d26a310
-projection_sha256: 0f68c87303c71b142625cddde9734e972095773fda686a8abfa0a2133661320a
+projection_sha256: 894bb8b505ef58e2619f0907614af236da8007fa871774ba60f587c8d259124e
 parent: 분산 시스템
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/distributed-systems
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 쿼럼

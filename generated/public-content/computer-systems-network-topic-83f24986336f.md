@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-83f24986336f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
-projection_sha256: a979eb2248f577864f526287e198bc125a823a4cf27f7a3f43581c902f9d63e7
+projection_sha256: 9dcfba73ff1077c62c7c39f486292947f78e54aafb23cca10cc22768c51b7522
 parent: PintOS
 content_status: ready
 public_parent_id: Wiki/projects/pintos
@@ -18,7 +18,7 @@ search_terms:
 - UNINIT
 - page_get_type
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 가상 메모리 구현

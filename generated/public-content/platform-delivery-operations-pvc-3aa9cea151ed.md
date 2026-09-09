@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-pvc-3aa9cea151ed/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-pvc-3aa9cea151ed
-projection_sha256: eaeb7c67600b0696cbfb5ab228da10c05df3423e4d16d478acf2332b6ae7e19e
+projection_sha256: 8ba2a3aad2e1228b07819094558546b155c871a874c29cf70b6b278ffe06145c
 parent: 저장소
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-7c23b03b190e
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # PVC

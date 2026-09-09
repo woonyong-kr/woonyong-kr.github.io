@@ -6,12 +6,14 @@ permalink: /wiki/data-storage/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/data-storage
-projection_sha256: 5fc7b28278f14867a9400cad0271fb8e3b1c7259d0dcf24200c7dd65daf5d842
+projection_sha256: 882fefab55073848785443bf0df8837a5d648ab01ac90e9ba73a9936b8509ab7
 parent: Data
 content_status: ready
 public_parent_id: Wiki/data
 search_terms:
 - 데이터베이스
+- Database
+- DB
 ---
 
 # Database

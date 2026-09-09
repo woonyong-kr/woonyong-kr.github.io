@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-39fd55620efd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-39fd55620efd
-projection_sha256: 3e777e40061441fcb2bf59d93bea12004fc0f91f773b429572f4f04c5205a1ae
+projection_sha256: 0f94ead347c431965cfd397c60c5fa168ac2929920c540b84c114548c15e7459
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -17,7 +17,7 @@ search_terms:
 - push
 - pop
 - Call Stack
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Stack

@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-4691a92f362e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-4691a92f362e
-projection_sha256: bc9c17e5fef6b3e67439b28ffc60c97f674837efe6c74f7de9125c7b786bbc22
+projection_sha256: 1c60dcfef00a1318fa98e7644da226be86395f4766d058af704bb34cc4f15636
 parent: 미적분
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-16d05fc6ce0b
 grand_parent: 수학
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 미분

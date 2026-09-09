@@ -6,12 +6,12 @@ permalink: /wiki/socket/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/network/socket
-projection_sha256: a1a468cbdd241ab2fe3fb1eb97322cead48743171c05948583d2a11a10d8555c
+projection_sha256: a07cb8d64caf90691e9975ea104281645a7d70b98924eb288a345cf0a055acd9
 parent: 네트워크
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/network
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Socket

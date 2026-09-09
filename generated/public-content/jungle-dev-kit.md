@@ -6,11 +6,11 @@ permalink: /wiki/jungle-dev-kit/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/development-tools/jungle-dev-kit
-projection_sha256: cb191485c302e742053cd4e31ecf3b01e0b468c42e41be1ffbbc51f5e8f3e905
+projection_sha256: f09fbfc0129ca145140b0034d2e0d0bea4a13763dd4b7b651d7afb59ecdeb4cd
 parent: 개발 도구
 content_status: ready
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-dd9189189d5c
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Jungle Dev Kit

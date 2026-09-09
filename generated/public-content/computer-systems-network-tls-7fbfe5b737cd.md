@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-tls-7fbfe5b737cd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-tls-7fbfe5b737cd
-projection_sha256: 20400fbba7db294e207f2d6e9f44de56961615a4445fd50b05618c046c77dbcd
+projection_sha256: 54f6a272532e899aecaaef746097b9ebf6229f73a50fc9b7fa132c8cefea1e41
 parent: 네트워크
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/network
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # TLS

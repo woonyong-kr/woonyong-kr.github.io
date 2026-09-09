@@ -6,12 +6,12 @@ permalink: /wiki/computer-science-topic-ec65c51778d8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-ec65c51778d8
-projection_sha256: 3cbb4469aa18914d29ed24f1452d056c3ea6a497ff1829dcc15300596ec74465
+projection_sha256: ff0b934d63f87c4e28e95d3163e65c9c76409bd912ef8446e3bd91e1f57cff6c
 parent: 탐색
 content_status: planned
 public_parent_id: Wiki/keywords/computer-science-topic-88d3a3e31531
 grand_parent: 알고리즘
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 선형 탐색

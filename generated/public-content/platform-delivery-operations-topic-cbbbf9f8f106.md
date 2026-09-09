@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-cbbbf9f8f106/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-cbbbf9f8f106
-projection_sha256: 965e16ba77c1ee27e4ad95db648412897a021689e3ecfcc0169d4bcf9916f5c2
+projection_sha256: 52bb047d3ef062d62f7ad75b0ebd459523d33dc4f5cbffd4b265781bc96a7ac5
 parent: Git·GitHub
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/git-github
 search_terms:
 - 브랜치
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Branch

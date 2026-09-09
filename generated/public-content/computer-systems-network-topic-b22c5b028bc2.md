@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-b22c5b028bc2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-b22c5b028bc2
-projection_sha256: f4f9d63fb0bb4cb617fb6c8a7f2c7a87efadfc652bba2eb137c1ab96c84fcafd
+projection_sha256: 79a0afbcb76645eb45434983e6d6577516dbc8a0a4eee4e3e839616011c6f9be
 parent: IP
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-ip-cf75ea1b870d
 search_terms:
 - 서브넷
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Subnet

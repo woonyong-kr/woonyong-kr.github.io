@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-storageclass-92190e4fc108/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-storageclass-92190e4fc108
-projection_sha256: 8c29803ab9924bbda63bdba4e0fd0d32124e8332930dfd271546f1a7138a1799
+projection_sha256: 340675385e56f4745ac229d703934736053129022fd424cfdfffc0dc5298a883
 parent: 저장소
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-7c23b03b190e
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # StorageClass

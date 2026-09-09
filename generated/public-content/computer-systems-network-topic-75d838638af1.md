@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-75d838638af1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-75d838638af1
-projection_sha256: f13f1402f1b1a92ccadfbdee5e212ef3e99e75b474b9c9f19f3f821ede1d4ef9
+projection_sha256: f69e7580e95d3df11e63d18ae088d5acd1ae55aa2a948c71508a5cd35b5cc649
 parent: 전송 프로토콜
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 흐름 제어

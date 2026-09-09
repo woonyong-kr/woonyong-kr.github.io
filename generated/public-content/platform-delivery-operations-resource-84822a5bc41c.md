@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-resource-84822a5bc41c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-resource-84822a5bc41c
-projection_sha256: c9a3055317edfc8514d1bb634abef67aefdf17207297e5253f75a43165c13585
+projection_sha256: d1a6c2e99836433623d2bac5a5090d3242f438925549f34feb60d7c14e28936e
 parent: IaC
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/iac
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Resource

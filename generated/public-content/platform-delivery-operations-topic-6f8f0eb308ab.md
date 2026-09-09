@@ -6,13 +6,13 @@ permalink: /wiki/platform-delivery-operations-topic-6f8f0eb308ab/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-6f8f0eb308ab
-projection_sha256: 557c097b1752028f78102a0547c7a384c589ebbffb5ea58099af6de6aae306d4
+projection_sha256: 61d6445731ed6e4f61efb938848190cdc3ffccebbb366bd9dc2d07e926713766
 parent: SRE
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/sre
 search_terms:
 - 온콜
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # On-call

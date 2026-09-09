@@ -6,7 +6,7 @@ permalink: /wiki/file-system-fsync/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/file-system/fsync
-projection_sha256: 0c37775d24b132d0d760715e146ae22c77e0a3a8497fbfecf33cce9b98ac325a
+projection_sha256: 1a800e997d80c26c8e067e784a4227b71a72353e6318259b80d165256fa1ac3e
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
@@ -19,7 +19,7 @@ search_terms:
 - Directory fsync
 - 파일 내구성
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # fsync

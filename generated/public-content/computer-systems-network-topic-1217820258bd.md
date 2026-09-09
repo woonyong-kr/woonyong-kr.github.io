@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-1217820258bd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-1217820258bd
-projection_sha256: f76d60ab00a3009236dfd9af9fb1116a21c84ceae12f51e239a37e55a50ea97e
+projection_sha256: 6b68002ea66ad1eb707a319b9db9bdfc8c61e005af742269b8f2d33f39fd19fe
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -22,7 +22,7 @@ search_terms:
 - args-many
 - Stack Alignment
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 인자 전달

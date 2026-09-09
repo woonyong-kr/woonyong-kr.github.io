@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-a06ebc760118/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-a06ebc760118
-projection_sha256: 675386233852af4f82e346d0150bcc3c67fc173fccf9457e07aebaf12c254652
+projection_sha256: f8b5e2619acfb5790d4eda299ddc9efa1c9fd9d7f68b1936a0d1868702a42bab
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -18,7 +18,7 @@ search_terms:
 - 부모
 - 자식
 - Binary Tree
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Tree

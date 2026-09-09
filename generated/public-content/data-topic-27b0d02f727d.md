@@ -6,8 +6,8 @@ permalink: /wiki/data-topic-27b0d02f727d/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-27b0d02f727d
-projection_sha256: d63e9f4e40e31c1734138bca9a4b96628e84eaebf7f1d0ce987f6911e474ebc9
-parent: lrn-sql
+projection_sha256: 5b3728f22930a49834c1bdfd95f0ec5f6835843040fa46f4919e9671ffe32f52
+parent: SQL 엔진 구현
 content_status: planned
 public_parent_id: Wiki/projects/minidb
 grand_parent: Database

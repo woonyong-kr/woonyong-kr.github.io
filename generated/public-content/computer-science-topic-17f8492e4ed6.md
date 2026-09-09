@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-17f8492e4ed6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-17f8492e4ed6
-projection_sha256: e32b103164a014b79fec1e1af3720180de8203d75119e35dfe51ac5721f1ca11
+projection_sha256: 145a55472f382d9d6f0fe661c2be7b1ce1dfd663563c99f52fca651ec2355ff5
 parent: Tree
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-a06ebc760118
@@ -22,7 +22,7 @@ search_terms:
 - postorder
 - last_visited
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 트리 순회

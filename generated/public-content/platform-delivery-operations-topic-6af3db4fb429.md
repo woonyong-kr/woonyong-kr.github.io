@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-topic-6af3db4fb429/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-6af3db4fb429
-projection_sha256: 2768fe1030f81e3ca8c044f87de3f8e17a82234ad4b289fcef94ccff56f03607
+projection_sha256: 836f45710c5553cff87b70eaa6b7424398c211a778851a467af806bae8cf21f4
 parent: Docker
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/docker
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # 컨테이너 네트워크

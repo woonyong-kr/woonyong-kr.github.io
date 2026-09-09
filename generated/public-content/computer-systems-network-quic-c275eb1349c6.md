@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-quic-c275eb1349c6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-quic-c275eb1349c6
-projection_sha256: de39b98aa33cd3877e2cdb459c27d5cb34260bc233045d0850788d16d68237a0
+projection_sha256: 6453dd065176ff71e8c61952de59d6f8e0c4ebd5e02766af806f651bd12c5d3e
 parent: 전송 프로토콜
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-692017ad8918
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # QUIC

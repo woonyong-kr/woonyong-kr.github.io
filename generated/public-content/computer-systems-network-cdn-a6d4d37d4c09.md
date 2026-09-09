@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-cdn-a6d4d37d4c09/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cdn-a6d4d37d4c09
-projection_sha256: 508394bbb9173205cbe456c94027fd40c42735c9bf941a4254a3917c84e3821f
+projection_sha256: 00d63e214c3f14cb95128270a697206b7aac16419353d75c5a9ae252fc5cda88
 parent: 트래픽 처리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-7b8f000c7073
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # CDN

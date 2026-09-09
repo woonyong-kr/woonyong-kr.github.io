@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-58802d355c9c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-58802d355c9c
-projection_sha256: 5414ebb3c7125e4e6b940d07658d4aff8ac8859e7c63625beb327289d729fce8
+projection_sha256: 79e631dc6b32c5786a203a03842d6fbb0e2109e9f26bb55a6ad9f56f75a7d606
 parent: HTTP
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-http-2fe226962c51
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 요청과 응답

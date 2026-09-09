@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-state-56e847a47b4f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-state-56e847a47b4f
-projection_sha256: 1b8f83e3a1ebc96032a7cdad90c67b067fe4d6400e1528a5f44d414f35225082
+projection_sha256: 6d626dee289a84bd539b6f514e96cc0171f2d01dc715976c2ff192e945f0a009
 parent: IaC
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/iac
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # State

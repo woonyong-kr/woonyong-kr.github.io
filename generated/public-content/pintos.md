@@ -6,12 +6,12 @@ permalink: /wiki/pintos/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/projects/pintos
-projection_sha256: d50539faa7838cc946548fb38dac5d7350c776d544587d6405f2bd702d4ddca3
+projection_sha256: c24d912f9506e0aeb87cc738d092e882bef479817a49c0e73007134b68390191
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # PintOS

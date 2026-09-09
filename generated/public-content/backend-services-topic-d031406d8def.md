@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-topic-d031406d8def/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-topic-d031406d8def
-projection_sha256: b4713dc9201b1380def536fe52957c4315f4d303243021d0c19857c069cdc294
+projection_sha256: e530db2a7c602184dc4399cde17c3712724b6b387e65053ea67f45c1a77db32b
 parent: 암호학
 content_status: planned
 public_parent_id: Wiki/security/cryptography
 grand_parent: 보안
-ancestor: Backend
+ancestor: CS 기초
 ---
 
 # 전자서명

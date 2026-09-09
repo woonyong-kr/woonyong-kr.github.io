@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-fd1595b77add/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-fd1595b77add
-projection_sha256: af49a2d72c979dd51707bd277260bbb5a0a81b69b12c45503237a1834c3ae062
+projection_sha256: c2dedf962e41350d8c7d8e6109a521d3fbc2bd3958b41c2f596275ab5e7b58b1
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -17,7 +17,7 @@ search_terms:
 - enqueue
 - dequeue
 - deque
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Queue

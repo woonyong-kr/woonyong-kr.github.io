@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-dockerfile-770cc046108e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-dockerfile-770cc046108e
-projection_sha256: a2d1755787614a4a5719ccfdb3c15e2e7e599d3bf267063a26640649c388d653
+projection_sha256: 3a90dbc8a9e9fe8ebfa792dd3d709cc5f7e7e73104d09e4698bf99618bd11542
 parent: Docker
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations/docker
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Dockerfile

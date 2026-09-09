@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a6a32eb78db0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a6a32eb78db0
-projection_sha256: a1752654415760c624a6f1837219667656a73aea35d2338ba89231457ba27754
+projection_sha256: fb5aee7336cbb428511b008009c62404649a54909effebc2bcfb25bf4fab0bfc
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -20,7 +20,7 @@ search_terms:
 - AT_ENTRY
 - AddressOfEntryPoint
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 실행 파일 적재

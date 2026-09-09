@@ -6,8 +6,8 @@ permalink: /wiki/git-github/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/git-github
-projection_sha256: d5d8bb00d6375f7043b4c5f08af5a8dac49201a5e7d9e4990bc364692fb2818e
-parent: Platform
+projection_sha256: 26b9332cfdbed7b68536537c342cd022c853fa2f71f57ed2417e491ee02caad1
+parent: DevOps
 content_status: planned
 public_parent_id: Wiki/platform-delivery-operations
 ---

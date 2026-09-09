@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-41565131cfca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41565131cfca
-projection_sha256: b02bef0da52c58a78de30b00ee67fa5e8bc9fd5ba696ce0610bda9ce346e0311
+projection_sha256: 2068a1f75f06e4d84b600a17d43f6ed16c12c3aa3ea5886d464af97002a487aa
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -19,7 +19,7 @@ search_terms:
 - thread_launch
 - intr_entry
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 커널과 사용자 영역

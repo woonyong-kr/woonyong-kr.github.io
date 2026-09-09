@@ -6,12 +6,12 @@ permalink: /wiki/aurora/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/platform-delivery-operations/cloud/aurora
-projection_sha256: d125bb66d53ba2bf13789bbbed0776640d3c189c7df601a5750041786f0f296b
+projection_sha256: 5de1f240fb5244ca30e1fe687c15fb5de8a24aca7d795d164361d841d1f742d8
 parent: 관리형 서비스
 content_status: ready
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-f5955687c1b2
 grand_parent: 클라우드
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # Aurora

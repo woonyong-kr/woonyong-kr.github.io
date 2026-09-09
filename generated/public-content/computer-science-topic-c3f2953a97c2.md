@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-c3f2953a97c2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
-projection_sha256: fb66c70f523f0ee9f81458ebd94ec2e4848630c0b7a66ef9d2c5bddcbfd132ac
+projection_sha256: bbf320d2193c27a41e986129a5eee6d5c48a232aeec9fa59fde44cd9ce30b9de
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -15,7 +15,7 @@ search_terms:
 - 부하율
 - 재해싱
 - 분할 상환
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Hash Table

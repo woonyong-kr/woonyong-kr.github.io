@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-be33a4504642/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-be33a4504642
-projection_sha256: da9799c2796a94c8600a6f17de20f6d1c36d3d5eda1953158bc172622ac5f753
+projection_sha256: 237d77cf9d9efd61a89601a2430f95d45874784a414bb8383e6f424601d0c7b0
 parent: 네트워크 기초
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-bbc093178a91
 grand_parent: 네트워크
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 대역폭

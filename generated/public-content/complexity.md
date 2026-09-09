@@ -6,8 +6,8 @@ permalink: /wiki/complexity/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-science/complexity
-projection_sha256: a48a0dd8ab37268172a84e85bfa3d93fc4d45fb8477cd19fa3a617569fb4363a
-parent: CS
+projection_sha256: 819ea0a17e6c74295a79623f603ddbf2bf4358811316d5115547e99e3661b03d
+parent: CS 기초
 content_status: planned
 public_parent_id: Wiki/computer-science
 ---

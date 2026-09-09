@@ -6,12 +6,12 @@ permalink: /wiki/backend-services-kubernetes-0322508c208e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/backend-services-kubernetes-0322508c208e
-projection_sha256: 75ffff37a3773df37c107487fc8db4e065eef13883d0e1979d8018d6b7424d05
+projection_sha256: 9f75b311b72b130c9dd4a63ed244c5e84a13b0b235138d6fe8dd3701893bf46a
 parent: 클라우드 보안
 content_status: planned
 public_parent_id: Wiki/security/cloud-security
-grand_parent: 보안
-ancestor: Backend
+grand_parent: 클라우드
+ancestor: DevOps
 ---
 
 # Kubernetes 보안

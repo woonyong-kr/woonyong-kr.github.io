@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-8d3fce7eee29/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-8d3fce7eee29
-projection_sha256: 87c4a617cdc2cbbc245f4a8e59475923b6f4520236f72fe41c0491a3c3449f51
+projection_sha256: 6317ded013f6323b55b3e8e54092cebd05ea69bc8790df4487822d54ca3ecd78
 parent: Hash Table
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-c3f2953a97c2
@@ -16,7 +16,7 @@ search_terms:
 - Hash 값
 - Bucket
 grand_parent: 자료구조
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 충돌

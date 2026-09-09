@@ -6,12 +6,12 @@ permalink: /wiki/platform-delivery-operations-controller-c10a8bec3b93/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-controller-c10a8bec3b93
-projection_sha256: 0990f369ba481ab3a4a4e7cd72524f25a581dc066c84d239fe0695bb2c37bcb7
+projection_sha256: 03fa20c93b6932c4ab824459b1c55c336a9f9f5c537bd15feebac61f2af28fa0
 parent: Cluster
 content_status: planned
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-9cdb629d8fdf
 grand_parent: Kubernetes
-ancestor: Platform
+ancestor: DevOps
 ---
 
 # Controller

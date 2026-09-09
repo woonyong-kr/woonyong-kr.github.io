@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-gdb-e6fe3b725060/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-gdb-e6fe3b725060
-projection_sha256: c548abd528fc50562f1399ca05b4b1a608c3488486e77e4277744255b2cce9ea
+projection_sha256: 0bd4eb36b43dd875dfe745af4a8b5fb07677149dce682094b3c40593defa1f4a
 parent: 개발 환경
 content_status: planned
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # GDB

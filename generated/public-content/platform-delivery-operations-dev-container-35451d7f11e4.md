@@ -6,11 +6,11 @@ permalink: /wiki/platform-delivery-operations-dev-container-35451d7f11e4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-dev-container-35451d7f11e4
-projection_sha256: c5a0df1407adbaa048aadd92b21e18dcb949d40b6b2254de0f72f78733c3cda0
+projection_sha256: 713c25a42eefdd968f814d5bc1f459d8258841d3271ef3b0e7a750a2394c9749
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-eb212956fe45
-grand_parent: Platform
+grand_parent: DevOps
 ---
 
 # Dev Container

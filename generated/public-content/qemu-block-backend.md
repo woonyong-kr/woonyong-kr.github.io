@@ -6,7 +6,7 @@ permalink: /wiki/qemu-block-backend/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/pintos/qemu/block-backend
-projection_sha256: 7409b719ab9708854080b853aefd74a73e16b6eecc41395f971ed1ef756556f9
+projection_sha256: a9b9399dd4156239489beca33a006725e99c9dece42ae898ef9f5d1288097a58
 parent: QEMU
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
@@ -18,7 +18,7 @@ search_terms:
 - blk_aio_pwritev
 - BDS
 grand_parent: 개발 환경
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # BlockBackend

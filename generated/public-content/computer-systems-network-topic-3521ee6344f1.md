@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-3521ee6344f1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3521ee6344f1
-projection_sha256: efaeaecf1705e70a3e08b77bfefb92d890c056e91be1ddaa34965bf080be131c
+projection_sha256: 07a0fbc3feafee1f047a279718740c70a2c8f2e5c34f0fc8bce042e8ef24ec75
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 주소 공간

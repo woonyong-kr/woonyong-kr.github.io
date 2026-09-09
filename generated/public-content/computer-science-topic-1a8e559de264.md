@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-1a8e559de264/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-1a8e559de264
-projection_sha256: 200a7d7970b76060d4300495f4385f59ee081dd1fd82c0193b510efe98865c63
+projection_sha256: 885707705b653a73877e0f3383bafa6cb3cee6d7fe2ecf127c7bed22ab20d3c4
 parent: 자료구조
 content_status: ready
 public_parent_id: Wiki/computer-science/data-structures
@@ -17,7 +17,7 @@ search_terms:
 - 간선
 - 인접 리스트
 - 인접 행렬
-grand_parent: CS
+grand_parent: CS 기초
 ---
 
 # Graph

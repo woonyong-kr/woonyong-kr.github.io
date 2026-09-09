@@ -6,7 +6,7 @@ permalink: /wiki/file-system-buffer-cache/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/file-system/buffer-cache
-projection_sha256: 3929fd7cc3f475505e09fcbf53818c57aa69df3e09a82e4dbd173bd26e8f0a24
+projection_sha256: bd14540082706affbebebe61af81053a615b38d1f73faae940a44062c809bc5a
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
@@ -18,7 +18,7 @@ search_terms:
 - Cache Hit
 - Cache Miss
 grand_parent: OS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Buffer Cache

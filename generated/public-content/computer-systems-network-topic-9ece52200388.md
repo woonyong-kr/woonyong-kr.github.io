@@ -6,12 +6,12 @@ permalink: /wiki/computer-systems-network-topic-9ece52200388/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-9ece52200388
-projection_sha256: adc0f073398f8ae5eb94e152e0447e54ebdf1690fb0ac4399b795027b3db2e72
+projection_sha256: 28d325ef79dd2c24dc964b7e9f658e7b77ac72998a06f3da65ae00fdf8722a18
 parent: 성능 분석
 content_status: planned
 public_parent_id: Wiki/computer-systems-network/performance
 grand_parent: Systems
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # 측정

@@ -6,14 +6,14 @@ permalink: /wiki/computer-systems-network-topic-db92c0e5225c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-db92c0e5225c
-projection_sha256: d74d8a2a821f65d87f08d552bf6d7d3cedc83623eb51155aa4c1796746d0c21c
+projection_sha256: 5bd61d592e063ef47594b8a63714fa51ecaf8711749536077015da5d53af0031
 parent: 파일 시스템 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
 search_terms:
 - 디렉터리
 grand_parent: PintOS
-ancestor: CS
+ancestor: CS 기초
 ---
 
 # Directory
