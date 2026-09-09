@@ -7,15 +7,27 @@ end
 # Add the same build revision to upstream and custom assets, including the
 # default light sheet. Preserve existing revisions and non-asset links.
 Jekyll::Hooks.register [:pages, :documents], :post_render do |page|
-  # Keep the gem as the source of search. Its focusout handler assumes a next
-  # focus target, but blur(), window changes and hidden inputs can supply null.
-  # Fail visibly on an upstream change so this small compatibility patch is reviewed.
+  # Keep the gem as the source of search. Review these narrow compatibility
+  # patches when upstream changes instead of maintaining a copied search engine.
   if page.url == '/assets/js/just-the-docs.js'
-    needle = 'const nextFocusedElement = evt.relatedTarget;'
-    unless page.output.split(needle, -1).length == 2
-      raise 'Just the Docs search focus handler changed; review the null-target compatibility patch'
+    patches = {
+      'const nextFocusedElement = evt.relatedTarget;' =>
+        "const nextFocusedElement = evt.relatedTarget;\n    if (!nextFocusedElement) { hideSearch(); return; }",
+      "  jtd.addEvent(searchInput, 'focus', function(){" =>
+        "  jtd.addEvent(searchInput, 'input', update);\n  if (searchInput.value !== '') update();\n\n  jtd.addEvent(searchInput, 'focus', function(){",
+      "    currentSearchIndex++;\n\n    var input = searchInput.value;" =>
+        '    var input = searchInput.value;',
+      '    currentInput = input;' =>
+        "    currentSearchIndex++;\n    currentInput = input;"
+    }
+    # Input can arrive before the index or without keyup (paste/IME). Repeated
+    # focus/keyup on the same query must not cancel its pending result batches.
+    patches.each do |needle, replacement|
+      unless page.output.split(needle, -1).length == 2
+        raise "Just the Docs search changed; review compatibility patch: #{needle.lines.first.strip}"
+      end
+      page.output = page.output.sub(needle, replacement)
     end
-    page.output = page.output.sub(needle, "#{needle}\n    if (!nextFocusedElement) { hideSearch(); return; }")
   end
 
   next unless page.output_ext == '.html'

@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: d47e5862211e10931f85aede583d022ae15c35bebf88ad035a02e262337dcddf
+projection_sha256: 084e04c9c446d0546ae431c536e14c9cdd9f929add5b6c85328aaec590134647
 content_status: ready
 ---
 
@@ -28,16 +28,25 @@ content_status: ready
 
 ## 학습
 
-- [SQL](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장으로 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
+### CS
+
 - [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
-- AICE Associate — 시험 준비용 연습 환경. 학습 기록과 저장소는 비공개다.
-- [Kotlin](/wiki/kotlin/) — 언어 학습. 정리 중이며 학습 저장소는 비공개다.
-- [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
-- [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
 - [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
+- [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
+
+### Data
+
+- [SQL](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장으로 이어지는 SQL 엔진 구현. [GitHub](https://github.com/woonyong-kr/lrn-sql)
+- [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
+
+### Frontend
+
+- [React](/wiki/frontend-topic-556b062c7529/) — 상태, Virtual DOM과 실제 DOM 갱신을 연결하는 작은 UI 런타임. [GitHub](https://github.com/woonyong-kr/lrn-react)
+
+### AI
+
 - [MNIST](/wiki/deep-learning/) — 숫자 이미지 분류에서 데이터 분할, 학습과 저장까지의 흐름. [GitHub](https://github.com/woonyong-kr/lrn-mnist)
 - [GPT](/wiki/ai-machine-learning-topic-7c4a8b2afe4c/) — 토큰을 벡터로 바꾸는 입력과 언어 모델 구현. [GitHub](https://github.com/woonyong-kr/lrn-gpt)
-- [React](/wiki/frontend-topic-556b062c7529/) — 상태, Virtual DOM과 실제 DOM 갱신을 연결하는 작은 UI 런타임. [GitHub](https://github.com/woonyong-kr/lrn-react)
 
 ## 참고한 책
 
