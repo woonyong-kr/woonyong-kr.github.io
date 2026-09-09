@@ -79,13 +79,28 @@ for (const width of [375, 1440]) {
   });
 }
 
+test('@core root opens Home and sidebar navigation returns to the same document', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveURL(new RegExp(`${browserPages.home}$`));
+  const main = page.locator('#main-content');
+  await expect(main.getByRole('heading', { name: '학습', exact: true })).toBeVisible();
+  const homeContent = await main.innerText();
+  await page.goto(browserPages.pintos);
+  await page.locator(`.side-bar a[href="${browserPages.home}"]`).click();
+  await expect(page).toHaveURL(new RegExp(`${browserPages.home}$`));
+  await expect(main).toHaveText(homeContent);
+  // Just the Docs removes href from the active page's navigation item.
+  await expect(page.locator('.side-bar .nav-list-link').filter({ hasText: /^Home$/ })).toHaveClass(/active/);
+});
+
 test('@core no-JS documents retain GitHub and system theme', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, colorScheme: 'dark' });
   const page = await context.newPage();
   await page.goto(`${api}/`);
   await expect(page.locator('.wn-header-action--github:visible')).toBeVisible();
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(39, 38, 43)');
-  await expect(page.getByRole('link', { name: 'Wiki 열기' })).toBeVisible();
+  await expect(page).toHaveURL(`${api}${browserPages.home}`);
+  await expect(page.locator('#main-content').getByRole('heading', { name: '학습', exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 900 });
   await expect(page.locator('.wn-header-action--github:visible')).toBeVisible();
   await context.close();
