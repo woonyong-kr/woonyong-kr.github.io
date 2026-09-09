@@ -253,6 +253,8 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme });
     await configureRunner(page);
     await page.goto('/');
+    await page.waitForURL(new RegExp(`${browserPages.home}$`), { waitUntil: 'load' });
+    await expect(page.locator('#main-content p').first()).toBeVisible();
     async function checkContrast(selector: string) {
       const ratios = await page.locator(selector).evaluateAll(elements => elements.filter(el => el.getBoundingClientRect().width > 0).map(el => {
         const rgba = (value: string) => value.match(/[\d.]+/g)!.map(Number);
