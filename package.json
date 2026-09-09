@@ -9,7 +9,7 @@
     "build:diagrams": "node scripts/build-diagrams.mjs",
     "build": "npm run check:projection && npm run build:runnable && npm run build:diagrams && node scripts/build-site.mjs",
     "check:built": "node scripts/check-built-site.mjs",
-    "check:links": "bundle exec htmlproofer _site --disable-external --allow-hash-href",
+    "check:links": "bundle exec ruby scripts/check-links.rb _site",
     "test:browser": "playwright test",
     "verify": "npm run check:types && npm test && npm run check:playground && npm run build && npm run check:built && npm run check:links && npm run test:browser",
     "verify:publication": "npm run build && npm run check:built && npm run check:links"
