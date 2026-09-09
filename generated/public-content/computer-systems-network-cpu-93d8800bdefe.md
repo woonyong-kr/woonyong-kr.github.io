@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-cpu-93d8800bdefe/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-93d8800bdefe
-projection_sha256: fc3a0a128bc1f74737dd7eba9f95537e52b9c849731f522ab107b2912f2f2050
+projection_sha256: 7e4d3efd091ec52e81e9d99102804f79018b6d2546f59ba7fcf5afe06cb08d5b
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture

@@ -6,7 +6,7 @@ permalink: /wiki/lrn-sql/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/projects/minidb
-projection_sha256: 8c142911b5b578f9405fca6977332788fbd8f6663232a7089af72d9c157f9a03
+projection_sha256: c486db0815a50f71fc39e4e04bf325ea1a32b4ca817b03e79f8e11424f960366
 parent: Database
 content_status: ready
 public_parent_id: Wiki/data-storage

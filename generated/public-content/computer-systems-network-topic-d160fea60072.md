@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d160fea60072/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
-projection_sha256: 0290c10825afe101738a1a23b304067967b91bf02cf9d1a5909b6561d328c931
+projection_sha256: a9ec94ba9678dbe0c586c345e3a8e0f1b582fbd5579b7f230d00b88fe07b1539
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -286,7 +286,7 @@ Segregated Free List는 크기별로 빈 블록을 나눠 탐색 범위를 줄�
 
 PintOS의 작은 `malloc()`은 앞에서 본 7개 Descriptor마다 Explicit Free List와 Lock을 둔다. 준비된 목록에서 블록 하나를 꺼내는 경로는 빈 블록 수와 무관하지만, 목록이 비었다면 페이지 확보와 Arena 초기화, 여러 블록의 등록이 추가된다. `struct desc`의 `block_size`, `blocks_per_arena`, `free_list`, `lock`이 이 과정을 나눠 맡는다.
 
-작은 블록을 받으면 Arena의 `free_cnt`를 줄이고, 해제하면 같은 Descriptor 목록에 돌려주며 늘린다. 모든 블록이 비면 해당 Arena의 블록들을 목록에서 모두 제거한 후 페이지를 반환한다. `block_to_arena()`는 블록 주소를 페이지 경계로 내리고 Arena의 `desc`에서 크기 클래스를 찾는다. 큰 요청은 `desc == NULL`인 별도 Arena와 연속 페이지 수를 사용하므로 작은 블록의 경로에 그대로 넣지 않는다. [PintOS의 Arena 확보와 회수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/malloc.c)
+작은 블록을 받으면 Arena의 `free_cnt`를 줄이고, 해제하면 같은 Descriptor 목록에 돌려주며 늘린다. 모든 블록이 비면 해당 Arena의 블록들을 목록에서 모두 제거한 후 페이지를 반환한다. `block_to_arena()`는 블록 주소를 페이지 경계로 내리고 Arena의 `desc`에서 크기 클래스를 찾는다. 큰 요청은 `desc == NULL`인 별도 Arena와 연속 페이지 수를 사용하므로 작은 블록의 경로에 그대로 넣지 않는다. Arena의 `magic`은 `ARENA_MAGIC`으로 초기화하며, `block_to_arena()`와 `arena_to_block()`은 이를 검사해 관리 정보의 손상을 찾는다. 이 검사가 모든 잘못된 포인터나 이중 해제를 안전하게 처리해 준다는 뜻은 아니다. [PintOS의 Arena 확보와 회수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/malloc.c)
 
 고정 크기 블록 둘을 즉시 합쳐 다른 크기로 쓰지 않더라도 Arena 전체를 반환할 수 있다. 일부 살아 있는 블록 때문에 페이지를 계속 보유하는 비용과, 물리 페이지가 흩어져 생기는 외부 단편화는 구분해야 한다.
 
