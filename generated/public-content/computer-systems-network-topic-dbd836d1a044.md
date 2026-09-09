@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: e774e95de5a49c409826ce9ae794015372e6c1e6d779c1e84c751b63112a0b8f
+projection_sha256: 2257f5c0674b7e7d2584dce32444c11b4aab76f18ba1e681380adbb0907733fe
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -134,7 +134,30 @@ CR3는 현재 루트 테이블의 물리 주소와 제어 정보를 담는다. �
 
 PTE에는 주소뿐 아니라 권한과 접근 기록도 들어간다. 아래에서는 주소 필드를 먼저 분리하고, Mapping이 만들어진 뒤 P·W·U·A·D를 어떻게 읽는지 살펴본다.
 
-PintOS의 `PTE_ADDR()`와 `pte_get_paddr()`는 하위 12비트를 지우는 단순 마스크다. 이것을 모든 x86-64 PTE의 완전한 주소 추출식으로 쓰면 NX 같은 상위 비트가 남는다. 위 실행 예제는 물리 주소 폭을 52비트로 **가정한** 마스크로 NX를 분리했다. 실제 하드웨어에서는 지원하는 물리 주소 폭과 엔트리 종류에 맞춰 주소·예약·상태 비트를 해석한다. PDPTE·PDE의 PS 비트와 마지막 PTE의 같은 위치에 있는 PAT 비트도 같은 의미가 아니다.
+### 주소 비트와 상태 비트의 경계
+
+다음 표는 **일반적인 x86-64 Paging의 4 KiB leaf PTE**를 읽는 기준이다. M은 해당 환경에서 사용하는 물리 주소 폭이다. 상위 엔트리나 큰 페이지에는 그대로 적용하지 않는다.
+
+| 비트 | 용도 |
+|---|---|
+| 0 | P: 이 엔트리를 통한 변환을 허용하는 Present 비트 |
+| 1·2 | R/W·U/S: 쓰기와 User 접근 조건 |
+| 3·4 | PWT·PCD: PAT 등과 함께 메모리 유형을 결정하는 비트 |
+| 5·6 | A·D: 접근과 쓰기의 기록 |
+| 7 | PAT: 메모리 유형 선택에 사용 |
+| 8 | G: CR4.PGE=1일 때 주소 공간 전환에서도 재사용할 수 있는 Global 변환을 표시 |
+| 9–11 | 일반적인 Paging에서 하드웨어가 무시하는 영역 |
+| 12–(M−1) | 4 KiB Frame의 물리 시작 주소 |
+| M–51 | M<52이면 예약 영역이며 0이어야 함 |
+| 52–58 | 하드웨어가 무시하는 영역 |
+| 59–62 | CR4.PKE 또는 PKS가 활성화된 경우 접근 제어에 쓰는 protection key |
+| 63 | EFER.NXE=1이면 NX(XD). 이 비트가 1이면 명령어 가져오기를 금지하며, NXE=0이면 예약 비트 |
+
+PWT·PCD 하나만 보고 실제 메모리가 항상 특정 Cache 정책을 따른다고 단정하지 않는다. 비트 7도 마지막 PTE에서는 PAT지만, 큰 페이지를 가리키는 PDPTE·PDE에서는 PS다. 이 큰 페이지의 leaf 엔트리에는 D도 의미가 있다. 다음 테이블을 가리키는 nonleaf의 bit 6과 구별한다. [Intel SDM 092, Vol. 3A §5.5와 Table 5-16~5-20](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=138)
+
+상위 상태 비트가 없는 단순한 예로 `PTE=0x0000000012345067`을 읽어 보자. Frame 시작은 `0x12345000`, 하위 플래그는 `0x067`이다. `0x067=0x040+0x020+0x004+0x002+0x001`이므로 D·A·U·W·P가 켜져 있다. 이 PTE에 연결된 VA가 `0x8048123`이면 offset은 `0x123`이고 최종 PA는 `0x12345123`이다. **PTE의 하위 12비트는 플래그이고 VA의 하위 12비트는 페이지 안의 위치**라는 차이를 읽는 계산이다. 실제 메모리 관측값은 아니다.
+
+PintOS의 `PTE_ADDR()`와 `pte_get_paddr()`는 하위 12비트를 지운다. NX까지 들어 있는 PTE에서는 이것만으로 주소를 추출할 수 없어, 앞의 실행 예제는 물리 주소 폭을 52비트로 가정해 마스크를 만들었다. 현재 `pte.h`의 `PTE_ADDR_MASK`에는 `0xffffffffffffff000UL`이라는 17자리 리터럴이 남아 있다. 64비트에서 하위 12비트만 지우려는 값은 `0xfffffffffffff000ULL`이지만, 이 값도 NX 등을 분리하는 완전한 물리 주소 마스크는 아니다. 현재 조회 코드가 사용하는 것은 `PTE_ADDR()`이며 `PTE_ADDR_MASK`의 사용처는 선언 외에 확인되지 않는다. `PTE_AVL=0x00000e00`은 bit 9–11을 가리킨다. [PintOS의 비트 정의](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/threads/pte.h#L41)
 
 ### 필요한 하위 테이블만 만든다
 
@@ -261,9 +284,21 @@ assert (pte&~(PAGE-1))+offset == kva-KERN_BASE
 
 처음 Kernel 주소로 넣은 `0x41`을 User 주소에서도 읽고, User 주소로 바꾼 `0x5a`를 Kernel 주소에서 읽는다. 데이터가 별도로 복제된 것이 아니라 같은 Byte Array 위치에 접근한 결과다. 한 Mapping의 쓰기 권한을 바꾸는 일과 Frame 자체를 제거하는 일도 구분된다.
 
+## Present와 OS의 페이지 상태
+
+P=1은 CPU가 그 엔트리를 주소 변환에 사용할 수 있다는 조건이다. 이것만으로 접근 권한 검사를 통과했거나, 대상이 RAM이거나, 필요한 데이터까지 읽어 왔다고 증명할 수는 없다. Page Table walk가 필요한 접근에서 어느 단계든 P=0인 엔트리를 만나면 그 경로의 변환은 성립하지 않는다. 최종 PTE를 아직 만들지 않은 경우도 중간 단계의 not-present 엔트리에서 멈출 수 있다. 예외의 원인과 복구 가능 여부는 [페이지 폴트](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 구별한다. [Intel SDM의 변환 조건](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=137)
+
+P=0일 때 OS는 엔트리를 소프트웨어 상태로 해석할 수 있다. 하지만 모든 OS가 같은 형식을 쓰거나, 남은 63비트를 아무 제약 없이 사용한다는 뜻은 아니다. Linux v6.16의 **x86-64 swap PTE**는 bit 59–63에 swap type을, bit 9–58에 반전한 offset을 저장한다. bit 8은 not-present 상태에서 PROT_NONE을 구별하는 데 쓰이고, 낮은 비트에도 soft-dirty 등의 용도가 있다. 소스는 하드웨어 erratum 때문에 A·D 위치를 swap 정보에 사용하지 않는 이유도 명시한다. [Linux의 swap 인코딩](https://github.com/torvalds/linux/blob/v6.16/arch/x86/include/asm/pgtable_64.h#L185), [비트와 PROTNONE 정의](https://github.com/torvalds/linux/blob/v6.16/arch/x86/include/asm/pgtable_types.h)
+
+Linux의 같은 비트 정의에서 `__PAGE_KERNEL`은 NX와 G를 포함하고, `__PAGE_KERNEL_ROX`는 쓰기를 허용하지 않으면서 실행을 허용하는 조합이다. 쓰기와 실행을 동시에 허용하지 않는 W^X 정책에는 이런 권한의 조합과 Mapping 관리가 함께 필요하다. NX를 지원한다는 사실 하나로 모든 Mapping에 W^X가 적용됐다고 판단하지 않는다. [Linux Kernel의 보호 속성 조합](https://github.com/torvalds/linux/blob/v6.16/arch/x86/include/asm/pgtable_types.h#L229)
+
+Windows의 transition 페이지는 Working Set에서 빠졌어도 RAM에 남아 있을 수 있다. 다시 사용되거나 다른 용도로 바뀌기 전까지 내용을 유지할 수 있으므로, transition을 곧바로 pagefile 저장 상태로 읽지 않는다. [Windows의 transition과 soft fault](https://learn.microsoft.com/en-us/windows/win32/memory/working-set) Windows는 PFN database와 prototype PTE 같은 메모리 관리 구조도 사용한다. PTE 하나의 하드웨어 플래그와 이 소프트웨어 정보를 구별해야 한다. 디버거의 `!pfn`은 Frame의 참조 수와 상태 등을 조회하며, `!pte`로 얻은 PFN과 연결해서 읽을 수 있다. [PFN 조회](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-pfn), [hardware PTE와 prototype PTE의 구분](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0x4e--pfn-list-corrupt)
+
+QEMU 10.0의 TCG도 `target/i386/tcg/system/excp_helper.c`에서 변환 경로의 Present를 검사한다. not-present 분기는 `#PF` 정보를 만들 때 오류 코드의 P를 0으로 두고, User 접근과 쓰기 접근은 별도 비트로 더한다. 읽기와 쓰기 모두에서 같은 오류 코드가 나온다는 뜻은 아니다. 실제 예외 전달과 PintOS의 재시도는 앞서 연결한 페이지 폴트의 흐름을 따른다. [QEMU의 not-present 분기](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/excp_helper.c#L497)
+
 ## PTE의 권한과 Page Fault
 
-PintOS의 PTE에서 P·W·U는 bit 0·1·2(`0x1/0x2/0x4`)이며, 각각 존재 여부, 쓰기 허용, User 접근 허용을 나타낸다. A·D가 접근의 흔적이라면 W·U는 접근 전에 검사할 조건이다. `0x12345007`은 Frame 주소 `0x12345000`에 P·W·U가 켜진 예다. A·D까지 켜지면 `0x12345067`이 된다. 이 숫자에서 W와 D를 혼동하면 쓰기가 가능한 상태와 쓰기가 기록된 상태를 구별할 수 없다.
+PintOS의 PTE에서 P·W·U는 bit 0·1·2(`0x1/0x2/0x4`)이며, 각각 Mapping의 Present 상태, 쓰기 허용, User 접근 허용을 나타낸다. A·D가 접근의 흔적이라면 W·U는 접근 전에 검사할 조건이다. `0x12345007`은 Frame 주소 `0x12345000`에 P·W·U가 켜진 예다. A·D까지 켜지면 `0x12345067`이 된다. 이 숫자에서 W와 D를 혼동하면 쓰기가 가능한 상태와 쓰기가 기록된 상태를 구별할 수 없다.
 
 4단계 Paging에서 User 접근을 허용하려면 변환 경로의 모든 엔트리가 present이고 U=1이어야 한다. User 쓰기는 모든 단계의 W도 1이어야 한다. 최종 PTE가 `...007`이어도 상위 PDE의 U=0이면 User 접근을 허용하지 않는다. Supervisor 쓰기에 W=0을 적용할지는 CR0.WP도 결정한다. WP=1이면 Supervisor에도 쓰기 보호가 적용되고, WP=0이면 기본적인 R/W 검사에서 Supervisor 쓰기가 허용될 수 있다. P=0까지 무시한다는 뜻은 아니다. [Intel SDM 092, Vol. 3A §5.6](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf)
 
@@ -448,7 +483,11 @@ A는 주로 어느 Frame을 후보로 삼을지 판단할 때, D는 내용을 �
 
 [`file_backed_swap_out()`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/file.c)은 `frame->owner_thread`를 사용하며 없으면 현재 Thread를 사용한다. dirty라면 `file_write_at(file,frame->kva,page_read_bytes,ofs)`를 호출하고, 요청한 바이트 수만큼 썼을 때 D를 내린다. 변경된 바이트의 위치를 추적하는 것은 아니므로 dirty 페이지 안의 파일 구간 전체를 쓴다. 한 소유자의 User PTE만 검사한다는 점에서 Kernel 별칭의 D나 여러 공유 Mapping의 변경을 모두 합산하는 구현은 아니다.
 
-`vm_evict_frame()`은 `swap_out()`이 실패하면 NULL을 반환하고 Mapping 해제를 진행하지 않는다. 반면 앞 표의 destroy 경로는 실패값을 무시한다. “해제되었으니 파일에 성공적으로 저장됐다”는 보장은 이 코드만으로 성립하지 않는다. 여기서 확인한 것은 현재 소스의 제어 흐름이며, 디스크의 지속성이나 실패 주입 테스트 결과가 아니다.
+`vm_evict_frame()`은 `swap_out()`이 실패하면 NULL을 반환하고 Mapping 해제를 진행하지 않는다. 성공하면 소유자 Mapping의 P를 내리고 기존 page와 Frame의 연결을 끊은 뒤, **같은 Frame을 반환해 재사용한다**. 이 경로에서 Frame을 `palloc_free_page()`로 반환했다가 다시 할당하는 것은 아니다. 이후 이전 VA의 내용을 복원할 때 어디서 읽어 올지는 SPT에 기록된 페이지 종류와 backing 상태에 따라 달라진다. [현재 Frame 재사용 경로](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L248)
+
+`pml4_clear_page()`는 PTE가 present일 때 P만 내린다. 현재 CR3가 대상 Page Table을 사용하면 `invlpg`로 이전 변환도 무효화한다. 예를 들어 Frame PA가 `0x80005000`이고 초기 PTE가 `0x80005007`이면, P를 내린 값은 `0x80005006`이다. 주소와 W·U 비트가 남아 있어도 그 값이 현재 유효한 Mapping이라는 뜻은 아니다. 이 숫자는 A·D가 추가로 켜지지 않은 상태를 가정한 계산이다. [PTE와 TLB 무효화](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c#L274)
+
+반면 앞 표의 destroy 경로는 write-back의 실패값을 무시한다. 해제되었다는 사실만으로 파일에 성공적으로 저장됐다고 보장할 수는 없다. 여기서 확인한 것은 현재 소스의 제어 흐름이며, 디스크의 지속성이나 실패 주입 테스트 결과가 아니다.
 
 Linux에서는 하드웨어 PTE.D, 파일 Cache의 folio dirty 상태, 사용자 변경 추적용 soft-dirty를 구별한다. `/proc/<pid>/pagemap`이 제공하는 soft-dirty를 x86의 원시 D 비트라고 읽으면 안 된다. pagemap은 원시 A도 제공하지 않으며, `kpageflags`의 REFERENCED·DIRTY도 Kernel의 페이지 상태다. [pagemap 형식](https://www.kernel.org/doc/html/v6.16/admin-guide/mm/pagemap.html), [soft-dirty 추적](https://www.kernel.org/doc/html/v6.16/admin-guide/mm/soft-dirty.html) 파일 write-back은 backing·파일 시스템·메모리 압력과 dirty 정책에 따라 진행한다. `dirty_expire_centisecs`는 write-back 대상으로 볼 나이, `dirty_writeback_centisecs`는 주기적 write-back의 간격을 다룬다. 둘 다 1/100초 단위이고 저장 완료 시각을 보장하지 않는다. `dirty_background_ratio`와 `dirty_ratio`는 백그라운드 쓰기 및 쓰기 주체의 제어에 관계되지만, 고정된 기본값이나 전체 RAM의 단순 비율로 모든 환경에 적용할 수는 없다. [Linux의 dirty 정책](https://www.kernel.org/doc/html/v6.16/admin-guide/sysctl/vm.html)
 
@@ -463,6 +502,8 @@ QEMU TCG의 Guest A·D 갱신은 x86 주소 변환 코드에서 확인할 수 �
 `install_page()`는 `pml4_get_page()`로 기존 Mapping이 없는지 검사한 뒤 `pml4_set_page()`를 호출한다. 현재 `pml4_set_page()` 자체는 leaf가 이미 present인지 검사하지 않으므로, 상위 호출자의 중복 검사와 하위 함수의 역할을 나누어 읽어야 한다.
 
 VM 빌드의 `load_segment()`는 파일·offset·읽을 길이·0으로 채울 길이를 aux에 담고 `vm_alloc_page_with_initializer()`로 등록한다. 아직 모든 프레임을 읽어 오는 단계는 아니다. 나중에 프레임을 확보하면 `lazy_load_segment()`가 `page->frame->kva`에 파일 내용을 읽고 나머지를 0으로 채운다. aux와 파일 참조의 반환은 이 페이지의 초기화 수명에 속한다. Eager 적재의 코드 조각을 모든 VM 실행 경로의 순서라고 일반화하면 안 된다.
+
+현재 `vm_do_claim_page()`는 `pml4_set_page()`로 PTE를 설치한 **뒤에** `swap_in()`을 호출한다. 후자의 실패 때 이 함수에서 PTE를 되돌리는 코드는 없으므로, P=1만 보고 초기화 성공이나 안전한 재시도를 판단하면 안 된다. `PTE_W`도 항상 켜는 것이 아니라 `page->writable`에 따라 정한다. 등록, Frame 확보, 내용 준비와 원래 명령으로의 복귀는 [페이지 폴트](/wiki/computer-systems-network-topic-5cebdbc10ddf/)의 현재 코드 흐름에서 이어서 확인한다.
 
 ## Guest 물리 주소와 Host 메모리
 
