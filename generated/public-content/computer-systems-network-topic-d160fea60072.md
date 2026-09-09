@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d160fea60072/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
-projection_sha256: 90a60649392d51713e30f54c7c4d9977f898dce1ed3944cfb796cb297707470a
+projection_sha256: 0290c10825afe101738a1a23b304067967b91bf02cf9d1a5909b6561d328c931
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -145,6 +145,8 @@ Implicit Free List는 블록 크기만큼 이동하며 할당 블록까지 함�
 
 전체 블록이 N개인 Implicit 탐색의 최악 비용은 O(N)이다. First Fit이 항상 모든 블록을 읽는다는 뜻은 아니다. Next Fit이 언제나 빠르거나 Best Fit이 항상 가장 높은 공간 이용률을 얻는 것도 아니다. 분할한 나머지 조각과 이후 요청 순서가 결과에 영향을 준다.
 
+Next Fit이 기억한 탐색 시작점도 병합 뒤 유효한 블록 경계에 있어야 한다. 시작점이 합쳐진 블록 내부에 남으면 그 앞의 바이트를 Header로 오인해 크기와 다음 주소를 잘못 읽을 수 있다. 과거 `83538b1`의 `coalesce()`는 Rover인 `last_fitp`가 합쳐진 블록 내부에 있으면 새 블록의 시작점으로 옮긴다. [Next Fit의 병합 후 시작점 보정](https://github.com/woonyong-kr/lrn-malloc/blob/83538b1970d1f96b61e71cdc7c00f09c0ba7aff3/malloc-lab/mm_implicit.c#L39)
+
 해제할 때 인접한 빈 블록을 즉시 합치는 Immediate Coalescing에서는 양옆의 상태를 확인한다. 둘 다 사용 중이면 그대로 두고, 한쪽만 비었으면 그쪽과 합치며, 양쪽이 비었으면 세 블록을 합친다. Boundary Tag가 있으면 이웃의 경계 확인 자체는 O(1)이다. 별도 List나 Tree에서 이웃을 제거하고 다시 등록하는 비용까지 항상 O(1)인 것은 아니다. 병합을 나중으로 미루는 방식도 있지만, 여기서는 즉시 병합을 비교한다.
 
 다음 예제는 작은 bytearray에 실제 Header·Footer 값을 쓰고 네 가지 병합을 확인한다. 주소는 배열 안의 offset이며, 최소 블록 16바이트인 설명용 모형이다. 아래에서 다룰 현재 Malloc Lab 구현의 최소 블록 40바이트와 구분한다.
@@ -262,6 +264,10 @@ assert head is None and not links
 Tree의 키는 블록 크기이고, 같은 크기 블록은 대표 노드의 `SAME_NEXT`에 연결한다. `SUB_MAX`는 서브트리 최대 크기다. `tree_best_fit()`은 부족한 서브트리를 제외하고, 현재 크기가 충분하면 왼쪽에서 더 작은 적합 블록을 찾으며, 부족하면 오른쪽으로 간다. AVL 균형이 유지된다면 탐색은 서로 다른 크기 개수 K에 대한 O(log K) 경로다.
 
 이는 모든 할당·해제 연산이 O(log M)이라는 뜻은 아니다. 현재 `tree_delete()`는 같은 크기의 비대표 블록을 제거할 때 `SAME_NEXT`를 순회한다. 해당 체인이 길면 그 길이에 비례하는 비용이 생긴다. `rotate_left()`·`rotate_right()`와 Balance Factor 갱신은 크기 대표 노드의 균형을 관리한다. 좋은 공간 이용률이나 처리량은 Tree라는 이름만으로 보장되지 않는다.
+
+현재 `lrn-malloc`의 `mm_realloc()`은 요청 크기를 정렬하고 최소 블록 크기를 반영한 뒤, 축소·제자리 확장·이동을 나누어 처리한다. 뒤의 빈 블록과 합칠 때는 그 블록을 AVL 색인에서 먼저 제거하고, 분할한 나머지를 다시 등록한다. 새 할당이 실패하면 기존 블록을 유지하며, 이동할 때는 내용을 복사한 뒤 이전 블록을 해제한다. 이 구현에서 `ptr == NULL`은 할당 경로로, `size == 0`은 해제 후 `NULL` 반환으로 처리한다. 정상 빌드 여부와 각 경로의 정렬·비중첩·데이터 보존 여부는 별도로 확인해야 한다. [재할당 경로](https://github.com/woonyong-kr/lrn-malloc/blob/25624686459182a69e9ca9a9a650d8f753828756/malloc-lab/mm.c#L505)
+
+이 흐름을 읽기 쉽게 정리하려면 요청 크기 계산, 처리 경로 선택, 실제 블록 조작을 나누는 방법을 생각할 수 있다. `coalesce()`의 양옆 할당 여부는 네 가지 조합으로 표현할 수 있지만, `realloc()`에는 축소 가능 여부와 인접 공간의 크기, 새 할당의 성공 여부가 함께 들어간다. 공통 크기 계산과 축소·확장·복사를 작은 함수로 나누고 종료 조건을 먼저 처리하면 각 경로가 드러난다. 이는 코드 구조를 개선할 때의 선택이며, 현재 구현이 이미 그렇게 분리됐다는 설명은 아니다.
 
 ## 크기별 목록과 페이지 묶음
 

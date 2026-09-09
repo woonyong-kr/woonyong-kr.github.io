@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-5cebdbc10ddf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-5cebdbc10ddf
-projection_sha256: 03ab682960859b703dcf75f375ce97bdd77365f981a1745f1fd008209afa14a5
+projection_sha256: c43378ee1052153f383f631ccf7db72bfa6c035d8afeb96f088cc5c548ee0dc0
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -191,6 +191,10 @@ VM 계층이 끝내 `false`를 반환하면 이 성공 흐름으로 돌아가지
 Linux의 VMA는 같은 속성을 가진 연속 가상 주소 범위를 나타낸다. PintOS SPT의 개별 항목은 페이지 단위 정보를 담는다. 둘 다 폴트 처리에 필요한 정책 정보를 제공하지만 같은 자료 구조는 아니다. [Linux 6.16의 VMA 설명](https://docs.kernel.org/6.16/mm/process_addrs.html)
 
 Linux v6.16 x86에서 사용자 주소 공간의 일반적인 처리 경로는 `exc_page_fault → handle_page_fault → do_user_addr_fault`다. VMA를 `lock_vma_under_rcu()`로 찾는 경로와 필요할 때 `lock_mm_and_find_vma()`로 내려가는 경로가 있고, 접근을 검사한 뒤 `handle_mm_fault()`에 메모리 처리를 맡긴다. 결과에 따라 완료, 재시도, SIGSEGV·SIGBUS, 메모리 부족 처리가 갈린다. 사용자 주소 공간이라는 표현에는 커널이 그 주소를 접근한 경우도 포함될 수 있다. [Linux v6.16의 실제 fault 처리](https://github.com/torvalds/linux/blob/v6.16/arch/x86/mm/fault.c#L1209)
+
+Linux에서는 복구에 I/O가 필요했는지에 따라 Minor Fault와 Major Fault를 구분한다. `getrusage()`의 `ru_minflt`는 I/O 없이 처리한 폴트 수이고, `ru_majflt`는 I/O가 필요했던 폴트 수다. 이는 주소와 접근 권한이 유효한지를 가르는 분류와 다르다. [Linux getrusage(2)](https://man7.org/linux/man-pages/man2/getrusage.2.html)
+
+Minor Fault에서도 새 Frame을 준비하거나 RAM에 있는 COW Page를 복사하는 작업이 필요할 수 있다. 따라서 PTE만 고치는 가벼운 작업으로 한정하면 안 된다. Major Fault의 시간도 저장 장치와 대기 상태에 따라 달라지므로 항상 몇 밀리초라고 고정하지 않는다. [Linux의 Page Table과 폴트 처리](https://docs.kernel.org/mm/page_tables.html)
 
 Windows의 VAD(Virtual Address Descriptor)는 프로세스의 가상 주소 범위를 기술한다. WinDbg의 `!vad`로 VAD 하나나 트리를 살펴보면 범위의 시작·끝과 보호 속성 등의 정보를 확인할 수 있다. 이런 정책 정보를 하드웨어 PTE의 현재 매핑 상태와 구별해서 읽는다는 점은 Linux의 VMA, PintOS의 SPT와 비교할 수 있다. 내부 fault 함수의 호출 순서까지 세 OS가 같다는 뜻은 아니다. [WinDbg의 VAD 조회](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-vad)
 

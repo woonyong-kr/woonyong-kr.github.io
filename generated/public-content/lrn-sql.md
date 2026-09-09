@@ -6,7 +6,7 @@ permalink: /wiki/lrn-sql/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/projects/minidb
-projection_sha256: f99c1a5c37d998d4ed6273bc7b75bd0a8c0d3972f31bfd712bbbfe6e43b0d462
+projection_sha256: 8c142911b5b578f9405fca6977332788fbd8f6663232a7089af72d9c157f9a03
 parent: Database
 content_status: ready
 public_parent_id: Wiki/data-storage
@@ -30,6 +30,8 @@ grand_parent: Data
 Week 7의 디스크 엔진에 Week 8에서 HTTP 서버를 연결했다. 서버와 CLI는 모두 `db_execute()`를 호출하므로 SQL 실행 경로를 공유한다. HTTP 요청을 읽는 Socket FD, DB 파일을 가리키는 FD, DB 내부의 `page_id`는 역할이 다르다. FD는 열린 파일이나 Socket을 가리키는 프로세스의 핸들이고, `page_id`는 DB 파일을 나눈 페이지의 번호다.
 
 B+ Tree와 Pager도 서로 다른 질문에 답한다. B+ Tree는 Key로 행의 위치를 찾고, Pager의 Hash Table은 `page_id`로 메모리에 올라온 Frame을 찾는다. 쿼리 결과가 잘못됐을 때 이 계층을 나눠 읽으면 문장 해석, 탐색 경로, 저장된 바이트 중 어디를 확인할지 좁힐 수 있다. [현재 엔진의 진입점](https://github.com/woonyong-kr/lrn-sql/blob/49ac2cbf310c1d8df720432833664e319484fdcc/src/db.c)
+
+저장 구조를 설계할 때는 프로그램을 다시 열어도 해석할 수 있는 값을 파일에 남겨야 한다. Week 7 설계안은 단일 `.db` 파일의 Header에 Page 크기, Index의 루트와 Heap의 시작 Page, 다음에 부여할 `id` 등을 남기도록 정했다. 행의 위치도 실행 중인 포인터 대신 `row_ref(page_id, slot_id)`로 기록한다. 이 위치 표현과 Page 안의 바이트 배치는 [B+ Tree 구현](/wiki/data-b-tree-99b399d45cdf/)에서 이어서 살펴본다.
 
 ## Queue를 잠그는 동안 요청 전체가 멈추는가
 
@@ -72,6 +74,8 @@ Pager는 Dirty Frame이 64개 이상이면 사용 중이지 않은 오래된 Fra
 
 정상 종료에는 남은 Dirty Page와 Header를 기록하고 `fsync()`를 호출하는 경로가 있다. 하지만 여러 Page를 바꾸는 SQL 문장 전체의 원자적 Commit이나 중간 장애 이후의 복구를 구현한 것은 아니다. 현재 기록 경로는 짧은 쓰기와 I/O 오류 처리까지 성공을 확인해 전달하는 구조도 아니므로, 함수 호출이 있다는 사실만으로 저장 완료를 보장할 수 없다. WAL 기반 장애 복구나 MVCC를 갖춘 범용 DBMS와는 이 경계를 구분해 읽어야 한다. [Pager의 기록 경로](https://github.com/woonyong-kr/lrn-sql/blob/49ac2cbf310c1d8df720432833664e319484fdcc/src/storage/pager.c)
 
+삭제 후 공간을 다시 쓰는 과정도 저장 설계의 일부다. Heap Slot을 빈 상태로 바꾸면서 해당 Index Key도 제거해야 이후 조회가 삭제된 행을 가리키지 않는다. 빈 Slot이나 Page를 재사용하는 것과 파일 전체를 압축하는 작업은 구분한다. B+ Tree의 병합은 부모·자식 관계와 정렬 조건을 유지하도록 노드를 합치는 과정이므로, 메모리 할당기가 관리하는 Heap 주소 공간에서 인접한 빈 블록을 합치는 규칙을 그대로 적용할 수는 없다.
+
 대량 삽입을 살펴볼 때는 진행 출력, 빌드 설정, 삽입할 Heap Page를 찾는 비용도 나눠 봐야 한다. `last_heap_page_id`와 빈 Slot을 재사용할 가능성을 나타내는 힌트는 Heap 탐색을 줄이기 위한 장치다. 과거 실행 시간은 그때의 코드와 입력, 빌드 조건에 속한다. 저장소의 PostgreSQL 비교 기록 역시 내구성 설정과 실행 조건이 다르다는 한계를 명시하므로, 특정 수치만 떼어 운영 DB보다 빠르다는 결론으로 사용하지 않는다. [벤치마크의 조건과 한계](https://github.com/woonyong-kr/lrn-sql/blob/49ac2cbf310c1d8df720432833664e319484fdcc/docs/benchmark-postgres.md)
 
 ## 테스트가 실행되는 경로
@@ -79,6 +83,8 @@ Pager는 Dirty Frame이 64개 이상이면 사용 중이지 않은 오래된 Fra
 테스트 하네스는 테스트를 준비하고 실행한 뒤 결과를 판정하는 장치다. 폴더를 만들거나 `harness`라는 이름을 붙이는 것만으로 테스트가 실행되지는 않는다. 실행할 프로그램, 입력, 기대 결과, 실패와 Timeout의 기준, 사용한 자원을 정리하는 방법이 연결돼 있어야 한다.
 
 이 저장소에서는 `Makefile`의 `test`, `test-step0`, `test-step1`, `test-step2`가 C 테스트 프로그램을 빌드하고 실행하며, `test-all`이 이를 묶는다. 서버를 시작하고 종료하는 부분과 응답·DB 결과를 판정하는 부분을 구분하면, 서버가 뜨지 않은 것인지 SQL 결과가 틀린 것인지 확인하기 쉽다. [테스트 진입점](https://github.com/woonyong-kr/lrn-sql/blob/49ac2cbf310c1d8df720432833664e319484fdcc/Makefile)
+
+저장 경로의 검증 기준은 재열기 뒤의 행 조회와 다음 ID 복원, 삭제 뒤의 조회와 재삽입, B+ Tree 분할·병합 뒤의 검색 정합성이다. 성능 비교는 이 결과가 맞는지 확인한 뒤 수행한다. 같은 100만 행이라도 Page 크기, 행 크기, 채움률과 Cache 상태가 달라지면 비용이 달라지므로, ID를 찾는 Index Lookup과 다른 필드를 비교하는 Table Scan을 조건과 함께 기록해야 한다.
 
 서버 테스트를 확장할 때는 정상 쿼리뿐 아니라 문법 오류, 빈 요청, 긴 요청, 동시 요청, 재시작 뒤의 조회를 입력 사례로 둘 수 있다. 각 사례에는 응답 형식과 행 수 같은 판정 기준을 두고, 실행 과정에는 준비 완료 확인, Timeout, 재시도 횟수와 종료 조건을 둔다. 실행 결과와 오류를 같은 형식으로 남기면 성공률과 소요 시간을 비교할 수 있다. 이 구성은 테스트를 설계하는 예이며, 열거한 모든 검증이 현재 하네스에 구현됐다는 뜻은 아니다.
 

@@ -6,7 +6,7 @@ permalink: /wiki/frontend-topic-556b062c7529/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/frontend-topic-556b062c7529
-projection_sha256: 1ad43688a75a5494bd8df84c0cfede4b5656454d3485db3f514f88e2ed87488b
+projection_sha256: 8d379bfaef0018e4a81a57894f94fdd67613b768e1d7d92b69396a41c62bbea5
 parent: React
 content_status: ready
 public_parent_id: Wiki/keywords/frontend-react-8bebe766ebac
@@ -26,11 +26,25 @@ grand_parent: Frontend
 
 ## 상태 저장과 DOM 반영 사이의 책임
 
-원본 런타임 안내에서 `useState`의 setter는 DOM을 직접 고치지 않고 저장된 값을 바꾼 뒤 update를 예약한다. 렌더 중 dispatcher는 현재 Hook의 주인을 가리키며 슬롯 순서로 상태를 찾는다. 따라서 Hook 호출 순서와 컴포넌트 정체성을 함께 유지해야 한다.
+`props`는 컴포넌트에 전달하는 입력이다. 부모는 표시할 데이터와 이벤트 함수를 자식의 props로 넘기고, 자식은 그 입력으로 화면을 계산한다. 이 런타임의 `performRender()`는 현재 props를 정하고 `hookCursor`를 0으로 되돌린 뒤, 저장된 `renderFn`을 호출해 새 VNode를 얻는다. 렌더가 반복되어도 함수 정의를 매번 새로 만드는 것은 아니다. `update(nextProps)`에 인자를 전달하면 기존 props와 병합하지 않고 교체한다. [렌더와 props 갱신](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/FunctionComponent.js)
 
-DOM patch 뒤에는 effect를 commit한다. 의존성이 바뀐 effect를 다시 실행하기 전에 이전 cleanup을 호출하고, unmount에서도 자원 정리를 수행한다. 이벤트 핸들러 변경 역시 이전 리스너 제거와 새 리스너 등록을 구분해야 한다.
+`useState()`는 컴포넌트의 `hooks` 배열에서 현재 순서에 해당하는 Slot을 읽는다. 처음에는 상태 값과 setter를 만들고, 다음 렌더에서는 같은 Slot을 재사용한다. 나중에 이벤트에서 호출하는 setter는 클로저에 남은 `slot`과 `component`를 사용한다. setter를 부르는 순서와 렌더 중 Hook을 부르는 순서는 서로 다르다. 상태를 올바르게 이어 가려면 Hook 호출 순서와 컴포넌트 정체성을 함께 유지해야 한다. [상태 Slot과 setter](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/hooks/useState.js)
 
-이 자료에는 초기 버전의 ‘루트에서만 Hook 허용’ 제약이 남아 있다. 이는 당시 설계의 한계이며 이후 학습 레포의 컴포넌트별 Hook 지원을 부정하는 현재 계약으로 옮기지 않는다. 이 문서는 자체 런타임을 통해 경계를 설명하며 React 전체 호환이나 React 내부 구현을 주장하지 않는다. [VDOM, Resolver, Diff, Patch 설명 · 5e9a60f](https://github.com/woonyong-kr/lrn-react/blob/5e9a60f126cc1a2f6ad8df31c7db0f5a59fb929e/learning-docs/renderer-and-vdom.md) [런타임 동작 설명 · 5e9a60f](https://github.com/woonyong-kr/lrn-react/blob/5e9a60f126cc1a2f6ad8df31c7db0f5a59fb929e/learning-docs/runtime-walkthrough.md)
+setter는 DOM을 직접 고치지 않는다. 값을 바꾼 뒤 `scheduleUpdate()`를 호출하며, 자식의 갱신도 `rootOwner`에 예약한다. microtask 모드에서는 이미 유효한 예약이 있으면 다시 예약하지 않는다. 콜백이 기억한 token과 현재 `scheduledUpdate`가 다르거나 취소된 경우에는 오래된 예약을 실행하지 않는다. 이로써 같은 동기 구간의 여러 상태 갱신을 한 번의 update로 묶는다. 실행을 시작한 render·diff·patch를 우선순위에 따라 중단하는 스케줄러는 아니다. [갱신 예약과 취소](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/scheduleUpdate.js)
+
+`useMemo()`는 렌더 중 계산 결과를 재사용하고, `useEffect()`는 DOM 반영 뒤에 실행할 작업을 등록한다. 두 Hook에 전달하는 `deps`는 의존값 배열이다. 이 구현은 두 배열의 길이와 각 원소를 `Object.is()`로 비교한다. 객체 내부를 재귀적으로 비교하거나 콜백이 읽은 값을 자동으로 수집하지 않는다. [의존값 비교](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/areHookDepsEqual.js)
+
+Memo의 계산 결과는 Hook Slot에 남는다. Effect의 실행 함수와 cleanup도 Slot에 저장하지만, 이번에 실행할 Slot의 인덱스는 `pendingEffects`에 따로 모은다. DOM patch 뒤의 commit 단계는 이 목록을 읽어 이전 cleanup, 새 Effect, 새 cleanup 저장 순서로 처리한다. unmount에서도 자원을 정리한다. 이벤트 핸들러를 바꿀 때 이전 리스너를 제거하고 새 리스너를 등록하는 처리 역시 필요하다. [Memo 계산](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/hooks/useMemo.js), [Effect 등록](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/hooks/useEffect.js), [Effect commit](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/core/runtime/commitEffects.js)
+
+비동기 API 응답을 저장하고 다음 화면 갱신을 알리는 일과, 이미 가진 값으로 파생 결과를 계산하는 일은 나누어 생각해야 한다. 이 앱은 응답을 상태에 저장하고 Memo로 파생값을 계산한다. 응답 내용이 잘 바뀌지 않더라도 `useMemo()`가 응답 도착을 감지해 화면 갱신까지 예약해 주는 것은 아니다.
+
+옛 런타임 안내에는 ‘루트에서만 Hook 허용’이라는 제약이 남아 있다. 이후 학습 레포는 컴포넌트별 Hook을 지원하므로 버전에 따라 읽어야 한다. 여기서 다루는 것은 자체 UI 런타임이며 React 전체의 호환 구현은 아니다. [초기 런타임 안내](https://github.com/woonyong-kr/lrn-react/blob/5e9a60f126cc1a2f6ad8df31c7db0f5a59fb929e/learning-docs/runtime-walkthrough.md)
+
+## 화면 변화와 Inspector를 함께 읽기
+
+카드 hover를 검토한 당시에는 두 가지 갱신 경로가 있었다. 카드 선택과 데이터 로드는 상태를 바꿔 런타임의 patch를 거쳤고, 광택·기울기 효과는 이벤트에서 DOM style을 직접 바꿨다. 이후 상세 카드 한 장을 상태 갱신 경로로 옮겨 전체 흐름을 관찰하도록 했다. 이벤트 연결과 요소 생성이 런타임을 거친다고 해서 이후 모든 시각효과도 같은 경로를 거치는 것은 아니다.
+
+Inspector는 렌더 횟수와 patch 목록 등을 요약한 snapshot을 보여 준다. `createRuntimeBridge()`의 `subscribe()`는 콜백을 등록하고 해제 함수를 반환하며, `publish()`는 최신 snapshot을 저장한 뒤 등록된 콜백을 호출한다. snapshot은 실제 DOM 전체를 복사한 자료가 아니므로, 화면 효과의 실행 경로나 성능을 확인하려면 해당 이벤트와 DOM 변경도 함께 살펴야 한다. [Inspector와 구독 연결](https://github.com/woonyong-kr/lrn-react/blob/0cfbd0305bd6f260d5b41dec9c069fbbe32852bd/src/app/main.js)
 
 ## 순서를 바꿨을 때 상태가 따라가는 항목
 

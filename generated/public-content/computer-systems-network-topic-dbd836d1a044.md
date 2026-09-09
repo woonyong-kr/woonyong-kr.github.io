@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: b35d360bcb98b70fd2234f4666ddc6d5c65375250e46c6643815f959c1440d2b
+projection_sha256: 21ed13553a801249a48aba9dd66f96a35deb0641d1104396c64fddf807268897
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -172,6 +172,96 @@ Linux는 공통 계층을 `PGD → P4D → PUD → PMD → PTE`로 표현한다.
 Linux HugeTLB는 지원되는 크기의 큰 페이지를 별도 Pool에서 관리한다. `/proc/meminfo`의 `HugePages_Total`만 보고 1 GiB 페이지 수라고 읽으면 안 된다. `Hugepagesize`는 기본 크기이고 크기별 Pool은 `/sys/kernel/mm/hugepages`에서 구별한다. PMD 크기의 THP는 애플리케이션이 HugeTLB Pool을 직접 지정하는 방식과 다르다. 큰 페이지는 TLB 부담을 줄일 수 있지만 연속된 물리 공간과 단편화 비용도 함께 고려한다. [HugeTLB의 크기별 Pool](https://docs.kernel.org/6.16/admin-guide/mm/hugetlbpage.html)
 
 Windows의 일반 애플리케이션은 `GetLargePageMinimum()`으로 크기를 조회하고, 필요한 권한과 정렬을 갖춰 `VirtualAlloc(...,MEM_LARGE_PAGES,...)` 경로를 사용한다. `CreateFileMappingW`에서 `SEC_LARGE_PAGES|SEC_COMMIT`을 사용하는 경로도 있다. 이 경우 paging file이 backing이어야 하고, `SeLockMemoryPrivilege`와 large-page 크기에 맞는 객체·view 크기 및 정렬이 필요하다. 일반 데이터 파일이나 실행 이미지 Mapping에 같은 옵션을 적용하는 것은 아니다. [SEC_LARGE_PAGES의 조건](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw) 특정 크기의 지원을 OS 이름만으로 단정하지 않는다. Kernel 내부 `_MMPTE`·`MiGetPteAddress`의 형태를 고정 API로 사용하는 대신, 디버거에서는 `!pte`가 보여 주는 PDE·PTE와 상태 비트를 대상 시스템에 맞춰 읽는다. [Windows Large Page](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support), [WinDbg !pte](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-pte)
+
+## TLB에 변환이 없다는 것과 페이지가 없다는 것
+
+TLB(Translation Lookaside Buffer)는 최근 주소 변환을 재사용하는 CPU의 캐시다. 페이지 번호에서 Frame 번호를 찾는 데 그치지 않고, 그 변환의 접근 권한과 주소 공간 문맥도 다룬다. 따라서 **TLB Hit이어도 금지된 쓰기를 시도하면 Page Fault가 발생할 수 있다**. 캐시에 항목이 있다는 사실과 요청한 접근을 허용한다는 판단은 다르다. [Intel SDM의 TLB 정보와 사용 규칙](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=155)
+
+| 접근 상황 | 이어지는 처리 |
+|---|---|
+| TLB Hit, 권한 허용 | 캐시한 변환을 사용한다. 실제 데이터는 별도의 Cache 계층에서 찾는다. |
+| TLB Miss, Page Table에 유효한 변환과 권한이 있음 | x86 하드웨어가 변환을 구하고 이후 접근에 재사용할 수 있다. Miss 자체로 Page Fault가 발생하지는 않는다. |
+| 캐시한 권한 또는 Page Table의 조건이 접근을 거부함 | Page Fault 정보를 커널에 전달한다. 복구 여부는 OS 정책과 해당 페이지의 상태에 달려 있다. |
+| 변환 성공, 데이터 Cache Miss | 필요한 데이터를 하위 Cache나 RAM에서 가져온다. 데이터 Cache Miss만으로 디스크를 읽지는 않는다. |
+
+4 KiB 페이지를 사용하는 4단계 구조에는 네 테이블의 논리적 조회가 있다. 그러나 이것이 매번 네 번의 DRAM 접근을 뜻하지는 않는다. 상위 변환을 기억하는 Paging-structure Cache가 일부 단계를 줄일 수 있고, 테이블 엔트리를 읽을 때도 CPU Cache가 관여한다. 큰 페이지는 더 일찍 Frame에 도달한다. 주소 변환과 데이터 접근을 구분해서 설명하되, 실제 CPU에서 두 처리가 언제나 완전히 직렬로 실행된다고 가정하지 않는다. [Intel SDM의 Paging-structure Cache](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=156)
+
+명령어용 ITLB와 데이터용 DTLB를 나누고, 그 아래에 다른 TLB 계층을 두는 CPU도 있다. 엔트리 수, 연관도, 지원하는 페이지 크기는 CPU마다 다르다. 특정 모델을 확인하지 않은 채 ‘TLB는 항상 1 Cycle’이나 ‘4단계 Miss는 항상 1,000 Cycle’이라는 값을 사용하면 실제 병목을 잘못 짚게 된다. x86의 하드웨어 Walk와 달리 소프트웨어가 TLB 보충에 참여하는 아키텍처도 있다. [Linux의 TLB 구조와 비용 설명](https://docs.kernel.org/arch/x86/tlb.html), [소프트웨어 TLB 보충을 위한 인터페이스](https://docs.kernel.org/core-api/cachetlb.html)
+
+### Set 수와 전체 엔트리 수를 나눠 계산한다
+
+주소 폭이 14비트이고 페이지 크기가 64 B인 모형을 생각해 보자. offset은 6비트, VPN은 8비트다. `0x03D4`를 나누면 VPN은 15이고 offset은 20이다. 물리 주소 폭을 12비트로 정하면 Frame 번호는 6비트다. 페이지 단위 변환에서는 페이지 안의 offset이 유지된다.
+
+4-way라는 말은 Set 하나에 엔트리가 네 개라는 뜻이다. **16 Set과 전체 16 Entry는 다른 구성**이다. VPN의 하위 비트를 Set index로 사용하는 모형에서는 다음과 같이 나뉜다.
+
+| 가정한 구성 | 전체 엔트리 | Set 수 | Index 비트 | Tag 비트 | VPN 15의 Index / Tag |
+|---|---:|---:|---:|---:|---|
+| 16 Set, 4-way | 64 | 16 | 4 | 4 | 15 / 0 |
+| 전체 16 Entry, 4-way | 16 | 4 | 2 | 6 | 3 / 3 |
+
+다음 코드는 주소와 TLB 구성을 바꿔 계산할 수 있는 모형이다. 실제 CPU의 TLB를 조회하거나 지연 시간을 측정하지 않는다.
+
+```run-python
+VA_BITS, PA_BITS, PAGE_BITS = 14, 12, 6
+address, frame_number = 0x03D4, 43
+assert 0 <= address < 1 << VA_BITS
+assert 0 <= frame_number < 1 << (PA_BITS - PAGE_BITS)
+
+offset_mask = (1 << PAGE_BITS) - 1
+vpn, offset = address >> PAGE_BITS, address & offset_mask
+physical = (frame_number << PAGE_BITS) | offset
+print(f"VPN={vpn}, offset={offset}, PA={physical:#x}")
+
+for entries, ways in [(64, 4), (16, 4)]:
+    assert entries > 0 and ways > 0 and entries % ways == 0
+    sets = entries // ways
+    assert sets & (sets - 1) == 0
+    index_bits = sets.bit_length() - 1
+    tag_bits = VA_BITS - PAGE_BITS - index_bits
+    assert tag_bits >= 0
+    index, tag = vpn & (sets - 1), vpn >> index_bits
+    print(f"{entries} entries, {ways}-way: sets={sets}, "
+          f"index_bits={index_bits}, tag_bits={tag_bits}, "
+          f"index={index}, tag={tag}")
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+VPN=15, offset=20, PA=0xad4
+64 entries, 4-way: sets=16, index_bits=4, tag_bits=4, index=15, tag=0
+16 entries, 4-way: sets=4, index_bits=2, tag_bits=6, index=3, tag=3
+```
+
+TLB가 한 번에 담당할 수 있는 주소 범위도 엔트리 수와 페이지 크기를 함께 봐야 한다. 동일 크기의 서로 다른 페이지를 각 엔트리가 하나씩 담는 모형에서 64 Entry × 4 KiB는 256 KiB, 1,536 Entry × 4 KiB는 6 MiB, 32 Entry × 2 MiB는 64 MiB다. 이는 세 가지 구성의 산술 예다. 실제 CPU가 모든 페이지 크기에 같은 용량을 제공하거나, 충돌 없이 그 범위를 모두 유지한다는 보장은 아니다.
+
+평균 비용은 같은 범위의 비용을 정의한 뒤 계산한다. Hit 비용을 `H`, Miss 비용을 `M`, Hit 비율을 `h`로 두면 단순 모형의 평균은 `h×H+(1−h)×M`이다. 가령 변환 비용을 Hit 1, Miss 401이라는 가상 값으로 정하면 Hit 비율 99%에서는 5, 95%에서는 21이다. 이 계산에 실제 데이터 접근 비용이나 Page Fault 처리 시간을 섞으면 다른 모형이 된다.
+
+## Page Table을 바꾼 뒤 남은 변환을 처리한다
+
+메모리의 PTE를 수정해도 CPU가 이전 변환을 계속 사용할 수 있다. 특히 매핑을 제거하고 Frame을 다른 용도로 재사용하려면, 이전 주소로 그 Frame에 접근할 수 없도록 필요한 무효화를 마쳐야 한다. 단순히 시간이 지났다는 이유로 TLB 항목이 사라졌다고 가정해서는 안 된다. [Intel SDM의 무효화와 지연 조건](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=164)
+
+x86에서는 `invlpg`로 주소에 해당하는 변환을 무효화하거나, CR3 전환과 `INVPCID`로 주소 공간 문맥을 다룬다. PCID가 꺼진 상태의 CR3 쓰기는 해당 문맥의 non-global 변환을 무효화한다. PCID를 사용하면 다른 주소 공간의 변환과 구분해 재사용할 수 있으며, CR3의 입력 비트와 명령에 따라 무효화 범위가 달라진다. Global 변환도 별도 조건을 갖는다. ‘CR3를 쓰면 모든 TLB가 반드시 비워진다’는 한 문장으로 묶을 수 없는 이유다. [Intel SDM의 명령별 무효화 범위](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=160)
+
+여러 CPU가 같은 주소 공간을 사용했다면 다른 CPU에 남은 변환도 고려한다. TLB Shootdown은 이런 변경을 관련 CPU에 전달하는 작업이다. Linux는 주소 공간을 사용한 CPU 집합 등을 추적해 불필요한 무효화를 줄일 수 있다. 한 CPU에서 `invlpg`를 실행하는 것과 시스템 전체의 변경을 완료하는 것은 같지 않다. [Linux의 CPU별 무효화 범위](https://docs.kernel.org/core-api/cachetlb.html)
+
+무효화 명령 자체의 비용뿐 아니라, 버린 항목을 다시 채우는 비용도 생긴다. 좁은 범위에는 페이지별 무효화가 유리할 수 있고, 넓은 범위에는 주소 공간 단위 처리가 더 적절할 수 있다. Linux의 선택은 범위와 CPU 구조, 이후 접근에 영향을 받는다. 고정된 100·200 Cycle로 우열을 정하지 않는다. Kernel Thread로 전환할 때 주소 공간을 당장 바꾸지 않는 Lazy TLB 처리와, PTI를 위해 User·Kernel Page Table을 전환하는 처리는 서로 다른 상황이다. PTI에서도 PCID 지원 여부가 재사용 비용에 영향을 준다. [Linux의 무효화 선택](https://docs.kernel.org/arch/x86/tlb.html), [PTI의 주소 공간 전환](https://docs.kernel.org/6.16/arch/x86/pti.html)
+
+### PintOS의 세 경로를 구분한다
+
+`lrn-pintos`의 `5afaa6d` 시점에서는 다음 세 경로를 별도로 읽어야 한다. 소스에 있는 연산을 확인한 것이며, 실제 부팅 중 무효화 횟수를 측정한 결과는 아니다.
+
+| 경로 | 확인한 동작 |
+|---|---|
+| `schedule → process_activate → pml4_activate` | 대상 PML4의 물리 주소를 `lcr3()`에 넘긴다. |
+| `pml4_clear_page` | Present를 내리고, 현재 CR3의 주소 공간이면 해당 User VA에 `invlpg`를 실행한다. |
+| `pml4_set_page` | PTE를 기록하지만 이 함수 안에는 `invlpg`가 없다. 기존 문서의 ‘설치할 때도 항상 무효화한다’는 설명과 다르다. |
+
+새로운 not-present 항목을 present로 만드는 경우와 기존 매핑·권한을 바꾸는 경우는 요구 조건이 다르다. 상위 호출자가 어느 상태의 PTE를 넘기는지까지 확인해야 한다. A·D 비트의 조회와 초기화 경로는 뒤의 ‘메모리의 비트와 Cache의 비트’에서 이어진다. [PintOS의 Mapping 구현](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c), [Intel SDM의 선택적 무효화 조건](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=163)
+
+Timer가 100 Hz이고 Time Slice가 4 Tick이라는 값만으로 Context Switch나 TLB Flush를 초당 25회 이하라고 계산할 수는 없다. `thread_block()`과 `thread_yield()`도 스케줄링을 일으킨다. 이 소스의 `schedule()`은 다음 Thread가 현재 Thread와 같은지 검사하기 전에 `process_activate(next)`를 호출하므로, CR3 쓰기 횟수와 서로 다른 Thread 사이의 전환 횟수도 그대로 일치하지 않는다. [PintOS의 스케줄링 경로](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/thread.c)
+
+QEMU TCG의 Software TLB와 Host CPU의 TLB도 구별한다. QEMU v10.0.0의 `cpu_x86_update_cr3()`는 Guest Paging이 켜져 있으면 TCG의 `tlb_flush()`를 호출한다. 이것을 Host 하드웨어 TLB 전체를 비우는 동작으로 해석하지 않는다. Guest의 `invlpg`에도 별도의 TCG 처리 경로가 있다. 이 구분은 앞서 설명한 Guest VA·PA와 Host 메모리의 경계로 이어진다. [QEMU의 CR3 처리](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/helper.c), [Guest invlpg 처리](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/misc_helper.c)
 
 ## 페이지 안의 위치로 경계와 접근 범위를 계산한다
 

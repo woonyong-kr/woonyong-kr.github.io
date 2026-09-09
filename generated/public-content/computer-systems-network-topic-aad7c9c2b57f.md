@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aad7c9c2b57f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aad7c9c2b57f
-projection_sha256: 413f3fb9e71f8f29b760474157d89d2175a5e60a9d22a34a66721e64d2f301c0
+projection_sha256: 0f1d9e377aab7172cf0b75357775edc16565e2e5d53b21c94f1f89913c8837da
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -69,6 +69,19 @@ PintOS에서는 [보조 페이지 테이블](/wiki/computer-systems-network-topi
 ## 같은 파일을 읽어도 쓰기의 의미는 달라진다
 
 Linux의 `MAP_SHARED`는 변경을 파일과 같은 영역의 공유 매핑에 반영한다. `MAP_PRIVATE`는 Copy-on-Write 방식이며, 매핑을 통해 수정한 내용을 원본 파일에 기록하지 않는다. 읽기·쓰기·실행 권한을 정하는 `prot`과 공유 방식을 정하는 `flags`는 서로 다른 선택이다. `MAP_PRIVATE`라고 쓰기 권한까지 자동으로 생기지는 않는다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
+
+파일 유무와 공유 방식은 서로 다른 축이다. 읽기·쓰기 권한을 별도로 정한다는 전제에서 네 조합을 비교할 수 있다.
+
+| 내용의 출처 | 공유 방식 | 초기 내용과 쓰기 |
+|---|---|---|
+| 파일 | `MAP_SHARED` | 지정한 파일 구간에서 시작한다. 허용된 쓰기는 같은 구간의 공유 매핑에 보이며 파일에도 반영된다. 저장 완료 시점은 별도로 동기화한다. |
+| 파일 | `MAP_PRIVATE` | 지정한 파일 구간에서 시작한다. 사적인 수정은 파일에 기록하지 않는다. 수정 전의 물리 페이지까지 반드시 독점한다는 뜻은 아니다. |
+| 익명 메모리 | `MAP_SHARED` | 초기 내용은 0이다. Linux에서는 `fork()`로 같은 매핑을 물려받은 프로세스들이 공유할 수 있다. 동기화는 별도로 필요하다. |
+| 익명 메모리 | `MAP_PRIVATE` | 초기 내용은 0이다. `fork()` 뒤에는 각 프로세스의 쓰기가 다른 쪽의 사적인 내용을 바꾸지 않는다. |
+
+`mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)`은 OS가 고른 주소에 읽고 쓸 수 있는 사적 익명 구간을 요청한다. 연결된 일반 파일은 없고 초기값은 0이지만, 반환 즉시 모든 전용 Frame이 마련됐다고 판단할 수는 없다. 매핑 실패는 `MAP_FAILED`로 확인한다. 이후 접근에서 필요한 페이지를 준비하는 과정은 앞의 VMA·Page Table 구분을 따른다. [Linux mmap의 매핑 종류와 반환 규칙](https://man7.org/linux/man-pages/man2/mmap.2.html)
+
+`libc.so`처럼 공유 라이브러리라는 이름을 가진 파일도 모든 구간을 `MAP_SHARED` 하나로 매핑하는 것은 아니다. 실행 코드와 데이터는 서로 다른 Segment와 권한을 가질 수 있다. 파일의 `MAP_PRIVATE` 매핑이어도 수정하지 않은 파일 페이지를 물리적으로 재사용할 수 있고, 사적 쓰기가 필요할 때는 내용을 분리한다. ‘공유 라이브러리’라는 배포 단위와 `mmap`의 공유 쓰기 옵션을 구별해야 한다. [Linux의 매핑별 권한과 Private·Shared 표시](https://man7.org/linux/man-pages/man5/proc_pid_maps.5.html)
 
 Linux에서 `PROT_READ`만 허용한 매핑에 쓰면 `SIGSEGV`가 발생할 수 있다. Windows의 `FILE_MAP_READ` View에 쓰는 경우에는 access violation이 발생한다. 이는 읽기 전용 View와 Copy-on-Write View가 서로 다른 선택이라는 뜻이기도 하다. 읽기는 허용하되 쓰기는 거절하는 정책과, 쓰기 때 사본을 만들어 허용하는 정책을 나누어 확인한다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html), [Microsoft MapViewOfFile](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile)
 
