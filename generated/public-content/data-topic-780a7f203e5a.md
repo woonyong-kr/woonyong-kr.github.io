@@ -6,7 +6,7 @@ permalink: /wiki/data-topic-780a7f203e5a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/data-topic-780a7f203e5a
-projection_sha256: 12a89a2d063d1bed2c82dfb8eff8be72cf1da70a100d02b4eed47d90b06ba0b4
+projection_sha256: 45bcdd14cac44ab04a7ad43f40bc1489623a941a044ed510afca9d9fe35c4d80
 parent: 검색 엔진
 content_status: ready
 public_parent_id: Wiki/data-storage/search-engine
