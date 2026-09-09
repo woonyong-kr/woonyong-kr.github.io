@@ -376,6 +376,8 @@ test('@core renders Worker Canvas and WebGL through the production bundle', asyn
     if (gl) { gl.clearColor(1,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT); }
     else { console.log('WebGL context unavailable on this browser'); }
     </script>`);
+  // Editing collapses the block; keep its toolbar clear of the fixed header.
+  await web.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await web.getByRole('button', { name: 'Run code', exact: true }).click();
   const preview = web.locator('iframe').contentFrame().locator('#preview').contentFrame();
   for (const [id, expected] of [['two', [0,255,0,255]], ...(nativeWebGL ? [['gpu', [255,0,0,255]]] as const : [])] as const) {
