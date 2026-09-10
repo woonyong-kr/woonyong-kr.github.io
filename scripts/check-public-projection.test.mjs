@@ -102,6 +102,29 @@ test("rejects Obsidian wikilinks", async () => {
   });
 });
 
+test("preserves nested Python lists in fenced examples while retaining prose and privacy checks", async () => {
+  for (const body of [
+    "```run-python\nassert solve([[0]]) == 0\n```",
+    "~~~python\nmatrix = [[0]]\n~~~",
+    "````python\nmatrix = [[0]]\n```\n[[still a literal]]\n````",
+    "```python\nmatrix = [[0]]",
+  ]) await withFixture(publicDocument(body), async root => {
+    assert.equal((await validatePublicProjection(root)).documents, 1);
+  });
+  for (const body of [
+    "```python\nmatrix = [[0]]\n```\n[[private note]]",
+    "~~~python\nmatrix = [[0]]\n~~~\n[[private note]]",
+    "```invalid`info\n[[private note]]\n```",
+  ]) await withFixture(publicDocument(body), async root => {
+    await assert.rejects(validatePublicProjection(root), /prohibited Obsidian wikilink/u);
+  });
+  for (const body of ["/Users/person/private.txt", "[secret](/private/note/)", "source_session_id: secret"]) {
+    await withFixture(publicDocument(`\`\`\`python\n${body}\n\`\`\``), async root => {
+      await assert.rejects(validatePublicProjection(root), /prohibited/u);
+    });
+  }
+});
+
 for (const [name, change] of [
   ["quoted duplicate approval key", (text) => text.replace("publication_state: publish", 'publication_state: publish\n"publication_state": private')],
   ["private approval", (text) => text.replace("publication_state: publish", "publication_state: private")],

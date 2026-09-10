@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-9704fa5d9e29/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-9704fa5d9e29
-projection_sha256: aa439e4af6731eb3bf6f97f71d3b6110069f566bb5d20358ae7f925bc566ce55
+projection_sha256: 16fd1e8588a2b26c362944db243dcf967e1abd768af4a2564d61e6f3a64e75bc
 parent: Tree
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-a06ebc760118
@@ -28,6 +28,12 @@ search_terms:
 - 높이 캐시
 - Red-Black Tree
 - 피보나치 높이
+- 레드-블랙 트리
+- 레드 블랙 트리
+- RB Tree
+- black-height
+- 2-3-4 Tree
+- 재색칠
 grand_parent: 자료구조
 ancestor: CS 기초
 ---
@@ -37,7 +43,7 @@ ancestor: CS 기초
 
 `1, 2, 3, 4, 5`를 차례로 넣어도 값을 빠르게 찾으려면, 값의 대소 관계뿐 아니라 **탐색 경로의 길이**도 관리해야 한다. 균형 탐색 트리(Balanced Search Tree)는 노드를 추가하거나 제거할 때 정해진 균형 조건을 유지해 한쪽으로 길게 늘어나는 일을 막는다.
 
-균형을 정하는 규칙은 구조마다 다르다. 여기서는 **AVL Tree**를 구체적인 사례로 삼아 높이 차이를 계산하고, 회전으로 연결을 바꾸며, 삽입 후 균형을 복구하는 Python 프로그램까지 따라간다. Red-Black Tree와 B+ Tree는 마지막에 선택 기준을 비교한다.
+균형을 정하는 규칙은 구조마다 다르다. **AVL Tree**는 두 부분 트리의 높이 차이를 제한하고, **Red-Black Tree**는 색 규칙으로 경로 길이를 묶는다. 두 구조의 삽입을 각각 Python으로 실행하면서, 회전이 보존하는 키 순서와 서로 다른 균형 조건을 살펴본다.
 
 ## 값의 순서만 지키면 길어질 수 있다
 
@@ -403,15 +409,332 @@ h <= log_φ(n+1) - 1
 
 유효한 AVL에서 탐색과 삽입은 한 경로를 따라가고 노드마다 상수 시간의 비교·갱신을 하므로 `O(log n)`이다. 이는 키 비교를 상수 비용으로 보는 모델이다. 이 예제의 트리 저장 공간은 `O(n)`, 재귀 삽입의 추가 호출 공간은 `O(log n)`이다. 검증 함수는 모든 노드를 읽고 목록·ID를 만들므로 실제 자료구조 연산의 비용과 분리해야 한다. 위 출력은 정확성 확인이며 처리량 벤치마크가 아니다. 비용 표기의 기준은 [시간 복잡도](/wiki/computer-science-topic-869aa2bd6535/)에서 이어진다.
 
-## 삭제와 다른 균형 조건의 경계
+## Red-Black Tree는 색으로 경로 길이를 제한한다
+
+AVL은 두 부분 트리의 높이 차이를 직접 계산한다. **Red-Black Tree**는 키의 BST 순서를 유지하면서 노드의 색에 제약을 둔다. 모든 노드의 높이 차이를 1 이내로 맞추지는 않지만, 어느 경로도 지나치게 길어지지 않도록 한다.
+
+여기서 **NIL Leaf**는 키를 가진 마지막 노드가 아니라, 자식이 없는 자리에 있는 빈 노드를 뜻한다. 일반적인 Leaf와 구별해야 한다. 아래 구현에서는 별도의 NIL 객체를 만들지 않고 `None`을 검정으로 취급한다. 검정 Sentinel 하나를 공유하는 구현도 가능하지만, 두 표현의 종료 조건과 참조 처리를 섞으면 안 된다.
+
+색 규칙은 다음과 같다.
+
+1. 키를 가진 노드는 빨강 또는 검정이다.
+2. Root는 검정이다.
+3. NIL은 검정이다.
+4. 빨간 노드의 자식은 모두 검정이다.
+5. 어떤 노드에서 그 아래 NIL까지 내려가는 모든 경로에는 검정 노드가 같은 수만큼 있다.
+
+4번은 빨강이 연달아 붙는 것을 막고, 5번은 어느 쪽으로 내려가도 같은 검정 층을 지나게 한다. BST 순서 조건은 이 색 규칙과 별도로 유지한다. [GNU libavl의 균형 규칙](https://adtinfo.org/libavl.html/RB-Balancing-Rule.html)
+
+### 검정 높이로 전체 높이를 묶는다
+
+이 글의 **검정 높이(black-height)**는 현재 노드에서 NIL로 내려갈 때 만나는 **키를 가진 검정 노드 수**다. 현재 노드가 검정이면 포함하고, 마지막 NIL은 세지 않는다. NIL 자체의 검정 높이는 0이다. 자료마다 시작 노드와 NIL을 세는 방식이 다르므로 식을 비교할 때 이 기준을 먼저 맞춰야 한다.
+
+Root의 검정 높이를 `b`라고 하자. Root는 검정이고 빨강이 연달아 올 수 없으므로, Root에서 NIL 직전까지 만나는 실제 노드 수는 어떤 경로에서도 `b` 이상 `2b` 이하다. 따라서 Root에서 NIL까지의 간선 수로 비교한 최장 경로는 최단 경로의 두 배를 넘지 않는다. 앞의 AVL에서 사용한 실제 Leaf까지의 높이가 `h`라면, 최장 경로의 실제 노드 수는 `h + 1`이다.
+
+검정 높이가 `b`인 부분 트리에는 적어도 `2^b - 1`개의 실제 노드가 필요하다. 검정 Root 아래에는 검정 높이가 `b - 1`인 두 부분 트리가 필요하기 때문이다. 빨간 노드를 끼우더라도 이 최소 노드 수보다 작아지지는 않는다. 실제 노드 수를 `n`으로 두면 다음 관계를 얻는다.
+
+```text
+n >= 2^b - 1
+b <= log₂(n + 1)
+h + 1 <= 2b <= 2 log₂(n + 1)
+```
+
+핵심은 검정 높이가 막연히 `log₂ n`과 같다는 가정이 아니라, 색 규칙과 최소 노드 수로부터 **높이의 로그 상한**이 나온다는 점이다. 빈 트리는 `n = 0`, `b = 0`, `h = -1`로 같은 식에 들어간다. [GNU libavl의 높이 분석](https://adtinfo.org/libavl.html/Analysis-of-Red_002dBlack-Balancing-Rule.html)
+
+### 빨강으로 넣은 뒤 부모와 삼촌을 본다
+
+새 키는 BST의 삽입 위치에 빨간 노드로 붙인다. 기존 NIL 자리에 빨간 노드와 두 NIL이 생겨도 검정 높이는 그대로다. 먼저 확인할 위반은 새 노드와 부모가 모두 빨강인 경우다. 부모가 빨강이면 검정 Root가 될 수 없으므로 할아버지도 존재한다.
+
+부모의 형제인 **삼촌(Uncle)**이 빨강이면 부모와 삼촌을 검정으로, 할아버지를 빨강으로 바꾼다. 이 부분 트리 안의 모든 경로는 검정 하나를 더 얻고 할아버지의 검정 하나를 잃으므로, 바깥에서 본 검정 높이는 같다. 다만 할아버지와 그 부모 사이에 빨강이 연달아 생길 수 있어 할아버지부터 다시 검사한다.
+
+`10, 5, 15`를 넣은 상태는 검정 `10` 아래에 빨간 `5`, `15`가 있다. 여기에 `1`을 넣으면 부모 `5`와 삼촌 `15`가 모두 빨강이다.
+
+| 단계 | 10 | 5 | 15 | 1 |
+| --- | --- | --- | --- | --- |
+| 1을 붙인 직후 | 검정 | 빨강 | 빨강 | 빨강 |
+| 부모·삼촌·할아버지 재색칠 | 빨강 | 검정 | 검정 | 빨강 |
+| Root를 검정으로 마무리 | 검정 | 검정 | 검정 | 빨강 |
+
+이 경우에는 회전이 없다. 마지막 상태에서 `10 → 15 → NIL`과 `10 → 5 → 1 → NIL`은 실제 검정 노드를 각각 두 개 지난다. 모든 빠진 자식도 NIL로 끝나므로 같은 조건을 만족한다. 검정 Root로 바꾸는 마지막 단계는 모든 경로의 검정 높이를 함께 하나 늘린다.
+
+삼촌이 검정이거나 NIL이면 회전과 재색칠을 사용한다. 새 노드가 부모를 거쳐 할아버지와 일직선이면 한 번 회전한다. 꺾여 있으면 부모를 먼저 회전해 일직선으로 만든 뒤 할아버지를 회전한다. 아래 표의 L/R은 할아버지에서 부모, 부모에서 새 노드로 내려가는 방향이다.
+
+| 방향 | 첫 조정 | 마무리 |
+| --- | --- | --- |
+| LL | 없음 | 할아버지를 오른쪽 회전 |
+| RR | 없음 | 할아버지를 왼쪽 회전 |
+| LR | 부모를 왼쪽 회전 | 할아버지를 오른쪽 회전 |
+| RL | 부모를 오른쪽 회전 | 할아버지를 왼쪽 회전 |
+
+마무리 회전 전에 위로 올라올 노드는 검정으로, 내려갈 할아버지는 빨강으로 바꾼다. 회전 자체의 키 순서와 가운데 부분 트리 이동은 앞에서 살펴본 AVL과 같다. 이 구현에서는 `parent` 참조도 저장하므로, 옮겨진 자식의 부모와 전체 Root까지 함께 갱신한다.
+
+이 방식의 삽입은 한 번에 최대 두 번 회전한다. 재색칠은 조상을 따라 반복될 수 있어 전체 보정이 상수 시간인 것은 아니다. **AVL 삽입도 한 곳에서 단일 또는 이중 회전으로 복구하므로 최대 두 번**이다. Red-Black 삽입이 언제나 더 적게 회전한다고 비교하면 안 된다. [GNU libavl의 삽입 보정](https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html)
+
+### 양쪽 삽입을 같은 불변식으로 확인한다
+
+다음은 앞의 AVL 예제와 독립적으로 실행하는 정수 집합 프로그램이다. `insert`는 중복 키를 추가하지 않고 기존 노드를 반환한다. `find`는 찾은 노드 또는 `None`을 반환한다. 왼쪽 부모의 경우와 오른쪽 부모의 대칭 경우를 모두 구현했다. 외부 패키지는 필요하지 않다.
+
+`verify`는 실제 자식 연결을 따라 BST 순서, 검정 높이, 빨강 연속 금지, Root 색, 부모 참조, 노드 보존을 검사한다. 삽입 횟수와 별개로 회전 횟수도 세어 각 삽입의 두 번 상한을 확인한다. 이 검증은 `insert_fixup`이 계산한 값을 정답으로 재사용하지 않는다.
+
+```run-python
+RED, BLACK = 0, 1
+
+
+class Node:
+    def __init__(self, key, color=RED):
+        self.key = key
+        self.color = color
+        self.left = None
+        self.right = None
+        self.parent = None
+
+
+def color(node):
+    return BLACK if node is None else node.color
+
+
+def rotate_left(tree, x):
+    y = x.right
+    assert y is not None
+    x.right = y.left
+    if y.left is not None:
+        y.left.parent = x
+    y.parent = x.parent
+    if x.parent is None:
+        tree.root = y
+    elif x is x.parent.left:
+        x.parent.left = y
+    else:
+        x.parent.right = y
+    y.left = x
+    x.parent = y
+    tree.rotations += 1
+
+
+def rotate_right(tree, x):
+    y = x.left
+    assert y is not None
+    x.left = y.right
+    if y.right is not None:
+        y.right.parent = x
+    y.parent = x.parent
+    if x.parent is None:
+        tree.root = y
+    elif x is x.parent.left:
+        x.parent.left = y
+    else:
+        x.parent.right = y
+    y.right = x
+    x.parent = y
+    tree.rotations += 1
+
+
+def insert_fixup(tree, z):
+    while color(z.parent) == RED:
+        gp = z.parent.parent
+        if z.parent is gp.left:
+            uncle = gp.right
+            if color(uncle) == RED:
+                z.parent.color = BLACK
+                uncle.color = BLACK
+                gp.color = RED
+                z = gp
+            else:
+                if z is z.parent.right:
+                    z = z.parent
+                    rotate_left(tree, z)
+                z.parent.color = BLACK
+                gp.color = RED
+                rotate_right(tree, gp)
+        else:
+            uncle = gp.left
+            if color(uncle) == RED:
+                z.parent.color = BLACK
+                uncle.color = BLACK
+                gp.color = RED
+                z = gp
+            else:
+                if z is z.parent.left:
+                    z = z.parent
+                    rotate_right(tree, z)
+                z.parent.color = BLACK
+                gp.color = RED
+                rotate_left(tree, gp)
+    tree.root.color = BLACK
+
+
+class RBTree:
+    def __init__(self):
+        self.root = None
+        self.rotations = 0
+
+    def find(self, key):
+        node = self.root
+        while node is not None:
+            if key == node.key:
+                return node
+            node = node.left if key < node.key else node.right
+        return None
+
+    def insert(self, key):
+        parent, node = None, self.root
+        while node is not None:
+            parent = node
+            if key == node.key:
+                return node
+            node = node.left if key < node.key else node.right
+        new = Node(key)
+        new.parent = parent
+        if parent is None:
+            self.root = new
+        elif key < parent.key:
+            parent.left = new
+        else:
+            parent.right = new
+        insert_fixup(self, new)
+        return new
+
+
+# 아래 함수는 자료구조 연산과 별개로 실제 연결과 불변식을 검사한다.
+def verify(tree, expected):
+    keys, identities = [], {}
+
+    def visit(node, parent, low, high):
+        if node is None:
+            return -1, 0  # 높이, NIL을 제외한 검정 높이
+        assert id(node) not in identities
+        identities[id(node)] = node.key
+        assert node.parent is parent
+        assert low is None or low < node.key
+        assert high is None or node.key < high
+        assert node.color in (RED, BLACK)
+        if node.color == RED:
+            assert node.left is None or node.left.color == BLACK
+            assert node.right is None or node.right.color == BLACK
+        lh, lb = visit(node.left, node, low, node.key)
+        keys.append(node.key)
+        rh, rb = visit(node.right, node, node.key, high)
+        assert lb == rb
+        return 1 + max(lh, rh), lb + (node.color == BLACK)
+
+    if tree.root is not None:
+        assert tree.root.color == BLACK and tree.root.parent is None
+    height, black_height = visit(tree.root, None, None, None)
+    assert keys == sorted(set(expected))
+    assert len(keys) >= 2 ** black_height - 1
+    assert height + 1 <= 2 * black_height
+    return height, black_height, identities
+
+
+def build_checked(values):
+    tree, inserted, previous_ids, steps = RBTree(), [], {}, []
+    for key in values:
+        existing = tree.find(key)
+        before = tree.rotations
+        returned = tree.insert(key)
+        steps.append(tree.rotations - before)
+        assert steps[-1] <= 2
+        if existing is not None:
+            assert returned is existing and steps[-1] == 0
+        inserted.append(key)
+        height, bh, identities = verify(tree, inserted)
+        assert all(identities.get(node_id) == value
+                   for node_id, value in previous_ids.items())
+        assert tree.find(key) is returned
+        previous_ids = identities
+    return tree, steps
+
+
+def main():
+    empty = RBTree()
+    assert verify(empty, [])[:2] == (-1, 0)
+    assert empty.find(7) is None
+    print("empty: height=-1; black-height=0; search missing")
+    single, _ = build_checked([7])
+    assert verify(single, [7])[:2] == (0, 1)
+    print("single: root=7 black; height=0; black-height=1")
+
+    cases = [("LL", [30, 20, 10], 1), ("RR", [10, 20, 30], 1),
+             ("LR", [30, 10, 20], 2), ("RL", [10, 30, 20], 2)]
+    for name, values, count in cases:
+        tree, steps = build_checked(values)
+        assert tree.root.key == 20 and steps[-1] == count
+        assert tree.root.left.color == RED and tree.root.right.color == RED
+        print(f"{name}: root=20 black; last-insert rotations={count}")
+
+    for side, values in [("left", [10, 5, 15, 1]),
+                         ("right", [10, 5, 15, 20])]:
+        tree, steps = build_checked(values)
+        assert tree.root.key == 10 and steps[-1] == 0
+        assert tree.root.left.color == tree.root.right.color == BLACK
+        assert verify(tree, values)[:2] == (2, 2)
+        print(f"red uncle ({side}): root=10 black; rotations=0; black-height=2")
+
+    tree, _ = build_checked([41, 38, 31, 12, 19, 8])
+    assert tree.find(19).key == 19 and tree.find(99) is None
+    print("mixed insertion: 19 found; 99 missing; all invariants hold")
+    for values in [range(1, 32), range(31, 0, -1)]:
+        build_checked(values)
+    print("ascending/descending 31: invariants and rotation bound checked per insertion")
+    tree, _ = build_checked([1, 1, 1])
+    assert len(verify(tree, [1])[2]) == 1
+    build_checked([0, -3, 8, -10, -1, 5, 12, 6, 7, -3, 8, 0])
+    print("duplicates and negative keys: existing nodes and parent links preserved")
+    print("all checks passed")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+코드를 `red-black-tree.py`로 저장해 `python3 red-black-tree.py`로도 실행할 수 있다. 검증에 사용하는 `assert`가 유지되도록 `-O` 옵션은 붙이지 않는다. 실행 출력은 다음과 같다.
+
+```text
+empty: height=-1; black-height=0; search missing
+single: root=7 black; height=0; black-height=1
+LL: root=20 black; last-insert rotations=1
+RR: root=20 black; last-insert rotations=1
+LR: root=20 black; last-insert rotations=2
+RL: root=20 black; last-insert rotations=2
+red uncle (left): root=10 black; rotations=0; black-height=2
+red uncle (right): root=10 black; rotations=0; black-height=2
+mixed insertion: 19 found; 99 missing; all invariants hold
+ascending/descending 31: invariants and rotation bound checked per insertion
+duplicates and negative keys: existing nodes and parent links preserved
+all checks passed
+```
+
+LL·RR은 한 번, LR·RL은 두 번 회전해 Root `20`을 만든다. 삼촌이 빨강인 두 입력은 회전 없이 재색칠하며, 앞의 `10, 5, 15, 1` 예제도 검정 높이 `2`로 끝난다. 정렬·역순 입력은 각 삽입 직후 불변식을 검사한다. 중복 키는 노드를 늘리지 않고, 음수와 섞인 입력에서도 기존 노드와 부모 연결이 유지된다.
+
+키 비교를 상수 비용으로 보면 `find`와 `insert`는 `O(log n)`이다. 트리 저장 공간은 `O(n)`이고, 이 반복문 기반 삽입은 부모 참조를 따라가므로 연산 중 추가 작업 공간은 `O(1)`이다. 모든 노드를 순회하는 `verify`와 기대값을 정렬하는 검사 비용은 별도다. 위 결과는 삽입·탐색의 정확성 확인이며 삭제 구현이나 처리량 측정은 포함하지 않는다.
+
+### 빨간 자식을 묶으면 2-3-4 Tree가 보인다
+
+검정 노드와 그 빨간 자식을 한 덩어리로 묶어 보자. 빨강이 연달아 올 수 없으므로, 한 덩어리에는 키가 하나에서 세 개까지 들어간다.
+
+| 검정 노드의 빨간 자식 수 | 묶인 키 수 | 대응하는 노드 |
+| --- | --- | --- |
+| 0 | 1 | 2-node |
+| 1 | 2 | 3-node |
+| 2 | 3 | 4-node |
+
+이름의 2·3·4는 내부 노드가 가질 자식 구간 수다. 색 규칙상 모든 경로의 검정 높이가 같으므로, 묶은 뒤의 Leaf 깊이도 같다. 이렇게 일반적인 Red-Black Tree를 **2-3-4 Tree**로 해석할 수 있다. 앞에서 삼촌이 빨강일 때 재색칠하는 과정은 묶인 4-node를 나누어 가운데 키를 위로 보내는 모습과 연결된다.
+
+다만 별도의 방향 규칙 없이 두 표현이 일대일이라고 하면 부정확하다. 키가 `10, 20`인 3-node는 검정 `20`의 빨간 왼쪽 자식 `10`으로도, 검정 `10`의 빨간 오른쪽 자식 `20`으로도 표현할 수 있다. **Left-Leaning Red-Black Tree**는 이런 방향에 추가 조건을 둔다. 예를 들어 Princeton의 2-3 Tree 구현은 빨간 연결을 왼쪽으로 두는 표현을 사용한다. 이 글의 양방향 Red-Black 구현과 그대로 같은 알고리즘은 아니다. [Princeton의 표현 규칙](https://algs4.cs.princeton.edu/33balanced/)
+
+2-3-4 Tree는 [B-Tree 계열](/wiki/data-b-tree-cd9340fd2546/)의 작은 사례다. 여러 키를 한 노드로 묶어 분기 수를 늘린다는 발상은 같지만, 실제 DB Page에 담을 키 수와 분할·병합 기준은 별도로 결정해야 한다.
+
+## 삭제와 구현의 선택 기준
 
 AVL 삭제도 올바르게 구현하면 `O(log n)`이지만, 이 프로그램에는 삭제 함수가 없다. 삭제는 한 곳을 고친 뒤에도 부분 트리 높이가 줄어 조상에서 다시 균형을 고쳐야 할 수 있다. 삽입의 ‘가장 낮은 위반 한 곳을 복구하면 된다’는 결론을 삭제에 그대로 적용하면 안 된다. 새 키의 대소로 나누는 위 삽입 분기를 삭제에 복사하는 것도 맞지 않는다. [GNU libavl의 삭제 과정](https://adtinfo.org/libavl.html/Deleting-from-an-AVL-Tree.html)
 
-Red-Black Tree는 AVL의 높이 차이 대신 색 조건을 사용한다. 같은 노드에서 아래의 NIL Leaf까지 가는 경로의 검은 노드 수가 같고 빨간 노드가 연달아 오지 않도록 하여, 가장 긴 경로를 가장 짧은 경로의 두 배 이내로 제한한다. AVL과 다른 균형 규칙으로 로그 높이를 얻는 방법이다. 색 변경은 높이 갱신과 같은 연산이 아니므로 회전 횟수 하나만으로 전체 쓰기 비용을 비교할 수 없다.
+삭제에서는 회전 수의 차이가 더 분명하게 나타난다. AVL은 삭제 뒤 여러 조상에서 다시 균형을 맞추며 최악에 `O(log n)`번 회전할 수 있다. 전통적인 Red-Black 삭제 보정은 최대 세 번 회전하지만, 색 조건을 복구하며 조상을 따라가는 작업은 여전히 필요하다. 여기의 두 프로그램에는 삭제가 없으므로 이는 알고리즘의 비교이며 실행 결과가 아니다. [GNU libavl의 두 구조 비교](https://adtinfo.org/libavl.html/Red_002dBlack-Trees.html)
 
-AVL의 더 엄격한 높이 조건은 탐색 경로를 짧게 제한하는 데 도움이 된다. 그러나 같은 데이터에서 항상 더 얕거나 실제 탐색이 항상 더 빠르다는 뜻은 아니다. 삽입·삭제 비율, 키 비교 비용, 노드 배치와 캐시, 사용하는 구현에 따라 결과가 달라진다. 읽기와 갱신 비율은 후보를 고르는 단서이며, ‘읽기는 AVL, 쓰기는 Red-Black이 언제나 우세’라는 성능 보장은 아니다.
+AVL의 더 엄격한 높이 조건은 탐색 경로를 짧게 제한하는 데 도움이 된다. 그러나 같은 데이터에서 항상 더 얕거나 실제 탐색이 항상 더 빠르다는 뜻은 아니다. 색 변경, 높이 갱신, 키 비교와 메모리 접근은 서로 다른 비용이다. 삽입·삭제 비율, 노드 배치와 캐시, 사용하는 구현에 따라 결과가 달라지므로 회전 횟수 하나만으로 전체 쓰기 비용을 비교할 수 없다. 읽기와 갱신 비율은 후보를 고르는 단서이며, ‘읽기는 AVL, 쓰기는 Red-Black이 언제나 우세’라는 성능 보장은 아니다.
 
 C++ `std::map`의 내부 구조와 표준 계약도 구별해야 한다. [표준 초안의 associative container 요구사항](https://eel.is/c++draft/associative.reqmts)은 `find`와 일반적인 단일 원소 삽입 등에 로그 복잡도를 요구하지만 Red-Black Tree를 지정하지 않는다. [GCC libstdc++의 map 구현](https://github.com/gcc-mirror/gcc/blob/master/libstdc++-v3/include/bits/stl_map.h)은 내부 저장소로 `_Rb_tree`를 사용한다. 구체적인 구현 선택의 근거다.
+
+Java SE 25의 [`TreeMap` 문서](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/TreeMap.html)는 Red-Black Tree 기반 구현이며 `containsKey`, `get`, `put`, `remove`에 로그 시간 비용을 보장한다고 명시한다. 이것은 특정 API의 문서화된 계약이다. 위 Python 학습 코드로 그 라이브러리의 동작이나 성능까지 검증한 것은 아니다.
 
 [Linux rbtree 문서](https://docs.kernel.org/core-api/rbtree.html)에도 커널의 Red-Black Tree 구현과 사용 인터페이스가 나온다. 그 문서의 오래된 활용 사례를 현재 모든 커널 하위 시스템의 구조로 일반화하지 않는다. Linux 전체가 하나의 트리 종류를 쓰는 것도 아니다.
 

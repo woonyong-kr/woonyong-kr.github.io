@@ -36,6 +36,12 @@ test('rendered Markdown reference links, HTML entities, relative URLs and srcset
   assert.doesNotThrow(() => inspectRenderedHtml(render('[public](/wiki/home/)\n\n<a href="https://example.com/reference">reference</a>'), base));
 });
 
+test('Jekyll preserves fenced Python nested-list literals as code', () => {
+  const html = render('```run-python\nassert solve([[0]]) == 0\n```');
+  assert.match(html, /<code[^>]*>[\s\S]*?\[\[0\]\][\s\S]*?<\/code>/u);
+  assert.doesNotThrow(() => inspectRenderedHtml(html, base));
+});
+
 test('unexpected deploy files and missing approved pages fail independently', () => {
   assert.throws(() => checkFileList(['index.html', 'private.html'], new Set(['index.html'])), /unexpected \[private.html\]/u);
   assert.throws(() => checkFileList([], new Set(['index.html'])), /missing \[index.html\]/u);

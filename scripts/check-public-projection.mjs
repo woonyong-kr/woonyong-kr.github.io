@@ -50,6 +50,24 @@ const PRIVATE_CONTENT_PATTERNS = [
   ['source session ID', /source_session_ids?\s*[:=]/iu],
 ];
 
+// Match the compiler's top-level Markdown fences without changing literal bytes.
+function withoutFencedCode(source) {
+  let marker = null;
+  return source.split(/(?<=\n)/u).map(line => {
+    if (marker) {
+      const closing = line.match(/^ {0,3}(`+|~+)[ \t]*(?:\r?\n)?$/u);
+      if (closing && closing[1][0] === marker[0] && closing[1].length >= marker.length) marker = null;
+      return "\n";
+    }
+    const opening = line.match(/^ {0,3}(`{3,}|~{3,})([^\r\n]*)(?:\r?\n)?$/u);
+    if (opening && !(opening[1][0] === "`" && opening[2].includes("`"))) {
+      marker = opening[1];
+      return "\n";
+    }
+    return line;
+  }).join("");
+}
+
 function sameMembers(actual, expected) {
   return Array.isArray(actual) && actual.length === expected.length && expected.every(item => actual.includes(item));
 }
@@ -118,7 +136,9 @@ export async function readPublicProjectionBundle(root) {
       set.add(value);
     }
     for (const [label, pattern] of PRIVATE_CONTENT_PATTERNS) {
-      if (pattern.test(source)) throw new Error(`${filename} contains prohibited ${label}`);
+      if (pattern.test(label === "Obsidian wikilink" ? withoutFencedCode(source) : source)) {
+        throw new Error(`${filename} contains prohibited ${label}`);
+      }
     }
     documents.push({ filename, ...values });
   }

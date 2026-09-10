@@ -32,6 +32,10 @@ Runnable CI는 unit 180개와 browser 26개를 통과했다. CI의 Docker 조건
 
 Graph 릴리스에는 GitHub 화면에서 실행할 수 있는 workflow_dispatch를 추가했다. 기존 태그 경로를 유지하며 manifest 버전 일치, main 브랜치, 해당 커밋의 성공한 CI와 명시적 release target을 요구한다. 로컬 Git 인증을 새로 발급하지 않고 공식 workflow 권한으로 공개했다.
 
+## 후속 공개 코드 리터럴 검사 수정
+
+DP 예제의 Python `[[0]]`가 소스 검사에서 Obsidian 링크로 오인됐다. 생성 예제는 수정하지 않고, wikilink 검사에서만 compiler와 같은 top-level backtick/tilde fence를 구분했다. fence 밖 링크와 코드 안의 로컬 경로·비공개 링크·session ID 차단은 유지한다. 중첩 리스트·서로 다른 fence 길이·닫히지 않은 fence·잘못된 info string·개인정보 경계를 회귀 검사하고 Jekyll이 같은 리터럴을 code로 보존하는지도 검사한다.
+
 ## 검증 범위와 비교 조건
 
 - 실행기 기준 revision: `4e9268d` → `3d5c849`. 공통 구현 `5b740e7`의 `npm run verify`와
