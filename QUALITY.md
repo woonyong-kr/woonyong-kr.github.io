@@ -5,7 +5,7 @@
 
 ## 2026-09-10 재현 기반 후속 점검
 
-아래 플러그인 수정은 로컬 검증본이다. 새 공개 릴리스나 Community 심사 통과를 뜻하지 않는다.
+아래 수정은 2026-09-10 정식 릴리스로 공개했다. 공개 파일을 다시 내려받아 검증본과 SHA-256을 대조했다. Community 심사나 Google 실제 계정 동기화 성공을 뜻하지 않는다.
 
 | 대상 | 확인한 원인과 수정 | 검증 범위 |
 | --- | --- | --- |
@@ -14,9 +14,23 @@
 | Linked Graph | 검색 명령이 실제 검색창의 부모가 아닌 외부 컨테이너를 열었다. 렌더링과 검색 모두 공개 contentEl을 사용하며 자식 배열 위치 의존을 제거했다. | 수정 전 검색 명령 검사 실패, 수정 후 check/48개 검사. 실제 명령으로 검색창 표시·입력 포커스 확인 |
 | Calendar 인증 | 연결 해제 뒤 늦은 인증·갱신 응답이 토큰을 다시 저장했다. 연결 세대가 바뀐 응답을 폐기한다. | 12개 인증 검사. 실제 Google 계정 인증·동기화는 이 검사에 포함되지 않음 |
 | Calendar 색인 | 초기화·비활성화 이전의 읽기 결과가 일정을 되살렸다. 파일별 누적 버전 대신 현재 읽기 요청만 보관하고 완료·초기화·삭제 때 제거한다. | 23개 색인 검사, check/build/Knip. 수정본의 실제 월간 화면 확인 |
-| 사이트 문서 렌더링 | Merge Sort C 초기화 구문의 이중 중괄호를 Liquid 변수로 오인해 CI 빌드가 실패했다. 공개 Markdown 본문만 Liquid 평가를 끄고 HTML redirect와 layout의 템플릿 처리는 유지한다. | 실패 run 34455891415의 배포는 건너뛰었다. 수정 후 최종 배포와 공개 예제 실행은 별도 확인 대상 |
+| 사이트 문서 렌더링 | Merge Sort C 초기화 구문의 이중 중괄호를 Liquid 변수로 오인해 CI 빌드가 실패했다. 공개 Markdown 본문만 Liquid 평가를 끄고 HTML redirect와 layout의 템플릿 처리는 유지한다. | 실패 run 34455891415의 배포는 건너뛰었다. 수정 4b008c9의 run 34456621298 배포 성공, 브라우저 82개 통과, 공개 예제 3개 출력 hash·역사 주소 8개 확인 |
 
 세 플러그인의 Knip 결과는 미사용 항목 0이었다. Runnable·Calendar 전체 의존성 audit와 Graph 제품 의존성 audit도 보고된 취약점 0이었다. 이 결과를 모든 동작의 무결함으로 확대하지 않는다. 이전 설정 migration과 사용하는 CodeMirror legacy-modes는 호환성·구문 강조 경로가 있어 유지했다. 사이트는 공통 실행기 submodule을 사용하며, 호스트 색상 토큰과 연결 설정만 분리한다. 확인된 공유 코드 중복이 없으므로 새 공통 프레임워크를 추가하지 않았다.
+
+## 2026-09-10 정식 릴리스 확인
+
+| 제품 | 공개 버전 | 최종 CI / 릴리스 작업 | 공개 파일 대조 |
+| --- | --- | --- | --- |
+| Runnable | [0.7.4](https://github.com/woonyong-kr/obsidian-runnable-code-blocks/releases/tag/0.7.4) | [34459821737](https://github.com/woonyong-kr/obsidian-runnable-code-blocks/actions/runs/34459821737) / [34460078795](https://github.com/woonyong-kr/obsidian-runnable-code-blocks/actions/runs/34460078795) | plugin 3개와 별도 companion 1개 모두 일치 |
+| Graph | [1.6.11](https://github.com/woonyong-kr/obsidian-linked-graph-navigator/releases/tag/1.6.11) | [34460445045](https://github.com/woonyong-kr/obsidian-linked-graph-navigator/actions/runs/34460445045) / [34460563283](https://github.com/woonyong-kr/obsidian-linked-graph-navigator/actions/runs/34460563283) | 3개 모두 일치 |
+| Calendar | [3.6.3](https://github.com/woonyong-kr/obsidian-link-calendar-navigator/releases/tag/3.6.3) | [34460724788](https://github.com/woonyong-kr/obsidian-link-calendar-navigator/actions/runs/34460724788) / [34460842717](https://github.com/woonyong-kr/obsidian-link-calendar-navigator/actions/runs/34460842717) | 3개 모두 일치 |
+
+Runnable CI는 unit 180개와 browser 26개를 통과했다. CI의 Docker 조건부 검사 1개는 생략되며 별도 로컬 Docker/profile 11개 통과 근거를 사용한다. Graph는 Node 20/22/24에서 검사·제품 의존성 audit를 통과했고, Calendar는 plugin 123개와 OAuth worker·visual·build 검사를 통과했다. 실제 앱에서 이미 확인한 동일 main.js와 styles.css를 재사용했으며 patch manifest만 버전에 맞췄다. 기존 캡처의 촬영 버전·날짜는 새 촬영으로 바꾸지 않았다.
+
+공개 main.js SHA-256: Runnable `b18587a467e419fe10ddde6708b54b31ae399f266eaa3adca956310d1745a772`, Graph `39a385878dd644563bfc3568270649c835caf27b69d1519870e1fcee71583305`, Calendar `cec15512b9dc517650304259cb4e7fcd47baf443195dd0ab32ecf7a748a2db56`. Companion은 `eb90564f236c1e9ef571979bb4661e44cd85fe83c05d2831e02c2420840acc35`다.
+
+Graph 릴리스에는 GitHub 화면에서 실행할 수 있는 workflow_dispatch를 추가했다. 기존 태그 경로를 유지하며 manifest 버전 일치, main 브랜치, 해당 커밋의 성공한 CI와 명시적 release target을 요구한다. 로컬 Git 인증을 새로 발급하지 않고 공식 workflow 권한으로 공개했다.
 
 ## 검증 범위와 비교 조건
 
