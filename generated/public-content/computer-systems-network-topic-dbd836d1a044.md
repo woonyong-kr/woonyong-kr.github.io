@@ -6,12 +6,16 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: a967e803b86343b04f113728354ca4dc3b2fe521af36244ff2e0e0b50727d991
+projection_sha256: 8d422b08a34a29ab8dd229e060ed4356ba4e0b26c519168da03906d9c795adc0
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
 search_terms:
 - 페이징
+- CR3
+- PCID
+- TLB Flush
+- 주소 공간 전환
 grand_parent: OS
 ancestor: CS 기초
 ---
@@ -173,6 +177,24 @@ Linux HugeTLB는 지원되는 크기의 큰 페이지를 별도 Pool에서 관�
 
 Windows의 일반 애플리케이션은 `GetLargePageMinimum()`으로 크기를 조회하고, 필요한 권한과 정렬을 갖춰 `VirtualAlloc(...,MEM_LARGE_PAGES,...)` 경로를 사용한다. `CreateFileMappingW`에서 `SEC_LARGE_PAGES|SEC_COMMIT`을 사용하는 경로도 있다. 이 경우 paging file이 backing이어야 하고, `SeLockMemoryPrivilege`와 large-page 크기에 맞는 객체·view 크기 및 정렬이 필요하다. 일반 데이터 파일이나 실행 이미지 Mapping에 같은 옵션을 적용하는 것은 아니다. [SEC_LARGE_PAGES의 조건](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw) 특정 크기의 지원을 OS 이름만으로 단정하지 않는다. Kernel 내부 `_MMPTE`·`MiGetPteAddress`의 형태를 고정 API로 사용하는 대신, 디버거에서는 `!pte`가 보여 주는 PDE·PTE와 상태 비트를 대상 시스템에 맞춰 읽는다. [Windows Large Page](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support), [WinDbg !pte](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-pte)
 
+## CR3의 주소 필드와 전환 조건
+
+CR3에 넣는 것은 Kernel 포인터 자체가 아니라 최상위 테이블의 물리 주소와 제어 정보다. 4단계 Paging에서는 PML4, 5단계에서는 PML5가 루트다. 테이블은 4 KiB로 정렬하며 주소 필드는 해당 환경의 물리 주소 폭까지 사용한다. `& ~0xfff`만으로 모든 CPU 기능이 섞인 CR3에서 주소를 정확히 추출한다고 가정하지 않는다.
+
+CR4.PCIDE=0이면 하위 비트 중 PWT·PCD가 테이블 접근의 메모리 유형에 관여한다. PCIDE=1이면 하위 12비트는 PCID다. PCID는 재사용할 주소 변환 문맥을 구별하며 PID나 PintOS의 tid와 같은 번호 체계가 아니다. LAM을 지원하는 구성에는 상위 제어 비트도 있으므로 사용하지 않는 상위 비트를 전부 같은 의미로 취급해서는 안 된다. [Intel SDM 092의 CR3 형식, Table 5-12·5-13](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=133)
+
+| CR3를 쓰는 조건 | 요구되는 non-global 변환 무효화 |
+|---|---|
+| PCIDE=0 | PCID 0의 변환과 Paging-structure Cache를 무효화한다. |
+| PCIDE=1, MOV 입력 bit 63=0 | 새로 선택하는 PCID의 변환과 Paging-structure Cache를 무효화한다. |
+| PCIDE=1, MOV 입력 bit 63=1 | 이 명령 때문에 해당 Cache를 무효화할 의무가 없다. |
+
+표의 bit 63은 **MOV 명령의 입력**에 지정하는 조건이다. CR3를 읽었을 때 남아 있는 ‘no-flush 상태 비트’가 아니다. CPU는 필요한 범위보다 많은 Cache 항목을 무효화할 수 있으므로 Global 변환이나 다른 PCID가 반드시 유지된다고 약속하는 표도 아니다. Global 변환에는 CR4.PGE 등의 조건이 있다. [Intel SDM의 명령별 무효화 규칙](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=161)
+
+PintOS의 `pml4_activate(pml4)`는 NULL이면 `base_pml4`를 고른 뒤 `vtop()`으로 변환한 값을 `lcr3()`에 넘긴다. 같은 포인터인지 비교해 쓰기를 생략하는 분기는 없다. `process_activate(next)`는 그 뒤 TSS의 Kernel Stack을 갱신한다. 페이지 테이블을 바꾸는 것과 RIP·RSP 등의 실행 문맥을 복구하는 것은 서로 다른 작업이며, 공통 Kernel Mapping 덕분에 다음 주소 공간을 활성화한 뒤에도 Kernel 코드를 이어서 실행할 수 있다. [PintOS의 CR3 쓰기](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c), [활성화와 TSS](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c#L730)
+
+종료 경로에서는 `curr->pml4 = NULL → pml4_activate(NULL) → pml4_destroy(old)` 순서를 지킨다. 먼저 Thread가 이전 테이블을 다시 선택하지 않게 하고, 현재 CPU가 기본 테이블을 사용하도록 바꾼 다음 이전 테이블을 해제한다. 현재 사용 중인 테이블을 먼저 반환하면 이후 주소 변환이 해제되거나 재사용된 메모리를 읽을 수 있다. 항상 같은 순간에 Triple Fault가 발생한다는 의미는 아니다. [현재 `process_cleanup()`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c#L697)
+
 ## TLB에 변환이 없다는 것과 페이지가 없다는 것
 
 TLB(Translation Lookaside Buffer)는 최근 주소 변환을 재사용하는 CPU의 캐시다. 페이지 번호에서 Frame 번호를 찾는 데 그치지 않고, 그 변환의 접근 권한과 주소 공간 문맥도 다룬다. 따라서 **TLB Hit이어도 금지된 쓰기를 시도하면 Page Fault가 발생할 수 있다**. 캐시에 항목이 있다는 사실과 요청한 접근을 허용한다는 판단은 다르다. [Intel SDM의 TLB 정보와 사용 규칙](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf#page=155)
@@ -262,6 +284,76 @@ x86에서는 `invlpg`로 주소에 해당하는 변환을 무효화하거나, CR
 Timer가 100 Hz이고 Time Slice가 4 Tick이라는 값만으로 Context Switch나 TLB Flush를 초당 25회 이하라고 계산할 수는 없다. `thread_block()`과 `thread_yield()`도 스케줄링을 일으킨다. 이 소스의 `schedule()`은 다음 Thread가 현재 Thread와 같은지 검사하기 전에 `process_activate(next)`를 호출하므로, CR3 쓰기 횟수와 서로 다른 Thread 사이의 전환 횟수도 그대로 일치하지 않는다. [PintOS의 스케줄링 경로](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/thread.c)
 
 QEMU TCG의 Software TLB와 Host CPU의 TLB도 구별한다. QEMU v10.0.0의 `cpu_x86_update_cr3()`는 Guest Paging이 켜져 있으면 TCG의 `tlb_flush()`를 호출한다. 이것을 Host 하드웨어 TLB 전체를 비우는 동작으로 해석하지 않는다. Guest의 `invlpg`에도 별도의 TCG 처리 경로가 있다. 이 구분은 앞서 설명한 Guest VA·PA와 Host 메모리의 경계로 이어진다. [QEMU의 CR3 처리](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/helper.c), [Guest invlpg 처리](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/misc_helper.c)
+
+### 같은 VA를 바꾸는 것과 남은 변환을 버리는 것
+
+다음 모형에서 A와 B는 `0x8048123`을 서로 다른 Frame에 연결한다. Cache는 페이지 주소만으로 조회하고 CR3를 다시 쓰면 비운다. PCID·Global 페이지·권한·여러 CPU는 구현하지 않은 단순 모형이다. B의 Page Table만 수정한 직후와 해당 Cache 항목까지 버린 뒤의 출력을 비교해 보자.
+
+```run-python
+PAGE = 4096
+tables = {
+    0x41000: {0x8048000: 0x12345000},
+    0x52000: {0x8048000: 0x23456000},
+}
+current = 0x41000
+tlb = {}
+
+def load_cr3(root):
+    global current
+    assert root in tables and root % PAGE == 0
+    current = root
+    tlb.clear()
+
+def translate(address):
+    page = address & -PAGE
+    hit = page in tlb
+    if not hit:
+        if page not in tables[current]:
+            raise LookupError('mapping missing')
+        tlb[page] = tables[current][page]
+    return tlb[page] + address % PAGE, hit
+
+address = 0x8048123
+pa, hit = translate(address)
+print(f'A: PA={pa:#x}, hit={hit}')
+assert (pa, hit) == (0x12345123, False)
+assert translate(address) == (pa, True)
+load_cr3(0x52000)
+pa, hit = translate(address)
+print(f'B: PA={pa:#x}, hit={hit}')
+assert (pa, hit) == (0x23456123, False)
+
+tables[current][address & -PAGE] = 0x34567000
+stale, hit = translate(address)
+print(f'PTE changed, cached PA={stale:#x}, hit={hit}')
+assert stale == 0x23456123
+tlb.pop(address & -PAGE, None)
+fresh, hit = translate(address)
+print(f'invalidated: PA={fresh:#x}, hit={hit}')
+assert (fresh, hit) == (0x34567123, False)
+
+load_cr3(current)
+print('same CR3 reload clears model cache:', len(tlb) == 0)
+try:
+    translate(0x9000000)
+except LookupError:
+    print('unmapped page: rejected')
+else:
+    raise AssertionError('unmapped page must fail')
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+A: PA=0x12345123, hit=False
+B: PA=0x23456123, hit=False
+PTE changed, cached PA=0x23456123, hit=True
+invalidated: PA=0x34567123, hit=False
+same CR3 reload clears model cache: True
+unmapped page: rejected
+```
+
+B의 테이블을 수정해도 Cache에 남은 `0x23456123`이 먼저 반환된다. 해당 항목을 없앤 뒤에는 새 Frame의 `0x34567123`을 얻는다. 이 차이가 Page Table 수정과 TLB 무효화를 함께 다루는 이유다. 마지막 두 출력은 같은 루트를 다시 선택해도 이 모형은 Cache를 비우며, Mapping이 없는 페이지는 변환할 수 없다는 것을 확인한다. Python의 예외를 실제 CPU의 #PF 처리나 PintOS의 복구 절차로 해석하지 않는다.
 
 ## 페이지 안의 위치로 경계와 접근 범위를 계산한다
 

@@ -6,10 +6,16 @@ permalink: /wiki/computer-systems-network-topic-3521ee6344f1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3521ee6344f1
-projection_sha256: 07a0fbc3feafee1f047a279718740c70a2c8f2e5c34f0fc8bce042e8ef24ec75
+projection_sha256: 0dac5de934fa8a01174e78d295f0fe2f876fd5856795de3c6a42aef57a83796e
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
+search_terms:
+- Canonical Address
+- KERN_BASE
+- VMA
+- LMA
+- 초기 main Thread
 grand_parent: OS
 ancestor: CS 기초
 ---
@@ -20,6 +26,19 @@ ancestor: CS 기초
 프로그램이 사용하는 주소는 프로세스의 **가상 주소 공간**에 속한다. 같은 주소라도 프로세스가 다르면 다른 메모리를 가리킬 수 있고, 서로 다른 주소를 같은 물리 페이지에 연결할 수도 있다. 주소의 범위와 접근 권한을 정하는 일, 물리 Frame을 확보하는 일, 그 안에 객체를 만드는 일은 각각 다른 단계다.
 
 전역 변수 `int g = 42;`와 `malloc()`으로 얻은 블록을 비교하면 이 차이가 드러난다. 전역 변수의 초기값은 실행 파일에서 출발하고, 동적 할당은 실행 중에 필요한 공간을 요청한다. 어느 경우든 주소를 사용할 수 있다는 사실만으로 해당 페이지가 이미 물리 메모리에 상주한다고 결론낼 수는 없다. 주소 변환 자체는 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)에서 다룬다.
+
+## 주소의 형태와 접근 권한은 서로 다른 조건이다
+
+x86-64의 4단계 Paging에서는 bit 47을 상위 16비트로 부호 확장한 주소가 canonical form을 만족한다. 두 유효 범위 사이의 값은 이 규칙에 맞지 않는다. 다음 표는 **주소 형태의 범위**이며, 각 범위를 User와 Kernel 중 누가 사용하는지는 OS가 정한다.
+
+| 4단계 Paging의 범위 | 크기 |
+|---|---:|
+| `0x0000000000000000`–`0x00007fffffffffff` | 128 TiB |
+| `0xffff800000000000`–`0xffffffffffffffff` | 128 TiB |
+
+5단계 Paging에서는 bit 56을 부호 확장하므로 양쪽 범위가 각각 64 PiB로 늘어난다. 이 기능의 지원과 활성화는 별도로 확인해야 한다. 여기서는 LAM으로 포인터의 상위 비트를 처리하지 않는 주소를 기준으로 한다. Non-canonical 주소를 사용하는 일반적인 메모리 접근은 #GP를, Stack Segment를 사용하는 접근은 #SS를 일으킬 수 있다. Page Table의 Present·권한 문제로 발생하는 #PF와는 원인이 다르다. [Intel SDM의 주소 검사와 Paging](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf), [Linux의 5단계 Paging](https://docs.kernel.org/6.16/arch/x86/x86_64/5level-paging.html)
+
+Canonical 주소라도 Mapping이 없거나 권한이 맞지 않으면 접근할 수 없다. 반대로 낮은 canonical 범위 안에 Kernel을 놓을 수도 있다. Linux x86-64의 전형적인 배치는 낮은 범위에 프로세스의 Mapping을, 높은 범위에 Kernel의 직접 Mapping·vmalloc·vmemmap·실행 이미지 등을 둔다. KASLR과 빌드 설정에 따라 일부 기준 주소가 달라지며, PTI를 사용하면 User와 Kernel 실행 때 사용하는 Page Table도 구분된다. 아래 PintOS의 `KERN_BASE`를 Linux의 `PAGE_OFFSET`으로 바꿔 끼우면 같은 주소 계산이 되지 않는다. [Linux 6.16의 주소 배치](https://docs.kernel.org/6.16/arch/x86/x86_64/mm.html), [PTI](https://docs.kernel.org/6.16/arch/x86/pti.html)
 
 ## 실행 파일에서 메모리로
 
@@ -102,6 +121,87 @@ Linux의 `brk()`는 데이터 영역 끝을 나타내는 **Program Break**를 �
 따라서 `malloc(256 * 1024)`만 보고 정확한 시스템 호출을 단정할 수 없다. 어떤 할당기를 쓰는지, 재사용할 공간이 있는지, 임계값과 Arena 상태가 어떤지 알아야 한다. 실제 호출 경로를 확인하려면 해당 환경에서 추적해야 한다. 독립된 큰 Mapping은 해제할 때 개별적으로 반환하기 쉽지만, Program Break로 얻은 영역의 중간 블록은 비어도 끝을 바로 줄일 수 없다. 재사용을 위해 보유하는 정책도 OS 반환 시점에 영향을 준다.
 
 Stack을 ‘빠르고 단편화가 없는 공간’, Heap을 ‘느리지만 무제한인 공간’으로 나누는 설명도 거칠다. Stack의 연속적인 Frame 관리는 단순하지만 호출·정렬·페이지 확보 비용까지 사라지는 것은 아니다. Heap에는 탐색·동기화·단편화 비용이 있으나 이미 준비한 블록을 빠르게 재사용하는 경로도 있다. 두 공간 모두 환경의 한도 안에서 사용한다. 블록의 분할과 병합, 재할당 실패 시 내용 보존은 [메모리 관리](/wiki/computer-systems-network-topic-d160fea60072/)에서 다룬다.
+
+## PintOS의 Kernel은 어느 주소에 놓이는가
+
+[lrn-pintos `9d1b14c`](https://github.com/woonyong-kr/lrn-pintos/tree/9d1b14cbdf41425ba8867af743c03cf32190ee9b)의 상수와 Linker Script를 함께 읽으면 파일의 로드 위치와 실행 주소를 구분할 수 있다.
+
+| 기준 | 값 | 의미 |
+|---|---|---|
+| `KERN_BASE` | `0x8004000000` | Kernel 직접 Mapping의 기준: 512 GiB + 64 MiB |
+| `LOADER_PHYS_BASE` | `0x200000` | Kernel 이미지의 물리 로드 주소: 2 MiB |
+| Kernel Text VMA | `0x8004200000` | `KERN_BASE + LOADER_PHYS_BASE` |
+| `USER_STACK` | `0x47480000` | 초기 User Stack의 상단 |
+| `PGSIZE` | `0x1000` | 일반 페이지 크기: 4 KiB |
+
+[`kernel.lds.S`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/kernel.lds.S)는 현재 위치를 `LOADER_KERN_BASE + LOADER_PHYS_BASE`로 정하고 `.text`에 `AT(LOADER_PHYS_BASE)`를 지정한다. VMA는 실행할 때의 주소, LMA는 이미지를 적재할 주소다. 따라서 Kernel Text의 `0x8004200000`에서 기준을 빼면 `0x200000`이 된다. `0x4200000`이 아니다.
+
+[`paging_init(mem_end)`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/init.c#L178)는 `pa < mem_end`인 페이지마다 `pa + KERN_BASE`에 Mapping을 구성한다. 마지막 `KERN_BASE + mem_end`는 포함하지 않는다. `start`부터 `_end_kernel_text` 전까지 PTE의 W를 내리고, 나머지는 P·W를 설정한다. User 접근을 허용하는 U는 leaf PTE에 넣지 않는다. Supervisor 쓰기의 실제 제한에는 CR0.WP 같은 CPU 설정도 관계되므로, PTE의 W가 0이라는 사실과 모든 Kernel 쓰기가 차단됐다는 판단은 구분한다. 직접 Mapping에 들어간 주소라고 해서 모두 `palloc`이 할당할 수 있는 RAM인 것도 아니다.
+
+### User 주소 판별만으로 Mapping을 보장할 수는 없다
+
+`is_user_vaddr(va)`는 `va < KERN_BASE`만 검사한다. 이 조건은 Mapping의 존재, 버퍼 전체의 범위, User 접근 권한까지 확인하지 않는다. ELF의 적재 주소는 Program Header에서 읽고, `validate_segment()`가 범위와 크기 등을 검사한다. `0x400000`부터 고정된 크기의 모든 영역을 항상 코드로 채우는 구조가 아니다. 초기 Stack 페이지는 `0x4747f000`에서 시작하지만 이후 성장과 Mapping 정책은 별도 구현에 달려 있다. [주소 매크로](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/vaddr.h), [ELF와 Stack 준비](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c)
+
+Page Table 구현에는 더 좁은 가정도 있다. `KERN_BASE`는 PML4[1] 아래의 PD[32]에서 시작한다. `0x8000000000`처럼 `KERN_BASE`보다 작으면서 PML4 index가 1인 값도 있지만, 현재 `pml4_destroy()`는 PML4[0] 아래만 해제한다. `pml4_create()`는 `base_pml4`의 상위 엔트리를 복사해 Kernel 쪽 하위 테이블을 공유한다. 따라서 단순 주소 비교를 통과한 모든 값을 독립적인 User Mapping에 안전하게 쓸 수 있다고 일반화하면 안 된다. 허용할 범위를 넓히려면 생성·공유·해제의 가정부터 함께 맞춰야 한다. 이는 현재 코드의 경계에 대한 검토이며, 해당 범위에 Mapping을 만들어 실행한 결과는 아니다. [Page Table의 생성·조회·해제](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c)
+
+### main이 시작되기 전에 준비되는 것
+
+`main()`에 도달했을 때 하드웨어 Paging은 이미 켜져 있다. `start.S`는 PAE와 임시 테이블을 준비하고 CR3를 설정한 뒤 EFER.LME·CR0.PG와 Segment 전환을 통해 64비트 실행을 시작한다. 이 부트 테이블은 2 MiB 페이지를 사용한다. 사용자 페이지의 지연 적재와 교체를 담당하는 SPT·VM 초기화가 끝났다는 뜻은 아니다. [부트 주소 변환](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/start.S)
+
+`entry_64`가 정하는 초기 RSP는 `KERN_BASE + 0x1000`이다. `call`이 8바이트 반환 주소를 저장하면 `0x8004000ff8`이 되며, 이후 함수의 Prologue와 다른 호출에 따라 더 움직인다. `thread_init()`은 현재 Kernel RSP를 페이지 시작으로 내려 최초 Thread를 등록한다. 최초 Thread를 새 페이지에 할당하는 흐름이 아니다. `main()`은 이어서 `palloc_init() → malloc_init() → paging_init(mem_end)`를 실행한다. 마지막 단계가 `base_pml4`를 만들고 `pml4_activate(NULL)`로 활성화한다. [최초 Thread](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c), [초기화 순서](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/init.c#L76)
+
+다음 예제는 주소 형태와 상수의 산술 관계를 비교한다. MMU나 부팅을 실행하지 않으며, `after_call`은 호출 직후 한 순간만 계산한 값이다.
+
+```run-python
+U64 = (1 << 64) - 1
+KERN_BASE, PAGE = 0x8004000000, 4096
+
+def canonical(address, bits):
+    if not 0 <= address <= U64 or bits not in (48, 57):
+        return False
+    upper = address >> bits
+    expected = (1 << (64 - bits)) - 1 if address & (1 << (bits - 1)) else 0
+    return upper == expected
+
+for address in (0x7fffffffffff, 0x800000000000,
+                0xffff7fffffffffff, 0xffff800000000000):
+    print(f'{address:016x}: 48-bit={canonical(address, 48)}, '
+          f'57-bit={canonical(address, 57)}')
+
+kernel_text_pa = 0x200000
+kernel_text_va = KERN_BASE + kernel_text_pa
+assert canonical(KERN_BASE, 48)
+assert kernel_text_va - KERN_BASE == kernel_text_pa
+print(f'kernel_text: VA={kernel_text_va:#x}, PA={kernel_text_pa:#x}')
+print('KERN_BASE:', KERN_BASE // (1 << 30), 'GiB +',
+      KERN_BASE % (1 << 30) // (1 << 20), 'MiB')
+
+stack_top = KERN_BASE + PAGE
+after_call = stack_top - 8
+print(f'boot_stack: top={stack_top:#x}, after_call={after_call:#x}, '
+      f'page={after_call & -PAGE:#x}')
+assert after_call & -PAGE == KERN_BASE
+candidate = 0x8000000000
+print(f'candidate={candidate:#x}: below_KERN_BASE={candidate < KERN_BASE}, '
+      f'PML4_index={(candidate >> 39) & 511}')
+assert candidate < KERN_BASE and ((candidate >> 39) & 511) == 1
+assert not canonical(-1, 48) and not canonical(1 << 64, 48)
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+00007fffffffffff: 48-bit=True, 57-bit=True
+0000800000000000: 48-bit=False, 57-bit=True
+ffff7fffffffffff: 48-bit=False, 57-bit=True
+ffff800000000000: 48-bit=True, 57-bit=True
+kernel_text: VA=0x8004200000, PA=0x200000
+KERN_BASE: 512 GiB + 64 MiB
+boot_stack: top=0x8004001000, after_call=0x8004000ff8, page=0x8004000000
+candidate=0x8000000000: below_KERN_BASE=True, PML4_index=1
+```
+
+48비트 조건에서 제외된 두 주소가 57비트 조건에서는 형태 검사를 통과한다. 실제 접근 가능 여부는 여전히 활성화한 Paging 방식과 Mapping에 달려 있다. 마지막 줄은 `is_user_vaddr`에 해당하는 비교와 PML4 index가 같은 경계를 표현하지 않는다는 점을 보여 준다.
 
 ## PintOS에서 같은 차이를 읽는다
 

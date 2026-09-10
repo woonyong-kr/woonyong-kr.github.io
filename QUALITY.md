@@ -3,6 +3,21 @@
 2026-09-08. 테마·실행기 개선과 별도 승인된 Wiki 생성물 갱신을 통합한다.
 내용은 Vault producer에서 생성했고 사이트에서 생성 Markdown을 직접 보정하지 않았다.
 
+## 2026-09-10 사이트 공통 실행 정책 연결
+
+사이트의 언어별 실행기 선택과 서버 주소 복구를 공통 `createPrivateWebRunnerRegistry`로 옮겼다.
+호스트는 현재 endpoint만 제공하고, 공통 소스가 브라우저 실행과 개인 컴파일러를 선택한다.
+사이트용 source pin은 `fbe0145107f3dae12ce02a83c24727e2190070e4`이며, plugin 0.7.7 release의
+`af346fe853f5a940fb1e5a0a648ccf63c228a80f`와 구분한다. 일반 plugin의 provider 기본 정책은 바꾸지 않았다.
+
+기존 web bundle 금지 검사는 유지했다. 실제 빌드 graph에 공개 provider와 localhost companion 구현이
+포함되지 않으며 초기 loader는 2,809 bytes, gzip 1,550 bytes다. 타입·production build·최종 파일 검사를
+통과했고, 관련 브라우저 검사 17개를 Chromium·Firefox·WebKit에서 확인했다. 기존 lazy mount,
+React·TypeScript 지연 로딩, 주소 수정·offline 복구, 429, 같은 ID 취소와 Worker 중단·Canvas 검사를 재사용했다.
+주소가 잘못돼도 브라우저 예제가 실행되는지와 외부 POST가 없는지를 기존 복구 검사에 추가했다.
+별도 취소 검사는 서버 정리가 확인되지 않을 때 완료로 표시하지 않고 소스를 다시 보내지 않는 경계를 보호한다.
+개인 서버 응답은 이 통합 검사에서 로컬 fixture로 제공하며 실제 서버 정리 성공으로 확대하지 않는다.
+
 ## 2026-09-10 재현 기반 후속 점검
 
 아래 수정은 2026-09-10 정식 릴리스로 공개했다. 공개 파일을 다시 내려받아 검증본과 SHA-256을 대조했다. Community 심사나 Google 실제 계정 동기화 성공을 뜻하지 않는다.

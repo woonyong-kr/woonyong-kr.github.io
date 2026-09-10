@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-cpu-4b05d739f0f6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-4b05d739f0f6
-projection_sha256: 7e5608e268a0abddb02cc79d6facd780aec22ffec751aeb92b5e38b2b2a9f865
+projection_sha256: ade1076bb2b71e12ffe23ac6558576dee58cbb7fa2907db6899b506f47b4b9cc
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture

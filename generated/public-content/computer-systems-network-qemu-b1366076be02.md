@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: 1a86195d4c8476d09fef9c7ce45d618c64f55f86a5353c98f290aa290f9f7c99
+projection_sha256: a4408b04d7c6276d8e46475a8c4632f784c101708278dbaebcfb1d36718f20b6
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
@@ -16,6 +16,12 @@ search_terms:
 - gpr_map
 - cpu_synchronize_state
 - gdb_target_memory_rw_debug
+- RAMBlock
+- MemoryRegion
+- FlatView
+- AddressSpace
+- Guest Physical Memory
+- address_space_rw
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -140,6 +146,127 @@ Guest 가상 주소를 페이지 테이블로 변환하는 것은 CPU의 MMU와 
 이 PintOS의 일반 4KiB 매핑에서는 네 단계의 페이지 테이블을 따른다. 부팅 초기 `start.S`가 2MiB 페이지를 쓰는 구간과는 구별한다. 매핑이 없거나 접근 권한을 위반하면 CPU는 페이지 폴트 `#PF`를 발생시킬 수 있다. 그러나 매핑이 없다는 사실만으로 OS 버그가 확정되지는 않는다. Lazy Loading, Swap In, Stack Growth, COW 등은 폴트를 계기로 필요한 상태를 만드는 정상 경로를 포함한다. `vm_try_handle_fault()`가 접근과 복구 가능성을 판단하며, 복구하지 못한 경우에 종료나 오류 처리를 이어 간다.
 
 폴트가 요구하는 판단과 실제 매핑이 어떻게 연결되는지는 [가상 메모리 구현](/wiki/computer-systems-network-topic-83f24986336f/)에서 읽는다. Guest VA·PA와 커널 별칭의 계산은 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)으로 연결한다. 장치 모델이 주소에 반응하는 동작과 OS가 그 페이지를 유효하다고 판단하는 정책을 함께 확인해야 원인을 좁힐 수 있다.
+
+## Guest의 물리 주소를 Host 메모리에 연결한다
+
+PintOS의 PTE에 들어 있는 물리 주소는 **Guest Physical Address(GPA)**다. QEMU 프로세스 안의 포인터인 Host Virtual Address(HVA)와도, Host OS가 관리하는 물리 주소(HPA)와도 다르다. Guest가 RAM을 접근하는 TCG 경로에서는 Guest VA를 GPA로 번역하고, QEMU가 그 GPA의 영역을 Host 메모리에 연결한다. 마지막 Host VA의 변환은 Host OS와 CPU가 담당한다. 물리 주소 공간에는 장치 영역도 있으므로 PA를 언제나 DRAM의 위치라고 읽을 수는 없다.
+
+`palloc_get_page(PAL_USER)`가 반환하는 Kernel VA, PTE에 넣는 GPA, 프로세스가 사용하는 User VA의 관계는 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)의 두 VA 예제에서 확인할 수 있다. 그 계산에 QEMU의 RAMBlock을 더할 때는 먼저 GPA가 **어느 영역으로 번역되는지** 찾아야 한다.
+
+### RAMBlock의 offset은 GPA의 시작 주소가 아니다
+
+| 구성 요소 | 표현하는 것 |
+|---|---|
+| `AddressSpace` | CPU나 장치가 바라보는 주소 공간 |
+| `MemoryRegion` | RAM·ROM·MMIO, Container와 Alias 등 주소 영역의 구성 |
+| `FlatView` | Alias와 중첩·우선순위 등을 반영해 현재 보이는 영역 |
+| `RAMBlock` | RAM 등을 담는 Host 메모리의 backing과 관리 정보 |
+
+QEMU v10.0.0의 `RAMBlock`은 `host`, `offset`, `used_length`, `max_length`, `mr`, `flags` 등을 가진다. `offset`은 QEMU 내부 RAM 주소 관리에서 사용하는 위치다. Guest 물리 주소 공간에 그 Block이 놓이는 시작 주소와 같다고 가정하면 안 된다. 같은 backing의 일부를 서로 다른 GPA에 Alias로 노출할 수도 있다. [RAMBlock 정의](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/ramblock.h), [메모리 영역과 Alias](https://www.qemu.org/docs/master/devel/memory.html)
+
+일반 RAM의 Host 포인터는 최종 Region을 찾은 뒤 **`block->host + Block 내부 offset`**으로 계산한다. `qemu_ram_ptr_length()`가 Block 포인터를 받으면 전달받은 offset을 그 Block 안에서 해석한다. Block 포인터가 NULL인 경로는 내부 RAM 주소로 Block을 찾고 `block->offset`을 뺀다. 따라서 Guest PA에서 RAMBlock의 `offset`을 바로 빼는 디버깅 스크립트는 Alias와 영역 배치를 놓친다. [Host 포인터 계산](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L2394), [`ramblock_ptr()`](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/ram_addr.h#L89)
+
+PC 머신의 `pc_memory_init()`도 RAM backing과 Guest 배치를 구분한다. 아래쪽 RAM과 4 GiB 위 RAM을 Alias로 연결하는 경로가 있으며, 위쪽 Alias의 backing offset은 아래쪽 RAM 크기에서 시작한다. VGA·ROM·장치 영역과 Firmware의 예약 영역까지 있으므로 `-m 128M`을 ‘GPA 0부터 128 MiB까지 전부 할당 가능한 RAM’이라고 바꾸어 읽을 수 없다. PintOS의 Pool은 Firmware 정보와 Kernel이 사용한 범위를 고려해 정한다. [PC의 RAM Alias와 E820 정보](https://github.com/qemu/qemu/blob/v10.0.0/hw/i386/pc.c#L887)
+
+### RAM을 확보하는 방식과 메모리 사용량
+
+일반적인 RAM 할당 경로의 `qemu_ram_alloc()`은 `qemu_ram_alloc_internal()`로 내려간다. 내부에서 크기와 정렬, backing 방식과 플래그를 정하고 `ram_block_add()`로 등록한다. 이미 제공한 Host 포인터, 파일·공유 메모리, 익명 메모리 등 경로가 다르다. 이를 언제나 동일한 인자의 `mmap()` 한 번이라고 설명할 수는 없다. [RAM 할당과 등록](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L2142)
+
+`used_length`와 `max_length`는 사용 중인 길이와 최대 backing 길이를 구별한다. 후자가 더 크다는 사실만으로 Guest의 hotplug나 NUMA 구성이 완성되지는 않는다. 장치·머신 구성과 Guest 지원도 필요하다. RAMBlock마다 Host 메모리의 backing을 관리하는 것과 Linux의 buddy allocator가 Frame을 할당하는 것은 단위와 책임이 다르다.
+
+마찬가지로 설정한 Guest RAM 크기와 QEMU의 RSS는 같은 값이 아니다. Host의 페이지 확보·공유·회수 정책과 아직 접근하지 않은 메모리, QEMU 코드와 장치의 추가 메모리가 관계된다. 특정 실행의 RSS나 TCG·KVM의 Cycle 비용은 측정 없이 정할 수 없다.
+
+### address_space_rw는 어느 주소를 읽는가
+
+QEMU v10.0.0의 `address_space_rw(as, addr, attrs, buf, len, is_write)`에서 `addr`는 선택한 `as`의 주소이고 `buf`는 Host 버퍼다. CPU가 보는 물리 메모리뿐 아니라 장치가 보는 DMA 주소 공간에도 메모리 API가 쓰인다. IOMMU가 있으면 장치의 주소를 다른 공간으로 번역할 수도 있다. x86의 Port I/O는 `address_space_io`를 사용하므로 PintOS의 모든 IDE·PIT·PIC 접근을 MMIO라고 묶지 않는다. [AddressSpace의 관점](https://www.qemu.org/docs/master/devel/memory.html), [x86 Port I/O helper](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/misc_helper.c)
+
+이 버전의 `address_space_rw()`는 쓰기일 때 `address_space_write()`, 읽기일 때 `address_space_read_full()`을 호출한다. 이후 FlatView에서 Region과 그 내부 위치를 구한다. 한 요청이 영역 경계를 넘으면 남은 범위를 다시 번역해 처리한다. MMIO 접근은 장치가 지원하는 크기·정렬·Byte Order도 고려한다. [읽기·쓰기의 실제 분기](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L2920)
+
+직접 접근할 수 있는 RAM의 읽기는 Host 버퍼로 복사하고, 쓰기는 backing에 복사한 뒤 QEMU의 dirty tracking과 코드 무효화 처리를 한다. 일반 ROM 읽기와 ROM device 쓰기는 같은 경로가 아니며, Debug 접근에는 ROM 쓰기를 허용하는 별도 조건도 있다. `mr->ram` 하나만으로 모든 읽기·쓰기의 효과를 결정할 수는 없다. 장치 callback의 실패나 연결되지 않은 영역은 `MemTxResult`로 전달된다. 이 결과가 Guest에서 어떤 예외나 장치 동작으로 나타나는지는 호출 경로까지 확인해야 한다. [직접 접근의 조건](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/memory.h#L3015)
+
+### 두 주소에서 같은 backing을 바꿔 본다
+
+다음 모형은 RAM 32바이트를 만들고 세 Region을 연결한다. `0x2000`과 `0x3000`의 두 Region은 같은 backing의 offset 16부터 8바이트를 공유한다. `0x4000`의 쓰기는 장치 callback을 흉내 내어 별도 List에 기록한다. HVA는 계산을 보여 주는 가상의 기준값이며 실제 Python 버퍼의 주소가 아니다.
+
+```run-python
+ram = bytearray(range(32))
+host_base = 0x600000000000
+# (guest start, length, offset inside the one RAM backing)
+regions = [(0x1000, 8, 0), (0x2000, 8, 16), (0x3000, 8, 16)]
+device_writes = []
+
+def resolve(gpa):
+    for start, length, backing_offset in regions:
+        if start <= gpa < start + length:
+            offset = backing_offset + gpa - start
+            return offset, host_base + offset
+    raise LookupError('not mapped to RAM')
+
+def write_byte(gpa, value):
+    assert 0 <= value <= 255
+    if gpa == 0x4000:
+        device_writes.append(value)
+        return 'MMIO callback'
+    offset, _ = resolve(gpa)
+    ram[offset] = value
+    return 'RAM'
+
+for gpa in (0x1003, 0x2003, 0x3003):
+    offset, hva = resolve(gpa)
+    print(f'GPA={gpa:#x}: backing_offset={offset}, HVA={hva:#x}')
+assert resolve(0x2003) == resolve(0x3003)
+print('write through first alias:', write_byte(0x2003, 90))
+print('read through second alias:', ram[resolve(0x3003)[0]])
+assert ram[19] == 90
+print('device write:', write_byte(0x4000, 65), device_writes)
+assert device_writes == [65] and ram[19] == 90
+try:
+    resolve(0x2008)
+except LookupError:
+    print('exclusive region end: rejected')
+else:
+    raise AssertionError('the region end must be outside RAM')
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+GPA=0x1003: backing_offset=3, HVA=0x600000000003
+GPA=0x2003: backing_offset=19, HVA=0x600000000013
+GPA=0x3003: backing_offset=19, HVA=0x600000000013
+write through first alias: RAM
+read through second alias: 90
+device write: MMIO callback [65]
+exclusive region end: rejected
+```
+
+GPA가 다른 `0x2003`과 `0x3003`은 같은 offset 19로 연결된다. 한쪽에서 쓴 90을 다른 쪽에서 읽는 까닭이다. `0x4000`의 값은 RAM에 쓰지 않고 장치 List에 남는다. 이 예제는 최종 Region이 이미 정해진 단순 Mapping이며, QEMU의 전체 FlatView·IOMMU·동시 접근을 구현하지는 않는다.
+
+### TCG와 KVM에서 재사용하는 주소 변환
+
+TCG의 직접 RAM 접근은 Software TLB에 저장한 정보를 재사용해 Guest VA에 `addend`를 더한 Host 포인터로 접근할 수 있다. 매번 `address_space_rw()`나 전체 Page Table Walk를 실행하는 경로가 아니다. MMU index, 접근 종류와 느린 경로로 보낼 조건도 함께 읽는다. v10.0.0의 TLB 크기는 동적으로 조절되므로 ‘항상 256 Entry’라는 상수로 설명하지 않는다. [TCG의 TLB와 직접 접근](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cputlb.c)
+
+Guest의 CR3 쓰기는 `helper_write_crN() → cpu_x86_update_cr3()`로 이어진다. 이 버전은 Guest Paging이 켜져 있으면 `env->cr[3]`를 바꾸고 `tlb_flush()`를 호출한다. Host 하드웨어 TLB를 모두 비운다는 뜻이 아니며, 번역된 명령을 담는 TB Cache와도 구분한다. [Guest CR3의 갱신](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/helper.c#L173)
+
+KVM의 일반적인 userspace RAM 등록은 Guest 물리 범위와 Host 가상 메모리를 연결한다. Intel EPT나 AMD NPT를 사용하는 환경에서는 CPU가 Guest 변환과 두 번째 단계의 변환을 수행한다. Guest의 각 메모리 접근이 QEMU의 C 함수에서 HVA를 계산하는 것은 아니다. 실제 장치·공유 메모리·가속 설정에 따라 경로를 더 구분해야 한다. [KVM의 메모리 등록 API](https://www.kernel.org/doc/html/latest/virt/kvm/api.html#kvm-set-user-memory-region)
+
+### 관찰할 대상부터 고른다
+
+Guest GDB에서는 PintOS의 PTE와 CR3, `kpage`를 읽는다. `kpage - KERN_BASE`가 GPA이고, 실제 프레임과 Pool의 유효 범위까지 함께 확인해야 한다. 함수 진입 주소에 1을 더한 Breakpoint를 반환 직후라고 가정하거나, User RSP를 `struct thread *`로 바로 읽지 않는다. 일반 Register와 저장된 Frame의 선택은 [Debugger](/wiki/platform-delivery-operations-topic-f89d71c7eb29/)에서 이어진다.
+
+RAMBlock 자체를 보려면 해당 QEMU 빌드의 심볼로 **Host 프로세스**를 디버깅해야 한다. 모든 Host Thread를 정지한 상태에서 v10.0.0의 List를 읽는 절차는 다음과 같다. 실제 실행 결과를 첨부한 명령은 아니다.
+
+```gdb
+set $rb = ram_list.blocks.lh_first
+while $rb != 0
+  printf "name=%s host=%p offset=%#llx used=%#llx max=%#llx\n", $rb->idstr, $rb->host, (unsigned long long)$rb->offset, (unsigned long long)$rb->used_length, (unsigned long long)$rb->max_length
+  set $rb = $rb->next.le_next
+end
+```
+
+`mru_block`은 가장 최근에 참조한 Block을 기억하는 필드이며 List의 머리가 아니다. 이 목록만으로 GPA를 HVA로 번역할 수 없으므로, `flatview_read_continue_step()`·`flatview_write_continue_step()`에서 `mr`, `mr_addr`, `mr->ram_block`을 함께 조사한다. 생성 과정은 `qemu_ram_alloc_internal()`·`ram_block_add()`, TCG의 변환 실패와 보충은 `x86_cpu_tlb_fill()`에서 이어진다. 최적화로 변수가 보이지 않으면 해당 빌드의 소스와 Disassembly를 함께 읽는다. [RAMList 정의](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/ramlist.h), [x86 TLB 보충](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/excp_helper.c)
+
+QEMU Monitor의 `info tlb`도 이름만 보고 Software TLB의 적중 항목을 출력한다고 해석해서는 안 된다. v10.0.0의 x86 구현은 현재 CR3에서 Guest Page Table을 읽어 Mapping을 출력한다. 실제 TLB Hit 비율이나 Cache에 남은 항목 수를 측정한 결과가 아니다. Guest 물리 바이트는 Monitor의 `xp` 등 물리 조회 경로로 확인하며, 기본 Guest GDB의 `x`가 읽는 가상 주소와 구분한다. [Monitor의 Page Table 조회](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/monitor.c#L140), [QEMU GDB의 주소 공간](https://www.qemu.org/docs/master/system/gdb.html#examining-physical-memory)
 
 ## 파일 이름이 Sector 요청으로 바뀌는 지점
 

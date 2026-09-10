@@ -173,8 +173,17 @@ test('@core browser preview can stop and restart after page scrolling', async ({
 test('@core offline recovery and corrected endpoint retain edited source and avoid automatic execution', async ({ page }) => {
   await configureRunner(page, 'invalid-endpoint');
   let runs = 0;
-  page.on('request', request => { if (request.url().endsWith('/v1/run')) runs++; });
+  const externalPosts: string[] = [];
+  page.on('request', request => {
+    if (request.url().endsWith('/v1/run')) runs++;
+    if (request.method() === 'POST' && new URL(request.url()).origin !== api) externalPosts.push(request.url());
+  });
   await page.goto(showcase);
+  const js = await block(page, 'javascript');
+  await js.locator('.cm-content').fill('console.log("browser survives invalid endpoint")');
+  await js.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect(js.locator('.rcb__output')).toContainText('browser survives invalid endpoint');
+  expect(runs).toBe(0);
   const java = await block(page, 'java');
   await expect(java).toHaveAttribute('data-state', 'unavailable');
   await java.locator('.cm-content').fill('edited source');
@@ -189,6 +198,7 @@ test('@core offline recovery and corrected endpoint retain edited source and avo
   await java.getByRole('button', { name: 'Run code', exact: true }).click();
   await expect(java.locator('.rcb__output')).toContainText('server-ok');
   expect(runs).toBe(1);
+  expect(externalPosts).toEqual([]);
 });
 
 test('@core 429 shows Retry-After; cancellation uses the original ID without resending source', async ({ page }) => {
@@ -220,6 +230,27 @@ test('@core 429 shows Retry-After; cancellation uses the original ID without res
   expect(request.postData()).toBeNull();
   await expect(java.locator('.rcb__output')).toContainText('Server execution cancelled; container removed.');
   expect(runs).toBe(2);
+  await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
+});
+
+test('unknown cancellation keeps server cleanup unconfirmed and never resends source', async ({ page }) => {
+  await configureRunner(page);
+  const posts: { url: string; body: string | null }[] = [];
+  page.on('request', request => {
+    if (request.method() === 'POST') posts.push({ url: request.url(), body: request.postData() });
+  });
+  await page.route('**/v1/run', route => route.continue({ headers: { ...route.request().headers(), 'x-test-response': 'body' } }));
+  await page.route('**/v1/cancel', route => route.fulfill({ contentType: 'application/json', body: '{"state":"unknown"}' }));
+  await page.goto(showcase);
+  const java = await block(page, 'java');
+  await java.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect.poll(() => posts.length).toBe(1);
+  await java.getByRole('button', { name: 'Stop' }).click();
+  await expect(java.locator('.rcb__console-meta')).toHaveText('Cancellation unconfirmed');
+  await expect(java.locator('.rcb__output')).toContainText('Server cancellation could not be confirmed');
+  await expect(java.locator('.rcb__output')).not.toContainText('container removed');
+  expect(posts.map(post => post.url)).toEqual([`${api}/v1/run`, `${api}/v1/cancel`]);
+  expect(posts[1]?.body).toBeNull();
   await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();
 });
 
