@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-17f8492e4ed6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-17f8492e4ed6
-projection_sha256: 145a55472f382d9d6f0fe661c2be7b1ce1dfd663563c99f52fca651ec2355ff5
+projection_sha256: 33337255bb03e61b916db6cb5aee35185344748c0fa689affcf5b1cf788027f2
 parent: Tree
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-a06ebc760118
@@ -277,3 +277,5 @@ print(f"확인: 트리 {len(cases)}개, 재귀 3종과 반복 중위 결과 일�
 부모를 먼저 처리해야 하면 전위, Binary Search Tree의 정렬된 값이 필요하면 중위, 자식 결과를 모은 뒤 부모를 처리해야 하면 후위, 루트에서 가까운 깊이부터 살펴야 하면 레벨 순회를 선택할 수 있다. 같은 알고리즘을 반복으로 옮길 때는 다음 방문지를 저장하는 규칙과 결과에 넣는 시점을 함께 보존해야 한다. 전위 재귀를 Queue로 바꾸는 것만으로 같은 전위 순서가 유지되지는 않는다.
 
 [Tree](/wiki/computer-science-topic-a06ebc760118/)는 입력 구조를, [Stack](/wiki/computer-science-topic-39fd55620efd/)과 [Queue](/wiki/computer-science-topic-fd1595b77add/)는 후보를 꺼내는 규칙을 설명한다. 호출의 상태를 직접 저장하는 이유는 [재귀와 반복](/wiki/computer-science-topic-931a857d1d9a/)으로 이어진다.
+
+반복 구현을 비교할 때는 [전위 순회](https://cedis.tistory.com/185)와 [레벨 순회](https://cedis.tistory.com/183) 풀이도 함께 볼 수 있다. 후위 순회는 [Stack 한 개를 사용하는 풀이](https://cedis.tistory.com/186)와 [Stack 두 개를 사용하는 풀이](https://cedis.tistory.com/187)를 비교할 수 있다.

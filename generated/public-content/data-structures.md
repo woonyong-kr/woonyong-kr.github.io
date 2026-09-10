@@ -6,7 +6,7 @@ permalink: /wiki/data-structures/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/computer-science/data-structures
-projection_sha256: 3bda72623cca9ac7ad4e7a2471fdde87fb298bfa9b013d9a59062a57dfd7ed87
+projection_sha256: 8ffbb07c3a82a042c736ff66fb9eca80216248399d6e0e6e7e296e345a71790e
 parent: CS 기초
 content_status: ready
 public_parent_id: Wiki/computer-science
