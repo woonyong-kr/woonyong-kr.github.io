@@ -19,6 +19,13 @@ color_scheme: woon-light
 mermaid: true
 
 defaults:
+  # Projected Markdown is authored content, including literal C/JS braces.
+  # Keep Liquid in layouts, but never evaluate it inside these documents.
+  - scope:
+      path: "generated/public-content/*.md"
+      type: "pages"
+    values:
+      render_with_liquid: false
   - scope:
       path: "docs"
       type: "pages"

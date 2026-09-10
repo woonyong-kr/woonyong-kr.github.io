@@ -3,6 +3,21 @@
 2026-09-08. 테마·실행기 개선과 별도 승인된 Wiki 생성물 갱신을 통합한다.
 내용은 Vault producer에서 생성했고 사이트에서 생성 Markdown을 직접 보정하지 않았다.
 
+## 2026-09-10 재현 기반 후속 점검
+
+아래 플러그인 수정은 로컬 검증본이다. 새 공개 릴리스나 Community 심사 통과를 뜻하지 않는다.
+
+| 대상 | 확인한 원인과 수정 | 검증 범위 |
+| --- | --- | --- |
+| Runnable 설정 | SecretComponent는 비밀 값이 아니라 비밀 이름을 선택한다. 이름만 저장하고 기존 고정 이름의 읽기 호환성을 유지했다. | 설정·plugin·companion 관련 16개 검사, check/build. 실제 Obsidian에서 로컬 연결 상태 복구 |
+| Kotlin companion | 이미지에 포함된 coroutines JAR이 compile/runtime classpath에 빠져 있었다. 추가 다운로드 없이 기존 JAR을 연결했다. | 실제 Docker를 포함한 11개 검사. 같은 Obsidian 예제가 unresolved kotlinx 실패에서 4.31초 Success로 전환 |
+| Linked Graph | 검색 명령이 실제 검색창의 부모가 아닌 외부 컨테이너를 열었다. 렌더링과 검색 모두 공개 contentEl을 사용하며 자식 배열 위치 의존을 제거했다. | 수정 전 검색 명령 검사 실패, 수정 후 check/48개 검사. 실제 명령으로 검색창 표시·입력 포커스 확인 |
+| Calendar 인증 | 연결 해제 뒤 늦은 인증·갱신 응답이 토큰을 다시 저장했다. 연결 세대가 바뀐 응답을 폐기한다. | 12개 인증 검사. 실제 Google 계정 인증·동기화는 이 검사에 포함되지 않음 |
+| Calendar 색인 | 초기화·비활성화 이전의 읽기 결과가 일정을 되살렸다. 파일별 누적 버전 대신 현재 읽기 요청만 보관하고 완료·초기화·삭제 때 제거한다. | 23개 색인 검사, check/build/Knip. 수정본의 실제 월간 화면 확인 |
+| 사이트 문서 렌더링 | Merge Sort C 초기화 구문의 이중 중괄호를 Liquid 변수로 오인해 CI 빌드가 실패했다. 공개 Markdown 본문만 Liquid 평가를 끄고 HTML redirect와 layout의 템플릿 처리는 유지한다. | 실패 run 34455891415의 배포는 건너뛰었다. 수정 후 최종 배포와 공개 예제 실행은 별도 확인 대상 |
+
+세 플러그인의 Knip 결과는 미사용 항목 0이었다. Runnable·Calendar 전체 의존성 audit와 Graph 제품 의존성 audit도 보고된 취약점 0이었다. 이 결과를 모든 동작의 무결함으로 확대하지 않는다. 이전 설정 migration과 사용하는 CodeMirror legacy-modes는 호환성·구문 강조 경로가 있어 유지했다. 사이트는 공통 실행기 submodule을 사용하며, 호스트 색상 토큰과 연결 설정만 분리한다. 확인된 공유 코드 중복이 없으므로 새 공통 프레임워크를 추가하지 않았다.
+
 ## 검증 범위와 비교 조건
 
 - 실행기 기준 revision: `4e9268d` → `3d5c849`. 공통 구현 `5b740e7`의 `npm run verify`와
