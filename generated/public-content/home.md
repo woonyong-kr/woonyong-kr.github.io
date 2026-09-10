@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: 8786b0d486d85dc570c68f65a10799bf7b7b62589d4e0ee7996e563983b9e1df
+projection_sha256: ab13bb36dd5ba7ce4f00c331c0dd56fc0baca2faf9f1538062ecae31445f15e8
 content_status: ready
 ---
 
@@ -47,7 +47,7 @@ content_status: ready
 
 ## 참고한 책
 
-- [Kotlin in Action 2/e](https://www.yes24.com/product/goods/142690359)
+- [Kotlin in Action (2판)](https://www.yes24.com/product/goods/142690359)
 - [밑바닥부터 만들면서 배우는 LLM](https://www.yes24.com/product/goods/154099735)
 - [밑바닥부터 시작하는 딥러닝 1 (리마스터판)](https://www.yes24.com/product/goods/141787639)
 - [컴퓨터 시스템 (3판)](https://www.yes24.com/product/goods/31950404)
