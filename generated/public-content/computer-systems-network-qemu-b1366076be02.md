@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: 9f4d65e204ba151a3703eb0d95392feb2bf19a0e357b200f1d11a01d4cd9e4d2
+projection_sha256: 8f195062c41f2a9e00ddd956f9a61ce7c4ea13ce7b105ea2cb9808cb4fe3c46c
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
@@ -164,29 +164,9 @@ QEMU v10.0.0의 `helper_syscall(env, next_eip_addend)`는 `env->eip + next_eip_a
 
 PintOS의 `syscall_init()`은 LSTAR에 `syscall_entry`를 등록하고 FMASK로 IF·TF·DF·IOPL·AC·NT를 지우도록 설정한다. 진입한 assembly가 User RSP를 보관하고 TSS에서 Kernel RSP를 읽은 다음 `intr_frame`을 쌓는다. 즉 **CPU의 진입 동작과 커널 코드의 스택 교체**는 서로 다른 단계다. [초기화](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c), [진입 assembly](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall-entry.S)
 
-### 저장된 인자를 커널 함수에 넘긴다
+### Guest 커널의 번호 해석
 
-`syscall_entry`는 `intr_frame *`를 RDI에 놓고 `syscall_handler()`를 호출한다. 이 시점의 CPU RDI는 사용자 fd가 아니라 C 함수의 첫 인자인 Frame 포인터다. 원래 syscall의 번호와 인자는 `f->R.rax`, `f->R.rdi`, `f->R.rsi`, `f->R.rdx`에서 읽어야 한다.
-
-handler는 `f->R.rax`로 분기한다. `SYS_WRITE`라면 fd·버퍼·길이와 Frame을 `write()`에 넘기고 반환값을 다시 `f->R.rax`에 저장한다. fd 1의 정상 출력 경로에는 `putbuf()`가 사용된다. 파일 fd라면 파일 객체와 파일 시스템을 거치는 별도 경로다. 일반적으로 돌아오는 syscall의 끝에서는 assembly가 저장한 상태와 결과를 복구하고 `sysretq`를 실행한다. `exit`처럼 사용자 호출 지점으로 돌아오지 않는 동작도 구분해야 한다.
-
-### 번호의 선언과 구현 범위
-
-이 커밋의 enum과 handler를 함께 읽으면 다음과 같다. 이름이 선언되어 있다는 사실만으로 그 기능이 구현되었다고 판단하지 않는다.
-
-| 번호 | enum 이름 | 현재 handler |
-|---|---|---|
-| 0–4 | HALT, EXIT, FORK, EXEC, WAIT | 각 분기 존재 |
-| 5–8 | CREATE, REMOVE, OPEN, FILESIZE | 각 분기 존재 |
-| 9–13 | READ, WRITE, SEEK, TELL, CLOSE | 각 분기 존재 |
-| 14–15 | MMAP, MUNMAP | 각 분기 존재; 실제 기능은 VM 빌드와 구현 조건을 함께 확인 |
-| 16–21 | CHDIR, MKDIR, READDIR, ISDIR, INUMBER, SYMLINK | 대응 분기 없음 |
-| 22 | DUP2 | 사용자 wrapper는 있으나 대응 분기 없음 |
-| 23–24 | MOUNT, UMOUNT | 대응 분기 없음 |
-
-표의 이름 앞에는 모두 `SYS_`가 붙는다. `default`는 `break`만 실행하며 실패 코드를 따로 넣지 않는다. 따라서 미구현 번호는 저장된 RAX가 바뀌지 않은 채 돌아갈 수 있다. 이를 성공, 정상 오류 처리 또는 `dup2` 지원으로 해석해서는 안 된다. [번호 정의](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/syscall-nr.h), [현재 dispatch](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c#L110-L174)
-
-번호 체계는 OS와 아키텍처의 ABI가 정한다. 예를 들어 Linux x86-64의 `write` 번호 1과 이 PintOS의 번호 10은 다르다. system emulation이 Guest 커널 대신 그 차이를 결정하는 것이 아니다. QEMU 전체에서 `SYS_WRITE` 문자열이 검색되는지 여부도 이 책임 경계를 증명하지 못한다. user-mode 변환기처럼 실제로 번호를 처리하는 코드가 있기 때문이다. [Linux x86-64 syscall 번호](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/syscalls/syscall_64.tbl)
+PintOS의 `syscall_handler()`는 저장된 번호를 구현 함수로 연결한다. 번호·인자·반환값, 미구현 분기와 사용자 버퍼 검사는 [시스템 콜](/wiki/computer-systems-network-topic-3cc26725c1cb/)에서 코드와 함께 다룬다. QEMU의 system emulation은 이 Guest 코드를 실행하며, Guest의 번호 체계를 대신 정하지 않는다.
 
 ## Thread를 고르는 자료구조와 CPU 상태
 
