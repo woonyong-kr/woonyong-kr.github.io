@@ -6,10 +6,16 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: ed49b1d2189ddf1f754976bc3096963635d9a557a534276d369eaacf0c256c31
+projection_sha256: 1a86195d4c8476d09fef9c7ce45d618c64f55f86a5353c98f290aa290f9f7c99
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
+search_terms:
+- CPUX86State
+- Guest Register Hosting
+- gpr_map
+- cpu_synchronize_state
+- gdb_target_memory_rw_debug
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -225,3 +231,120 @@ end
 | 타이머 이상 | PIT·PIC 설정, IF, `timer_interrupt()` 진입과 `ticks` 변화 | handler가 한 번 호출되면 주파수·누락·지연까지 정상이라는 결론 |
 
 fd table을 조사할 때도 먼저 fd 범위와 예약된 표준 입력·출력 번호를 확인한 뒤 파일 슬롯을 읽는다. 타이머에서는 중단점 방문 수와 가상 시간·Host 벽시계 시간을 구분한다. 관찰한 Guest 요청이 올바른데 장치 응답이 다르면 QEMU의 Machine·accelerator·장치·Backend 경로로 조사를 넓힌다. 책임 경계는 원인을 찾는 순서를 정해 주지만, 측정 없이 “99%는 OS 버그”라는 확률을 주지는 않는다.
+
+## GDB에 전달할 CPU 상태를 만드는 과정
+
+GDB에서 `info registers`를 실행했을 때 보이는 Guest RAX가 Host CPU의 RAX와 같은 저장소라고 생각하면 TCG를 읽기 어렵다. Guest 명령을 번역한 Host 코드가 실행되는 동안에는 Guest 값이 Host Register나 임시 값으로 다뤄질 수 있다. QEMU는 Guest 상태를 관찰하거나 복원해야 하는 경계에서 그 값과 `CPUX86State`의 표현을 맞춘다. 모든 명령마다 구조체 전체를 저장하거나, 모든 TB의 마지막에 한 번만 저장한다는 고정 규칙으로 설명하지 않는다.
+
+### 구조체의 필드와 CPU의 상태
+
+다음은 QEMU v10.0.0의 x86 상태에서 서로 다른 역할을 맡는 필드다. 구조체 전체를 줄여 복제한 C 선언이 아니라, 소스에서 찾아갈 항목을 비교한 표다. `target_ulong`의 크기는 QEMU의 Target 빌드 조건을 따르며 Guest가 현재 실행하는 명령의 operand 크기와 같아야 하는 것은 아니다. [CPUX86State 정의](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/cpu.h)
+
+| 필드 | 담는 상태와 읽을 때의 조건 |
+|---|---|
+| `regs[]` | Target의 GPR; 이 버전의 x86-64 일반 Register 배열은 16개 |
+| `eip` | 실행 위치; 필드 이름에 `e`가 있어도 x86-64 빌드에서는 64 Bit 값을 담음 |
+| `eflags` | Flag 표현; TCG 실행 중에는 아래 지연 계산 상태와 함께 읽어야 함 |
+| `cc_src`, `cc_src2`, `cc_dst`, `cc_op` | 필요한 산술 Flag를 재구성할 값과 연산 종류 |
+| `df` | String 명령 방향의 내부 표현; DF가 0이면 1, DF가 1이면 -1 |
+| `segs[]` | Selector뿐 아니라 Base·Limit·속성을 포함한 Segment Cache |
+| `cr[]` | CR0·CR2·CR3·CR4; 배열의 CR1 위치는 사용하지 않음 |
+| `efer`, `star`, `lstar`, `fmask` | 실행 모드와 syscall 진입 설정에 관계된 MSR |
+| `hflags`, `hflags2` | 번역과 실행에 사용하는 QEMU 내부 상태; 독립된 하드웨어 Register가 아님 |
+| `fpregs`, `xmm_regs`, `mxcsr` | 부동소수점·Vector 상태; MXCSR는 32 Bit이며 Vector 저장 형식과 크기가 다름 |
+
+`SegmentCache`의 Selector를 출력한 값과 구조체의 메모리 크기는 다른 문제다. 컴파일 조건과 정렬도 구조체 크기에 영향을 준다. Guest 물리 주소 역시 `CPUX86State` 뒤에 바로 이어지는 RAM offset이 아니다. 앞서 설명한 `AddressSpace`와 `MemoryRegion`을 통해 실제 backing 영역을 찾아야 한다.
+
+### 지연된 Flag가 관찰 가능한 값이 된다
+
+TCG는 연산마다 모든 Flag를 계산하는 대신 필요한 입력과 연산 종류를 남길 수 있다. 이 버전의 `x86_cpu_exec_enter()`는 산술 Flag와 DF를 내부 표현으로 옮기고, `x86_cpu_exec_exit()`는 `cpu_compute_eflags()`로 Flag 값을 다시 만든다. 따라서 실행 도중 Host Debugger에서 `env->eflags` 필드 하나만 읽은 값은 Guest GDB에 전달되는 완성된 Flag와 다를 수 있다. [TCG 진입·이탈 코드](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/tcg-cpu.c)
+
+공통 GDB Stub의 `handle_read_all_regs()`는 선택한 CPU에 `cpu_synchronize_state()`를 호출한 뒤 Register callback들을 순서대로 호출한다. x86 callback의 Flag 분기는 준비된 `env->eflags`를 읽는다. “GDB callback이 직접 모든 지연 Flag를 계산한다”는 설명은 이 둘 사이의 실행·동기화 단계를 빠뜨린다. [공통 Register 읽기](https://github.com/qemu/qemu/blob/v10.0.0/gdbstub/gdbstub.c), [x86 callback](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/gdbstub.c)
+
+KVM에서는 실행 상태의 동기화에 Linux KVM API가 관여한다. QEMU v10.0.0의 `kvm_getput_regs()` 읽기 경로는 `KVM_GET_REGS` ioctl로 값을 가져와 `env`에 옮긴다. 이는 `kvm_get_regs`라는 syscall을 부르는 것도, 모든 GPR이 VMCS에 들어 있다는 뜻도 아니다. CPU 상태의 여러 부분은 별도의 KVM API로 처리한다. 실제 비용이나 동기화 빈도는 이 함수 하나의 존재로 계산할 수 없다. [KVM Register 동기화](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/kvm/kvm.c)
+
+### GDB 번호와 regs 배열의 번호
+
+GDB의 Register 1은 RBX지만 `env->regs[1]`은 RCX다. QEMU v10.0.0의 `gpr_map`이 두 순서를 연결한다. 같은 번호를 그대로 배열 index로 쓰면 통신이 성공해도 다른 Register를 표시하게 된다.
+
+| GDB 번호 | 이름 | QEMU 배열 index |
+|---:|---|---:|
+| 0 | RAX | 0 |
+| 1 | RBX | 3 |
+| 2 | RCX | 1 |
+| 3 | RDX | 2 |
+| 4 | RSI | 6 |
+| 5 | RDI | 7 |
+| 6 | RBP | 5 |
+| 7 | RSP | 4 |
+| 8–15 | R8–R15 | 8–15 |
+
+RIP는 이 x86-64 Target Description에서 번호 16이고, 별도의 `eip` 필드에서 읽는다. EFLAGS는 32 Bit 형식으로 전송되며 Segment Selector도 해당 XML에서는 32 Bit 형식이다. 이는 PintOS `intr_frame`의 16 Bit Selector와 padding 배치를 그대로 보낸 결과가 아니다. x87·Vector·제어 Register 등의 항목도 있으므로 `g` 응답 전체가 항상 164 Byte라고 가정하지 않는다. [Target Description](https://github.com/qemu/qemu/blob/v10.0.0/gdb-xml/i386-64bit.xml)
+
+다음 모형은 첫 GPR 여덟 개의 순서를 바꾸고 Little Endian Byte를 Hex로 인코딩한다. Packet의 ASCII 길이와 안에 담긴 이진 데이터 크기는 다르다. 네트워크 연결, Target 협상, 실제 QEMU 실행은 하지 않으며 escaping이 필요한 입력은 거부한다.
+
+```run-python
+def packet(payload):
+    data = payload.encode('ascii')
+    if any(value in data for value in b'$#}*'):
+        raise ValueError('이 예제는 escaping이 필요 없는 ASCII payload만 처리한다.')
+    return f'${payload}#{sum(data) % 256:02x}'
+
+
+qemu_order = ('rax', 'rcx', 'rdx', 'rbx', 'rsp', 'rbp', 'rsi', 'rdi')
+gdb_order = ('rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'rbp', 'rsp')
+qemu_regs = [0x100 + index for index in range(8)]
+gdb_to_qemu = [qemu_order.index(name) for name in gdb_order]
+print('GDB 0..7 -> QEMU slot:', gdb_to_qemu)
+
+payload = b''.join(qemu_regs[index].to_bytes(8, 'little') for index in gdb_to_qemu)
+rbx = int.from_bytes(payload[8:16], 'little')
+print(f'GDB reg 1 RBX=0x{rbx:x}; QEMU slot 1 RCX=0x{qemu_regs[1]:x}')
+print(f'8개 GPR 데이터={len(payload)} bytes, hex 문자열={len(payload.hex())} chars')
+for command in ('g', 'p10', 'm1000,10'):
+    framed = packet(command)
+    print(f'{command}: {framed} ({len(framed)} ASCII bytes)')
+
+example_rip = 0x400c28
+encoded = example_rip.to_bytes(8, 'little').hex()
+print(f'RIP=0x{example_rip:x} -> {encoded} -> 0x{int.from_bytes(bytes.fromhex(encoded), "little"):x}')
+print('16-byte memory request:', packet(f'm1000,{16:x}'))
+print('16개의 8-byte 값 요청:', packet(f'm1000,{16 * 8:x}'))
+try:
+    packet('bad#payload')
+except ValueError as error:
+    print(f'입력 검사: {error}')
+```
+
+Python 3.9.6에서 실행해 확인한 결과다.
+
+```text
+GDB 0..7 -> QEMU slot: [0, 3, 1, 2, 6, 7, 5, 4]
+GDB reg 1 RBX=0x103; QEMU slot 1 RCX=0x101
+8개 GPR 데이터=64 bytes, hex 문자열=128 chars
+g: $g#67 (5 ASCII bytes)
+p10: $p10#d1 (7 ASCII bytes)
+m1000,10: $m1000,10#bb (12 ASCII bytes)
+RIP=0x400c28 -> 280c400000000000 -> 0x400c28
+16-byte memory request: $m1000,10#bb
+16개의 8-byte 값 요청: $m1000,80#c2
+입력 검사: 이 예제는 escaping이 필요 없는 ASCII payload만 처리한다.
+```
+
+RBX는 QEMU 배열의 3번 값인 `0x103`으로 복원된다. `$g#67`의 전체 길이는 5 Byte이고, `p10`의 `10`은 16진수로 쓴 Register 번호다. 아래 두 메모리 요청은 16 Byte와 128 Byte를 요구하므로 끝의 길이 필드도 `10`과 `80`으로 달라진다. Packet 계산 규칙과 GDB 관찰 절차는 [Debugger](/wiki/platform-delivery-operations-topic-f89d71c7eb29/)에서 이어서 확인한다.
+
+### 메모리 읽기는 Register 읽기와 경로가 다르다
+
+공통 Stub의 `handle_read_mem()`은 주소와 길이를 해석해 `gdb_target_memory_rw_debug()`에 전달한다. System mode의 기본 가상 주소 경로는 CPU별 Debug Memory callback이나 `cpu_memory_rw_debug()`를 사용한다. `qemu.PhyMemMode`로 물리 주소 모드를 선택하면 `cpu_physical_memory_read()` 경로로 달라진다. 두 경우의 숫자를 같은 주소로 해석해서는 안 된다. [Memory 요청 처리](https://github.com/qemu/qemu/blob/v10.0.0/gdbstub/gdbstub.c), [가상·물리 Debug 경로](https://github.com/qemu/qemu/blob/v10.0.0/gdbstub/system.c)
+
+Debug Memory 읽기는 Guest 코드가 Load 명령을 실행하는 과정과 다르다. Debugger에서 읽혔다고 Guest의 동일 주소 접근에 필요한 권한이 모두 만족됐다고 결론 내리지 않는다. 반대로 매핑되지 않은 주소를 Debugger가 읽는다고 Guest의 Lazy Loading handler가 실행되어 페이지를 채워 주는 것도 아니다. 이 경로의 실패 응답과 실제 Guest Page Fault를 구별해야 한다.
+
+## 정지 원인과 관찰 도구의 경계
+
+QEMU GDB Stub의 Thread 목록은 Guest OS의 `tid` 목록과 동일하지 않다. vCPU와 CPU Cluster의 노출 방식을 먼저 확인하고, PintOS Thread는 Guest의 구조체와 Scheduler 자료에서 찾는다. Host QEMU를 Debugger로 읽는 경우에는 그 프로세스의 Symbol과 주소를 사용한다. Linux Guest 안의 kgdb 역시 그 커널을 대상으로 하는 별도 연결이며, 언제나 Host 커널만 조사하는 도구는 아니다.
+
+Breakpoint나 Single-step의 처리 방식은 accelerator와 Target 지원에 따라 달라진다. TCG의 Breakpoint를 모든 경우에 Guest Byte `0xcc` 삽입으로 설명하거나, `stepi`를 일반적인 TB 하나의 실행이라고 설명하지 않는다. QEMU의 GDB Single-step에는 IRQ와 Timer를 어떻게 다룰지 정하는 설정도 있다. 멈춘 결과가 원래 실행과 다른 시간 흐름을 만들 수 있으므로 타이머 횟수나 지연을 측정할 때 이 조건을 기록한다. [QEMU GDB의 CPU 선택과 Single-step](https://www.qemu.org/docs/master/system/gdb.html)
+
+QEMU v10.0.0의 `check_for_breakpoints_slow()`는 현재 PC의 정확한 Breakpoint와 같은 Page에 있는 Breakpoint를 구별한다. 같은 Page이면 `CF_NO_GOTO_TB | CF_BP_PAGE`와 한 명령의 실행 경계를 사용해 실제 주소에 도달했는지 다시 확인한다. 등록 즉시 해당 주소의 모든 TB를 반드시 무효화한다는 설명과 다르다. 이 동작을 모든 accelerator의 구현으로 확장하지 않는다. [TCG의 Breakpoint 검사](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cpu-exec.c)
+
+GDB가 보고한 `SIGTRAP`은 중단 이유를 전달하는 Protocol 상태다. `SIGSEGV`를 보았다고 PintOS의 Page Fault vector 14와 바로 대응시키지 않는다. 어느 Target이 어떤 Stop Reply를 보냈는지와 Guest handler의 실제 실행을 함께 확인한다. Register의 값이 낯설 때에는 Packet, 선택한 CPU, 현재 Frame, 저장된 Guest Frame 중 어느 단계에서 그 값이 만들어졌는지부터 좁힌다.

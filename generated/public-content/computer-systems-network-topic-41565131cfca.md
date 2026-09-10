@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-41565131cfca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41565131cfca
-projection_sha256: 2068a1f75f06e4d84b600a17d43f6ed16c12c3aa3ea5886d464af97002a487aa
+projection_sha256: 32f008dad099b65d899593d66248e6fcd01b38d6c0adce7a8b4f640d36408e53
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -18,6 +18,8 @@ search_terms:
 - sysretq
 - thread_launch
 - intr_entry
+- Interrupt Frame
+- 저장된 Register
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -80,6 +82,12 @@ print(f'새 사용자 문맥의 RFLAGS: 0x{flags:x}')
 전체 크기는 192바이트다. `rip`의 offset은 152바이트, 즉 `0x98`이다. `0xa0`을 RIP의 위치로 읽으면 실제로는 CS slot을 읽게 된다. 또한 `cs`, `ss`, `ds`, `es`는 16비트 필드이지만 각각 padding을 포함한 8바이트 slot을 차지한다. 구조체 크기를 필드 이름의 개수로 계산하면 이 부분을 놓치기 쉽다.
 
 `vec_no`는 Assembly Stub이 넣은 인터럽트 번호다. `error_code`는 예외에 따라 CPU가 넣거나 Stub이 0으로 채운다. 이 둘은 핸들러가 원인을 판단하는 정보이므로 복귀할 CPU 레지스터에 다시 적재하지 않는다. 일반 시스템 콜의 진입 코드는 이 영역을 건너뛸 공간만 확보한다. 프레임의 모든 slot이 모든 진입 경로에서 유효한 값으로 채워진다고 가정하지 않는다.
+
+`intr_frame`은 CPU 전체 상태를 담는 구조체가 아니다. 이 배치에는 CR3, FPU·SIMD Register와 모든 MSR이 들어 있지 않다. 주소 공간은 `process_activate()`와 페이지 테이블 활성화 경로에서 따로 관리한다. Linux의 `pt_regs`와도 저장 목적을 비교할 수 있지만 같은 크기·필드 배치나 전체 Context라고 간주하지 않는다. [현재 PintOS의 구조체와 활성화 경로](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c)
+
+저장된 값은 Frame의 생성 시점과 수정 시점을 함께 읽는다. `syscall_handler()` 안의 현재 RAX와 `f->R.rax`는 서로 다를 수 있고, Handler가 반환값을 쓰면 저장된 RAX의 의미도 syscall 번호에서 복귀 값으로 달라진다. 타이머 Interrupt의 Frame도 항상 User 상태인 것은 아니다. 현재 구현의 Code Selector를 해석해 중단된 실행이 User인지 Kernel인지 확인하며, 64 Bit Interrupt 진입에서는 같은 CPL이어도 SS와 RSP가 저장된다. [현재 Interrupt Stub](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/intr-stubs.S), [QEMU v10.0.0의 64 Bit Interrupt 구현](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/seg_helper.c)
+
+현재 CPU와 저장된 Frame을 같은 중단점에서 비교하는 순서는 [Debugger](/wiki/platform-delivery-operations-topic-f89d71c7eb29/)에서 이어서 확인한다.
 
 ## do_iret가 복원하는 순서
 

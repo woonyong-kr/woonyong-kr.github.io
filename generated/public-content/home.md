@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: d833ffb026e1e279a8f6314647b4e96405ac6d49e70b2d71c58d1d8e2d27874b
+projection_sha256: 8786b0d486d85dc570c68f65a10799bf7b7b62589d4e0ee7996e563983b9e1df
 content_status: ready
 ---
 
@@ -25,6 +25,13 @@ content_status: ready
 - [DevOps](/wiki/platform-delivery-operations/)
 - [AI](/wiki/ai-machine-learning/)
 - [Projects](/wiki/projects/)
+
+## 프로젝트
+
+- [K8s Clue](https://github.com/woonyong-kr/clue) — Kubernetes 장애 증거 수집과 원인 분석, 변경 제안·복구 검증을 설계하는 프로젝트.
+- [Link Calendar Navigator](https://github.com/woonyong-kr/obsidian-link-calendar-navigator) — 노트의 날짜를 모아 달력에서 원문을 찾는 Obsidian 플러그인.
+- [Linked Graph Navigator](https://github.com/woonyong-kr/obsidian-linked-graph-navigator) — 현재 노트의 링크를 작성한 순서대로 목차와 그래프로 탐색하는 Obsidian 플러그인.
+- [Runnable Code Blocks](https://github.com/woonyong-kr/obsidian-runnable-code-blocks) — 노트와 웹 문서의 코드 예제를 편집·실행하고 결과를 확인하는 Obsidian 플러그인.
 
 ## 학습
 
