@@ -8,6 +8,24 @@ const REQUIRED_FIELDS = ['layout', 'title', 'nav_order', 'permalink', 'publicati
 const OPTIONAL_FIELDS = ['has_toc', 'parent', 'grand_parent', 'ancestor', 'content_status', 'public_parent_id', 'search_terms'];
 const REDIRECT_FIELDS = ['layout', 'permalink', 'redirect_target', 'nav_exclude', 'search_exclude', 'sitemap'];
 const PUBLIC_URL = /^\/wiki\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/u;
+const LEGACY_PUBLIC_PATH = /^\/wiki\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/|\.html)$/u;
+const PRIVATE_ROUTE_SEGMENTS = new Set(['private', 'sources', 'catalog', 'personal', 'local-only']);
+
+function legacyPublicPath(value) {
+  return typeof value === 'string' && LEGACY_PUBLIC_PATH.test(value)
+    && !value.slice(6).replace(/\/$|\.html$/u, '').split('/').some(part => PRIVATE_ROUTE_SEGMENTS.has(part));
+}
+
+export function publicOutputPath(permalink) {
+  if (!PUBLIC_URL.test(permalink) && !legacyPublicPath(permalink)) throw new Error('Invalid public output path');
+  return permalink.slice(1) + (permalink.endsWith('/') ? 'index.html' : '');
+}
+
+function redirectInputPath(permalink) {
+  if (PUBLIC_URL.test(permalink)) return `${CONTENT_ROOT}/${permalink.slice(6, -1)}.html`;
+  if (legacyPublicPath(permalink)) return `${CONTENT_ROOT}/legacy-paths/${publicOutputPath(permalink).slice(5)}`;
+  return null;
+}
 const REDIRECT_BODY = `<!doctype html>
 <html lang="ko">
 <head>
@@ -48,6 +66,12 @@ export async function readPublicProjectionBundle(root) {
   const redirects = [];
   const identities = new Set();
   const permalinks = new Set();
+  const outputFiles = new Set();
+  function reserveOutput(permalink, filename) {
+    const output = publicOutputPath(permalink);
+    if (outputFiles.has(output)) throw new Error(`${filename}: duplicate public output file`);
+    outputFiles.add(output);
+  }
   for (const item of await filesUnder(resolve(root, CONTENT_ROOT))) {
     const filename = relative(root, item);
     if (filename === `${CONTENT_ROOT}/README.md`) continue;
@@ -57,15 +81,16 @@ export async function readPublicProjectionBundle(root) {
       if (!sameMembers(Object.keys(values), REDIRECT_FIELDS)
           || values.layout !== null || values.nav_exclude !== true
           || values.search_exclude !== true || values.sitemap !== false
-          || !PUBLIC_URL.test(values.permalink) || !PUBLIC_URL.test(values.redirect_target)
+          || !redirectInputPath(values.permalink) || !PUBLIC_URL.test(values.redirect_target)
           || values.permalink === values.redirect_target
-          || filename !== `${CONTENT_ROOT}/${values.permalink.slice(6, -1)}.html`) {
+          || filename !== redirectInputPath(values.permalink)) {
         throw new Error(`${filename}: invalid public redirect metadata`);
       }
       const body = source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u, '').trim();
       if (body !== REDIRECT_BODY) throw new Error(`${filename}: redirect must use the canonical static body`);
       if (permalinks.has(values.permalink)) throw new Error(`${filename}: duplicate permalink`);
       permalinks.add(values.permalink);
+      reserveOutput(values.permalink, filename);
       redirects.push({ filename, ...values });
       continue;
     }
@@ -86,6 +111,7 @@ export async function readPublicProjectionBundle(root) {
     if (values.layout !== 'default' || values.publication_state !== 'publish') throw new Error(`${filename}: only default-layout published documents are allowed`);
     if (values.content_status && !['planned', 'overview', 'ready'].includes(values.content_status)) throw new Error(`${filename}: invalid content_status`);
     if (!PUBLIC_URL.test(values.permalink)) throw new Error(`${filename}: invalid public Wiki permalink`);
+    reserveOutput(values.permalink, filename);
     if (!/^[a-f0-9]{64}$/u.test(values.projection_sha256)) throw new Error(`${filename}: invalid projection_sha256 metadata`);
     for (const [set, value, name] of [[identities, values.projection_id, 'projection_id'], [permalinks, values.permalink, 'permalink']]) {
       if (set.has(value)) throw new Error(`${filename}: duplicate ${name}: ${value}`);

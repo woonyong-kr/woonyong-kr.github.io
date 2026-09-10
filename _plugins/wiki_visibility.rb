@@ -1,6 +1,24 @@
 # Only approved public projection pages participate in this display switch.
 # Removing a page before rendering also removes it from search and sitemap.
 module WNDocs
+  def self.validate_redirect_destinations(site)
+    aliases = site.pages.select { |page| page.data['redirect_target'] }
+    return if aliases.empty?
+
+    destinations = (site.pages + site.documents + site.static_files)
+                   .group_by { |item| item.destination(site.dest) }
+    aliases.each do |page|
+      target = page.destination(site.dest)
+      conflict = destinations.any? do |path, owners|
+        path == target ? owners != [page] :
+          path.start_with?(target + File::SEPARATOR) || target.start_with?(path + File::SEPARATOR)
+      end
+      next unless conflict
+
+      raise "Redirect output conflicts with another page or static file: #{page.url}"
+    end
+  end
+
   def self.apply_visibility(site)
     flag = site.config.fetch('wiki_show_planned', false)
     raise 'wiki_show_planned must be true or false' unless [true, false].include?(flag)
@@ -29,6 +47,10 @@ module WNDocs
       end
     end
   end
+end
+
+Jekyll::Hooks.register :site, :pre_render do |site|
+  WNDocs.validate_redirect_destinations(site)
 end
 
 Jekyll::Hooks.register :site, :post_read do |site|

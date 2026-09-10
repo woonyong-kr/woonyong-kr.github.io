@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { parse } from 'parse5';
 import { filesUnder, siteConfig } from './site-policy.mjs';
-import { readPublicProjectionBundle } from './check-public-projection.mjs';
+import { readPublicProjectionBundle, publicOutputPath } from './check-public-projection.mjs';
 
 function decode(value) {
   let result = value;
@@ -120,7 +120,7 @@ export async function checkBuiltSite(root) {
   const visibleRedirects = redirects.filter(item => retainedUrls.has(item.redirect_target));
   const projectedUrl = permalink => new URL(`${(config.baseurl ?? '').replace(/\/$/u, '')}${permalink}`, config.url).href;
   const redirectPaths = new Set(redirects.map(item => new URL(projectedUrl(item.permalink)).pathname));
-  const pages = ['index.html', '404.html', 'docs/ui-components/runnable-code-blocks/index.html', ...docs.map(doc => `${doc.permalink.slice(1)}index.html`), ...visibleRedirects.map(item => `${item.permalink.slice(1)}index.html`)];
+  const pages = ['index.html', '404.html', 'docs/ui-components/runnable-code-blocks/index.html', ...docs.map(doc => publicOutputPath(doc.permalink)), ...visibleRedirects.map(item => publicOutputPath(item.permalink))];
   const assets = [
     'assets/css/just-the-docs-default.css', 'assets/css/just-the-docs-head-nav.css', 'assets/css/just-the-docs-woon-dark.css',
     'assets/css/runnable-code-blocks.css', 'assets/css/runnable-code-blocks-host.css',
@@ -146,7 +146,7 @@ export async function checkBuiltSite(root) {
     links += urls.length;
   }
   for (const redirect of visibleRedirects) {
-    inspectRenderedRedirect(await readFile(resolve(output, `${redirect.permalink.slice(1)}index.html`), 'utf8'), projectedUrl(redirect.redirect_target), projectedUrl(redirect.permalink));
+    inspectRenderedRedirect(await readFile(resolve(output, publicOutputPath(redirect.permalink)), 'utf8'), projectedUrl(redirect.redirect_target), projectedUrl(redirect.permalink));
   }
   const search = JSON.parse(await readFile(resolve(output, 'assets/js/search-data.json'), 'utf8'));
   for (const item of Object.values(search)) {

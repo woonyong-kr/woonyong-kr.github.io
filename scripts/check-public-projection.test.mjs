@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
 
-import { readPublicProjection, readPublicProjectionBundle, validatePublicProjection } from "./check-public-projection.mjs";
+import { readPublicProjection, readPublicProjectionBundle, validatePublicProjection, publicOutputPath } from "./check-public-projection.mjs";
 
 const CONFIG = `content_root: generated/public-content
 input_owner: Obsidian Vault
@@ -178,6 +178,57 @@ test("public redirects stay outside document identities and counts", async () =>
     assert.equal((await readPublicProjection(root)).length, 1);
     assert.equal((await readPublicProjectionBundle(root)).redirects.length, 1);
     assert.equal((await validatePublicProjection(root)).redirects, 1);
+  });
+});
+
+test("explicit legacy category paths preserve slash and html URLs", async () => {
+  await withFixture(publicDocument(), async root => {
+    const paths = [
+      ['/wiki/algorithm/linear-data-structures/', 'algorithm/linear-data-structures/index.html'],
+      ['/wiki/algorithm/linear-data-structures.html', 'algorithm/linear-data-structures.html'],
+    ];
+    for (const [url, path] of paths) {
+      const file = resolve(root, `generated/public-content/legacy-paths/${path}`);
+      await mkdir(resolve(file, '..'), { recursive: true });
+      await writeFile(file, publicRedirect().replace('/wiki/old-example/', url));
+      assert.equal(publicOutputPath(url), `wiki/${path}`);
+    }
+    const bundle = await readPublicProjectionBundle(root);
+    assert.equal(bundle.documents.length, 1);
+    assert.deepEqual(bundle.redirects.map(item => item.permalink).sort(), paths.map(([url]) => url).sort());
+  });
+});
+
+for (const path of [
+  '/wiki/algorithm/../private/', '/wiki/algorithm/%2e%2e/', '//example.com/wiki/a/b/',
+  'https://example.com/wiki/a/b/', '/wiki/algorithm/a/?q=x', '/wiki/algorithm/a/#x',
+  '/wiki/algorithm/a\\b/', '/wiki/private/item/', '/wiki/algorithm/private.html',
+  '/wiki/algorithm/a//', '/wiki/algorithm/a.html/',
+]) test(`legacy path rejects unsafe route ${path}`, async () => {
+  await withFixture(publicDocument(), async root => {
+    const file = resolve(root, 'generated/public-content/legacy-paths/algorithm/unsafe.html');
+    await mkdir(resolve(file, '..'), { recursive: true });
+    await writeFile(file, publicRedirect().replace('/wiki/old-example/', path));
+    await assert.rejects(readPublicProjectionBundle(root));
+  });
+});
+
+test("legacy index html cannot shadow a canonical directory URL", async () => {
+  await withFixture(publicDocument().replace('/wiki/example/', '/wiki/algorithm/'), async root => {
+    const file = resolve(root, 'generated/public-content/legacy-paths/algorithm/index.html');
+    await mkdir(resolve(file, '..'), { recursive: true });
+    await writeFile(file, publicRedirect().replace('/wiki/old-example/', '/wiki/algorithm/index.html').replace('/wiki/example/', '/wiki/algorithm/'));
+    await assert.rejects(readPublicProjectionBundle(root), /duplicate public output file/u);
+  });
+});
+
+test("legacy paths cannot target another redirect", async () => {
+  await withFixture(publicDocument(), async root => {
+    await writeFile(resolve(root, 'generated/public-content/old-example.html'), publicRedirect());
+    const file = resolve(root, 'generated/public-content/legacy-paths/algorithm/old.html');
+    await mkdir(resolve(file, '..'), { recursive: true });
+    await writeFile(file, publicRedirect().replace('permalink: /wiki/old-example/', 'permalink: /wiki/algorithm/old.html').replace('redirect_target: /wiki/example/', 'redirect_target: /wiki/old-example/'));
+    await assert.rejects(readPublicProjectionBundle(root), /canonical public document/u);
   });
 });
 
