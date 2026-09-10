@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-6276ce481024/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-6276ce481024
-projection_sha256: 1802db68554436327e497fb5da9f37aa2597e89c37d1ffd2de09f2dd5a20dbde
+projection_sha256: 5063194769f1eeb7d9964aaed38ae0009357393ff535b559f3069e23d6d352ba
 parent: 스레드 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-936b351311c8
@@ -19,6 +19,13 @@ search_terms:
 - FIFO
 - TIME_SLICE
 - MLFQS
+- Priority Donation
+- priority-preempt
+- priority-change
+- priority-sema
+- ready_list reorder
+- SCHED_FIFO
+- SCHED_RR
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -199,3 +206,44 @@ end
 ```
 
 Queue가 비어 있으면 반복문은 한 번도 실행되지 않는다. `next_thread_to_run()`을 식으로 직접 호출하면 원소를 제거하므로 관찰값을 훼손할 수 있다. 실제 선택을 보려면 함수의 반환값이나 `schedule()`에서 대입을 마친 `next`를 관찰한다. Thread가 Yield하기 전후의 상태와 Stack은 [Thread](/wiki/computer-systems-network-topic-aebc87b0fcf5/)에서 이어진다.
+
+## 기부 후에는 Queue 순서도 확인한다
+
+기본 우선순위 모드의 `thread_set_priority()`는 `base_priority`를 갱신하고 `refresh_priority()`로 기부를 반영한 뒤 `check_preemption()`을 호출한다. MLFQS 모드에서는 이 API가 우선순위를 직접 바꾸지 않는다. Lock 해제는 남은 기부로 우선순위를 재계산하고 `sema_up()`을 통해 선점 검사에 도달한다. 기부의 수명은 [우선순위 기부](/wiki/computer-systems-network-topic-0eef2c64a382/)에서 다룬다.
+
+숫자를 바꾸는 것만으로 List 순서가 바뀌지는 않는다. 현재 `lock_acquire()`의 기부 코드는 holder의 `priority`를 올리지만 holder가 이미 READY일 때 Ready Queue에서 재배치하지 않는다. `refresh_priority()`도 `donation_list`만 정렬한다. MLFQS의 주기적인 `ready_list` 정렬을 기본 모드의 Donation 보완 처리로 볼 수는 없다. [기부 갱신 경로](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/synch.c)
+
+다음은 M(30), L(10) 순서인 Queue에서 L의 값만 50으로 높이는 모델이다. 마지막 정렬은 차이를 보여 주기 위해 추가한 동작이며, 현재 PintOS Donation 코드에 이미 구현된 처리라는 뜻은 아니다.
+
+```run-python
+priority = {"M": 30, "L": 10}
+ready = ["M", "L"]
+print(f"before donation: {[(n, priority[n]) for n in ready]}")
+priority["L"] = 50
+print(f"after field update: {[(n, priority[n]) for n in ready]}")
+print(f"pop-front choice: {ready[0]}")
+ready.sort(key=lambda n: -priority[n])
+print(f"after reorder: {[(n, priority[n]) for n in ready]}")
+print(f"priority choice: {ready[0]}")
+assert ready[0] == "L"
+```
+
+실행 결과:
+
+```text
+before donation: [('M', 30), ('L', 10)]
+after field update: [('M', 30), ('L', 50)]
+pop-front choice: M
+after reorder: [('L', 50), ('M', 30)]
+priority choice: L
+```
+
+기부 직후 맨 앞을 꺼내면 M을 고르지만 값에 맞게 재정렬하면 L을 고른다. 이는 List의 값 갱신만으로 순서가 보존되지 않는다는 예제다. 특정 PintOS 테스트를 실행해 실패를 관찰한 기록은 아니다. 정렬 불변조건은 삽입 지점뿐 아니라 Queue에 들어간 원소의 우선순위가 바뀌는 지점에서도 확인해야 한다.
+
+우선순위 범위가 작고 고정돼 있다면 우선순위별 Queue와 Bitmap을 사용하는 선택지도 있다. Linked List 전체를 비교해 삽입하는 대신 해당 Queue 뒤에 붙이고, 비어 있지 않은 최상위 Queue를 찾는다. 다만 우선순위가 바뀌면 소속 Queue와 Bitmap을 함께 갱신해야 한다. Linux v6.12의 RT Class에서도 우선순위별 Queue와 Bitmap을 사용한다. Fair Scheduler 전체가 같은 구조라는 의미는 아니다. `SCHED_FIFO`는 같은 우선순위 사이에서 Time Slice 만료만으로 순환하지 않고, `SCHED_RR`은 Time Slice를 사용한다. [Linux RT Queue](https://github.com/torvalds/linux/blob/v6.12/kernel/sched/rt.c), [스케줄링 정책](https://man7.org/linux/man-pages/man7/sched.7.html)
+
+## 테스트가 요구하는 순서와 관찰값
+
+`priority-preempt`는 main(31)이 새 Thread(32)를 만든 뒤 다음 메시지에 도달하기 전에 새 Thread가 완료되기를 기대한다. 새 Thread가 반복해서 Yield해도 main보다 우선순위가 높으므로 자신이 다시 선택될 수 있다. `priority-change`는 현재 우선순위를 낮춘 뒤의 양보, `priority-sema`는 Semaphore 대기자의 선택 순서를 확인한다. 각 테스트가 검사하는 조건을 구분해야 한다. [선점 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/tests/threads/priority-preempt.c)
+
+GDB에서 선점 검사의 빈도를 조사한다면 `check_preemption()` 진입 횟수, 비교가 참이 된 횟수, `thread_yield()` 호출 횟수, 실제 `curr != next` 전환 횟수를 따로 센다. IRQ에서 예약만 한 검사와 즉시 양보한 검사를 같은 전환 횟수로 합치지 않는다. Queue가 비면 맨 앞 Thread를 읽지 않고, 출력 때문에 관찰 대상의 시간 특성이 바뀔 수 있다는 점도 고려한다. 특정 검사 비율이나 성능 향상률은 이 코드만으로 계산할 수 없다.
