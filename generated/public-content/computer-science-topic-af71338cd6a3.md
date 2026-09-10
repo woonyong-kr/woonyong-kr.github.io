@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-af71338cd6a3/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-af71338cd6a3
-projection_sha256: 020a6599df6a382ffbd4b7707a546bbd18f5a0e1283df441a747dfed57e94bd2
+projection_sha256: 77c98e44f06459bd5ee684525b570834732764126e68899c57bc45bf739acb27
 parent: 그래프 알고리즘
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-f8706f61ab70
@@ -66,7 +66,7 @@ Kahn 알고리즘은 아직 결과에 넣지 않은 정점 중 **남은 진입 �
 
 1과 3 사이에는 선행 관계가 없으므로 `[0, 3, 1, 2]`도 유효하다. 위상 정렬은 답이 여러 개일 수 있다. 이 구현에서 초기 후보는 정점 번호 순서로 들어가고, 이후 후보의 순서는 간선이 인접 목록에 들어간 순서에도 영향을 받는다. 가능한 정점 중 항상 가장 작은 번호를 고르는 규칙은 아니다.
 
-Queue를 쓴다고 [BFS](/wiki/computer-science-bfs-00637871e6a7/)의 최단 거리 탐색과 같은 것은 아니다. BFS는 정점을 발견하는 시점에 후보로 넣지만, Kahn 알고리즘은 모든 선행 간선이 해결되어 진입 차수가 0이 된 시점에 넣는다. Queue의 변화은 [[정글 베이직 25] 위상 정렬(Topological Sort) 완전 정리](https://cedis.tistory.com/75)의 과목 예제와 비교해 볼 수 있다.
+Queue를 쓴다고 [BFS](/wiki/computer-science-bfs-00637871e6a7/)의 최단 거리 탐색과 같은 것은 아니다. BFS는 정점을 발견하는 시점에 후보로 넣지만, Kahn 알고리즘은 모든 선행 간선이 해결되어 진입 차수가 0이 된 시점에 넣는다. Queue의 변화는 [[정글 베이직 25] 위상 정렬(Topological Sort) 완전 정리](https://cedis.tistory.com/75)의 과목 예제와 비교해 볼 수 있다.
 
 ## Queue가 비었는데 정점이 남는 이유
 

@@ -6,7 +6,7 @@ permalink: /wiki/computer-science-topic-e00dfaa7306e/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-science-topic-e00dfaa7306e
-projection_sha256: 6be88decd6c7c20694299fb9e9b297a2afe3db7d24171a2c0b154d524b091be9
+projection_sha256: 47ac98fa669b75d2d966f8131985481cb8155562ef020de69eba96103ac4f604
 parent: Linked List
 content_status: ready
 public_parent_id: Wiki/keywords/computer-science-topic-2f43235867e4
@@ -23,6 +23,13 @@ search_terms:
 - malloc
 - 할당 실패
 - 중복 값
+- 연결 리스트 최댓값 노드를 맨 앞으로 옮기기
+- 연결 리스트 최댓값 노드를 맨 앞으로 옮기기 — 앞 노드를 기억하며 재배선하는 법
+- move_max_to_front
+- max_node
+- max_prev
+- 노드 이동
+- 값 교환
 grand_parent: 자료구조
 ancestor: CS 기초
 ---
@@ -299,3 +306,161 @@ clear: both lists empty
 노드 할당 비용을 별도로 두면 맨 앞 삽입의 탐색·연결 변경은 O(1)이다. 맨 뒤에 들어가려면 n개의 기존 노드를 모두 지나갈 수 있으므로 최악의 탐색 비용은 O(n)이다. `prev`와 `cur`를 찾은 뒤 바꾸는 링크 수는 일정하므로 연결 변경 자체는 O(1)이다. 시간 측정을 한 결과가 아니라 비교와 포인터 이동 횟수에 따른 [시간 복잡도](/wiki/computer-science-topic-869aa2bd6535/) 분석이다.
 
 탐색 중에는 `prev`, `cur`, `new_node`만 보관하므로 보조 공간은 O(1)이고, 성공할 때마다 리스트가 소유하는 노드 하나의 공간이 추가된다. 마지막 노드 주소를 알고 있어도 임의의 새 값이 들어갈 정렬 위치까지 알 수 있는 것은 아니다. [자료구조](/wiki/data-structures/)를 비교할 때는 노드가 여러 하위 연결을 가질 수 있는 [Tree](/wiki/computer-science-topic-a06ebc760118/)와, 각 노드의 하나뿐인 `next`를 따라 위치를 찾는 이 리스트의 탐색 경로를 구분한다.
+
+## 최댓값 노드를 맨 앞으로 옮기기
+
+`3 → 8 → 2 → 7`에서 값 8을 가진 **그 노드**를 맨 앞으로 옮기면 `8 → 3 → 2 → 7`이 된다. 새 노드를 삽입하는 것이 아니라, 기존 노드를 원래 연결에서 빼내 다시 붙이는 작업이다. 옮기지 않은 3·2·7의 상대적인 순서와 각 노드의 값은 그대로 둔다.
+
+이번 함수는 정렬되지 않은 리스트도 받는다. 아래 예제의 `Node.value`는 정수이며 `next`를 따라 None에서 끝나는 연결을 순회한다. 순환이 있으면 이 탐색은 끝에 도달하지 않으므로, 입력에 순환이 없다는 범위에서 사용한다. 리스트 전체를 정렬하는 연산은 아니다.
+
+### 최댓값과 그 앞 노드를 함께 기억한다
+
+`cur`는 이번에 비교할 노드이고 `prev`는 그 앞 노드다. 여기에 지금까지의 최댓값을 가진 `max_node`와 그 직전 노드 `max_prev`를 따로 보관한다. 현재 위치를 전진시키는 것과 최댓값 후보를 갱신하는 것은 서로 다른 일이다.
+
+처음에는 `max_node = head`, `max_prev = None`으로 둔다. 이미 첫 노드의 값을 알고 있으므로 `prev = head`, `cur = head.next`에서 나머지를 비교한다. 각 `cur`의 값을 비교한 직후의 후보는 다음과 같다.
+
+| 비교한 cur의 값 | 비교할 때 prev의 값 | 비교 후 max_node의 값 | max_prev의 값 |
+| --- | --- | --- | --- |
+| 8 | 3 | 8 | 3 |
+| 2 | 8 | 8 | 3 |
+| 7 | 2 | 8 | 3 |
+
+2와 7을 읽는 동안 `prev`는 바뀌지만 `max_prev`는 3에 남아 있다. 최댓값 노드를 원래 자리에서 빼낼 때 필요한 것은 탐색의 마지막 노드가 아니라 **최댓값 바로 앞의 노드**이기 때문이다.
+
+순회 중에는 링크를 바꾸지 않는다. 더 큰 값을 발견하면 `max_node = cur`, `max_prev = prev`를 함께 갱신한다. 따라서 `max_prev`가 있으면 그 `next`가 `max_node`를 가리킨다는 관계도 유지된다. 최댓값 노드만 기억했다면 head에서 앞 노드를 다시 찾을 수는 있지만, 함께 기억하면 그 추가 순회가 필요 없다.
+
+### 뒤쪽 연결을 사용한 뒤 새 머리에 붙인다
+
+최댓값이 8이면 먼저 `max_prev.next = max_node.next`로 3의 다음을 2로 바꾼다. 원래 `head`에서 따라가는 경로는 이제 `3 → 2 → 7`이다. 8은 이 경로에서 빠졌지만 `max_node`가 여전히 그 노드를 보관한다.
+
+그다음 `max_node.next = head`로 8을 기존 첫 노드 3 앞에 붙인다. `max_node.next`가 원래 가리키던 뒤쪽 연결을 분리에 사용하고 나서 새 값을 대입하는 순서다. 마지막 노드가 최댓값인 경우에는 원래 `max_node.next`가 None이므로 앞 노드를 새 마지막 노드로 만들 수 있다.
+
+함수는 새 머리인 `max_node`를 반환한다. 호출한 쪽에서는 **`head = move_max_to_front(head)`**로 받아야 한다. 함수 안의 `return`이 호출자의 변수까지 자동으로 바꾸지는 않는다. 원래 head를 다른 변수에 보관했다면 그 변수는 여전히 옛 첫 노드를 가리키므로, 이동한 노드 뒤에서부터 리스트를 읽게 된다. 참조를 보관하는 변수와 노드의 연결은 [Pointer](/wiki/programming-languages-runtime-topic-ef71fd296666/)에서 구분해 볼 수 있다.
+
+빈 리스트와 단일 노드는 그대로 반환한다. 두 개 이상을 탐색한 뒤 `max_prev is None`이면 선택된 최댓값이 이미 첫 노드이므로 연결을 바꾸지 않는다. 실제로 옮기는 경우에는 두 노드의 `next`가 바뀌고, 호출자가 새 head를 보관한다.
+
+### 같은 최댓값이 여러 개라면
+
+비교 조건은 `cur.value > max_node.value`다. 같은 값을 만나서는 후보를 갱신하지 않으므로 **처음 만난 최댓값 노드**를 옮긴다. `3 → 8 → 2 → 8 → 7`에서는 두 번째 자리에 있던 8이 앞으로 가고, 나중의 8은 나머지 노드 사이의 원래 순서를 유지한다.
+
+처음 노드가 이미 최댓값인 `8 → 3 → 8`도 첫 8을 선택하므로 그대로 둔다. 마지막 최댓값을 선택하려는 계약이라면 `>=`로 갱신하는 등 선택 규칙을 바꿔야 한다. 아래 프로그램은 `>` 규칙을 사용한다.
+
+[연결 리스트 Q6. 최댓값 노드를 맨 앞으로 옮기기](https://cedis.tistory.com/166)의 C 구현도 최댓값과 앞 노드를 함께 기억해 같은 순서로 연결을 바꾼다. 그 함수는 `ListNode **ptrHead`를 통해 호출자의 head를 갱신한다. 아래 Python 함수는 새 head를 반환하므로 호출 방법을 구분해서 읽으면 된다.
+
+### 값 목록이 같아도 같은 노드가 옮겨졌을까
+
+3과 8이 이웃인 첫 예제에서는 두 노드의 값만 교환해도 겉으로는 `8 → 3 → 2 → 7`처럼 보인다. 값 교환이 허용되는 문제라면 다른 계약으로 풀 수 있지만, 이번에는 기존 노드가 자기 값을 가진 채 이동해야 한다. 그래서 출력 값만으로 성공을 판단하지 않는다.
+
+다음 전체 프로그램은 Python 3.9 이상의 `Optional[Node]`·`list[Node]` 표기를 사용한다. `move_max_to_front()` 아래에서는 입력 노드를 만들고, 이동 후 노드들의 순서와 각 노드의 값, 변경된 연결을 대조한다. `collect()`의 순환 검사는 결과 확인용이며 이동 함수 자체가 순환 입력을 탐지하는 것은 아니다.
+
+```run-python
+from typing import Optional
+
+
+class Node:
+    def __init__(self, value: int, next: Optional["Node"] = None):
+        self.value = value
+        self.next = next
+
+
+def move_max_to_front(head: Optional[Node]) -> Optional[Node]:
+    if head is None or head.next is None:
+        return head
+
+    max_node = head
+    max_prev = None
+    prev = head
+    cur = head.next
+
+    while cur is not None:
+        if cur.value > max_node.value:
+            max_node = cur
+            max_prev = prev
+        prev = cur
+        cur = cur.next
+
+    if max_prev is None:
+        return head
+
+    max_prev.next = max_node.next
+    max_node.next = head
+    return max_node
+
+
+def collect(head: Optional[Node]) -> list[Node]:
+    nodes = []
+    seen = set()
+    while head is not None:
+        assert id(head) not in seen, "cycle in result"
+        seen.add(id(head))
+        nodes.append(head)
+        head = head.next
+    return nodes
+
+
+cases = ([], [7], [9, 3, 2], [3, 8, 2, 7], [3, 2, 7],
+         [3, 8, 2, 8, 7], [8, 3, 8], [-5, -2, -9])
+for values in cases:
+    nodes = [Node(value) for value in values]
+    for left, right in zip(nodes, nodes[1:]):
+        left.next = right
+    head = nodes[0] if nodes else None
+    original_head = head
+    old_links = [node.next for node in nodes]
+    picked_index = values.index(max(values)) if values else None
+    picked = nodes[picked_index] if picked_index is not None else None
+    expected = ([picked] + nodes[:picked_index] + nodes[picked_index + 1:]
+                if picked_index is not None else [])
+
+    head = move_max_to_front(head)
+    actual = collect(head)
+    same_nodes = len(actual) == len(expected) and all(
+        left is right for left, right in zip(actual, expected)
+    )
+    same_values = all(node.value == value for node, value in zip(nodes, values))
+    assert same_nodes and same_values
+    assert len({id(node) for node in actual}) == len(nodes)
+    assert head is picked
+
+    moved = picked_index is not None and picked_index > 0
+    changed_links = sum(node.next is not old for node, old in zip(nodes, old_links))
+    assert changed_links == (2 if moved else 0)
+    for i, node in enumerate(nodes):
+        if moved and i == picked_index - 1:
+            expected_next = old_links[picked_index]
+        elif moved and node is picked:
+            expected_next = original_head
+        else:
+            expected_next = old_links[i]
+        assert node.next is expected_next
+
+    print(f"{values} -> {[node.value for node in actual]}; "
+          f"picked_index={picked_index}; same_nodes={same_nodes}; "
+          f"same_values={same_values}; changed_links={changed_links}")
+
+```
+
+프로그램을 실행해 확인한 결과다. `picked_index`는 선택한 노드가 원래 리스트에서 차지한 0부터 시작하는 위치다.
+
+```text
+[] -> []; picked_index=None; same_nodes=True; same_values=True; changed_links=0
+[7] -> [7]; picked_index=0; same_nodes=True; same_values=True; changed_links=0
+[9, 3, 2] -> [9, 3, 2]; picked_index=0; same_nodes=True; same_values=True; changed_links=0
+[3, 8, 2, 7] -> [8, 3, 2, 7]; picked_index=1; same_nodes=True; same_values=True; changed_links=2
+[3, 2, 7] -> [7, 3, 2]; picked_index=2; same_nodes=True; same_values=True; changed_links=2
+[3, 8, 2, 8, 7] -> [8, 3, 2, 8, 7]; picked_index=1; same_nodes=True; same_values=True; changed_links=2
+[8, 3, 8] -> [8, 3, 8]; picked_index=0; same_nodes=True; same_values=True; changed_links=0
+[-5, -2, -9] -> [-2, -5, -9]; picked_index=1; same_nodes=True; same_values=True; changed_links=2
+```
+
+`same_nodes=True`는 기대한 순서로 같은 노드 객체들이 남았다는 뜻이다. 선택한 최댓값을 맨 앞에 놓고 나머지는 원래 순서로 두었는지, 누락이나 중복이 없는지를 검사했다. `same_values=True`는 각 원래 노드가 자기 값을 그대로 가지고 있다는 뜻이다. 값 교환이나 새 노드 복제로 결과를 대신하지 않았음을 구분한다.
+
+중간과 끝의 최댓값은 앞으로 이동하며 `changed_links=2`가 된다. 변경된 개수만 세는 것이 아니라, 이전 노드가 최댓값을 건너뛰고 최댓값의 다음이 옛 head를 가리키며 나머지 링크는 그대로인지도 검사한다. 빈 입력·단일 노드·이미 맨 앞인 경우에는 바뀐 링크가 없다. 음수 사례에서도 첫 노드의 값부터 비교하므로 최댓값 -2를 찾는다.
+
+### 탐색은 끝까지, 이동은 두 연결만
+
+최댓값을 찾는 동안에는 뒤에 더 큰 값이 있을 수 있으므로 끝까지 순회한다. 두 개 이상의 노드에서 n-1개의 나머지 값을 비교하므로 탐색은 O(n)이다. 탐색 결과 최댓값이 이미 앞에 있었다고 해도, 그것을 확인하기 위한 순회는 수행했다.
+
+노드 이동 자체는 두 `next` 대입과 새 머리 반환이므로 O(1)이다. 고정된 수의 참조만 보관하고 새 Node를 생성하지 않아 함수의 보조 공간도 O(1)이다. 예제에서 입력을 만들고 결과를 확인하는 목록·집합은 별도의 O(n) 공간을 쓴다.
+
+기존 노드의 링크만 바꾸는 또 다른 예는 [Two Pointers의 앞·뒤 분할](/wiki/computer-science-topic-00c3fce8f9af/)에서 볼 수 있다. 그쪽은 경계 뒤를 끊어 두 리스트로 나누고, 여기서는 한 노드를 분리한 뒤 다시 앞에 붙인다. [자료구조](/wiki/data-structures/)의 탐색 비용과 이미 찾은 위치의 연결 변경 비용을 나누어 읽으면, 새 노드를 삽입하는 앞 절과 기존 노드를 이동하는 이 연산의 차이를 설명할 수 있다.
