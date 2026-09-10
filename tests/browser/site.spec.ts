@@ -284,12 +284,17 @@ for (const scheme of ['light', 'dark'] as const) {
 test('capability header timeout exposes recovery after 2.5 seconds', async ({ page }) => {
   await configureRunner(page);
   let stalled = true;
-  await page.route('**/v1/capabilities', route => route.continue({ headers: { ...route.request().headers(), ...(stalled ? { 'x-test-response': 'headers' } : {}) } }));
+  let requestStarted: number | undefined;
+  await page.route('**/v1/capabilities', route => {
+    // Measure the request deadline, not lazy editor/module loading before the request.
+    if (stalled && requestStarted === undefined) requestStarted = performance.now();
+    return route.continue({ headers: { ...route.request().headers(), ...(stalled ? { 'x-test-response': 'headers' } : {}) } });
+  });
   await page.goto(showcase);
-  const started = Date.now();
   const java = await block(page, 'java');
   await expect(java).toHaveAttribute('data-state', 'unavailable', { timeout: 4_000 });
-  expect(Date.now() - started).toBeLessThan(4_500);
+  expect(requestStarted).toBeDefined();
+  expect(performance.now() - requestStarted!).toBeLessThan(4_500);
   stalled = false;
   await java.getByRole('button', { name: 'Check again' }).click();
   await expect(java.getByRole('button', { name: 'Run code', exact: true })).toBeEnabled();

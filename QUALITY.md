@@ -36,6 +36,8 @@ Graph 릴리스에는 GitHub 화면에서 실행할 수 있는 workflow_dispatch
 
 DP 예제의 Python `[[0]]`가 소스 검사에서 Obsidian 링크로 오인됐다. 생성 예제는 수정하지 않고, wikilink 검사에서만 compiler와 같은 top-level backtick/tilde fence를 구분했다. fence 밖 링크와 코드 안의 로컬 경로·비공개 링크·session ID 차단은 유지한다. 중첩 리스트·서로 다른 fence 길이·닫히지 않은 fence·잘못된 info string·개인정보 경계를 회귀 검사하고 Jekyll이 같은 리터럴을 code로 보존하는지도 검사한다.
 
+capability timeout 브라우저 검사는 복구 UI가 표시됐는데도 요청 전 lazy editor 로딩까지 합산해 4,556ms로 실패했다(run 34466898642, 허용 4,500ms). 시작점을 첫 실제 capability 요청으로 옮기고 UI 4,000ms·전체 4,500ms 상한과 Check again 복구 검증은 유지했다. 실패 배포는 건너뛰어 직전 공개본을 보존했다.
+
 ## 검증 범위와 비교 조건
 
 - 실행기 기준 revision: `4e9268d` → `3d5c849`. 공통 구현 `5b740e7`의 `npm run verify`와
