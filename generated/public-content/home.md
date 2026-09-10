@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: 86aae1beb2ced84106e261ff8e81be5bd9f758df33445496712246130bfb15af
+projection_sha256: d833ffb026e1e279a8f6314647b4e96405ac6d49e70b2d71c58d1d8e2d27874b
 content_status: ready
 ---
 
@@ -28,27 +28,13 @@ content_status: ready
 
 ## 학습
 
-### CS 기초
-
 - [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
 - [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
 - [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
-
-### Programming
-
 - [Kotlin](/wiki/kotlin/) — 문법, 객체의 동등성과 해시, 람다의 캡처와 호출 순서를 코드와 출력으로 확인하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-kotlin)
-
-### Data
-
 - [SQL 엔진 구현](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장까지 연결하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-sql)
 - [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
-
-### Frontend
-
 - [React](/wiki/frontend-topic-556b062c7529/) — 상태, Virtual DOM과 실제 DOM 갱신을 연결하는 작은 UI 런타임. [GitHub](https://github.com/woonyong-kr/lrn-react)
-
-### AI
-
 - [MNIST](/wiki/deep-learning/) — 숫자 이미지 분류에서 데이터 분할, 학습과 저장까지의 흐름. [GitHub](https://github.com/woonyong-kr/lrn-mnist)
 - [GPT](/wiki/ai-machine-learning-topic-7c4a8b2afe4c/) — 토큰을 벡터로 바꾸는 입력과 언어 모델 구현. [GitHub](https://github.com/woonyong-kr/lrn-gpt)
 
