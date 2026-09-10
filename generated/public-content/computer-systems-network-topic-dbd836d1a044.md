@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: 8d422b08a34a29ab8dd229e060ed4356ba4e0b26c519168da03906d9c795adc0
+projection_sha256: f7dc893968d7ee561a83bea19144a52808b2128c68e90e1eaf948f734304c886
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -16,6 +16,13 @@ search_terms:
 - PCID
 - TLB Flush
 - 주소 공간 전환
+- pml4_create
+- pml4_get_page
+- pml4_clear_page
+- pml4_destroy
+- pml4e_walk
+- Page Table 생성과 해제
+- 명시적 Page Table Walk
 grand_parent: OS
 ancestor: CS 기초
 ---
@@ -176,6 +183,71 @@ Linux는 공통 계층을 `PGD → P4D → PUD → PMD → PTE`로 표현한다.
 Linux HugeTLB는 지원되는 크기의 큰 페이지를 별도 Pool에서 관리한다. `/proc/meminfo`의 `HugePages_Total`만 보고 1 GiB 페이지 수라고 읽으면 안 된다. `Hugepagesize`는 기본 크기이고 크기별 Pool은 `/sys/kernel/mm/hugepages`에서 구별한다. PMD 크기의 THP는 애플리케이션이 HugeTLB Pool을 직접 지정하는 방식과 다르다. 큰 페이지는 TLB 부담을 줄일 수 있지만 연속된 물리 공간과 단편화 비용도 함께 고려한다. [HugeTLB의 크기별 Pool](https://docs.kernel.org/6.16/admin-guide/mm/hugetlbpage.html)
 
 Windows의 일반 애플리케이션은 `GetLargePageMinimum()`으로 크기를 조회하고, 필요한 권한과 정렬을 갖춰 `VirtualAlloc(...,MEM_LARGE_PAGES,...)` 경로를 사용한다. `CreateFileMappingW`에서 `SEC_LARGE_PAGES|SEC_COMMIT`을 사용하는 경로도 있다. 이 경우 paging file이 backing이어야 하고, `SeLockMemoryPrivilege`와 large-page 크기에 맞는 객체·view 크기 및 정렬이 필요하다. 일반 데이터 파일이나 실행 이미지 Mapping에 같은 옵션을 적용하는 것은 아니다. [SEC_LARGE_PAGES의 조건](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw) 특정 크기의 지원을 OS 이름만으로 단정하지 않는다. Kernel 내부 `_MMPTE`·`MiGetPteAddress`의 형태를 고정 API로 사용하는 대신, 디버거에서는 `!pte`가 보여 주는 PDE·PTE와 상태 비트를 대상 시스템에 맞춰 읽는다. [Windows Large Page](https://learn.microsoft.com/en-us/windows/win32/memory/large-page-support), [WinDbg !pte](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-pte)
+
+## 테이블 생성과 Mapping 설치를 나누어 읽는다
+
+PintOS의 `struct thread`에는 `uint64_t *pml4`라는 포인터가 들어 있다. 512개 엔트리 전체가 Thread 구조체에 포함되는 것은 아니다. [`pml4_create()`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c)는 Kernel Pool에서 한 페이지를 얻고 `base_pml4`의 4 KiB를 그대로 복사해 그 포인터를 반환한다. 할당에 실패하면 NULL이다. `PAL_ZERO`를 사용하지 않아도 복사에 성공하면 512개 엔트리가 모두 덮어써진다.
+
+새 루트를 만들었다고 User 데이터나 모든 하위 테이블까지 복제되는 것은 아니다. 복사한 엔트리는 기존 Kernel 하위 테이블을 계속 가리킨다. 따라서 공유 중인 하위 테이블의 엔트리를 바꾸는 것과 `base_pml4`의 루트 엔트리만 새 값으로 바꾸는 것은 효과가 다르다. 루트 한 칸을 교체했다고 이미 복사한 다른 루트의 값까지 저절로 바뀌지는 않는다. 이 레포의 Kernel 매핑은 PML4[1] 아래에서 시작한다. 256번부터의 상위 절반만 골라 복사하는 구현이 아니다. 구체적인 주소와 허용 범위는 [주소 공간](/wiki/computer-systems-network-topic-3521ee6344f1/)에서 확인한다.
+
+이후 `pml4e_walk(pml4, va, create)`는 해당 VA가 사용할 **leaf PTE의 주소**를 찾는다. 중간 엔트리가 없고 `create=0`이면 NULL을 반환한다. `create=1`이면 필요한 테이블 페이지를 `palloc_get_page(PAL_ZERO)`로 확보한다. 마지막 PT까지 도달한 뒤 반환하는 PTE 칸은 아직 P=0일 수도 있다. PTE의 위치를 찾는 일과 데이터 Frame을 설치하는 일이 다른 이유다.
+
+할당 실패도 단계별로 처리한다. `pdpe_walk()`와 `pml4e_walk()`는 이번 호출에서 하위 테이블을 새로 만들었는지 `allocated`로 기록한다. 더 아래의 탐색이 실패하면 이번에 만든 페이지를 반환하고 그 엔트리를 0으로 되돌린다. 이미 존재하던 하위 트리까지 지우는 처리는 아니다. [PintOS의 생성과 실패 정리](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c#L11)
+
+### 같은 페이지 수라도 필요한 테이블 수는 다르다
+
+인접한 두 페이지는 PT 한 장을 공유할 수 있다. 두 주소가 서로 다른 2 MiB 구간에 놓이면 서로 다른 PT가 필요하고, 더 큰 경계를 넘으면 상위 테이블도 늘어난다. 각 배열의 512개 칸을 다 썼을 때 `next` 포인터로 연결하는 구조가 아니다. VA의 상위 index가 다른 하위 테이블을 고른다.
+
+다음 예제는 빈 루트에서 지정한 주소를 4 KiB 페이지로 매핑할 때 필요한 테이블 수를 계산한다. 큰 페이지, 미리 만든 Kernel 매핑과 테이블 공유는 제외하며 데이터 Frame의 비용도 세지 않는다. 마지막 사례는 일반적인 4단계 주소 공간의 계산이다. PintOS가 그 주소를 독립적인 User 영역으로 지원한다는 뜻은 아니다.
+
+```run-python
+PAGE_SIZE = 4096
+
+
+def table_pages(addresses):
+    if any(not 0 <= address < (1 << 47) for address in addresses):
+        raise ValueError("이 예제는 4단계 Paging의 낮은 canonical 주소만 받는다.")
+    # 같은 상위 index를 사용하는 주소는 하위 테이블을 공유한다.
+    return (1,) + tuple(len({address >> shift for address in addresses})
+                        for shift in (39, 30, 21))
+
+
+cases = [
+    ("빈 루트", []),
+    ("한 페이지", [0x1000]),
+    ("인접한 두 페이지", [0x1000, 0x2000]),
+    ("서로 다른 2 MiB 구간", [0x1000, 0x201000]),
+    ("서로 다른 1 GiB 구간", [0x1000, 0x40001000]),
+    ("서로 다른 512 GiB 구간", [0x1000, 0x8000001000]),
+]
+for label, addresses in cases:
+    counts = table_pages(addresses)
+    print(f"{label}: PML4/PDPT/PD/PT={counts}, 테이블={sum(counts) * PAGE_SIZE // 1024} KiB")
+
+print(f"512 GiB 전체 매핑: 테이블={1 + 1 + 512 + 512**2} pages, 데이터={512**3} pages")
+
+try:
+    table_pages([1 << 47])
+except ValueError as error:
+    print(f"범위 검사: {error}")
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+빈 루트: PML4/PDPT/PD/PT=(1, 0, 0, 0), 테이블=4 KiB
+한 페이지: PML4/PDPT/PD/PT=(1, 1, 1, 1), 테이블=16 KiB
+인접한 두 페이지: PML4/PDPT/PD/PT=(1, 1, 1, 1), 테이블=16 KiB
+서로 다른 2 MiB 구간: PML4/PDPT/PD/PT=(1, 1, 1, 2), 테이블=20 KiB
+서로 다른 1 GiB 구간: PML4/PDPT/PD/PT=(1, 1, 2, 2), 테이블=24 KiB
+서로 다른 512 GiB 구간: PML4/PDPT/PD/PT=(1, 2, 2, 2), 테이블=28 KiB
+512 GiB 전체 매핑: 테이블=262658 pages, 데이터=134217728 pages
+범위 검사: 이 예제는 4단계 Paging의 낮은 canonical 주소만 받는다.
+```
+
+주소가 두 개라는 조건은 같아도 테이블 저장량은 16 KiB에서 28 KiB까지 달라진다. 반대로 루트만 있고 매핑이 없으면 루트의 4 KiB만 필요하다. 주소가 가리키는 데이터 Frame을 더하면 비용이 늘지만, 여러 VA가 같은 Frame을 공유할 수도 있으므로 주소 개수만으로 Frame 수까지 정하지 않는다. 출력의 512 GiB 전체 매핑은 4 KiB 데이터 페이지 512³개를 빈틈없이 붙이는 가정이다. 이때 테이블은 루트 1장, PDPT 1장, PD 512장, PT 512²장이다. 실제 PintOS의 사용량을 측정한 값은 아니다.
+
+`pml4_create()`의 복사량이 4 KiB로 정해져 있다는 사실도 전체 실행 시간이 일정하다는 뜻은 아니다. [`palloc_get_multiple()`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/palloc.c#L291)은 Bitmap을 탐색한다. 이 경로를 확인하지 않고 할당을 O(1)로 가정하거나 고정된 Cycle 수를 붙이지 않는다.
 
 ## CR3의 주소 필드와 전환 조건
 
@@ -418,6 +490,14 @@ Guest PA  = Kernel VA - KERN_BASE
 kpage 자체가 PTE에 들어가지 않고, 물리 Frame 주소로 바꾼 값이 들어간다. 이때 `PTE_P/W/U`의 값은 각각 `0x1/0x2/0x4`다.
 
 반대로 `pml4_get_page(pml4,uaddr)`는 present PTE를 찾으면 `ptov(PTE_ADDR(*pte))+pg_ofs(uaddr)`를 반환한다. 결과는 Kernel VA이며, 입력 uaddr의 페이지 안 offset도 유지한다. 현재 함수가 확인하는 것은 Mapping의 present 상태다. 이 함수가 포인터를 반환했다고 User 쓰기 권한이나 전체 버퍼의 유효성이 자동으로 확인되는 것은 아니다.
+
+### 명시적인 조회도 CPU의 주소 변환을 이용한다
+
+`pml4_get_page()`는 인자로 받은 Page Table을 C 코드로 따라간다. User VA에 대한 하드웨어 TLB 결과를 조회하는 API는 아니지만, 함수 안에서 테이블 메모리를 읽는 load까지 MMU와 TLB를 우회하는 것은 아니다. 그 load는 현재 Kernel Mapping을 통해 실행된다. [QEMU](/wiki/computer-systems-network-qemu-b1366076be02/)의 TCG 모드에서도 PintOS 함수는 Guest 명령어로 실행되고, 그 메모리 접근에 Software TLB가 사용될 수 있다.
+
+유효한 Page Table 포인터를 받았다는 전제에서 User 매핑이 없으면 이 함수는 NULL을 반환한다. 잘못된 Kernel 포인터나 손상된 테이블을 전달해도 어떤 예외도 발생하지 않는다는 보장은 아니다. 또한 함수는 User의 U·W 권한을 모두 검사하거나 Frame을 고정하지 않는다. 반환 이후의 Mapping 변경, 페이지 경계를 넘는 버퍼, 아직 적재하지 않은 lazy page는 호출자가 별도로 처리해야 한다. [조회가 확인하는 조건](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c#L231)
+
+조회할 PML4가 현재 CR3와 같아야 하는 것도 아니다. 예를 들어 non-VM fork의 `duplicate_pte()`는 부모 PML4에서 얻은 Kernel VA를 `memcpy()`의 원본으로 사용한다. 같은 User VA를 현재 자식 주소 공간에서 직접 읽는 것과 구별해야 한다. 이때 부모 테이블과 Frame이 살아 있고 Kernel 직접 Mapping으로 접근할 수 있다는 전제가 필요하다. [부모 Frame의 복사](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c#L240)
 
 ### 두 VA에서 같은 바이트를 읽는다
 
@@ -676,6 +756,16 @@ Linux에서는 하드웨어 PTE.D, 파일 Cache의 folio dirty 상태, 사용자
 파일의 공유 Mapping을 동기화하는 `msync(MS_SYNC)`와 주소 Mapping을 제거하는 `munmap()`도 같은 보장이 아니다. `munmap()` 자체를 동기 write-back 완료로 간주하지 않는다. `MAP_PRIVATE`의 수정은 파일에 쓰는 공유 변경과 달리 사적 COW 내용을 만든다. “처음에는 모든 PTE가 이미 W=0으로 설치된다”는 고정 순서보다 지연 Mapping, 논리적 권한, 사적 복제의 의미를 구분한다. [Linux msync의 동기화](https://github.com/torvalds/linux/blob/v6.16/mm/msync.c), [Mapping 해제](https://github.com/torvalds/linux/blob/v6.16/mm/vma.c)
 
 QEMU TCG의 Guest A·D 갱신은 x86 주소 변환 코드에서 확인할 수 있다. `mmu_translate()`는 경로의 권한을 결합하고 허용된 쓰기에 leaf D를 설정하며, D가 없는 읽기 변환에는 TLB의 쓰기 권한을 남기지 않아 첫 쓰기를 다시 처리한다. 한편 SoftMMU의 `TLB_NOTDIRTY`와 `notdirty_write()`는 QEMU의 RAM dirty tracking과 번역 코드 무효화 등을 다룬다. 이것을 Guest PTE.D의 다른 이름으로 보면 안 된다. [QEMU 10.0 x86 변환](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/excp_helper.c), [SoftMMU의 RAM 쓰기 추적](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cputlb.c)
+
+## 테이블을 해제할 때는 자식부터 반환한다
+
+`pml4_clear_page()`는 한 Mapping의 Present를 내린다. Frame이나 비어 있는 중간 테이블을 할당기에 반환하지는 않는다. 반면 [`pml4_destroy()`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/mmu.c#L200)는 PML4[0] 아래를 순회하고 마지막에 루트 자체를 반환한다. NULL 입력은 그대로 돌아오며 `base_pml4`를 파괴하려 하면 ASSERT로 막는다.
+
+하위 함수는 Present 엔트리를 따라 `pdpe_destroy() → pgdir_destroy() → pt_destroy()`로 내려간다. `pt_destroy()`는 아직 Present인 leaf가 가리키는 데이터 Frame을 반환한 뒤 PT를 반환한다. 이후 PD와 PDPT, 마지막 PML4 순서로 돌아온다. 상위 테이블을 먼저 반환하면 하위 페이지의 주소를 안전하게 따라갈 수 없으므로, 생성할 때와 반대 방향으로 소유한 자원을 정리한다.
+
+이때 커널의 C 포인터는 테이블 엔트리에 저장된 물리 주소와 다르다. 구현은 `ptov()`와 주소 마스크를 거쳐 Kernel 직접 Mapping의 포인터로 하위 페이지를 읽고 반환한다. PML4[1]의 공유 Kernel 트리까지 재귀적으로 해제하지 않는다. 상위 엔트리마다 주소 범위가 같다는 사실과, 이 구현이 어느 하위 트리의 소유권을 갖는지는 별개의 조건이다.
+
+VM 빌드에서는 앞선 SPT 정리가 Mapping의 P를 내리고 공유 Frame의 참조 수를 처리한다. 그 뒤 Page Table을 파괴해야 같은 Frame을 다시 반환하는 일을 피할 수 있다. 사용 중인 CR3의 교체, SPT·Frame과 테이블의 해제 순서는 [프로세스 종료](/wiki/computer-systems-network-topic-93ebb5bf7e48/)에서 함께 읽는다. `pml4_destroy()` 자체가 TLB를 비우거나 Guest의 반환 페이지를 Host OS에 돌려주는 것은 아니다.
 
 ## 실행 파일의 적재와 VM의 지연 적재
 

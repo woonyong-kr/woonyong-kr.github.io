@@ -6,7 +6,7 @@ permalink: /wiki/lrn-sql/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/projects/minidb
-projection_sha256: 7d59c47c7185a5bcfc408801842b357acb64241c38cc2ab39e857489f59245bf
+projection_sha256: d3484f528670459bdacdf97203e57f39a88515e4276ecc5ae2ec81c14dc9f987
 parent: Database
 content_status: ready
 public_parent_id: Wiki/data-storage
@@ -25,13 +25,22 @@ grand_parent: Data
 
 `SELECT`로 요청한 행이 파일에서 돌아오기까지는 문장 해석, 실행 계획, Index 탐색과 Page 읽기가 이어진다. lrn-sql은 이 경로를 C로 구현한 학습 저장소다. SQL 문법 자체는 [SQL](/wiki/sql/)에서 다루고, 여기서는 문법이 저장 구조와 만나는 지점을 살펴본다.
 
+정글 팀 과제에서 출발했으며, 최우녕이 개인 주도로 대부분 직접 구현한 학습 프로젝트다. 실제 사용 가능한 실행 범위와 설치 방법은 [lrn-sql README](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/README.md)에서 확인한다.
+
+## 기여와 판단
+
+- 인덱스 선택 · 2026-08-02: heap scan으로 처리하던 `id` 범위를 B+Tree 리프 순회로 연결했다. [범위 스캔 변경](https://github.com/woonyong-kr/lrn-sql/commit/c1049b0a02f15660fdb80568524eeed48ff27aa8)
+- 저장 경로: SQL 실행, 행의 slot, B+Tree의 위치 참조, Pager의 pin·dirty 관리가 만나는 경계를 구현했다. [Pager 코드](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/src/storage/pager.c)
+- 동시 접근: engine·row·range lock과 page latch를 구분하고 문장 종료 시 잠금을 해제한다. 범용 다중 문장 트랜잭션이나 WAL 복구를 뜻하지 않는다. [SQL 실행과 잠금](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/src/db.c)
+- 성능 분석 · 2026-08-02: 반복되는 heap 탐색과 REPL의 잠금 누적을 줄이는 변경을 비교했다. [INSERT 후속 변경](https://github.com/woonyong-kr/lrn-sql/commit/993d4d873aeeaa08aae2a9de3d3dadc55123ea5d), [측정 조건과 한계](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/docs/benchmark-postgres.md)
+
 ## 요청에서 저장소까지
 
 `src/sql/parser.c`는 문장을 해석하고, `planner.c`와 `executor.c`는 실행할 작업과 데이터 접근 경로를 연결한다. `src/storage/bptree.c`는 정렬된 Key의 탐색과 분할을, `table.c`는 Page 안의 행 저장을 맡는다. `pager.c`는 상위 계층과 파일 I/O 사이에서 Page Cache를 관리한다.
 
-Week 7의 디스크 엔진에 Week 8에서 HTTP 서버를 연결했다. 서버와 CLI는 모두 `db_execute()`를 호출하므로 SQL 실행 경로를 공유한다. HTTP 요청을 읽는 Socket FD, DB 파일을 가리키는 FD, DB 내부의 `page_id`는 역할이 다르다. FD는 열린 파일이나 Socket을 가리키는 프로세스의 핸들이고, `page_id`는 DB 파일을 나눈 페이지의 번호다.
+Week 7의 디스크 엔진에 Week 8에서 HTTP 서버를 연결했다. 서버는 `db_execute()`를 호출하고 REPL은 `main.c`에서 parse 뒤 `execute()`를 직접 호출한다. 두 경로는 `execute()`를 공유하며, 문장 실행 뒤 각각 잠금을 해제한다. HTTP 요청을 읽는 Socket FD, DB 파일을 가리키는 FD, DB 내부의 `page_id`는 역할이 다르다. FD는 열린 파일이나 Socket을 가리키는 프로세스의 핸들이고, `page_id`는 DB 파일을 나눈 페이지의 번호다.
 
-B+ Tree와 Pager도 서로 다른 질문에 답한다. B+ Tree는 Key로 행의 위치를 찾고, Pager의 Hash Table은 `page_id`로 메모리에 올라온 Frame을 찾는다. 쿼리 결과가 잘못됐을 때 이 계층을 나눠 읽으면 문장 해석, 탐색 경로, 저장된 바이트 중 어디를 확인할지 좁힐 수 있다. [현재 엔진의 진입점](https://github.com/woonyong-kr/lrn-sql/blob/49ac2cbf310c1d8df720432833664e319484fdcc/src/db.c)
+B+ Tree와 Pager도 서로 다른 질문에 답한다. B+ Tree는 Key로 행의 위치를 찾고, Pager의 Hash Table은 `page_id`로 메모리에 올라온 Frame을 찾는다. 쿼리 결과가 잘못됐을 때 이 계층을 나눠 읽으면 문장 해석, 탐색 경로, 저장된 바이트 중 어디를 확인할지 좁힐 수 있다. [서버 진입점](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/src/db.c), [REPL 진입점](https://github.com/woonyong-kr/lrn-sql/blob/913de5c610250326527105eec633ef6e293af7cb/src/main.c)
 
 저장 구조를 설계할 때는 프로그램을 다시 열어도 해석할 수 있는 값을 파일에 남겨야 한다. Week 7 설계안은 단일 `.db` 파일의 Header에 Page 크기, Index의 루트와 Heap의 시작 Page, 다음에 부여할 `id` 등을 남기도록 정했다. 행의 위치도 실행 중인 포인터 대신 `row_ref(page_id, slot_id)`로 기록한다. 이 위치 표현과 Page 안의 바이트 배치는 [B+ Tree 구현](/wiki/data-b-tree-99b399d45cdf/)에서 이어서 살펴본다.
 
@@ -93,8 +102,6 @@ Pager는 Dirty Frame이 64개 이상이면 사용 중이지 않은 오래된 Fra
 `docs/sql/12-test-harness-plan.md`의 통과 개수는 2026년 4월 22일의 기록이다. 현재 코드를 재실행한 결과와 구분해야 한다.
 
 ## 코드와 구현 기록
-
-크래프톤 정글 팀 구현의 개인 보존 저장소다. 공동 구현과 개인 기여는 원본 팀 저장소와 커밋 이력으로 구분한다.
 
 - [lrn-sql](https://github.com/woonyong-kr/lrn-sql)
 - [SQL 구현 설명](https://github.com/woonyong-kr/lrn-sql/tree/main/docs/sql)

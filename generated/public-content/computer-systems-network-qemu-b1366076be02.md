@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: a4408b04d7c6276d8e46475a8c4632f784c101708278dbaebcfb1d36718f20b6
+projection_sha256: 9f4d65e204ba151a3703eb0d95392feb2bf19a0e357b200f1d11a01d4cd9e4d2
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
@@ -22,6 +22,12 @@ search_terms:
 - AddressSpace
 - Guest Physical Memory
 - address_space_rw
+- Translation Block
+- TB
+- TCG IR
+- MemoryRegionOps
+- info jit
+- info mtree
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -58,6 +64,77 @@ Linux에서 사용할 수 있는 KVM은 Linux 커널의 가상화 기능이다. 
 | GDB 지원 | system mode에서 breakpoint·watchpoint 지원 | accelerator의 지원 범위에 따라 달라짐 |
 
 KVM을 사용하면 언제나 일정 배수만큼 빨라지거나, TCG이면 언제나 5~20배 느리다는 수치는 이 표에서 나오지 않는다. GDB도 KVM에서는 무조건 하드웨어 breakpoint만 써야 하는 것이 아니다. 메모리에 삽입하는 breakpoint와 accelerator가 제공하는 기능을 구분한다. [QEMU GDB의 breakpoint 지원](https://www.qemu.org/docs/master/system/gdb.html#breakpoint-and-watchpoint-support)
+
+### 같은 PC라도 같은 번역 결과를 쓸 수는 없다
+
+TCG는 Guest 명령을 IR로 표현하고 불필요한 연산을 줄인 뒤 Host 코드를 만든다. 이 결과를 담는 단위가 **Translation Block(TB)**이다. `mov`를 처리한다고 언제나 동일한 IR 하나를 만드는 것은 아니다. 특히 `tcg_gen_ld_i64` 같은 Host 메모리 접근과 Guest 주소 변환을 포함하는 `qemu_ld` 계열을 구별해야 한다. [TCG IR의 메모리 연산](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg-ops.rst)
+
+TB는 시작 PC만으로 찾지 않는다. QEMU v10.0.0의 `tb_htable_lookup()`과 비교 함수는 코드의 물리 위치, CS Base, CPU 상태와 번역 플래그 등을 함께 확인한다. 페이지 경계에 걸친 명령은 두 번째 코드 페이지도 확인할 수 있다. 같은 VA를 다른 Frame으로 연결했거나 실행 모드가 달라졌다면 이전 번역 결과를 그대로 사용할 수 없는 이유다. [TB 조회 조건](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cpu-exec.c#L159)
+
+분기나 `SYSCALL`처럼 다음 실행 상태를 바꾸는 명령은 TB의 경계가 된다. 번역할 명령 수의 상한과 디버깅 조건도 경계에 영향을 준다. TB의 경계는 C 함수의 경계와 일치하지 않으며, 포함하는 명령 수도 달라질 수 있다. [`tb_gen_code()`의 번역 한도](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/translate-all.c#L290)
+
+번역한 코드를 재사용하는 것과 다음 TB로 직접 이동하는 것도 다르다. `goto_tb + exit_tb` 방식은 처음에는 메인 루프로 돌아와 다음 TB를 찾고, 이후 분기 슬롯을 연결해 그 경로를 줄인다. 이 방식은 같은 페이지 안에서 목적지를 정할 수 있는 직접 분기라는 조건을 요구한다. `lookup_and_goto_ptr`는 현재 상태에 맞는 TB 주소를 조회해 이동하는 별도 경로다. 인터럽트를 새로 받을 수 있는 상태 변화 뒤에는 메인 루프로 돌아가 인터럽트를 다시 확인해야 한다. [TB 연결의 조건](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg.rst#direct-block-chaining)
+
+Guest 코드의 바이트를 바꾸면 해당 코드를 번역한 TB와 연결도 무효화해야 한다. 주소 변환 Cache와 코드 Cache는 보관하는 정보가 다르므로 PTE 변경이나 CR3 전환이 모든 TB의 폐기를 뜻하지는 않는다. 같은 코드 Frame과 상태로 돌아왔을 때 기존 TB를 재사용할 여지가 있도록 물리 위치를 함께 관리한다. [코드 변경과 무효화](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg.rst#self-modifying-code-and-translated-code-invalidation)
+
+다음 모형은 PC·코드 Frame·실행 모드를 조회 조건으로 사용한다. QEMU의 구조체나 해시 함수를 재현하지 않고, 주소 하나만 Cache Key로 사용했을 때 빠지는 조건을 보여 준다. 코드 Frame을 수정하면 그 Frame의 항목을 제거한다.
+
+```run-python
+cache = {}
+next_tb = 1
+
+def lookup(pc, frame, mode):
+    global next_tb
+    key = (pc, frame, mode)
+    hit = key in cache
+    if not hit:
+        cache[key] = next_tb
+        next_tb += 1
+    return cache[key], hit
+
+pc = 0x400123
+cases = [
+    ('첫 실행', 0x12000, 'user'),
+    ('같은 조건', 0x12000, 'user'),
+    ('다른 코드 Frame', 0x34000, 'user'),
+    ('다른 실행 모드', 0x12000, 'kernel'),
+    ('원래 조건으로 복귀', 0x12000, 'user'),
+]
+observed = []
+for label, frame, mode in cases:
+    result = lookup(pc, frame, mode)
+    observed.append(result)
+    print(f'{label}: TB={result[0]}, hit={result[1]}')
+assert observed == [(1, False), (1, True), (2, False), (3, False), (1, True)]
+
+changed_frame = 0x12000
+removed = [key for key in cache if key[1] == changed_frame]
+for key in removed:
+    del cache[key]
+print('코드 Frame 수정으로 제거한 항목:', len(removed))
+assert len(removed) == 2
+after = lookup(pc, changed_frame, 'user')
+print(f'코드 수정 뒤 재실행: TB={after[0]}, hit={after[1]}')
+assert after == (4, False)
+assert lookup(pc, 0x34000, 'user') == (2, True)
+```
+
+Python 3.9.6에서 실행한 결과다.
+
+```text
+첫 실행: TB=1, hit=False
+같은 조건: TB=1, hit=True
+다른 코드 Frame: TB=2, hit=False
+다른 실행 모드: TB=3, hit=False
+원래 조건으로 복귀: TB=1, hit=True
+코드 Frame 수정으로 제거한 항목: 2
+코드 수정 뒤 재실행: TB=4, hit=False
+```
+
+처음과 같은 조건에서는 TB 1을 다시 쓴다. Frame이나 실행 모드가 바뀌면 새 항목이 필요하고, 원래 조건으로 돌아오면 이전 항목을 찾는다. 코드 Frame을 수정한 뒤에는 해당 Frame의 번역을 다시 만든다. 이 결과는 모형의 조회 결과이며 QEMU의 적중률이나 실행 시간을 측정한 값이 아니다.
+
+실제 번역 통계를 읽을 때는 해당 빌드의 Monitor에서 `info jit`를 확인한다. Cache 용량·평균 TB 크기·번역 비용은 실행한 버전과 설정에서 확인한다. Cache가 적중한다는 사실만으로 네이티브와 같은 속도라고 판단할 수도 없다. [Monitor의 번역 통계 명령](https://github.com/qemu/qemu/blob/v10.0.0/hmp-commands-info.hx#L245)
+
 
 ### CPU 상태와 RAM은 각각 여러 개일 수 있다
 
@@ -183,6 +260,17 @@ QEMU v10.0.0의 `address_space_rw(as, addr, attrs, buf, len, is_write)`에서 `a
 이 버전의 `address_space_rw()`는 쓰기일 때 `address_space_write()`, 읽기일 때 `address_space_read_full()`을 호출한다. 이후 FlatView에서 Region과 그 내부 위치를 구한다. 한 요청이 영역 경계를 넘으면 남은 범위를 다시 번역해 처리한다. MMIO 접근은 장치가 지원하는 크기·정렬·Byte Order도 고려한다. [읽기·쓰기의 실제 분기](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L2920)
 
 직접 접근할 수 있는 RAM의 읽기는 Host 버퍼로 복사하고, 쓰기는 backing에 복사한 뒤 QEMU의 dirty tracking과 코드 무효화 처리를 한다. 일반 ROM 읽기와 ROM device 쓰기는 같은 경로가 아니며, Debug 접근에는 ROM 쓰기를 허용하는 별도 조건도 있다. `mr->ram` 하나만으로 모든 읽기·쓰기의 효과를 결정할 수는 없다. 장치 callback의 실패나 연결되지 않은 영역은 `MemTxResult`로 전달된다. 이 결과가 Guest에서 어떤 예외나 장치 동작으로 나타나는지는 호출 경로까지 확인해야 한다. [직접 접근의 조건](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/memory.h#L3015)
+
+### 영역의 배치와 실제 조회 구조를 구별한다
+
+`MemoryRegion.addr`는 부모 안에서의 상대 위치다. Alias를 거쳐 다른 영역을 바라보거나, 같은 부모의 영역이 겹치면 최종 주소 해석에 offset과 우선순위가 반영된다. 높은 우선순위의 Container 안에 빈 구간이 있으면 그 아래 우선순위의 영역이 보일 수 있다. 우선순위는 같은 부모의 자식끼리 비교하는 값이지 전체 트리에서 통용되는 순위가 아니다. [영역의 중첩과 가시성](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/memory.rst)
+
+최종 배치를 나타내는 FlatView와 매 접근에 사용하는 조회 구조도 구별한다. 이 버전의 `address_space_lookup_region()`은 최근 사용한 Section을 확인하고, 필요하면 `phys_page_find()`의 다단계 Dispatch 구조를 탐색한다. 하위 페이지의 영역을 다시 고르는 경로도 있다. FlatView의 영역 수만으로 접근 때의 비교 횟수를 계산할 수 없는 이유다. [주소를 Section으로 찾는 과정](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L310)
+
+장치 callback의 크기는 `MemoryRegionOps`의 두 조건을 함께 읽는다. `valid`는 장치가 허용하는 접근 크기·정렬이고, `impl`은 callback 구현이 처리하는 크기·정렬이다. 큰 요청은 여러 callback으로 나뉠 수 있으므로 C Wrapper 호출 수와 장치 callback 횟수가 다를 수 있다. Port I/O와 MMIO의 명령·폭은 [장치](/wiki/computer-systems-network-topic-d38307e3894c/)에서 비교한다. [MMIO callback의 접근 조건](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/memory.rst#mmio-operations)
+
+실제 배치는 QEMU Monitor의 `info mtree`, `info mtree -f`, `info mtree -f -d`로 각각 트리·FlatView·Dispatch 구조를 나누어 볼 수 있다. QEMU 프로세스에 Host Debugger를 연결한 상태와 Guest GDB Stub에 연결한 상태를 구별한다. `-S`는 Guest CPU 실행을 멈추므로, 그 옵션만으로 이미 끝난 Host의 장치 생성 과정을 처음부터 관찰할 수 있는 것은 아니다. [Monitor의 메모리 트리 옵션](https://github.com/qemu/qemu/blob/v10.0.0/hmp-commands-info.hx#L229)
+
 
 ### 두 주소에서 같은 backing을 바꿔 본다
 
