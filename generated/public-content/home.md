@@ -6,7 +6,7 @@ permalink: /wiki/home/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/developer-wiki
-projection_sha256: ab13bb36dd5ba7ce4f00c331c0dd56fc0baca2faf9f1538062ecae31445f15e8
+projection_sha256: 18690e06a13b1502e5e13a1f9ec648a3d3536fa98adb1a81d5c7306382843e81
 content_status: ready
 ---
 
@@ -28,22 +28,24 @@ content_status: ready
 
 ## 프로젝트
 
-- [K8s Clue](https://github.com/woonyong-kr/clue) — Kubernetes 장애 증거 수집과 원인 분석, 변경 제안·복구 검증을 설계하는 프로젝트.
-- [Link Calendar Navigator](https://github.com/woonyong-kr/obsidian-link-calendar-navigator) — 노트의 날짜를 모아 달력에서 원문을 찾는 Obsidian 플러그인.
-- [Linked Graph Navigator](https://github.com/woonyong-kr/obsidian-linked-graph-navigator) — 현재 노트의 링크를 작성한 순서대로 목차와 그래프로 탐색하는 Obsidian 플러그인.
-- [Runnable Code Blocks](https://github.com/woonyong-kr/obsidian-runnable-code-blocks) — 노트와 웹 문서의 코드 예제를 편집·실행하고 결과를 확인하는 Obsidian 플러그인.
+- **Kubernetes**
+  - [K8s Clue](https://github.com/woonyong-choi/clue) — 장애 분석·복구 검증.
+- **Obsidian**
+  - [Link Calendar Navigator](https://github.com/woonyong-choi/obsidian-link-calendar-navigator) — 날짜로 노트 찾기.
+  - [Linked Graph Navigator](https://github.com/woonyong-choi/obsidian-linked-graph-navigator) — 목차·그래프로 탐색.
+  - [Runnable Code Blocks](https://github.com/woonyong-choi/obsidian-runnable-code-blocks) — 코드 실행·결과 확인.
 
 ## 학습
 
-- [PintOS](/wiki/pintos/) — 스케줄링, 프로세스와 가상 메모리를 다루는 OS 팀 학습. [GitHub](https://github.com/woonyong-kr/lrn-pintos)
-- [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 블록의 할당·해제와 빈 공간 관리. [GitHub](https://github.com/woonyong-kr/lrn-malloc)
-- [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — 두 연결 사이에서 요청과 응답을 중계하는 과정. [GitHub](https://github.com/woonyong-kr/lrn-http-proxy)
-- [Kotlin](/wiki/kotlin/) — 문법, 객체의 동등성과 해시, 람다의 캡처와 호출 순서를 코드와 출력으로 확인하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-kotlin)
-- [SQL 엔진 구현](/wiki/lrn-sql/) — 문장 해석부터 조회와 저장까지 연결하는 학습. [GitHub](https://github.com/woonyong-kr/lrn-sql)
-- [Redis](/wiki/redis/) — 요청 파싱, 자료형별 명령, 만료와 저장을 연결하는 구현 학습. [GitHub](https://github.com/woonyong-kr/lrn-redis)
-- [React](/wiki/frontend-topic-556b062c7529/) — 상태, Virtual DOM과 실제 DOM 갱신을 연결하는 작은 UI 런타임. [GitHub](https://github.com/woonyong-kr/lrn-react)
-- [MNIST](/wiki/deep-learning/) — 숫자 이미지 분류에서 데이터 분할, 학습과 저장까지의 흐름. [GitHub](https://github.com/woonyong-kr/lrn-mnist)
-- [GPT](/wiki/ai-machine-learning-topic-7c4a8b2afe4c/) — 토큰을 벡터로 바꾸는 입력과 언어 모델 구현. [GitHub](https://github.com/woonyong-kr/lrn-gpt)
+- [PintOS](/wiki/pintos/) — OS 팀 학습. [GitHub](https://github.com/woonyong-choi/lrn-pintos)
+- [Malloc](/wiki/computer-systems-network-topic-d160fea60072/) — Heap 할당·해제. [GitHub](https://github.com/woonyong-choi/lrn-malloc)
+- [HTTP Proxy](/wiki/computer-systems-network-topic-e8bae755299d/) — HTTP 중계. [GitHub](https://github.com/woonyong-choi/lrn-http-proxy)
+- [Kotlin](/wiki/kotlin/) — 문법·람다. [GitHub](https://github.com/woonyong-choi/lrn-kotlin)
+- [SQL 엔진 구현](/wiki/lrn-sql/) — SQL 해석·저장. [GitHub](https://github.com/woonyong-choi/lrn-sql)
+- [Redis](/wiki/redis/) — 명령·만료·저장. [GitHub](https://github.com/woonyong-choi/lrn-redis)
+- [React](/wiki/frontend-topic-556b062c7529/) — 상태·DOM 갱신. [GitHub](https://github.com/woonyong-choi/lrn-react)
+- [MNIST](/wiki/deep-learning/) — 숫자 이미지 분류. [GitHub](https://github.com/woonyong-choi/lrn-mnist)
+- [GPT](/wiki/ai-machine-learning-topic-7c4a8b2afe4c/) — 언어 모델 구현. [GitHub](https://github.com/woonyong-choi/lrn-gpt)
 
 ## 참고한 책
 
