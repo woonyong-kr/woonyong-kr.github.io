@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3cc26725c1cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3cc26725c1cb
-projection_sha256: 747fe1c999f08a1e3dd9b97051ae119356e5fdcbbf9eacca6c63ea726d980df9
+projection_sha256: 364ea7c3d8840c1d6fc85949addcdfdda76a4ac45e0887f070caf9f5c16581ad
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -40,6 +40,22 @@ ancestor: CS 기초
 PintOS의 `write(fd, buffer, size)`를 따라가면 사용자 Wrapper가 RAX에 번호 10을, RDI·RSI·RDX에 세 인자를 놓는다. `syscall3`의 3은 인자 개수다. `SYSCALL`이 `syscall_entry`로 진입하면 Assembly가 Kernel Stack으로 옮겨 Frame을 만든 뒤 `syscall_handler()`를 호출한다. [사용자 Wrapper](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/lib/user/syscall.c)
 
 이 Wrapper의 inline asm 앞에는 `asm("rdi")`, `asm("rsi")`처럼 사용할 Register를 지정한 지역 변수 선언이 있다. `halt`는 인자가 없어 `syscall0`, `exit(status)`는 인자가 하나여서 `syscall1`, `mmap`은 다섯 인자를 넘기는 `syscall5`를 사용한다. 매크로 이름의 숫자와 RAX에 넣는 syscall 번호는 서로 다른 값이다.
+
+## 커널은 MSR에 진입 규칙을 등록한다
+
+LSTAR는 호출할 기능의 번호가 아니라 커널 진입 코드의 주소를 담는다. PintOS의 `syscall_init()`은 아래 세 MSR을 설정한다. MSR 번호는 `wrmsr`가 대상을 고르는 식별자이며, 프로그램이 읽고 쓰는 메모리 주소가 아니다. [PintOS의 MSR 설정](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c#L78-L100)
+
+| MSR | 번호 | 이 PintOS에서 기록하는 값 |
+|---|---|---|
+| STAR | `0xc0000081` | `0x0013000800000000` |
+| LSTAR | `0xc0000082` | `syscall_entry`의 주소 |
+| SYSCALL_MASK, FMASK | `0xc0000084` | IF·TF·DF·IOPL·AC·NT를 합친 `0x47700` |
+
+STAR의 값은 `((0x23 - 0x10) << 48) | (0x08 << 32)`로 계산한다. 상위 16 Bit가 `0x13`, 그다음 16 Bit가 `0x08`이다. 이 설정에서 진입할 Kernel CS·SS는 `0x08`·`0x10`, 정상적인 64비트 SYSRET으로 돌아갈 User CS·SS는 `0x23`·`0x1b`다. User SS는 User CS보다 8 작다. [Selector 상수](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/loader.h#L71-L83)
+
+CPL은 현재 코드의 실행 권한 수준이며 CS의 하위 두 Bit로 확인할 수 있다. PintOS는 Kernel에서 0, User에서 3을 사용한다. Selector를 Table index·RPL로 나누는 실행 예제는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/#실행-주소와-실행-권한)에 있다. 주소의 매핑과 접근 권한은 Page Table과 CPU의 보호 설정도 함께 확인해야 한다.
+
+`write_msr()`는 ECX에 MSR 번호, EDX:EAX에 64비트 값을 나누어 놓고 `wrmsr`를 실행한다. 일반 사용자 코드에서 MSR을 임의로 바꾸는 API가 아니라 커널 초기화 코드다. Flag를 하나씩 조합하고 Mask 적용 결과를 보는 예제는 [CPU의 RFLAGS 설명](/wiki/computer-systems-network-cpu-4b05d739f0f6/#값의-크기와-flag를-함께-바꿔-보기)에서 이어진다. [write_msr 구현](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/intrinsic.h#L123-L128)
 
 ## 진입 주소에 도착해도 스택은 아직 사용자 것이다
 
@@ -208,6 +224,8 @@ TCG 번역 코드의 `gen_SYSCALL()`·`gen_SYSRET()`는 각각 helper 호출을 
 
 번호와 구현 함수를 연결할 때는 함수 포인터 배열이나 `switch` 등을 사용할 수 있다. 그러나 배열이 소스에 존재한다는 사실만으로 현재 진입 경로가 그 배열을 호출한다고 결론 낼 수는 없다.
 
+이하의 Linux 비교는 LSTAR와 SYSRET을 사용하는 기존 x86-64 진입 경로를 기준으로 한다. Linux v6.12의 `syscall_init()`은 FRED가 활성화되지 않았을 때 `idt_syscall_init()`을 호출하고, 이 함수가 LSTAR에 `entry_SYSCALL_64`를 등록한다. FRED가 활성화된 경우에는 다른 진입점과 복귀 명령을 사용하므로 같은 순서를 적용하지 않는다. 이 버전의 FMASK에는 PintOS의 여섯 Flag 외에 CF·PF·AF·ZF·SF·OF·RF·ID도 들어 있다. [Linux v6.12의 진입 설정과 FRED 분기](https://github.com/torvalds/linux/blob/v6.12/arch/x86/kernel/cpu/common.c#L2036-L2085)
+
 Linux v6.12의 x86-64 경로는 `do_syscall_64()`에서 `x64_sys_call()`로 이어지고, 후자는 생성된 `case`를 넣은 `switch`를 사용한다. 같은 파일의 `sys_call_table[]`은 Trace용 주소 조회에 남아 있다. 번호 자료도 `asm-offsets.h`의 구조체 Offset과 구분해야 한다. [x86-64 진입 처리](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/common.c), [v6.12 Dispatch](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/syscall_64.c)
 
 이 경로의 `__x64_sys_*`는 `const struct pt_regs *` 하나를 받는다. `SC_X86_64_REGS_TO_ARGS`가 저장된 `di·si·dx·r10·r8·r9` 필드를 인자로 풀어 `__se_sys_*`에 넘기고, 타입 변환을 거쳐 `__do_sys_*`의 본문으로 이어진다. 저장된 `regs->r10`이 이후 C 함수의 네 번째 인자가 되는 과정이다. 중간 함수가 실제 호출로 남는지, 어느 Register에 값을 읽는지는 컴파일 결과에 따라 달라진다. [Linux v6.12의 syscall Wrapper](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/syscall_wrapper.h#L12-L55)
@@ -259,5 +277,9 @@ WRITE 호출만 관찰하려면 위 `tbreak *syscall_handler` 명령 뒤에 `if 
 C Handler 실행 중의 CPU RAX는 임시 계산에 쓰일 수 있으므로, 저장한 번호나 결과는 `$call->R.rax`에서 확인한다. 출력 형식에 따라서도 같은 비트 패턴이 다르게 보인다. 모든 비트가 1인 64비트 값을 `p/x`로 읽으면 `0xffffffffffffffff`이고, 부호 있는 10진수 형식인 `p/d`로 읽으면 -1이다. [GDB의 출력 형식](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output-Formats.html) QEMU의 Guest Register와 GDB Register 번호의 연결은 [QEMU의 GDB 연결](/wiki/computer-systems-network-qemu-b1366076be02/#gdb-번호와-regs-배열의-번호)에서 이어서 확인할 수 있다.
 
 그 위치에서 `p sizeof(struct intr_frame)`로 192바이트 배치를 확인하고, `$call->rsp`와 `$user_sp`, `$call->rip`와 `$return_ip`, `$call->eflags`와 `$return_flags`를 비교한다. `x/5gx &$call->rip`는 RIP·CS·RFLAGS·RSP·SS 다섯 칸을 읽는다. `R.rcx`나 `R.r11`을 같은 값으로 기대하지 않는다. 복귀 명령을 관찰할 때는 현재 빌드의 `disassemble syscall_entry` 또는 `disassemble do_iret`로 주소를 찾는다. 소스 줄 번호나 고정된 `함수+offset`은 다른 빌드에 그대로 적용하지 않는다.
+
+권한 왕복을 확인하려면 `syscall_entry` 첫 명령에서 `$cs & 3`, RSP·RCX·R11을 기록하고, 현재 빌드에서 찾은 `sysretq` 직전 값과 비교한다. 그 직전에는 아직 Kernel CPL 0이고, 복귀에 성공한 뒤 User CS가 적용된다. Kernel Stack인지 판단할 때는 임의의 주소 하한 대신 이 Thread의 `tss->rsp0`와 실제 Stack 범위를 사용한다. 같은 CPL의 IRQ라도 IST 사용 여부에 따라 Stack 선택이 달라지는 규칙은 [Interrupt의 진입 Stack](/wiki/computer-systems-network-topic-c19e34701c6c/#cpu와-assembly가-함께-만드는-frame)에서 확인한다.
+
+MSR 설정 자체를 관찰하려면 `disassemble /r syscall_init`으로 실제 `wrmsr` 위치를 찾고, 실행 직전 ECX의 번호와 EDX:EAX의 값을 함께 읽는다. 함수 진입·반환 메시지만 출력하는 Breakpoint로는 설정값을 확인할 수 없다. 이 절의 관찰 방법은 현재 빌드에서 실행할 절차이며, 새 GDB 실행 기록을 뜻하지 않는다.
 
 본문의 코드 기준은 `lrn-pintos@9d1b14c`다. W11 원본 `09390dd`와 진입 assembly·TSS·프레임 선언·파일 및 디스크 구현은 바이트가 같지만, `userprog/syscall.c`는 다르다. 따라서 W11 당시의 생략된 handler 예와 현재 버퍼 검증·복사 경로를 같은 실행 결과로 합치지 않는다. 이 대조는 코드 상태를 확인한 것이며 새 QEMU/GDB 실행이나 작성자별 기여 검증은 아니다.

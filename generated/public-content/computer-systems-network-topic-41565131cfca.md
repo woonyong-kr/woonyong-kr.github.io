@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-41565131cfca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41565131cfca
-projection_sha256: 796e46d920c036d7d57e8ebab5bf42a992e7cef580f1fcb3f667df39b3ecc39d
+projection_sha256: a4d536cef3ab4ba335681351187e970505ab5fce9cd5547a16951337fc630d08
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -199,6 +199,98 @@ fork 자식은 부모의 프레임을 복사한 뒤 `if_.R.rax = 0`으로 바꾼
 `sysretq`는 Stack에서 `iretq` 프레임을 읽는 명령이 아니다. Code·Stack Selector는 MSR 설정에 따르며, PintOS는 `syscall_init()`에서 `MSR_STAR`를 설정한다. RSP도 `sysretq` 앞의 Assembly가 직접 복원한다. [MSR 설정](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c)
 
 TSS의 `rsp0`는 사용자 모드로 나갈 때의 Stack Pointer가 아니다. `process_activate()`는 Page Table을 활성화하고 `tss_update()`로 다음 Thread의 Kernel Stack 위치를 기록한다. 사용자 모드에서 커널로 들어오는 인터럽트는 그 경로에서 TSS를 사용할 수 있고, 이 구현의 `syscall_entry`는 TSS를 소프트웨어로 읽는다. 반대 방향의 `iretq`는 자신에게 전달된 프레임의 `rsp`를 복원한다. [TSS 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/tss.c)
+
+## TSS에는 다음 진입에 사용할 Stack을 기록한다
+
+이 PintOS의 부팅 코드는 `tss_init()`, `gdt_init()`, `intr_init()` 순서로 실행한다. 첫 함수가 TSS용 Page를 할당하고 `rsp0`를 초기화한다. `gdt_init()`은 TSS의 주소를 GDT Descriptor에 기록하고 GDTR을 적재하며, `intr_init()`에서 `ltr(SEL_TSS)`로 TR에 TSS Selector를 적재한다. GDT를 적재하는 `lgdt`와 TSS를 선택하는 `ltr`는 서로 다른 명령이다. [부팅 순서](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/init.c#L105-L119), [GDT 설정](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/gdt.c), [TR 적재](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/interrupt.c#L228-L232)
+
+`SEL_TSS=0x28`은 GDT index 5를 뜻한다. 64비트 TSS Descriptor는 16바이트이므로 GDT[5]와 GDT[6] 두 칸을 사용한다. Descriptor에 넣은 TSS Base는 구조체의 선형 주소이며, 그 주소를 실제 메모리로 번역하는 일은 Paging 경로를 거친다. TR은 Selector와 함께 Descriptor에서 얻은 Base·Limit·속성을 보관한다. TSS의 내용 전체를 TR 안에 복사하는 것은 아니다.
+
+GDB에서 이 등록을 확인하려면 GDT[5]와 GDT[6]을 각각 64비트 값으로 읽는다. 첫 값의 bit 16–39는 Base의 하위 24비트, bit 56–63은 그다음 8비트다. 두 번째 값의 하위 32비트가 Base의 상위 32비트다. 이 세 부분을 이어 붙인 주소를 `tss` 포인터와 비교한다. 그 주소에서 `rsp0`·`rsp1`·`rsp2`와 IST 필드를 읽으면 Descriptor에 등록한 위치와 TSS에 기록한 Stack 값을 구분해 관찰할 수 있다.
+
+`struct task_state`는 `packed`로 선언돼 있다. 앞의 4바이트 다음에 `rsp0`가 오며, IST1은 `0x24`, IST7은 `0x54`에서 시작한다. `rsp0`와 IST1 사이에는 `rsp1`·`rsp2`와 예약 영역이 있다. 마지막 `iomb`는 I/O Permission Bitmap의 시작 위치를 표현하는 필드다. 이 구현은 TSS용 Page를 0으로 초기화하고 `rsp0`를 설정한다. [TSS 선언](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/userprog/tss.h), [초기화와 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/tss.c)
+
+IST(Interrupt Stack Table)는 NMI·Double Fault·Machine Check처럼 현재 Stack 상태를 가정하기 어려운 상황에 별도 Stack을 선택하는 데 쓰인다. IDT Gate의 IST가 0이 아니면 CPL이 같아도 해당 TSS 항목의 Stack으로 전환한다. 이 PintOS는 TSS를 0으로 초기화하고 `make_gate`의 IST도 0으로 설정하므로 IST Stack을 사용하지 않는다. User에서 Ring 0으로 들어오는 IDT 경로에서는 `rsp0`를 사용한다. [IST의 용도](https://docs.kernel.org/arch/x86/kernel-stacks.html), [PintOS의 Gate](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/interrupt.c#L78-L96)
+
+### Page 끝과 현재 Stack 위치를 구분한다
+
+`tss_update(next)`가 기록하는 값은 `(uint64_t)next + PGSIZE`다. 이 값은 Thread Page 바로 다음 주소인 Stack 꼭대기다. 아직 아무것도 쌓지 않아 RSP가 꼭대기에 있을 때 `RSP & ~0xfff`를 계산하면 다음 Page가 나온다. 프레임을 쌓은 뒤 Page 안에 들어온 RSP에 같은 계산을 적용하는 경우와 다르다.
+
+이 4 KiB Page의 아래쪽에는 `struct thread`, 위쪽에는 아래로 자라는 Kernel Stack이 있다. `setup_stack()`이 `USER_STACK` 아래에 준비하는 User Stack은 별도의 Mapping이다. 사용자 Stack의 시작과 확장은 [실행 파일 적재](/wiki/computer-systems-network-topic-a6a32eb78db0/)와 [Page Fault](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 이어서 확인한다.
+
+아래 C 예제는 TSS와 같은 배치의 구조체를 만들고 주소를 계산한다. 일곱 IST 필드는 배열로 표현했다. 커널 메모리를 할당하거나 실제 TR·RSP를 바꾸는 프로그램은 아니며, 주소는 계산을 위한 값이다.
+
+```run-c
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+
+struct Tss {
+    uint32_t reserved1;
+    uint64_t rsp0, rsp1, rsp2, reserved2;
+    uint64_t ist[7];
+    uint64_t reserved3;
+    uint16_t reserved4, iomb;
+} __attribute__((packed));
+
+int main(void) {
+    _Static_assert(sizeof(struct Tss) == 104, "TSS size");
+    _Static_assert(offsetof(struct Tss, rsp0) == 4, "RSP0 offset");
+    _Static_assert(offsetof(struct Tss, ist) == 36, "IST1 offset");
+    _Static_assert(offsetof(struct Tss, iomb) == 102, "I/O bitmap offset");
+
+    const uint64_t thread = UINT64_C(0x8004200000);
+    const uint64_t page_mask = ~UINT64_C(0xfff);
+    struct Tss tss = {.rsp0 = thread + 4096};
+    uint64_t frame = tss.rsp0 - 192;
+    printf("TSS=%zu, rsp0=%zu, IST1=%zu, iomb=%zu\n",
+           sizeof tss, offsetof(struct Tss, rsp0),
+           offsetof(struct Tss, ist), offsetof(struct Tss, iomb));
+    printf("thread=0x%llx, rsp0=0x%llx, frame=0x%llx\n",
+           (unsigned long long)thread, (unsigned long long)tss.rsp0,
+           (unsigned long long)frame);
+    printf("page(top)=0x%llx, page(top-8)=0x%llx\n",
+           (unsigned long long)(tss.rsp0 & page_mask),
+           (unsigned long long)((tss.rsp0 - 8) & page_mask));
+    assert((tss.rsp0 & page_mask) == thread + 4096);
+    assert(((tss.rsp0 - 8) & page_mask) == thread);
+    assert(frame == thread + 0xf40);
+    return 0;
+}
+```
+
+출력:
+
+```text
+TSS=104, rsp0=4, IST1=36, iomb=102
+thread=0x8004200000, rsp0=0x8004201000, frame=0x8004200f40
+page(top)=0x8004201000, page(top-8)=0x8004200000
+```
+
+전체 TSS 구조체는 104바이트이고 `rsp0`의 Offset은 4다. 같은 Thread Page에서 192바이트 프레임을 쌓으면 시작 위치는 Page 안의 `0xf40`이 된다. 실제 Stack에는 C 호출의 복귀 주소와 지역 변수도 들어가므로 이 값만으로 전체 사용량을 측정할 수는 없다.
+
+Stack 사용량을 살필 때는 먼저 알고 있는 Thread 주소와 현재 RSP가 같은 Kernel Page에 있는지 확인한다. 그 조건에서 `top - RSP`는 꼭대기부터 사용한 바이트 수이고, `RSP - (thread 주소 + sizeof(struct thread))`는 Thread 구조체 위에 남은 공간이다. User Stack이나 IRQ의 별도 Stack에 멈춘 상태에는 이 계산을 그대로 적용하지 않는다.
+
+RSP가 Thread 구조체 영역까지 내려오면 그 안의 상태를 훼손할 수 있다. 이 구현은 `magic`을 `THREAD_MAGIC`, 즉 `0xcd6abf4b`와 비교해 손상을 확인한다. 이 검사는 주소 접근 자체를 막는 Guard Page와 다르다. Linux의 `CONFIG_VMAP_STACK`은 지원하는 Architecture에서 Guard Page를 둔 Stack을 사용한다. [PintOS의 Magic 검사](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c#L20-L24), [Linux의 Stack과 Guard Page](https://docs.kernel.org/mm/vmalloced-kernel-stacks.html)
+
+### TSS 갱신 전후를 비교할 때
+
+`schedule()`은 실제 `thread_launch()` 전에 `process_activate(next)`를 호출한다. 이 함수는 다음 Page Table을 활성화한 뒤 TSS를 갱신한다. 따라서 전환 중간에는 아직 이전 Thread의 Stack에서 실행하면서 TSS는 다음 Thread를 가리킬 수 있다. 어느 명령에서 멈췄는지 확인하지 않고 두 값의 차이만으로 버그를 판단하면 정상적인 전환을 잘못 해석한다. [Scheduler의 순서](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c#L779-L809), [주소 공간과 TSS 활성화](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c#L729-L733)
+
+TSS를 갱신했다고 다음 Thread가 실행되는 것은 아니다. 실행 상태의 저장과 복원은 앞에서 살펴본 `thread_launch()`와 `do_iret()`가 맡는다. 이 PintOS의 전역 TSS 한 개를 쓰는 구성을 여러 CPU가 공유하는 설계로 그대로 확대해서는 안 된다. Linux는 CPU별 TSS와 진입 상태를 둔다.
+
+GDB에서는 `tss_update`의 `next`와 대입 전 `tss->rsp0`를 기록하고, 대입을 지난 뒤 새 값을 비교한다. 시스템 콜 진입에서는 현재 빌드의 Stack 교체 명령을 찾아 그 전후 RSP를 읽는다. 고정된 `syscall_entry+18`이나 명령 세 개라는 가정을 쓰기보다 `disassemble /r syscall_entry`로 실제 순서를 확인한다. `__do_fork()`는 자식 Thread에서 실행하므로 그 위치의 현재 Thread를 부모라고 기록해서도 안 된다.
+
+인터럽트가 어디서 왔는지는 Handler 안의 현재 CS가 아니라 저장된 Frame의 CS로 확인한다. Ring 0 Handler에 도착한 뒤의 현재 CS만 보고 User에서 온 IRQ를 분류할 수는 없다. 이 관찰 절차는 새 GDB 실행 기록이 아니며, TSS와 예상 Stack이 다를 때도 중단 위치·포인터 계산·메모리 손상을 함께 조사해야 한다.
+
+### Linux와 QEMU가 TSS를 사용하는 위치
+
+Linux v6.12의 일반 x86-64 경로는 PintOS처럼 모든 Thread 전환에서 TSS의 `sp0`를 해당 Thread Stack으로 바꾼다고 설명할 수 없다. `__switch_to()`는 `pcpu_hot.top_of_stack`을 갱신하며, `update_task_stack()`에서 `load_sp0()`를 호출하는 64비트 분기는 FRED가 꺼진 Xen PV 조건에 있다. 기존 진입 경로의 일정한 진입용 Stack과 Thread Stack을 구분해야 한다. [Thread별 Stack 위치 갱신](https://github.com/torvalds/linux/blob/v6.12/arch/x86/kernel/process_64.c), [sp0와 Xen PV 조건](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/switch_to.h#L60-L70)
+
+QEMU v10.0.0의 `helper_ltr()`는 Guest GDT의 TSS Descriptor를 읽어 `env->tr`에 Base·Limit·속성을 넣고 GDT 쪽에 Busy Bit를 기록한다. `get_rsp_from_tss()`는 이 Base에 Offset을 더해 Guest 메모리에서 Stack Pointer를 읽는다. 권한 전환이면 해당 CPL의 RSP를, IST가 지정됐으면 해당 IST 칸을 사용한다. Base를 Guest 물리 주소나 Host 포인터로 해석하지 않는다. [TR 적재와 TSS 읽기](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/seg_helper.c)
+
+이 TSS 접근은 Page Table의 주소 변환을 대신하지 않는다. 인터럽트의 Stack 선택과 저장 Frame은 [Interrupt](/wiki/computer-systems-network-topic-c19e34701c6c/#cpu와-assembly가-함께-만드는-frame)에서, SYSCALL 명령 뒤 PintOS가 직접 RSP를 바꾸는 과정은 [시스템 콜](/wiki/computer-systems-network-topic-3cc26725c1cb/#진입-주소에-도착해도-스택은-아직-사용자-것이다)에서 이어서 읽는다.
 
 ## 복귀 직전과 직후를 비교하기
 
