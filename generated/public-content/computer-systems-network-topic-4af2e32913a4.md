@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: ece0a728374f8500daf920cc0cfd9e780db6b84a50d476848908572a3d8409d0
+projection_sha256: 596a4de36a5579f38379beae6ee2dda8bacb53c213a610c4097cea8ba18381a1
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -223,7 +223,15 @@ PTE의 W=0은 현재 쓰기를 막는다는 뜻이다. 읽기 전용 코드처�
 
 W11 작업본의 `vm_frame_add_owner()`는 Page와 Thread를 담은 owner 항목을 추가하고 참조 수를 늘린다. `vm_frame_remove_owner()`는 해당 항목을 제거하고 대표 `page/owner_thread`를 남은 소유자로 갱신한다. Page를 파괴할 때도 해당 매핑과 owner를 먼저 제거하고, 참조가 남으면 Frame을 유지한다. Page 파괴로 마지막 참조가 사라지면 Frame도 해제된다. 이 owner 관리는 W11 작업본의 `pintos/vm/vm.c`와 `pintos/include/vm/vm.h`에 구현되어 있다.
 
+W11의 `8712916`에서는 swap된 부모 Page를 fork할 때 자식 Page를 `vm_claim_page()`로 준비하고, 부모 슬롯의 데이터를 `disk_read()`로 읽었다. 다음 커밋 `f90c5d9`는 이 분기를 ANON 상태 복사와 `swap_slot_ref()`로 바꿨다. 이 변경으로 해당 Page의 데이터 읽기가 fork 이후의 접근 시점으로 미뤄졌다. [W11의 swapped Page 복제 변경](https://github.com/Jungle-12-303/wk11_7/commit/f90c5d9eb2913e17b396c59d23a257fe52e5f34c)
+
+swap된 Page를 복제하는 `anon_copy()` 분기는 자식의 `operations`를 `anon_ops`에 연결한 뒤 `dst_page->anon = src_page->anon`을 수행한다. `struct page`의 union 안에는 `struct anon_page anon`이 값 필드로 들어 있으므로, 이 대입은 `swapped`와 `swap_idx` 값을 복사한다. 부모와 자식은 서로 다른 Page 객체를 가지면서 같은 슬롯 번호로 저장 데이터를 참조한다. 각 Page의 타입에 맞는 union 멤버를 읽는 기준은 [SPT의 Page 상태 관찰](/wiki/computer-systems-network-topic-aa5da5d73167/#gdb에서-두-상태를-나란히-확인한다)에서 확인할 수 있다.
+
 W11 작업본의 공유 익명 Frame을 swap-out하면 내용을 슬롯 하나에 기록하고 소유 Page들에 같은 슬롯을 남긴다. 각 매핑을 끊은 뒤 Frame 공유 대신 슬롯 참조 수로 저장 데이터의 수명을 관리한다. 이미 swap된 Page를 fork할 때도 슬롯 참조가 하나 늘어난다. 나중에 각 Page가 claim·swap-in될 때는 별도 Frame으로 내용을 읽고 슬롯 참조를 줄이며, 마지막 참조가 사라져야 슬롯을 반환한다. 데이터 복사는 각 Page의 claim 시점까지 미뤄진다. [기준 커밋의 슬롯 수명 관리](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c)
+
+공유 중인 resident Page를 읽는 동안에는 Frame을 그대로 사용하지만, swap된 Page에서는 유효한 읽기 접근도 not-present fault를 일으켜 별도 Frame으로 복원한다. 예를 들어 A와 B가 슬롯 5를 참조하던 중 B가 읽으면, B의 Page만 Frame에 올라오고 슬롯의 참조 수는 2에서 1로 줄어 A의 복구 데이터가 남는다. 한쪽의 참조 해제 뒤에도 슬롯을 유지하고 마지막 참조에서 반환하는 조건은 [Swap의 기존 수명 모델](/wiki/computer-systems-network-swap-11630540adf8/#cow의-frame-공유와-slot-공유)로 확인할 수 있다.
+
+W11 작업본의 `anon_swap_out()`은 데이터를 저장한 뒤 `list_pop_front(&frame->owners)`로 owner 연결을 하나씩 꺼낸다. 각 Page에 `swapped=true`와 같은 `swap_idx`를 기록하고 `page->frame=NULL`로 바꾼 다음, 해당 PTE를 지우고 owner 객체를 해제한다. Page 객체는 SPT에 남아 슬롯 위치를 기억한다. 저장과 매핑 정리가 성공하면 `vm_evict_frame()`이 그 victim Frame을 반환해 다른 Page에 재사용하므로, `page->frame=NULL`은 이전 Page와 Frame의 연결이 끊겼다는 뜻이다.
 
 이와 달리 현재 학습 레포의 swap 메타데이터는 `swap_slot/in_swap`이고, 공유 Frame은 교체 후보에서 제외한다. 앞의 VM 복제 경계에서 확인한 Lazy·Swap·VM_FILE의 제한도 그대로 적용된다. W11의 타입별 `file_copy()`·`uninit_copy()`는 소스에서 확인했으며, 파일·Lazy 복제의 실행 검증은 별도로 필요하다. [현재 교체 조건](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [W11의 타입별 분기](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/vm.c)
 

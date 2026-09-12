@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3cc26725c1cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3cc26725c1cb
-projection_sha256: b799081f82ec662d4afcd040b5622df1b45475f2d10e85e074a9307a0e3dc8f0
+projection_sha256: 747fe1c999f08a1e3dd9b97051ae119356e5fdcbbf9eacca6c63ea726d980df9
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -38,6 +38,8 @@ ancestor: CS 기초
 사용자 프로그램이 파일에 쓰려면 커널에 파일과 장치 처리를 요청해야 한다. 시스템 콜은 이 요청의 번호·인자·반환값을 약속한 인터페이스다. 커널에 들어오는 CPU 명령과, 들어온 뒤 번호에 맞는 기능을 실행하는 Dispatch는 서로 다른 단계다.
 
 PintOS의 `write(fd, buffer, size)`를 따라가면 사용자 Wrapper가 RAX에 번호 10을, RDI·RSI·RDX에 세 인자를 놓는다. `syscall3`의 3은 인자 개수다. `SYSCALL`이 `syscall_entry`로 진입하면 Assembly가 Kernel Stack으로 옮겨 Frame을 만든 뒤 `syscall_handler()`를 호출한다. [사용자 Wrapper](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/lib/user/syscall.c)
+
+이 Wrapper의 inline asm 앞에는 `asm("rdi")`, `asm("rsi")`처럼 사용할 Register를 지정한 지역 변수 선언이 있다. `halt`는 인자가 없어 `syscall0`, `exit(status)`는 인자가 하나여서 `syscall1`, `mmap`은 다섯 인자를 넘기는 `syscall5`를 사용한다. 매크로 이름의 숫자와 RAX에 넣는 syscall 번호는 서로 다른 값이다.
 
 ## 진입 주소에 도착해도 스택은 아직 사용자 것이다
 
@@ -81,7 +83,7 @@ case SYS_WRITE:
 
 ## 번호와 인자 규약
 
-인자는 차례로 RDI, RSI, RDX, **R10**, R8, R9를 사용한다. 일반적인 x86-64 C 함수 호출의 네 번째 인자인 RCX와 혼동하기 쉽다. `SYSCALL`이 RCX를 복귀 RIP 저장에 사용하므로, 이 시스템 콜 규약의 네 번째 인자는 R10이다.
+인자는 차례로 RDI, RSI, RDX, **R10**, R8, R9를 사용한다. System V AMD64 ABI를 따르고 정수나 포인터 인자 여섯 개를 받는 C 함수에서는 네 번째 인자가 RCX에 놓이므로 혼동하기 쉽다. `SYSCALL`이 RCX를 복귀 RIP 저장에 사용하므로, 이 시스템 콜 규약의 네 번째 인자는 R10이다.
 
 Linux의 일반 함수 인자 규약과 시스템 콜 인자 규약을 이어 주는 코드에서도 호출 형태를 구분해야 한다. 이름이 정해진 wrapper의 네 번째 인자는 RCX에서 R10으로 옮길 수 있다. 반면 glibc 2.40의 `syscall(number, arg1, ..., arg6)`는 번호 자체가 첫 C 인자라 모든 위치가 한 칸씩 밀린다. 이 함수에서는 RDI의 번호를 RAX로, R8의 arg4를 R10으로 옮기고 arg6는 스택에서 읽는다. [일반 syscall 함수](https://github.com/bminor/glibc/blob/glibc-2.40/sysdeps/unix/sysv/linux/x86_64/syscall.S), [이름별 wrapper 규약](https://github.com/bminor/glibc/blob/glibc-2.40/sysdeps/unix/sysv/linux/x86_64/sysdep.h)
 
@@ -93,7 +95,7 @@ Linux의 커널 반환값과 libc가 애플리케이션에 주는 오류 표현�
 |---|---|---|---|
 | 0 | `SYS_HALT` | 없음 | 시스템 전원 종료 |
 | 1 | `SYS_EXIT` | status | 프로세스 종료, 원래 호출 위치로 돌아오지 않음 |
-| 2 | `SYS_FORK` | thread_name | 자식 tid 또는 실패값 |
+| 2 | `SYS_FORK` | thread_name | 부모는 자식 tid 또는 실패값, 자식은 0 |
 | 3 | `SYS_EXEC` | cmd_line | 성공하면 새 프로그램으로 진입, 실패하면 `exit(-1)` |
 | 4 | `SYS_WAIT` | tid | 자식 종료 상태 또는 -1 |
 | 5 | `SYS_CREATE` | file, initial_size | 성공 여부 |
@@ -156,6 +158,10 @@ unimplemented SYS_DUP2 returns unchanged RAX=22
 
 같은 64비트 RAX도 반환형에 따라 해석이 달라진다. 예제는 -1의 비트 패턴을 C `int` 반환형으로 읽는 과정을 따로 보여 준다. 마지막의 22는 DUP2 성공값을 흉내 낸 것이 아니라, 결과를 쓰지 않는 현재 `default` 분기의 문제를 표현한 것이다.
 
+RAX·EAX·AX는 독립된 저장소가 아니라 같은 Register의 서로 다른 범위다. EAX에 쓰면 RAX 상위 32 Bit가 0이 되는 규칙과 좁은 반환형의 해석을 구별해야 한다. 겹치는 범위와 값 변화는 [CPU의 Register 설명](/wiki/computer-systems-network-cpu-4b05d739f0f6/#같은-register의-다른-크기)에서 확인할 수 있다.
+
+일반 함수의 반환값은 System V AMD64 ABI의 반환형 분류에 따라 전달된다. INTEGER 부분에는 RAX·RDX를, SSE 부분에는 XMM0·XMM1 등을 사용한다. MEMORY로 분류되면 호출자가 준비한 결과 공간의 주소를 RDI로 넘기고, 함수는 그 주소를 RAX로 돌려준다. 따라서 크기가 16바이트 이하인 구조체가 언제나 RAX:RDX로 반환된다고 판단할 수 없다. 크기뿐 아니라 필드의 타입과 ABI 분류를 함께 읽어야 한다. [AMD64 ABI의 반환형 분류](https://gitlab.com/x86-psABIs/x86-64-ABI/-/blob/ab2062ad5653913c39124548943b1177330e34c8/x86-64-ABI/low-level-sys-info.tex#L746-774)
+
 ## 사용자 주소와 Kernel Buffer 사이
 
 사용자가 선택할 수 있는 것은 커널이 제공한 요청 번호와 인자이며, LSTAR에 설정된 진입 주소를 호출마다 지정하는 것이 아니다. 이 제어 흐름과 메모리 접근 권한, 진입 후의 인자 검사를 함께 봐야 보호 경계를 설명할 수 있다. 예외나 하드웨어 인터럽트도 커널 진입을 일으키므로 시스템 콜만이 모든 커널 진입의 유일한 경로라고 설명하지 않는다. `read()`처럼 사용자 메모리에 데이터를 쓰는 호출은 RAX 외에도 결과를 전달한다.
@@ -204,9 +210,15 @@ TCG 번역 코드의 `gen_SYSCALL()`·`gen_SYSRET()`는 각각 helper 호출을 
 
 Linux v6.12의 x86-64 경로는 `do_syscall_64()`에서 `x64_sys_call()`로 이어지고, 후자는 생성된 `case`를 넣은 `switch`를 사용한다. 같은 파일의 `sys_call_table[]`은 Trace용 주소 조회에 남아 있다. 번호 자료도 `asm-offsets.h`의 구조체 Offset과 구분해야 한다. [x86-64 진입 처리](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/common.c), [v6.12 Dispatch](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/syscall_64.c)
 
-ABI의 번호는 OS와 아키텍처별로 다르다. Linux x86-64의 write 번호 1을 PintOS에 그대로 적용할 수 없다. QEMU의 system emulation은 Guest 커널 대신 그 번호 체계를 정하지 않으며, Host 서비스를 호출하는 user emulation의 syscall 변환과도 구별된다.
+이 경로의 `__x64_sys_*`는 `const struct pt_regs *` 하나를 받는다. `SC_X86_64_REGS_TO_ARGS`가 저장된 `di·si·dx·r10·r8·r9` 필드를 인자로 풀어 `__se_sys_*`에 넘기고, 타입 변환을 거쳐 `__do_sys_*`의 본문으로 이어진다. 저장된 `regs->r10`이 이후 C 함수의 네 번째 인자가 되는 과정이다. 중간 함수가 실제 호출로 남는지, 어느 Register에 값을 읽는지는 컴파일 결과에 따라 달라진다. [Linux v6.12의 syscall Wrapper](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/syscall_wrapper.h#L12-L55)
+
+ABI의 번호는 OS와 아키텍처별로 다르다. Linux x86-64의 read와 write 번호는 각각 0과 1이지만, 이 PintOS에서는 9와 10이다. [Linux의 번호 정의](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/syscalls/syscall_64.tbl#L12-L13) QEMU의 system emulation은 Guest 커널 대신 그 번호 체계를 정하지 않으며, Host 서비스를 호출하는 user emulation의 syscall 변환과도 구별된다.
 
 Linux v6.12의 진입 assembly는 `swapgs`로 CPU별 자료에 접근하고 사용자 RSP를 `TSS_sp2`에 임시 저장한 뒤 `pcpu_hot.X86_top_of_stack`에서 커널 RSP를 읽는다. 이 순서를 PintOS의 `tss->rsp0` 읽기와 같은 코드로 그리지 않는다. PTI가 활성화된 환경에서는 진입·복귀 때 사용자용과 커널용 페이지 테이블도 전환한다. CPU 명령이 자동으로 스택과 CR3를 모두 바꾸는 것은 아니다. [v6.12 진입 assembly](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/entry_64.S), [PTI의 적용 조건](https://docs.kernel.org/6.12/arch/x86/pti.html)
+
+이 진입 코드가 `pt_regs`를 만들 때 원래 RAX의 번호는 `orig_ax`에 따로 저장한다. 반환용 `ax`에는 우선 `-ENOSYS`를 놓으므로, 저장된 원래 번호와 사용자에게 돌려줄 값은 같은 필드가 아니다. PintOS의 `intr_frame`에는 이 `orig_ax` 필드가 없으며 현재 Handler는 번호를 읽은 `f->R.rax`에 반환값을 쓴다. [Linux v6.12의 번호 보존과 반환값 초기화](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/entry_64.S#L100-L109)
+
+두 구조체의 크기도 다르다. Linux v6.12의 x86-64 `pt_regs` 선언은 8바이트 칸 21개로 168바이트다. PintOS의 `gp_registers`는 120바이트이고, 이를 포함하는 `intr_frame` 전체는 앞서 살펴본 192바이트다. 구조체 이름만 보고 같은 배치나 Offset을 적용하면 다른 필드를 읽게 된다. [Linux의 `pt_regs` 선언](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/ptrace.h#L97-L160)
 
 번호를 dispatch하기 전에는 설정과 실행 상태에 따라 tracing·audit·seccomp가 개입할 수 있다. seccomp는 번호·아키텍처·직접 전달된 인자 등을 기준으로 호출을 걸러 노출되는 기능을 줄이지만, 포인터가 가리키는 데이터를 검증하는 일을 대신하지는 않는다. [진입 부가 처리](https://github.com/torvalds/linux/blob/v6.12/kernel/entry/common.c), [seccomp 필터의 범위](https://docs.kernel.org/6.12/userspace-api/seccomp_filter.html)
 
@@ -240,7 +252,11 @@ p/x $call->R.r8
 p/x $call->rsp
 ```
 
+WRITE 호출만 관찰하려면 위 `tbreak *syscall_handler` 명령 뒤에 `if ((struct intr_frame *)$rdi)->R.rax == 10`을 붙인다. Buffer 내용은 저장된 RSI가 가리키는 주소의 매핑과 요청한 크기를 확인한 뒤 읽는다. `fork`의 부모와 자식이 서로 다른 RAX를 받는 과정은 [프로세스 생성의 Frame 전달](/wiki/computer-systems-network-topic-4af2e32913a4/#부모의-user-문맥을-자식에게-전달한다)에서 이어서 살펴볼 수 있다. [GDB의 Breakpoint 조건](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Conditions.html)
+
 먼저 번호를 확인한 뒤 그 호출에서 의미가 있는 인자만 해석한다. 반환값 대입문을 지난 위치에서는 같은 Frame의 RAX를 다시 읽는다. `exec()`나 `exit()`처럼 복귀하지 않는 호출에 무조건 `finish`를 적용하지 않는다. `validate_user_buffer`, `copy_in_string`, `filesys_lock`의 획득·해제 위치도 함께 살피면 주소 검증과 파일 연산의 순서를 확인할 수 있다.
+
+C Handler 실행 중의 CPU RAX는 임시 계산에 쓰일 수 있으므로, 저장한 번호나 결과는 `$call->R.rax`에서 확인한다. 출력 형식에 따라서도 같은 비트 패턴이 다르게 보인다. 모든 비트가 1인 64비트 값을 `p/x`로 읽으면 `0xffffffffffffffff`이고, 부호 있는 10진수 형식인 `p/d`로 읽으면 -1이다. [GDB의 출력 형식](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output-Formats.html) QEMU의 Guest Register와 GDB Register 번호의 연결은 [QEMU의 GDB 연결](/wiki/computer-systems-network-qemu-b1366076be02/#gdb-번호와-regs-배열의-번호)에서 이어서 확인할 수 있다.
 
 그 위치에서 `p sizeof(struct intr_frame)`로 192바이트 배치를 확인하고, `$call->rsp`와 `$user_sp`, `$call->rip`와 `$return_ip`, `$call->eflags`와 `$return_flags`를 비교한다. `x/5gx &$call->rip`는 RIP·CS·RFLAGS·RSP·SS 다섯 칸을 읽는다. `R.rcx`나 `R.r11`을 같은 값으로 기대하지 않는다. 복귀 명령을 관찰할 때는 현재 빌드의 `disassemble syscall_entry` 또는 `disassemble do_iret`로 주소를 찾는다. 소스 줄 번호나 고정된 `함수+offset`은 다른 빌드에 그대로 적용하지 않는다.
 
