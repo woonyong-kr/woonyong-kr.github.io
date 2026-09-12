@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: 5bd2820fbd352d1ba03a7be4b49947da0a65542cbb2848c7f9e213adca3a0622
+projection_sha256: ece0a728374f8500daf920cc0cfd9e780db6b84a50d476848908572a3d8409d0
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -23,6 +23,13 @@ search_terms:
 - duplicate_pte
 - page_get_type
 - spt_copy_uninit_page
+- Copy-on-Write
+- COW
+- cow-simple
+- vm_handle_wp
+- spt_copy_cow_page
+- anon_copy
+- frame_owner
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -163,6 +170,114 @@ Swap에 있는 ANON Page도 따로 살펴봐야 한다. 현재 분기에서 Fram
 non-VM에서 User Page가 10개라면 데이터 복사량은 `10 × 4096 = 40960`바이트다. 여기에 Page Table·자식 Thread Page·fd Table·상태 객체의 할당이 더해진다. 데이터 Page 수에 비례하는 복사 비용만으로 fork 전체의 정확한 시간 복잡도나 실제 실행 시간을 설명하지 않는다. Lazy·Swap·공유 Frame이 섞인 VM 경로에는 같은 복사량 공식을 그대로 적용할 수 없다.
 
 GDB에서 `duplicate_pte()`를 세면 callback 진입 수이며, 그중 할당·매핑까지 성공한 Page 수와 다를 수 있다. memcpy 뒤의 데이터를 확인하려면 부모·자식 포인터를 유효한 시점에 GDB 변수로 저장하고 현재 소스 줄에서 관찰한다. `finish`로 함수를 빠져나온 뒤 이미 사라진 지역 변수 `newpage`를 그대로 읽지 않는다. 첫 8바이트가 같다는 것만으로 4096바이트 전체가 같다는 결론도 내리지 않는다.
+
+## 첫 쓰기까지 Frame 복사를 미룬다
+
+부모와 자식이 같은 데이터를 읽기만 하거나 자식이 곧 `exec()`를 호출한다면, fork 때 모든 데이터 Page를 복사하는 일은 낭비가 될 수 있다. Copy-on-Write(COW)는 사적으로 쓸 메모리의 내용을 처음에는 공유하고, 쓰기로 내용이 달라질 때 필요한 복사본을 만든다. 자식의 Kernel Stack과 Page Table, SPT Entry는 각각 따로 만든다.
+
+부모와 자식의 writable Page가 Frame A를 공유한다고 하자. 양쪽 PTE의 W를 내리되 SPT의 `page->writable=true`는 유지한다. 이때도 읽기는 가능하다. 먼저 쓰는 쪽이 자식이면 Frame B를 만들어 A의 내용을 복사하고 자식의 PTE만 B에 연결한다. 부모가 먼저 쓰는 경우에는 부모 쪽이 사본을 받는다. **공유 상태에서 먼저 쓰는 쪽**이 사본을 받는다.
+
+다음 표는 두 프로세스가 Page 하나를 공유하고 정상적으로 복구하는 경우의 상태 변화다. A·B는 상태 변화를 설명하기 위한 Frame 식별자다.
+
+| 시점 | 부모의 매핑 | 자식의 매핑 | 참조 수와 내용 |
+|---|---|---|---|
+| fork 전 | A, W=1 | 없음 | A의 참조 수 1 |
+| fork 후 | A, W=0 | A, W=0 | A의 참조 수 2, 같은 바이트를 읽음 |
+| 자식의 첫 쓰기 후 | A, W=0 | B, W=1 | A와 B 각각 1, 자식의 변경은 B에만 남음 |
+| 이후 부모가 쓰기 | A, W=1 | B, W=1 | A를 더 공유하지 않으므로 복사 없이 권한 복원 |
+
+자식의 종료나 `exec`로 공유 매핑이 사라져 참조가 하나 남으면, read-only였던 부모 PTE는 그대로 남는다. 학습 레포와 W11 작업본은 부모의 다음 쓰기에서 남은 참조를 보고 W를 복원할 수 있다. 프로세스가 셋 이상이면 어느 Page가 빠졌는지와 각 Frame의 남은 참조를 같은 방식으로 추적해야 한다.
+
+### 같은 쓰기 보호 위반도 모두 COW는 아니다
+
+PTE의 W=0은 현재 쓰기를 막는다는 뜻이다. 읽기 전용 코드처럼 원래 쓰기를 허용하지 않은 Page와 COW 때문에 잠시 막은 Page를 구별하려면 OS의 권한 정보가 더 필요하다. 아래에서 `page->writable`은 원래 허용한 접근, PTE의 W는 현재 매핑의 접근 조건이다.
+
+| SPT의 쓰기 허용 | 현재 매핑과 Frame | 쓰기 보호 위반 처리 |
+|---|---|---|
+| false | 읽기 전용 Page | COW로 쓰기를 허용하지 않음 |
+| true | 유효한 resident Frame, 참조 수 > 1 | 별도 Frame에 복사하고 쓰기 가능하게 연결 |
+| true | 유효한 resident Frame, 참조 수 = 1 | 같은 Frame의 쓰기 권한만 복원 |
+| 어느 값이든 | 주소·SPT Entry·Frame을 확인할 수 없음 | 정상 COW 복구로 취급하지 않음 |
+
+예를 들어 상위 상태 비트를 생략한 4KiB PTE `0x12345007`에서 W(`0x2`)를 끄면 `0x12345005`다. 기본적인 사용자 데이터 쓰기가 이 보호에 막히면 Page Fault 오류 코드가 `0x7`일 수 있다. 오류 코드의 P는 보호 위반, W는 쓰기 접근, U는 사용자 접근을 나타낸다. **PTE의 0x5와 오류 코드의 0x7은 서로 다른 정보를 담는다.** COW 복구 여부는 앞의 SPT·Frame 조건까지 확인해 결정한다.
+
+이 숫자는 최종 PTE에만 초점을 둔 예다. 실제 사용자 쓰기 권한은 상위 Page Table Entry에도 영향을 받으며, Supervisor 쓰기는 CR0.WP 등의 조건을 확인해야 한다. TLB에 유효한 변환 정보가 있으면 Page Walk를 다시 수행하지 않고 그 정보를 사용한다. 주소 폭·NX와 TLB, 권한 조합별 실행 예제는 [Paging의 기존 PTE·COW 판별 예제](/wiki/computer-systems-network-topic-dbd836d1a044/#오류-코드는-접근의-종류를-설명한다)에서 이어진다. PTE의 bit 63–12에는 NX처럼 주소가 아닌 비트도 있으므로, 물리 주소를 추출할 때는 주소 폭과 각 비트의 의미를 함께 확인해야 한다.
+
+### 현재 학습 레포와 W11 작업본은 소유권을 다르게 기록한다
+
+본문의 기본 코드 기준은 `lrn-pintos@5afaa6d`다. 비교한 W11 checkout은 `Jungle-12-303/wk11_7@09390dd`를 기준으로 하며, VM 관련 네 파일에 미커밋 변경이 있다. 아래에서 **W11 작업본**은 이 네 파일의 변경을 포함한 상태를 가리킨다.
+
+`anon_copy()`, 타입별 `page_operations.copy`, `swap_slot_ref/unref`는 W11의 기준 커밋에 이미 있다. 로컬 변경은 여기에 `frame_owner/owners`와 대표 소유자 갱신, 모든 소유자의 매핑을 끊는 공유 Frame의 swap-out 처리를 더한다. [W11 기준 커밋의 anon_copy·슬롯 참조](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c)
+
+| 확인 지점 | lrn-pintos@5afaa6d | W11 로컬 작업본, 09390dd 기반 |
+|---|---|---|
+| 상주 익명 Page 복제 | `supplemental_page_table_copy → spt_copy_cow_page` | 타입별 `page_operations.copy → anon_copy` |
+| Frame의 공유 추적 | `ref_count`와 대표 `page/owner_thread` | `ref_count`, `owners` 목록과 대표 소유자 |
+| 사본으로 이동 | 복사 뒤 기존 참조 수를 줄이고 `vm_remap_page` 호출 | 새 owner 추가·매핑 성공 뒤 기존 owner 제거 |
+| 공유 Frame의 교체 | 참조 수가 1인 Frame만 교체 후보 | 소유자별 매핑을 추적하여 공유 익명 Frame의 swap-out 처리 |
+| swap 상태의 복제 | 부모 swap 내용을 복사하는 분기를 이 코드에서 확인할 수 없음 | 같은 슬롯 정보를 복제하고 `swap_slot_ref`로 슬롯 참조 증가 |
+
+현재 학습 레포는 상주 익명 Page를 위한 자식 SPT Entry를 만들고 부모와 자식의 PTE를 같은 Frame에 read-only로 연결한 뒤 `ref_count`를 증가시킨다. 쓰기 보호 위반은 `page_fault → vm_try_handle_fault → vm_handle_write_protect_fault → vm_handle_wp`로 이어진다. 주소와 SPT·Frame을 확인하고 `page->writable`이 true이면 `vm_handle_cow`가 복사와 재사용을 나눈다. not-present 접근은 Lazy·Swap·Stack의 준비 경로로 보낸다. [현재 fork·fault 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [예외 분류](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/exception.c)
+
+`vm_copy_cow_page()`는 새 Frame을 얻고 `PGSIZE` 바이트를 복사한다. `vm_remap_page()`는 현재 매핑을 지운 뒤 새 Frame 또는 기존 Frame을 writable로 설치한다. 복구한 Page Fault에서 돌아오면 fault를 낸 명령을 다시 실행한다. 복사는 원래 내용을 보존하고, 재실행된 store가 새 Frame의 첫 바이트를 바꾼다. 설명용 주소 A=`0x12345000`, B=`0x23456000`을 쓰는 단순한 PTE 예라면 자식의 매핑은 `0x12345005`에서 `0x23456007`로 바뀐다.
+
+W11 작업본의 `vm_frame_add_owner()`는 Page와 Thread를 담은 owner 항목을 추가하고 참조 수를 늘린다. `vm_frame_remove_owner()`는 해당 항목을 제거하고 대표 `page/owner_thread`를 남은 소유자로 갱신한다. Page를 파괴할 때도 해당 매핑과 owner를 먼저 제거하고, 참조가 남으면 Frame을 유지한다. Page 파괴로 마지막 참조가 사라지면 Frame도 해제된다. 이 owner 관리는 W11 작업본의 `pintos/vm/vm.c`와 `pintos/include/vm/vm.h`에 구현되어 있다.
+
+W11 작업본의 공유 익명 Frame을 swap-out하면 내용을 슬롯 하나에 기록하고 소유 Page들에 같은 슬롯을 남긴다. 각 매핑을 끊은 뒤 Frame 공유 대신 슬롯 참조 수로 저장 데이터의 수명을 관리한다. 이미 swap된 Page를 fork할 때도 슬롯 참조가 하나 늘어난다. 나중에 각 Page가 claim·swap-in될 때는 별도 Frame으로 내용을 읽고 슬롯 참조를 줄이며, 마지막 참조가 사라져야 슬롯을 반환한다. 데이터 복사는 각 Page의 claim 시점까지 미뤄진다. [기준 커밋의 슬롯 수명 관리](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c)
+
+이와 달리 현재 학습 레포의 swap 메타데이터는 `swap_slot/in_swap`이고, 공유 Frame은 교체 후보에서 제외한다. 앞의 VM 복제 경계에서 확인한 Lazy·Swap·VM_FILE의 제한도 그대로 적용된다. W11의 타입별 `file_copy()`·`uninit_copy()`는 소스에서 확인했으며, 파일·Lazy 복제의 실행 검증은 별도로 필요하다. [현재 교체 조건](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [W11의 타입별 분기](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/vm.c)
+
+### PTE 갱신과 실패 경로도 함께 읽는다
+
+`pml4_set_page(..., rw)`는 `rw`에 따라 W를 넣어 PTE를 기록한다. 이 함수 안에는 `invlpg`가 없다. `pml4_clear_page()`는 Present를 내리고 수정 대상이 현재 CR3의 주소 공간이면 해당 VA를 무효화한다. fork에서 부모 PTE를 read-only로 바꾸는 경로와 현재 프로세스의 COW 매핑을 clear/set하는 경로는 무효화 시점이 다르므로, 스케줄링 때의 CR3 변경까지 함께 읽어야 한다. 여기서 다루는 범위는 현재 CPU의 TLB 갱신까지다. [두 레포가 공유하는 PTE 설정 코드](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c), [기존 TLB 설명](/wiki/computer-systems-network-topic-dbd836d1a044/#pintos의-세-경로를-구분한다)
+
+새 Frame을 얻지 못하면 COW 함수는 false를 반환할 수 있다. 공유 Frame밖에 남지 않은 경우도 현재 학습 레포의 교체 제한에 걸린다. 또한 현재 코드는 기존 `ref_count`를 줄인 뒤 새 매핑을 시도하지만, W11 작업본은 매핑 성공 뒤 기존 owner를 제거한다. 매핑 실패 뒤 참조·매핑·할당 상태가 일관되는지 점검할 때는 이 순서 차이가 중요하다. 소유자가 먼저 종료하는 경우, 다중 fork, 메모리 부족과 매핑 실패는 단일 성공 사례와 별도로 검증해야 한다. [공유 Frame과 교체의 범위](/wiki/computer-systems-network-topic-163345dd1b02/#cow와-accessed-bit의-관찰-범위)
+
+### cow-simple이 확인하는 것은 한 Page의 분리다
+
+두 레포에서 같은 `tests/vm/cow/cow-simple.c`를 사용한다. 테스트는 fork 전 데이터의 앞부분을 확인하고 Frame 식별값을 저장한다. 자식에서는 첫 쓰기 전에 부모와 식별값이 같은지, `large[0] = '@'` 뒤에는 달라지는지 확인한다. 부모는 자식을 기다린 뒤 원래 식별값과 앞부분의 데이터를 유지하는지 확인한다. 이 절은 테스트 소스와 기대 파일을 바탕으로 설명한다. Kernel 테스트와 아래 GDB 명령은 이번 정리에서 실행하지 않았다. [cow-simple 소스](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/cow/cow-simple.c), [기대 출력](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/cow/cow-simple.ck)
+
+`get_phys_addr()`는 `int 0x42`로 검사 handler를 호출한다. 이 구현은 `pml4_get_page()`가 반환한 Kernel VA에 `PTE_ADDR()`를 적용해 하위 offset을 지운 값을 돌려준다. 반환값의 주소 체계는 Kernel VA이며, 테스트는 이 식별값으로 두 매핑이 같은 Frame을 가리키는지 비교한다. 문자열 비교 범위는 `strlen("Lorem ipsum")`인 11바이트다. 이 테스트가 확인하는 범위는 한 Page의 Frame 분리와 그 앞부분의 데이터 보존이다. [검사 인터럽트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/inspect.c), [주소 조회](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c)
+
+x86-64 Linux용 PintOS Compiler와 QEMU 환경을 준비했다면 저장소 루트에서 다음 명령으로 해당 테스트를 실행할 수 있다.
+
+```bash
+make -C pintos/vm check TESTS=tests/vm/cow/cow-simple
+```
+
+GDB에서 현재 학습 레포는 `spt_copy_cow_page`, W11은 `anon_copy`를 공유 시작점으로 잡는다. 두 버전 모두 `vm_handle_wp`와 `vm_copy_cow_page`에서 복구와 실제 복사를 구분할 수 있다. 다음 명령은 유효한 Page 인자가 보이는 위치에서 Frame과 참조 수를 관찰할 때 사용한다.
+
+```gdb
+break vm_handle_wp
+continue
+p page
+if page != 0 && page->frame != 0
+  p/x page->va
+  p page->writable
+  p page->frame
+  p page->frame->ref_count
+end
+```
+
+먼저 Page와 Frame이 유효한지 확인한 뒤 필드를 읽는다. `page_fault()`의 원인 변수는 초기화된 줄에서 읽고, CR2의 fault 주소와 `f->rip`의 store 명령 주소를 구별한다. 복사 전 old Frame을 GDB 변수에 보관하고 새 Frame 할당·복사·매핑 뒤의 상태를 각각 읽는다. 지역 변수는 해당 함수가 실행 중일 때, Frame 포인터는 대상이 해제되기 전까지만 관찰에 사용할 수 있다.
+
+### 줄어드는 것은 데이터 복사량이다
+
+4KiB Page 10개를 부모가 계속 유지하고 자식이 그중 3개만 수정한다고 하자. 데이터 Frame만 세면 eager copy는 총 20개, COW는 공유 7개와 부모·자식 각각의 독립 Frame 3개씩으로 총 13개다. 80KiB와 52KiB의 차이인 28KiB는 이 가정에서의 계산값이다.
+
+같은 가정에서 100개 중 10개만 쓰면 데이터 복사는 400KiB에서 40KiB로 줄어든다. 쓰기 없이 바로 exec하거나 종료하면 이 Page들의 사본을 만들지 않을 수 있다. Page Table·SPT·Thread·owner 객체의 생성과 관리, fault 처리에는 별도 비용이 든다. `100 × 8바이트`의 PTE 기록량과 `100 × 4096바이트`의 데이터 복사량은 서로 다른 작업의 양이므로, 전체 비용을 비교하려면 이 작업들과 나머지 관리 비용을 함께 측정해야 한다.
+
+비교한 W11 작업본의 `struct list`는 두 `list_elem`을 담고 각 원소는 포인터 두 개를 가진다. 포인터와 `size_t`가 8바이트인 소스 배치를 가정하면 `owners`는 32바이트, `ref_count`와의 필드 합은 40바이트다. 16,384 Frame에 이 두 필드가 있다고 가정한 합은 640KiB이고, 별도로 owner 항목당 32바이트가 더 필요하다. 이 항목은 공유 수가 1인 Frame을 등록할 때도 생길 수 있다. 실제 전체 메모리 사용량은 allocator의 관리 비용과 다른 필드·자료구조까지 포함해 측정해야 한다. [W11 목록 구조](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/include/lib/kernel/list.h)
+
+### 다른 OS의 COW와 비교할 때
+
+Linux v6.12의 `do_wp_page()`는 shared 매핑을 별도로 처리하고, private 익명 Page에서는 exclusive 상태와 folio 재사용 조건 등을 확인한다. 재사용 조건에는 참조 수와 매핑 수, 잠금·swapcache 상태 등이 함께 관여한다. 재사용할 수 없는 private Page는 `wp_page_copy()`로 이어진다. [Linux v6.12 쓰기 폴트](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L3376-L3529)
+
+KSM은 지정한 익명 영역에서 내용이 같은 Page를 찾아 쓰기 보호된 하나의 Page로 합치는 별도 기능이다. fork의 공유와 출발점은 달라도, 나중의 사적인 쓰기를 위해 분리할 필요가 있다는 점이 이어진다. PCID와 메모리 압축은 이와 목적과 동작 경로가 다른 기능이다. [Linux KSM](https://docs.kernel.org/6.12/admin-guide/mm/ksm.html)
+
+Windows의 `FILE_MAP_COPY` View에 처음 쓰면 쓰는 프로세스의 사본이 생기고 원본 파일에는 그 변경을 쓰지 않는다. 여기서 다루는 것은 파일 View의 쓰기 정책으로, Unix식 fork와는 API 범위가 다르다. Windows 비교는 공식 `FILE_MAP_COPY` 계약을 기준으로 한다. 공유·private·읽기 전용 매핑의 정책과 기존 실행 예제는 [메모리 매핑](/wiki/computer-systems-network-topic-aad7c9c2b57f/#같은-파일을-읽어도-쓰기의-의미는-달라진다)에 있다. [Microsoft FILE_MAP_COPY](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile)
+
+QEMU v10.0.0의 TCG는 Guest의 Page Table 권한을 계산하고, 거부된 사용자 쓰기를 보호 위반으로 전달한다. `PAGE_WRITE`가 허용되지 않은 경우의 분기와 오류 코드 P·W·U 조합이 여기에 있다. COW인지 판단하고 Frame을 복사하는 것은 Guest인 PintOS의 일이다. [QEMU 권한과 fault 구성](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/excp_helper.c#L344-L490)
 
 ## 성공과 실패를 한 번씩 전달한다
 

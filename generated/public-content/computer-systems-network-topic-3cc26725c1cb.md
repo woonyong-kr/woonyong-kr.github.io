@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3cc26725c1cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3cc26725c1cb
-projection_sha256: 0b7967c380a6c1115002061950cae585d589c84f37ecb33d0e5a8629b2de9da2
+projection_sha256: b799081f82ec662d4afcd040b5622df1b45475f2d10e85e074a9307a0e3dc8f0
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -20,6 +20,14 @@ search_terms:
 - filesys_lock
 - copy_in_string
 - ABI
+- SYSRET
+- intr_frame
+- LSTAR
+- FMASK
+- TSS
+- RSP
+- seccomp
+- vDSO
 grand_parent: PintOS
 ancestor: CS 기초
 ---
@@ -30,6 +38,32 @@ ancestor: CS 기초
 사용자 프로그램이 파일에 쓰려면 커널에 파일과 장치 처리를 요청해야 한다. 시스템 콜은 이 요청의 번호·인자·반환값을 약속한 인터페이스다. 커널에 들어오는 CPU 명령과, 들어온 뒤 번호에 맞는 기능을 실행하는 Dispatch는 서로 다른 단계다.
 
 PintOS의 `write(fd, buffer, size)`를 따라가면 사용자 Wrapper가 RAX에 번호 10을, RDI·RSI·RDX에 세 인자를 놓는다. `syscall3`의 3은 인자 개수다. `SYSCALL`이 `syscall_entry`로 진입하면 Assembly가 Kernel Stack으로 옮겨 Frame을 만든 뒤 `syscall_handler()`를 호출한다. [사용자 Wrapper](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/lib/user/syscall.c)
+
+## 진입 주소에 도착해도 스택은 아직 사용자 것이다
+
+`SYSCALL`은 LSTAR에 등록한 코드로 제어를 넘기지만, 사용자 포인터를 검증하거나 `intr_frame`을 만들어 주지는 않는다. RCX에는 다음 명령의 RIP가, R11에는 복귀에 쓸 플래그가 남는다. 현재 RFLAGS에서는 FMASK가 지정한 비트를 지운다. RF를 제거하는 세부 동작과 STAR의 selector 설정은 [QEMU의 CPU 상태 전환](/wiki/computer-systems-network-qemu-b1366076be02/#cpu가-정한-상태-전환)에서 확인할 수 있다.
+
+PintOS가 설정하는 FMASK는 IF·TF·DF·IOPL·AC·NT의 합인 `0x47700`이다. IF를 지워 일반적인 마스크 가능한 외부 인터럽트를 막은 상태에서 스택을 준비한다. 이것이 NMI까지 차단하거나 진입 코드 전체를 하나의 원자적 작업으로 만든다는 뜻은 아니다. 프레임을 쌓은 뒤에는 저장해 둔 사용자 IF를 확인하여 필요하면 `sti`를 실행한다. [MSR 초기화](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c), [진입 코드](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall-entry.S)
+
+커널 스택의 시작 위치는 스케줄러가 `process_activate(next)`를 거쳐 `tss_update(next)`에서 기록한 `next + PGSIZE`다. 여기서 덧셈은 바이트 주소로 변환한 스레드 주소에 한 페이지를 더한다는 뜻이다. 진입 assembly는 사용자 RSP를 RBX에 잠시 보관하고, 전역 변수 `tss`가 가리키는 구조체를 역참조한 뒤 그 안의 `rsp0`를 RSP에 읽는다. `task_state`가 packed이고 첫 필드가 4바이트이므로 이 접근의 오프셋은 4다. 스레드에 저장된 `tf.rsp`를 읽는 경로와 구분해야 한다. [TSS 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/tss.c), [구조체 배치](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/userprog/tss.h)
+
+RBX와 R12의 원래 값은 `temp1`·`temp2`라는 전역 임시 저장소에 보관했다가 프레임에 넣는다. 이 코드를 여러 CPU의 동시 진입에 그대로 사용할 수 있다고 가정할 수는 없다. 같은 임시 저장소를 공유하는 문제가 생기므로, 단일 CPU용 진입 코드의 설명 범위를 넘겨 SMP 안전성을 주장하지 않는다.
+
+### 호출 인자와 복귀 정보는 프레임의 다른 칸에 있다
+
+커널 스택의 초기 끝을 K라고 하면, C 핸들러 호출 직전 프레임의 시작은 `K - 0xc0`이다. 프레임 전체가 192바이트이기 때문이다. `call`이 그 뒤에 쌓는 C 함수의 복귀 주소는 이 192바이트에 포함하지 않는다. 다음 값은 실행 로그가 아니라 `write(1, "hi", 2)`를 설명하기 위한 배치 예다.
+
+| 프레임 시작으로부터 | 필드 | 예에서 확인할 의미 |
+|---|---|---|
+| `0x40` | `R.rsi` | 사용자 문자열의 주소 |
+| `0x48` | `R.rdi` | fd = 1 |
+| `0x58` | `R.rdx` | size = 2 |
+| `0x70` | `R.rax` | 진입 시 번호 10, 처리 뒤 반환값 |
+| `0x98` | `rip` | SYSCALL 다음 사용자 명령 |
+| `0xa8` | `eflags` | 복귀에 사용할 플래그 |
+| `0xb0` | `rsp` | 저장한 사용자 스택 포인터 |
+
+이 진입 경로는 일반 레지스터 칸인 `R.rcx`와 `R.r11`에 0을 넣는다. 복귀 RIP와 플래그를 찾으려면 각각 `rip`와 `eflags`를 읽어야 한다. `vec_no`·`error_code` 자리도 공간만 확보하므로 실제 예외 번호처럼 해석하지 않는다. 전체 필드 배치와 `do_iret()`의 복원 순서는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에 있다. [프레임 선언](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/interrupt.h)
 
 ## 저장한 인자를 C 함수에 넘긴다
 
@@ -45,11 +79,13 @@ case SYS_WRITE:
 
 이것은 실제 Handler의 분기다. `write()`가 돌려준 값을 **저장된 RAX**에 대입하면, Assembly가 Frame을 복원할 때 사용자에게 전달할 RAX가 된다. 정상적으로 반환하는 호출은 `syscall_entry` 끝의 `sysretq`로 돌아간다. 이 경로에서 항상 `do_iret()`를 호출하는 것은 아니다. [Handler](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c), [진입·복귀 Assembly](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall-entry.S)
 
-`SYSCALL` 자체는 User RSP를 Kernel RSP로 바꾸지 않는다. PintOS의 Assembly가 TSS에서 Kernel Stack 위치를 읽고 전환한다. CPU가 LSTAR·STAR·FMASK를 사용하는 방식과 QEMU의 해당 명령 구현은 [QEMU](/wiki/computer-systems-network-qemu-b1366076be02/)에, Frame과 복귀 상태는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에 이어진다.
-
 ## 번호와 인자 규약
 
 인자는 차례로 RDI, RSI, RDX, **R10**, R8, R9를 사용한다. 일반적인 x86-64 C 함수 호출의 네 번째 인자인 RCX와 혼동하기 쉽다. `SYSCALL`이 RCX를 복귀 RIP 저장에 사용하므로, 이 시스템 콜 규약의 네 번째 인자는 R10이다.
+
+Linux의 일반 함수 인자 규약과 시스템 콜 인자 규약을 이어 주는 코드에서도 호출 형태를 구분해야 한다. 이름이 정해진 wrapper의 네 번째 인자는 RCX에서 R10으로 옮길 수 있다. 반면 glibc 2.40의 `syscall(number, arg1, ..., arg6)`는 번호 자체가 첫 C 인자라 모든 위치가 한 칸씩 밀린다. 이 함수에서는 RDI의 번호를 RAX로, R8의 arg4를 R10으로 옮기고 arg6는 스택에서 읽는다. [일반 syscall 함수](https://github.com/bminor/glibc/blob/glibc-2.40/sysdeps/unix/sysv/linux/x86_64/syscall.S), [이름별 wrapper 규약](https://github.com/bminor/glibc/blob/glibc-2.40/sysdeps/unix/sysv/linux/x86_64/sysdep.h)
+
+Linux의 커널 반환값과 libc가 애플리케이션에 주는 오류 표현도 다르다. 해당 glibc wrapper는 커널의 -4095부터 -1까지를 오류 범위로 검사하고, 오류 번호를 `errno`에 저장한 뒤 -1을 반환한다. PintOS의 wrapper에는 같은 변환이 없으므로 아래 표의 호출별 계약을 읽어야 한다. [glibc 오류 처리](https://github.com/bminor/glibc/blob/glibc-2.40/sysdeps/unix/sysv/linux/x86_64/sysdep.h)
 
 다음은 `lrn-pintos`의 `9d1b14c` 커밋에 있는 번호와 Handler를 함께 읽은 결과다. 번호를 정의한 것과 기능을 구현한 것은 구별해야 한다.
 
@@ -122,23 +158,47 @@ unimplemented SYS_DUP2 returns unchanged RAX=22
 
 ## 사용자 주소와 Kernel Buffer 사이
 
+사용자가 선택할 수 있는 것은 커널이 제공한 요청 번호와 인자이며, LSTAR에 설정된 진입 주소를 호출마다 지정하는 것이 아니다. 이 제어 흐름과 메모리 접근 권한, 진입 후의 인자 검사를 함께 봐야 보호 경계를 설명할 수 있다. 예외나 하드웨어 인터럽트도 커널 진입을 일으키므로 시스템 콜만이 모든 커널 진입의 유일한 경로라고 설명하지 않는다. `read()`처럼 사용자 메모리에 데이터를 쓰는 호출은 RAX 외에도 결과를 전달한다.
+
 포인터를 인자로 받았다고 해서 커널이 그 주소를 바로 안전하게 읽을 수 있는 것은 아니다. 버퍼는 여러 페이지에 걸칠 수 있고, 시작 주소가 유효해도 마지막 페이지가 없거나 쓰기 권한이 부족할 수 있다.
+
+이 버전의 `is_user_vaddr()`는 `KERN_BASE`인 `0x8004000000`보다 작은 주소인지 판단한다. 이 범위 검사만으로 페이지의 실제 매핑이나 접근 권한이 확인되는 것은 아니다. [사용자 주소 판정](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/vaddr.h), [경계 상수](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/loader.h)
 
 현재 `validate_user_buffer()`는 크기가 0이면 바로 돌아온다. 그 외에는 NULL과 범위 덧셈의 Overflow를 검사하고, 버퍼가 걸치는 페이지를 따라 `validate_user_addr()`를 호출한다. `write`의 입력 버퍼는 읽을 수 있어야 하고, `read`의 출력 버퍼는 쓸 수 있어야 한다. VM을 사용하는 경우에는 주소·권한과 함께 Lazy Page를 실제로 확보할 수 있는지도 검사한다.
 
-`copy_in()`과 `copy_out()`은 페이지 경계에서 복사 크기를 끊고 다음 페이지를 다시 확인한다. 파일 이름이나 명령 문자열은 `copy_in_string()`이 종료 문자를 찾아 Kernel Page에 복사한다. 이 함수는 한 페이지 안에 끝나는 문자열을 요구하므로, 4KiB 페이지에서는 종료 문자 이전 최대 길이가 4,095바이트다. 이 제한은 모든 OS의 문자열 길이 제한이 아니라 해당 구현의 선택이다.
+`copy_in()`과 `copy_out()`은 페이지 경계에서 복사 크기를 끊고 다음 페이지를 다시 확인한다. 파일 이름이나 명령 문자열은 `copy_in_string()`이 종료 문자를 찾아 Kernel Page에 복사한다. 복사한 문자열과 종료 문자가 한 커널 페이지에 들어와야 하므로, 4KiB 페이지에서는 종료 문자 이전 최대 길이가 4,095바이트다. 원래 사용자 문자열이 페이지 경계를 넘을 수 없다는 뜻은 아니다. 이 제한은 모든 OS의 문자열 길이 제한이 아니라 해당 구현의 선택이다.
 
 파일 연산에는 `filesys_lock`이 사용되지만 시스템 콜 전체를 하나의 Lock으로 감싼 구조는 아니다. 현재 `write()`는 사용자 데이터를 Kernel Buffer로 복사한 뒤 파일 쓰기 구간에 Lock을 건다. `read()`는 파일에서 Kernel Buffer로 읽는 구간의 Lock을 푼 다음 사용자 버퍼에 복사한다. 표준 입력 fd 0과 표준 출력 fd 1에도 별도 경로가 있다. 따라서 사용자 페이지 확보와 장치 대기를 모두 전역 Lock 안에서 처리한다고 설명하면 실제 순서와 달라진다.
 
 각 호출의 오류 처리도 확인할 필요가 있다. 현재 `read()`와 `write()`는 크기가 0이면 0을 반환하고, 유효하지 않은 파일 fd와 메모리 할당 실패 등은 각 경로의 실패값으로 처리한다. 이미 일부 바이트를 처리한 뒤 다음 조각에서 실패하면 일부 처리량을 반환할 수 있다. 사용자 주소 자체를 검증하지 못한 경로는 `exit(-1)`로 이어진다. [버퍼 검사·복사·파일 I/O 구현](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c)
 
+## 같은 write라도 표준 출력과 파일의 끝은 다르다
+
+`write(1, "Hello", 5)`의 fd 1은 콘솔 경로다. 현재 구현은 검증한 사용자 데이터를 최대 한 페이지씩 커널 버퍼에 복사하고, `filesys_lock` 안에서 `putbuf()`를 호출한다. 일반 파일 fd는 같은 분기에서 `process_get_file()`로 파일을 찾은 뒤 `file_write()`로 이어진다. 따라서 표준 출력 예를 그대로 “파일 시스템을 거쳐 디스크까지 내려가는 호출”이라고 읽으면 안 된다. [두 경로의 분기](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c)
+
+파일에 쓰는 경우 `file_write()`는 `inode_write_at()`의 실제 처리량만큼 파일 위치를 전진시킨다. 이 버전의 inode 구현은 파일을 자동으로 늘리지 않으며, 파일 끝이나 쓰기 금지, 버퍼 할당 실패 때문에 요청보다 적게 쓸 수 있다. 5바이트를 쓴다는 요청이 항상 반환값 5를 보장하는 것은 아니다. [파일 위치 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/filesys/file.c), [inode 쓰기](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/filesys/inode.c)
+
+앞서 사용한 4,096바이트짜리 커널 페이지와 디스크의 512바이트 섹터는 다른 단위다. `inode_write_at()`은 섹터의 일부만 바꿀 때 기존 섹터를 임시 버퍼에 읽고 필요한 부분을 덮어쓴 뒤 섹터 전체를 기록한다. `disk_write()`는 채널 잠금을 잡고 섹터 선택, PIO 쓰기 명령, 준비 상태 확인, `output_sector()`, 완료 semaphore 대기 순으로 진행한다. `output_sector()`의 `outsw`는 16비트 값 256개를 전달한다. 이 소스 경로를 확인한 것만으로 전원 장애 뒤 영속성이나 실제 장치에서의 처리 시간을 검증한 것은 아니다. [디스크 쓰기와 PIO](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/devices/disk.c)
+
 ## 돌아오는 호출과 실행을 바꾸는 호출
 
 `fork()`는 사용자에게 받은 Thread 이름을 Kernel Buffer로 복사하고, 저장된 Frame을 `process_fork()`에 전달한다. 자식의 실행 문맥을 준비하는 과정은 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)의 Frame 복사와 연결된다.
 
-`exec()`는 문자열을 복사한 뒤 `process_exec()`를 호출한다. 적재에 성공하면 새 사용자 프로그램으로 넘어가므로 기존 `exec()` 호출 지점으로 돌아오지 않는다. 현재 Wrapper는 실패했을 때도 -1을 사용자에게 반환하는 대신 `exit(-1)`을 호출한다. `exit()` 역시 프로세스 종료 경로로 들어간다. 이 차이를 빼고 모든 분기의 끝을 “RAX 저장 후 사용자 복귀”로 그리면 실제 동작을 놓친다.
+커널의 `exec()`는 문자열을 복사한 뒤 `process_exec()`를 호출한다. 적재에 성공하면 새 사용자 프로그램으로 넘어가므로 기존 `exec()` 호출 지점으로 돌아오지 않는다. 현재 커널 구현은 실패했을 때도 -1을 사용자에게 반환하는 대신 `exit(-1)`을 호출한다. `exit()` 역시 프로세스 종료 경로로 들어간다. 이 차이를 빼고 모든 분기의 끝을 “RAX 저장 후 사용자 복귀”로 그리면 실제 동작을 놓친다.
+
+정상 복귀 assembly는 일반 레지스터들을 꺼낸 뒤, 프레임의 `rip`를 RCX에, `eflags`를 R11에, 사용자 `rsp`를 RSP에 옮겨 `sysretq`를 실행한다. SS 칸은 직접 pop하지 않는다. `pop %rsp`가 가리키는 스택 자체를 바꾸므로 “프레임 시작에서 총 184바이트 위치까지 읽는다”는 계산을 사용자 RSP에 184를 더한다는 뜻으로 읽지 않는다. 64비트 SYSRET의 사용자 CS·SS는 STAR 설정에서 정해진다. [정상 복귀 순서](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall-entry.S)
+
+성공한 `exec`의 새 문맥이나 `fork` 자식의 복제 문맥은 이 PintOS에서 `do_iret()`로 진입한다. 이는 커널이 선택한 구현 경로이지, SYSRET이 반드시 직전 SYSCALL의 이력을 확인한다는 뜻은 아니다. Linux v6.12가 SYSRET을 허용하는 RIP·플래그·selector 조건과 IRET 복귀는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에서 구분한다. signal이나 ptrace라는 이름만으로 언제나 IRET을 사용한다고 단정하지 않는다.
+
+복귀 주소의 canonical 여부도 단순히 최상위 비트 하나와 bit 47만 비교해서는 안 된다. 48비트 주소 형식에서는 bit 63:48이 모두 bit 47과 같아야 하며, 57비트 형식에서는 bit 63:57이 모두 bit 56과 같아야 한다. 예를 들어 `0x0000800000000000`은 48비트 형식에서 조건을 만족하지 않는다. 이 PintOS의 복귀 assembly에는 Linux와 같은 검사와 fallback 분기가 보이지 않는다. ptrace가 없다는 이유만으로 모든 입력에서 안전하다고 결론 낼 근거는 되지 않는다. [canonical 주소 판정](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/page.h), [Linux v6.12의 진입·복귀 코드](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/entry_64.S)
+
+진입 때의 FMASK와 복귀 때의 플래그 복원을 혼동하지 않는다. QEMU v10.0.0의 `helper_sysret()`는 R11과 복원 마스크를 사용하며 FMASK를 다시 적용하지 않는다. 이 함수는 `target/i386/tcg/seg_helper.c`에 있고, `helper_syscall()`은 `target/i386/tcg/system/seg_helper.c`에 있다. 두 명령의 고정 사이클 수나 마이크로 연산 수는 이 코드만으로 정할 수 없다. [QEMU의 SYSRET 구현](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/seg_helper.c#L996-L1049)
+
+TCG 번역 코드의 `gen_SYSCALL()`·`gen_SYSRET()`는 각각 helper 호출을 생성하며, 실행 시 helper가 Guest CPU 상태를 바꾼다. Guest의 `wrmsr`로 설정한 STAR·LSTAR·FMASK 값 역시 Guest 상태에 저장된다. 이 TCG 구현 설명을 KVM 실행이나 모든 물리 CPU의 상세 동작·성능과 동일시하지 않는다. [명령 번역](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/emit.c.inc#L3797-L3838), [Guest MSR 저장](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/system/misc_helper.c#L181-L209)
 
 ## Dispatch 방식은 구현과 버전으로 확인한다
+
+번호·인자·반환값의 약속을 바꾸면 기존 바이너리가 다른 요청을 하거나 결과를 잘못 읽을 수 있다. 이 ABI 호환성 때문에 내부 구현을 바꾸는 일과 사용자에게 보이는 계약을 바꾸는 일은 구분해야 한다.
 
 번호와 구현 함수를 연결할 때는 함수 포인터 배열이나 `switch` 등을 사용할 수 있다. 그러나 배열이 소스에 존재한다는 사실만으로 현재 진입 경로가 그 배열을 호출한다고 결론 낼 수는 없다.
 
@@ -146,9 +206,26 @@ Linux v6.12의 x86-64 경로는 `do_syscall_64()`에서 `x64_sys_call()`로 이�
 
 ABI의 번호는 OS와 아키텍처별로 다르다. Linux x86-64의 write 번호 1을 PintOS에 그대로 적용할 수 없다. QEMU의 system emulation은 Guest 커널 대신 그 번호 체계를 정하지 않으며, Host 서비스를 호출하는 user emulation의 syscall 변환과도 구별된다.
 
+Linux v6.12의 진입 assembly는 `swapgs`로 CPU별 자료에 접근하고 사용자 RSP를 `TSS_sp2`에 임시 저장한 뒤 `pcpu_hot.X86_top_of_stack`에서 커널 RSP를 읽는다. 이 순서를 PintOS의 `tss->rsp0` 읽기와 같은 코드로 그리지 않는다. PTI가 활성화된 환경에서는 진입·복귀 때 사용자용과 커널용 페이지 테이블도 전환한다. CPU 명령이 자동으로 스택과 CR3를 모두 바꾸는 것은 아니다. [v6.12 진입 assembly](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/entry_64.S), [PTI의 적용 조건](https://docs.kernel.org/6.12/arch/x86/pti.html)
+
+번호를 dispatch하기 전에는 설정과 실행 상태에 따라 tracing·audit·seccomp가 개입할 수 있다. seccomp는 번호·아키텍처·직접 전달된 인자 등을 기준으로 호출을 걸러 노출되는 기능을 줄이지만, 포인터가 가리키는 데이터를 검증하는 일을 대신하지는 않는다. [진입 부가 처리](https://github.com/torvalds/linux/blob/v6.12/kernel/entry/common.c), [seccomp 필터의 범위](https://docs.kernel.org/6.12/userspace-api/seccomp_filter.html)
+
+또한 새 기능마다 새 syscall 번호가 필요한 것은 아니다. 기존 `ioctl()`에 장치별 명령을 추가하는 인터페이스도 있다. `gettimeofday` 같은 일부 시간 조회는 vDSO의 사용자 문맥 구현을 이용할 수도 있으므로, 라이브러리 함수를 한 번 불렀다고 항상 커널에 진입한 것으로 세지 않는다. [ioctl 인터페이스](https://docs.kernel.org/6.12/driver-api/ioctl.html), [x86 vDSO 시간 함수](https://github.com/torvalds/linux/blob/v6.12/arch/x86/entry/vdso/vclock_gettime.c)
+
 ## Handler에서 관찰할 값
 
-Debug Symbol이 일치하는 Guest에 연결한 상태라면 C Handler의 첫 명령에서 Frame 포인터를 보관해 읽을 수 있다.
+아래는 실제 세션의 출력이 아니라, Debug Symbol이 일치하는 Guest에 연결한 뒤 사용할 관찰 절차다. 먼저 진입 첫 명령에서 멈추면 CPU가 남긴 값과 assembly가 바꿀 값을 분리할 수 있다.
+
+```gdb
+tbreak *syscall_entry
+continue
+set $user_sp = $rsp
+set $return_ip = $rcx
+set $return_flags = $r11
+info registers rax rdi rsi rdx r10 r8 r9 rcx r11 rsp
+```
+
+이 시점에는 아직 완성된 프레임 포인터 `f`가 없다. RSP는 사용자 스택이고 RCX는 사용자 복귀 주소다. 이어서 C 핸들러의 첫 명령에서 프레임 포인터를 보관한다.
 
 ```gdb
 tbreak *syscall_handler
@@ -164,3 +241,7 @@ p/x $call->rsp
 ```
 
 먼저 번호를 확인한 뒤 그 호출에서 의미가 있는 인자만 해석한다. 반환값 대입문을 지난 위치에서는 같은 Frame의 RAX를 다시 읽는다. `exec()`나 `exit()`처럼 복귀하지 않는 호출에 무조건 `finish`를 적용하지 않는다. `validate_user_buffer`, `copy_in_string`, `filesys_lock`의 획득·해제 위치도 함께 살피면 주소 검증과 파일 연산의 순서를 확인할 수 있다.
+
+그 위치에서 `p sizeof(struct intr_frame)`로 192바이트 배치를 확인하고, `$call->rsp`와 `$user_sp`, `$call->rip`와 `$return_ip`, `$call->eflags`와 `$return_flags`를 비교한다. `x/5gx &$call->rip`는 RIP·CS·RFLAGS·RSP·SS 다섯 칸을 읽는다. `R.rcx`나 `R.r11`을 같은 값으로 기대하지 않는다. 복귀 명령을 관찰할 때는 현재 빌드의 `disassemble syscall_entry` 또는 `disassemble do_iret`로 주소를 찾는다. 소스 줄 번호나 고정된 `함수+offset`은 다른 빌드에 그대로 적용하지 않는다.
+
+본문의 코드 기준은 `lrn-pintos@9d1b14c`다. W11 원본 `09390dd`와 진입 assembly·TSS·프레임 선언·파일 및 디스크 구현은 바이트가 같지만, `userprog/syscall.c`는 다르다. 따라서 W11 당시의 생략된 handler 예와 현재 버퍼 검증·복사 경로를 같은 실행 결과로 합치지 않는다. 이 대조는 코드 상태를 확인한 것이며 새 QEMU/GDB 실행이나 작성자별 기여 검증은 아니다.

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-e647548deca2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e647548deca2
-projection_sha256: 1b199045d850ecebc699774b8f7c42d103da4a7c7c5f0457157b8174d86d11af
+projection_sha256: 6cc3013847490cd95a3dd6c7aa6e047dbe1dda6a0fb8993ee020f64cbabb3ff5
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
@@ -20,6 +20,15 @@ search_terms:
 - 바이트 정수 해석
 - GDB 메모리 덤프
 - off_t
+- 부동 소수점
+- 고정 소수점
+- IEEE 754
+- Floating Point
+- Fixed Point
+- binary32
+- binary64
+- '17.14'
+- Decimal
 grand_parent: Systems
 ancestor: CS 기초
 ---
@@ -29,7 +38,7 @@ ancestor: CS 기초
 
 Port 번호 9000을 출력했는데 메모리에는 `28 23`이 보일 수 있다. 값이 바뀐 것이 아니라, 16진수 `0x2328`을 이루는 두 Byte가 Little-endian 순서로 놓인 것이다. 같은 메모리를 몇 Byte씩 묶는지, 어떤 순서와 부호로 읽는지에 따라 표시되는 정수가 달라진다.
 
-먼저 소켓 API가 Byte Order를 바꾸는 경우를 살펴보고, 그다음 메모리 덤프의 필드 크기와 부호를 구분한다. 이 규칙은 PintOS의 정수 필드와 PTE를 읽을 때도 그대로 필요하다.
+먼저 소켓 API가 Byte Order를 바꾸는 경우를 살펴보고, 그다음 메모리 덤프의 필드 크기와 부호를 구분한다. 이 규칙은 PintOS의 정수 필드와 PTE를 읽을 때도 그대로 필요하다. 뒤에서는 같은 Bit에 부동 소수점과 고정 소수점의 규칙을 적용해 소수를 표현한다.
 
 ## 여러 Byte의 순서
 
@@ -225,3 +234,173 @@ ptype /o struct child_status
 QEMU의 GDB Stub은 메모리와 Register를 원격 디버거에 제공한다. 메모리를 요청하는 Remote Protocol의 `m` Packet에는 주소와 길이가 들어가며, 응답은 Byte를 16진수로 인코딩한 내용이다. `x/1wd`처럼 크기와 표시 형식을 선택하는 것은 GDB 명령의 역할이다. Stub이 그 명령을 그대로 받아 signed 10진수로 변환한다고 이해하면 두 역할이 섞인다. [GDB Remote Protocol의 메모리 읽기](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Packets.html)
 
 GDB는 Debug Symbol이 있으면 자료형과 필드 이름을 사용해 구조체를 보여 줄 수도 있다. 다만 `priority=31`이 어떤 Scheduling 판단에 쓰이는지는 프로그램의 규칙까지 읽어야 알 수 있다. CPU 명령이 정수·주소·명령어로 Bit를 해석하는 일, 디버거가 그 값을 표시하는 일, 개발자가 필드의 의미를 판단하는 일은 서로 이어지지만 같은 작업은 아니다.
+
+## 유한한 Bit에 소수를 담는다
+
+`0.1 + 0.2`를 계산하면 Python에서는 `0.30000000000000004`가 나온다. Byte Order를 잘못 읽어서 생긴 차이는 아니다. 10진수 `0.1`은 2진수로 `0.0001100110011...`처럼 끝없이 반복되므로, 유한한 Bit에는 가장 가까운 표현값을 저장해야 한다. 그 근삿값끼리 더한 결과에도 반올림이 적용된다.
+
+반면 `0.15625`는 `1/8 + 1/32`이므로 `0.00101₂`로 끝난다. 소수라는 이유만으로 모두 오차가 생기는 것은 아니다. 어떤 진법과 정밀도를 쓰는지가 중요하다.
+
+다음 예제는 근삿값 비교와 10진수 계산을 같은 입력으로 비교한다. `Decimal`에는 이미 근사된 `float` 대신 문자열을 전달한다.
+
+```run-python
+import math
+import struct
+from decimal import Decimal
+
+total = 0.1 + 0.2
+print("float 합:", total)
+print("0.3과 같은가:", total == 0.3)
+print("허용 오차 안인가:", math.isclose(total, 0.3))
+print("Decimal 합:", Decimal("0.1") + Decimal("0.2"))
+single = struct.unpack(">f", struct.pack(">f", 0.1))[0]
+print("binary32의 0.1:", Decimal.from_float(single))
+print("binary64의 0.1:", Decimal.from_float(0.1))
+print("0 근처의 비교:", math.isclose(1e-12, 0.0, abs_tol=1e-10))
+
+assert total != 0.3 and math.isclose(total, 0.3)
+assert Decimal("0.1") + Decimal("0.2") == Decimal("0.3")
+assert 0.15625 == 1 / 8 + 1 / 32
+```
+
+Python 3.13.13에서 실행한 결과다.
+
+```text
+float 합: 0.30000000000000004
+0.3과 같은가: False
+허용 오차 안인가: True
+Decimal 합: 0.3
+binary32의 0.1: 0.100000001490116119384765625
+binary64의 0.1: 0.1000000000000000055511151231257827021181583404541015625
+0 근처의 비교: True
+```
+
+`0.1`을 짧게 출력하면 저장된 근삿값 전체가 드러나지 않는다. 예제의 `Decimal.from_float()`는 그 값을 정확한 10진수로 펼쳐 보여 준다. binary32보다 binary64에 더 많은 유효 Bit가 있지만, 어느 쪽도 `1/10`을 정확히 담지는 못한다. [Python의 부동 소수점 설명](https://docs.python.org/3/tutorial/floatingpoint.html)
+
+`math.isclose(a, b)`의 기본값은 상대 허용 오차 `rel_tol=1e-9`, 절대 허용 오차 `abs_tol=0.0`이다. 큰 값끼리의 상대 차이를 비교하는 기준만으로는 0 근처를 판단하기 어렵다. 필요한 단위와 오차 범위에 맞춰 `abs_tol`도 정해야 한다. 모든 비교를 무조건 근사 비교로 바꾸기보다, 이 값이 정확히 같은 값이어야 하는지 허용 오차 안이면 되는지 먼저 구분한다. [math.isclose](https://docs.python.org/3/library/math.html#math.isclose)
+
+## 부호·지수·가수
+
+`0.00101₂`를 `1.01₂ × 2⁻³`으로 쓰면 유효한 숫자와 크기를 나눌 수 있다. 유효한 숫자 부분을 가수라고 부르고, 지수는 그 숫자를 얼마나 크게 또는 작게 읽을지 정한다. 이처럼 지수에 따라 소수점의 위치가 달라지는 표현이 부동 소수점, Floating Point다.
+
+IEEE 754의 여러 형식 중 여기서는 binary32와 binary64를 비교한다. 일반적인 C 환경의 `float`와 `double`에 대응하지만, C 자료형의 크기와 형식은 실행 환경에서 확인해야 한다.
+
+| 형식 | 부호 | 지수 | 저장하는 가수의 소수부 | 지수 Bias |
+| --- | --- | --- | --- | --- |
+| binary32 | Bit 31의 1 Bit | Bit 30–23의 8 Bit | Bit 22–0의 23 Bit | 127 |
+| binary64 | Bit 63의 1 Bit | Bit 62–52의 11 Bit | Bit 51–0의 52 Bit | 1023 |
+
+정규화된 값은 `(-1)^S × (1 + fraction / 2^p) × 2^(E - Bias)`로 읽는다. 여기서 `S`는 부호, `E`는 저장된 지수, `p`는 소수부 Bit 수다. 맨 앞의 `1`을 저장하지 않으므로 실제 유효 정밀도는 각각 24 Bit와 53 Bit가 된다. 이 식을 지수가 전부 0 또는 1인 특수 패턴에 그대로 적용하면 안 된다. [IEEE 형식과 해석](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_math.html)
+
+Bias를 더한 지수는 음의 지수부터 양의 지수까지 증가하는 순서로 저장된다. 양의 유한한 수끼리는 지수와 소수부를 unsigned 정수처럼 비교하는 순서와 값의 순서가 맞는다. 그러나 음수에서는 절댓값의 순서가 반대이고, `NaN`도 있으므로 전체 Bit 패턴의 단순 정수 비교를 모든 부동 소수점 비교로 대신할 수는 없다.
+
+다음 C 예제는 `0.15625f`의 표현을 `memcpy()`로 복사해 세 필드를 읽는다. Pointer를 다른 자료형으로 강제 변환해 읽지 않으며, 예제가 요구하는 크기와 정밀도도 검사한다.
+
+```run-c
+#include <assert.h>
+#include <float.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    _Static_assert(sizeof(float) == sizeof(uint32_t), "32-bit float required");
+    _Static_assert(FLT_RADIX == 2 && FLT_MANT_DIG == 24 && FLT_MAX_EXP == 128,
+                   "binary32 precision and range required");
+    float value = 0.15625f;
+    uint32_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+    uint32_t sign = bits >> 31;
+    uint32_t exponent = (bits >> 23) & UINT32_C(0xff);
+    uint32_t fraction = bits & UINT32_C(0x7fffff);
+    assert(bits == UINT32_C(0x3e200000));
+    printf("Bit: %08" PRIX32 "\n", bits);
+    printf("부호: %" PRIu32 "\n", sign);
+    printf("지수: %" PRIu32 " (실제: %d)\n", exponent, (int)exponent - 127);
+    printf("소수부: %06" PRIX32 "\n", fraction);
+    return 0;
+}
+```
+
+Clang에서 C11로 컴파일해 실행한 결과다.
+
+```text
+Bit: 3E200000
+부호: 0
+지수: 124 (실제: -3)
+소수부: 200000
+```
+
+저장된 지수 124에서 Bias 127을 빼면 -3이다. 소수부 `0x200000`은 `01₂`에 해당하므로, 생략된 맨 앞의 1을 붙이면 `1.01₂ × 2⁻³ = 0.15625`가 복원된다. 앞에서 살펴본 Endianness는 이 Bit 패턴을 메모리의 Byte로 배치하는 순서다. 여기서처럼 같은 환경에서 `memcpy()`한 정수를 읽는 일과, 외부 파일의 Byte 순서를 해석하는 일은 구분한다.
+
+## 0과 무한대 사이의 특수값
+
+지수 필드가 전부 0이면 소수부도 확인한다. 소수부가 0이면 부호만 다른 `+0`, `-0`이며 값 비교에서는 같다. 소수부가 0이 아니면 맨 앞을 `1` 대신 `0`으로 읽는 Subnormal이다. 정규화된 수보다 작은 값을 표현할 수 있지만, 0에 가까워질수록 유효한 숫자는 줄어든다.
+
+지수 필드가 전부 1일 때 소수부가 0이면 `+Infinity` 또는 `-Infinity`다. 소수부가 0이 아니면 숫자가 아닌 값을 나타내는 `NaN`이다. `NaN == NaN`은 거짓이므로 유효성 검사에는 `math.isnan()`처럼 목적에 맞는 함수를 쓴다.
+
+IEEE 연산에서는 0으로 나누거나 유효하지 않은 실수 연산이 무한대·NaN을 만드는 경우가 있다. 다만 언어가 같은 식을 반드시 같은 값으로 돌려주는 것은 아니다. Python의 `1.0 / 0.0`과 `0.0 / 0.0`은 `ZeroDivisionError`, `math.sqrt(-1.0)`은 `ValueError`를 발생시킨다. 표현 형식과 언어의 예외 처리를 함께 확인해야 한다.
+
+## 정수에 단위를 정하는 고정 소수점
+
+항상 100으로 나누어 읽기로 약속하면 정수 `1550`은 `15.50`을 뜻한다. 덧셈·뺄셈은 원시 정수끼리 수행하고 표시할 때 약속한 단위를 적용한다. 소수점의 위치를 고정한 이런 표현을 Fixed Point라고 한다. 고정된 최소 화폐 단위를 정수로 관리하는 경우에도 같은 생각을 쓸 수 있다.
+
+PintOS의 17.14 형식은 signed 32 Bit 정수 `x`를 `x / 2¹⁴`로 읽는다. 부호 1 Bit, 정수부 17 Bit, 소수부 14 Bit이며 `F = 16384`다. 따라서 정수 3을 저장한 값은 `3 × F = 49152`, 표현 가능한 간격은 `1/F`다. 범위는 `-131072`부터 `131072 - 1/16384`, 즉 `131071.99993896484375`까지다. `17`에 부호 Bit를 다시 포함해 범위를 절반으로 줄이지 않는다. [PintOS의 고정 소수점](https://casys-kaist.github.io/pintos-kaist/project1/advanced_scheduler.html#fixed-point-arithmetic)
+
+PintOS는 Thread마다 부동 소수점 Register 상태를 저장·복원하는 기능을 제공하지 않는다. 그래서 `load_avg`와 `recent_cpu`처럼 소수가 필요한 계산에도 정수 연산을 쓴다. 이를 모든 OS Kernel이 FPU를 사용할 수 없다는 규칙으로 일반화하지 않는다.
+
+아래 코드는 고정 소수점의 단위 변환과 연산을 독립 실행하는 예제다. 실제 PintOS의 Header를 그대로 옮긴 코드나 Kernel 실행 결과는 아니다. 매크로 인수에는 증가 연산이나 함수 호출처럼 여러 번 평가되면 결과가 달라지는 식을 넣지 않는다.
+
+```run-c
+#include <assert.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#define F (INT32_C(1) << 14)
+#define INT_TO_FP(n) ((n) * F)
+#define FP_TO_INT_ZERO(x) ((x) / F)
+#define FP_TO_INT_NEAR(x) ((x) >= 0 ? ((x) + F / 2) / F : ((x) - F / 2) / F)
+#define FP_ADD(x, y) ((x) + (y))
+#define FP_SUB(x, y) ((x) - (y))
+#define FP_MUL(x, y) ((int32_t)((int64_t)(x) * (y) / F))
+#define FP_DIV(x, y) ((int32_t)((int64_t)(x) * F / (y)))
+#define FP_ADD_INT(x, n) ((x) + (n) * F)
+#define FP_MUL_INT(x, n) ((x) * (n))
+
+int main(void) {
+    int32_t three = INT_TO_FP(3);
+    int32_t half = FP_DIV(INT_TO_FP(1), INT_TO_FP(2));
+    int32_t weight = FP_DIV(INT_TO_FP(59), INT_TO_FP(60));
+    int32_t load_avg = FP_ADD(FP_MUL(weight, 0),
+        FP_MUL_INT(FP_DIV(INT_TO_FP(1), INT_TO_FP(60)), 2));
+    printf("3의 원시 정수: %" PRId32 "\n", three);
+    printf("59/60의 원시 정수: %" PRId32 "\n", weight);
+    printf("load_avg 0, ready_threads 2: %" PRId32 "\n", load_avg);
+    printf("-1.5를 정수로: 버림 %" PRId32 ", 반올림 %" PRId32 "\n",
+        FP_TO_INT_ZERO(-3 * half), FP_TO_INT_NEAR(-3 * half));
+    assert(three == 49152 && weight == 16110 && load_avg == 546);
+    assert(FP_SUB(FP_ADD(three, half), half) == three);
+    assert(FP_ADD_INT(half, 3) == FP_ADD(three, half));
+    assert(FP_MUL(three, half) == 3 * half);
+    assert(FP_TO_INT_ZERO(-3 * half) == -1);
+    assert(FP_TO_INT_NEAR(-3 * half) == -2);
+    return 0;
+}
+```
+
+Clang에서 C11로 컴파일해 실행한 결과다.
+
+```text
+3의 원시 정수: 49152
+59/60의 원시 정수: 16110
+load_avg 0, ready_threads 2: 546
+-1.5를 정수로: 버림 -1, 반올림 -2
+```
+
+고정 소수점끼리 곱하면 중간값의 단위는 `F²`이므로 `F`로 나눈다. 나눗셈에서는 분자에 `F`를 곱해야 결과가 다시 같은 단위가 된다. 이 중간 곱에 `int64_t`를 쓰면 32 Bit 계산 중의 Overflow를 줄일 수 있지만, 최종 결과의 범위까지 무한해지는 것은 아니다. 0으로 나누는 입력과 변환·덧셈·곱셈·반올림의 범위 초과도 별도로 막아야 한다. 위 예제의 입력은 모두 범위 안에 있다.
+
+`59 / 60`을 C 정수끼리 먼저 계산하면 0이 된다. 단위를 적용한 `59 × F / 60`은 16110을 보존한다. 고정 소수점도 나누어떨어지지 않는 수에는 오차가 생기며, 위 예제는 그 값을 0 방향으로 버린다. `load_avg` 계산을 실제 갱신 시점과 우선순위 변화에 연결하는 과정은 [MLFQS](/wiki/computer-systems-network-mlfqs-db815d97f954/)에서 이어진다.
+
+넓은 크기 범위의 과학 계산·그래픽에는 부동 소수점이 적합할 수 있다. 일정한 단위를 정수로 다루는 계산에는 고정 소수점을 사용할 수 있다. 정확한 10진 입력을 다루려면 `Decimal`이나 정수 단위를 검토하되, `Decimal` 역시 정밀도와 반올림 설정이 있으므로 모든 나눗셈이 무조건 정확한 것은 아니다. 필요한 표현 범위, 가장 작은 단위, 허용 오차와 반올림 규칙을 함께 정해야 한다.
