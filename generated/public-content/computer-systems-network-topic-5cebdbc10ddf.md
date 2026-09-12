@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-5cebdbc10ddf/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-5cebdbc10ddf
-projection_sha256: b3770cbcd05cdf2bea3c0a9b60179cb9787b06dc5717785f57cd70b10398dd92
+projection_sha256: cc17e6ec220b561551c9ff5c7c910570244dda3c18796faeb89d6753280f4d0f
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -138,9 +138,19 @@ fault_addr >= 기준 RSP - 32
 
 이 저장소의 페이지 크기는 4,096바이트, `USER_STACK`은 `0x47480000`, `STACK_MAX`는 1 MiB다. 따라서 검사하는 스택 주소 범위는 `0x47380000` 이상, `0x47480000` 미만이다. `USER_STACK`은 아래로 자라는 스택의 위쪽 경계다. 32바이트 비교는 이 구현이 채택한 성장 판단 기준이며, 모든 OS의 스택 규칙은 아니다. [성장 조건과 상수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L452), [주소 상수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/threads/vaddr.h)
 
+`USER_STACK`은 User 가상 주소 공간 안에서 선택한 Stack 경계다. 전체 주소 공간을 나누는 `KERN_BASE`와 User 주소 판별의 한계는 [주소 공간의 Mapping 조건](/wiki/computer-systems-network-topic-3521ee6344f1/#user-주소-판별만으로-mapping을-보장할-수는-없다)에서 설명한다. 하한 아래의 접근도 별도의 유효한 SPT 기록이 있으면 앞의 페이지 준비 경로로 처리할 수 있다. 위 조건은 그 주소를 새 Stack으로 성장시켜도 되는지를 판단한다.
+
+`PUSHA/PUSHAD`는 64-bit 모드에서 유효하지 않으므로 위의 32바이트 조건을 이 명령의 동작으로 설명할 수는 없다. `sub rsp, 24` 뒤에 메모리에 접근했다면 이미 낮아진 RSP를 기준으로 명령과 Fault Frame을 읽는다. [Intel SDM의 PUSHA/PUSHAD 지원 모드](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-2b-manual.pdf#page=516), [RSP의 주소 산술과 메모리 접근](/wiki/computer-systems-network-cpu-4b05d739f0f6/#같은-register의-다른-크기)
+
 조건이 맞으면 `vm_stack_growth()`가 필요한 아래쪽 페이지를 등록하고 claim한다. 호출한 `vm_grow_stack_and_claim()`는 그 뒤 대상 페이지에 `vm_claim_page()`를 다시 호출한 결과를 반환한다. 이처럼 **성장 조건 통과와 복구 성공은 같은 판정이 아니다**. 또 현재 코드는 SPT 기록이 없을 때뿐 아니라 SPT 준비가 실패한 경우에도 이 성장 검사를 거친다. 할당이나 초기화 실패를 곧바로 ‘허용되지 않은 주소’로 해석하지 말고 어느 함수가 실패했는지 확인해야 한다. [현재 스택 준비 순서](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L323)
 
 1 MiB를 4,096바이트로 나누면 256페이지다. 이는 허용 범위의 크기이며 처음부터 256페이지를 할당한다는 뜻은 아니다. 기준 RSP가 `0x4747f010`, 접근 주소가 `0x4747f008`이면 RSP보다 8바이트 아래라 거리 조건을 만족한다. 하지만 이 주소는 `setup_stack()`이 처음 준비하는 `0x4747f000` 페이지 안에 있다. 거리 조건을 계산한 것만으로 실제 새 스택 페이지가 필요했다고 결론 내릴 수 없다. [초기 스택 준비](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1392)
+
+`vm_stack_growth()`는 요청 주소를 Page 시작으로 내린 뒤, 그 위치가 `stack_bottom`보다 낮은 동안 `while`로 반복한다. 한 Page를 등록하고 claim한 다음에야 `curr->stack_bottom`을 갱신한다. 따라서 한 번의 호출이 여러 Page를 준비할 수 있으며, 도중 할당이나 claim에 실패하면 반복을 끝낸다. [Page별 등록·claim·경계 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L323-L338)
+
+예를 들어 기존 `stack_bottom`이 `0x4747f000`이고 성장 조건을 통과한 주소가 `0x4747c123`이면 목표 Page는 `0x4747c000`이다. 모든 준비가 성공한다는 가정 아래 한 호출에서 `0x4747e000`, `0x4747d000`, `0x4747c000` 세 Page를 준비한다. 이는 소스의 반복 조건으로 계산한 예시이며 실행 기록이 아니다. 초기 한 Page에서 최대 범위까지 더할 수 있는 255 Page를 255번의 성장 호출이나 Page Fault로 읽어서는 안 된다.
+
+User Stack이 늘어나도 Kernel Thread의 기반 Page가 함께 커지는 것은 아니다. 현재 RSP에서 Thread를 찾는 조건과 Kernel Stack의 가용 공간은 [Thread의 구조체와 Stack 크기](/wiki/computer-systems-network-topic-aebc87b0fcf5/#구조체-크기가-달라지면-stack-공간도-달라진다)에서 구분한다. 파일 Mapping을 준비하는 `do_mmap()`도 요청 Page의 기존 SPT 항목을 검사해 중복을 거부한다. [mmap의 중복 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/file.c#L128-L151)
 
 ### syscall이 보관한 RSP와 실제 폴트를 구별한다
 
@@ -184,13 +194,19 @@ fault_addr >= 기준 RSP - 32
 
 이 값의 프레임을 커널이 직접 매핑으로 가리키는 주소는 `KERN_BASE + 0x12345000 = 0x8016345000`이다. 커널 주소를 그대로 PTE에 넣는 것이 아니다. 숫자의 역할과 주소 별칭 계산은 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)의 설명을 따른다. 실제 관측 시점의 PTE에는 접근에 따른 상태 비트가 더해질 수 있으므로, 표의 초기 설치값을 복귀 이후에도 고정된 값으로 기대하지 않는다.
 
-VM 계층이 끝내 `false`를 반환하면 이 성공 흐름으로 돌아가지 않는다. 현재 `page_fault()`는 사용자 코드에서 발생한 실패를 `process_exit_with_status(-1)`로 처리한다. 나머지는 `kill()`로 전달하며 커널 코드 영역의 복구되지 않은 폴트는 panic으로 이어진다. 커널에서 사용자 주소를 접근하다 발생한 폴트도 VM이 먼저 복구를 시도하므로, 발생 위치만 보고 처음부터 panic으로 단정할 수는 없다. [복구 실패 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/exception.c#L82)
+VM 계층이 끝내 `false`를 반환하면 이 성공 흐름으로 돌아가지 않는다. 현재 `page_fault()`는 사용자 코드에서 발생한 실패를 `process_exit_with_status(-1)`로 처리한다. 나머지는 `kill()`로 전달하며 커널 코드 영역의 복구되지 않은 폴트는 panic으로 이어진다. 커널에서 사용자 주소에 접근하다 발생한 폴트도 VM이 먼저 복구를 시도하므로, 발생 위치만 보고 처음부터 panic으로 단정할 수는 없다. [복구 실패 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/exception.c#L82)
 
 ## Linux와 Windows도 사용을 허용한 메모리인지 확인한다
 
 Linux의 VMA는 같은 속성을 가진 연속 가상 주소 범위를 나타낸다. PintOS SPT의 개별 항목은 페이지 단위 정보를 담는다. 둘 다 폴트 처리에 필요한 정책 정보를 제공하지만 같은 자료 구조는 아니다. [Linux 6.16의 VMA 설명](https://docs.kernel.org/6.16/mm/process_addrs.html)
 
-Linux v6.16 x86에서 사용자 주소 공간의 일반적인 처리 경로는 `exc_page_fault → handle_page_fault → do_user_addr_fault`다. VMA를 `lock_vma_under_rcu()`로 찾는 경로와 필요할 때 `lock_mm_and_find_vma()`로 내려가는 경로가 있고, 접근을 검사한 뒤 `handle_mm_fault()`에 메모리 처리를 맡긴다. 결과에 따라 완료, 재시도, SIGSEGV·SIGBUS, 메모리 부족 처리가 갈린다. 사용자 주소 공간이라는 표현에는 커널이 그 주소를 접근한 경우도 포함될 수 있다. [Linux v6.16의 실제 fault 처리](https://github.com/torvalds/linux/blob/v6.16/arch/x86/mm/fault.c#L1209)
+Linux v6.16 x86에서 사용자 주소 공간의 일반적인 처리 경로는 `exc_page_fault → handle_page_fault → do_user_addr_fault`다. VMA를 `lock_vma_under_rcu()`로 찾는 경로와 필요할 때 `lock_mm_and_find_vma()`로 내려가는 경로가 있고, 접근을 검사한 뒤 `handle_mm_fault()`에 메모리 처리를 맡긴다. 결과에 따라 완료, 재시도, SIGSEGV·SIGBUS, 메모리 부족 처리가 갈린다. 사용자 주소 공간이라는 표현에는 커널이 그 주소에 접근한 경우도 포함될 수 있다. [Linux v6.16의 실제 fault 처리](https://github.com/torvalds/linux/blob/v6.16/arch/x86/mm/fault.c#L1209)
+
+Linux v6.16의 `expand_downwards()`는 `VM_GROWSDOWN`으로 표시된 VMA에서 주소 범위와 이웃 Mapping과의 간격을 검사한다. `acct_stack_growth()`의 자원 한도 검사까지 통과하면 VMA와 사용량 기록을 갱신한다. VMA 경계를 옮겼다고 그 사이의 모든 Page가 곧바로 물리 메모리에 준비됐다는 뜻은 아니다. `stack_guard_gap`도 이웃 Mapping과의 간격을 제한하는 값이며, 모든 Stack 아래에 한 Page짜리 guard를 붙인다는 규칙이 아니다. [Linux의 Stack 성장 검사](https://github.com/torvalds/linux/blob/v6.16/mm/vma.c#L2711-L2892), [guard gap의 기본값과 부트 설정](https://github.com/torvalds/linux/blob/v6.16/mm/mmap.c#L886-L900)
+
+실제 환경에서는 `RLIMIT_STACK`의 Soft·Hard Limit와 Stack Mapping을 확인한다. 고정 8 MiB 한도나 고정 ASLR 범위를 전제하지 않는다. 초기 인자 Page의 준비는 [Linux의 최초 Stack](/wiki/computer-systems-network-topic-1217820258bd/#linux의-시작-규약과-비교), NPTL Thread의 기본 크기와 설정 조건은 [함수 호출과 Stack Frame](/wiki/computer-systems-network-topic-3521ee6344f1/#함수-호출과-stack-frame)으로 이어진다.
+
+Signal Handler를 실행할 때도 Stack에 여유가 필요하다. Linux v6.16 x86의 `get_sigframe()`은 원래 User Stack과 `SA_ONSTACK`에 따른 alternate Stack 선택을 구분하고, 64-bit 경로의 128 Byte redzone, FPU 상태 공간과 정렬을 고려해 Frame을 배치한다. 따라서 User RSP에서 Signal Frame 크기만 빼는 계산으로 끝나지 않으며, 이 redzone을 Page Fault의 보편적인 `RSP - 128` 허용 조건으로 사용해서도 안 된다. [Signal Frame에 사용할 Stack 선택](https://github.com/torvalds/linux/blob/v6.16/arch/x86/kernel/signal.c#L86-L160)
 
 Linux에서는 복구에 I/O가 필요했는지에 따라 Minor Fault와 Major Fault를 구분한다. `getrusage()`의 `ru_minflt`는 I/O 없이 처리한 폴트 수이고, `ru_majflt`는 I/O가 필요했던 폴트 수다. 이는 주소와 접근 권한이 유효한지를 가르는 분류와 다르다. [Linux getrusage(2)](https://man7.org/linux/man-pages/man2/getrusage.2.html)
 
@@ -199,6 +215,8 @@ Minor Fault에서도 새 Frame을 준비하거나 RAM에 있는 COW Page를 복�
 Windows의 VAD(Virtual Address Descriptor)는 프로세스의 가상 주소 범위를 기술한다. WinDbg의 `!vad`로 VAD 하나나 트리를 살펴보면 범위의 시작·끝과 보호 속성 등의 정보를 확인할 수 있다. 이런 정책 정보를 하드웨어 PTE의 현재 매핑 상태와 구별해서 읽는다는 점은 Linux의 VMA, PintOS의 SPT와 비교할 수 있다. 내부 fault 함수의 호출 순서까지 세 OS가 같다는 뜻은 아니다. [WinDbg의 VAD 조회](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-vad)
 
 Windows에서도 주소를 예약한 것만으로 메모리 접근이 허용되는 것은 아니다. reserved 페이지는 접근할 수 없고, committed 페이지는 보호 속성이 허용하는 첫 접근에서 물리 메모리에 준비될 수 있다. COW 매핑이나 guard 페이지도 각각의 정책을 따른다. 특히 guard 접근은 별도의 예외를 발생시키며 guard 속성을 해제하므로 일반적인 not-present 복구와 합치지 않는다. [페이지 상태](https://learn.microsoft.com/en-us/windows/win32/memory/page-state), [보호 속성과 PAGE_GUARD](https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants)
+
+Windows는 Thread마다 Stack의 예약 범위와 처음 commit한 범위를 준비하고, 필요할 때 예약 범위 안의 Page를 추가로 commit한다. 예약한 범위의 한도와 메모리 부족 때문에 확장이 실패할 수 있으며, commit한 범위 전체가 곧바로 RAM에 올라와 있다는 뜻도 아니다. 기본 reserve·commit 크기는 실행 파일 헤더에 있고 Thread 생성 옵션으로 조정할 수 있다. MSVC의 `/STACK:reserve,commit`은 EXE의 기본값을 지정하며, ARM64·x86·x64의 문서상 기본값은 reserve 1 MB와 commit 4 KB다. 이는 변경할 수 있는 링커 설정이다. `CreateThread()`의 `dwStackSize`도 `STACK_SIZE_PARAM_IS_A_RESERVATION` 지정 여부에 따라 해석이 달라지므로, 숫자 하나만 보고 실제 사용 가능한 Stack을 판단하지 않는다. [Windows의 Thread Stack 준비와 확장](https://learn.microsoft.com/en-us/windows/win32/procthread/thread-stack-size), [MSVC의 Stack 설정](https://learn.microsoft.com/en-us/cpp/build/reference/stack-stack-allocations?view=msvc-170)
 
 Windows의 접근 위반 기록을 읽을 때도 명령의 위치와 접근 대상 주소를 구별한다. `ExceptionAddress`는 예외가 발생한 명령의 위치다. `EXCEPTION_ACCESS_VIOLATION`의 `ExceptionInformation[1]`은 접근하지 못한 가상 주소이며, `[0]`은 읽기 0, 쓰기 1, 실행 8을 구별한다. 모든 페이지 관련 실패가 접근 위반 하나로 표현되는 것은 아니며 `EXCEPTION_IN_PAGE_ERROR` 같은 별도 기록도 있다. [EXCEPTION_RECORD의 공식 정의](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record)
 
@@ -261,6 +279,12 @@ p/x ((unsigned long long) addr & ~0xfffULL)
 
 `pml4_set_page()`에는 `page`라는 지역 변수가 없다. 한 함수의 breakpoint 명령을 다른 함수에 그대로 붙이지 않는다. 컴파일 최적화로 지역 변수가 보이지 않는 경우도 있어 소스 위치와 실제 심볼을 먼저 맞춘다. 또한 `pml4_get_page()`는 present 매핑의 커널 가상 주소를 반환한다. 반환값이 있다는 사실만으로 물리 주소나 쓰기 권한까지 확인한 것은 아니다. GDB에서 이 함수를 호출하는 것은 값을 단순히 읽는 것과도 다르다. [실제 매핑 함수와 변수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c#L231)
 
+Stack의 관찰값을 잠시 보관할 때는 Target Register 이름을 피한다. User에서 발생한 `page_fault()`의 Frame임을 확인했다면 `set $observed_user_rsp = (unsigned long long) f->rsp`처럼 별도의 GDB 편의변수에 담을 수 있다. `set $rsp = ...`는 실제 Target의 RSP를 바꾸는 명령이므로 사용량 관찰에 쓰지 않는다. 커널에서 User 주소를 접근한 Fault라면 현재 Frame의 Kernel RSP 대신 해당 Thread가 보관한 `user_rsp`를 읽어야 한다. [현재 CPU·선택 Frame·저장 Frame의 구분](/wiki/platform-delivery-operations-topic-f89d71c7eb29/#현재-frame과-저장된-frame), [GDB 편의변수의 이름과 수명](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Convenience-Vars.html), [Register 읽기와 쓰기](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Registers.html)
+
+사용량이라는 이름으로 출력하기 전에 계산 대상을 정한다. `USER_STACK - stack_bottom`은 현재 기록된 Stack 경계 사이의 크기이고, 그 값을 Page 크기로 나눈 것은 같은 범위를 Page 단위로 표현한 값이다. `USER_STACK - 관찰한 User RSP`는 꼭대기와 현재 포인터의 주소 차이다. 두 포인터가 기대한 Stack 범위에 있는지 먼저 확인해야 하며, 이 값들이 SPT 항목 수나 현재 RAM에 있는 Frame 수, 살아 있는 데이터량을 직접 세는 것은 아니다.
+
+SPT 페이지 수를 확인하려면 실제 항목을 살펴 Stack 범위와 종류를 구분하고, RAM 점유는 각 항목의 Frame·swap 상태를 별도로 확인한다. `vm_stack_growth()` 진입 시 계산한 Page 수 역시 준비할 범위의 예상치다. 해당 호출이 반환한 뒤 경계와 페이지 상태를 다시 읽어야 성공한 준비와 실패한 준비를 구분할 수 있다. 이 절차는 해당 빌드에서 직접 관찰할 때 사용할 확인 순서다.
+
 ### 테스트에서는 이름보다 접근 명령을 본다
 
 다음은 이 커밋의 테스트 소스로 확인한 의도다. 이 문서에서 테스트를 실행하거나 통과 여부·오류 코드를 측정한 기록은 아니다. 프로그램 하나에도 여러 폴트가 날 수 있으므로 테스트 이름에 오류 코드 하나를 붙이지 않는다.
@@ -268,12 +292,15 @@ p/x ((unsigned long long) addr & ~0xfffULL)
 | 테스트 | 소스에서 확인할 접근과 판단 |
 |---|---|
 | [`pt-grow-stack`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-stack.c) | 4 KiB 지역 배열을 실제로 쓰며 스택 확장을 확인한다. 사용자 쓰기가 not-present에서 실패한다면 `0x6`에 해당한다. |
+| [`pt-big-stk-obj`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-big-stk-obj.c) | 64 KiB 지역 배열을 0으로 채우고 ARC4로 암호화한 뒤 checksum을 출력한다. 큰 Stack 객체를 실제로 접근하는 테스트이며, 배열 크기만으로 새 Page 수나 Fault 횟수가 정해지지는 않는다. |
 | [`pt-grow-bad`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-bad.c) | RSP보다 4,096바이트 아래를 읽는다. 허용한 거리 밖의 접근을 거부하는지 확인한다. |
 | [`pt-grow-stk-sc`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-stk-sc.c#L18) | `read()`가 64 KiB 스택 배열의 아직 쓰지 않은 부분에 데이터를 넣는다. 현재 사전 준비 경로도 확인해야 하므로 커널 #PF가 반드시 발생한다고 가정하지 않는다. |
 | [`pt-bad-addr`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-bad-addr.c) | `0x04000000`을 읽는다. 그 주소를 사용할 기록이 없는 접근을 거부하는지 확인한다. |
 | [`pt-write-code`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-write-code.c) | `test_main`의 코드 주소에 쓴다. 원래 허용되지 않은 쓰기를 COW로 허용해서는 안 된다. |
 | [`cow-simple`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/cow/cow-simple.c#L21) | fork 전후의 공유와 자식 쓰기 뒤 데이터·물리 주소의 분리를 확인한다. 이미 present인 공유 페이지에서 사용자 쓰기 보호 폴트가 발생하는 조건이라면 `0x7`이다. |
 | [`mmap-ro`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-ro.c#L19) | `writable=0`으로 매핑한 뒤 첫 접근으로 쓰기를 시도한다. 읽기 전용 여부는 not-present에서 시작하더라도 지켜야 한다. |
+
+Stack 성장 테스트의 검사 파일도 함께 읽는다. `pt-grow-stack.ck`와 `pt-big-stk-obj.ck`는 begin·checksum·end 출력을, `pt-grow-stk-sc.ck`는 파일 쓰기와 읽기·내용 비교 메시지를 기대하며 이 세 검사는 종료 코드를 무시한다. `pt-grow-bad.ck`는 User fault 진단을 무시하면서 `exit(-1)`을 포함한 출력을 확인한다. 이들은 테스트가 요구하는 결과이며, 여기서 해당 Kernel 테스트를 실행해 얻은 결과는 아니다. [작은 Stack 객체의 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-stack.ck), [큰 Stack 객체의 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-big-stk-obj.ck), [syscall Stack 버퍼 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-stk-sc.ck), [먼 주소 접근의 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-grow-bad.ck)
 
 특히 `mmap-ro.ck`는 종료 코드를 무시하고, 금지된 쓰기 다음의 오류 메시지까지 진행하지 않는 예상 출력을 확인한다. 이 검사 파일만으로 특정 종료 코드나 `0x6`이 실제로 관측됐다고 주장할 수는 없다. [mmap-ro의 검사 조건](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-ro.ck#L5)
 

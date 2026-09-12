@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-cpu-4b05d739f0f6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-4b05d739f0f6
-projection_sha256: ade1076bb2b71e12ffe23ac6558576dee58cbb7fa2907db6899b506f47b4b9cc
+projection_sha256: e75c7d66fff13457a173634fefea38563ebb0f945a4077ec0fd4c65aa3ba4a09
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
@@ -40,6 +40,25 @@ RAX는 x86-64에서 64 Bit 값을 담는 범용 Register다. EAX는 그중 아�
 범용 Register의 용도도 이름에 고정되어 있지 않다. RAX는 산술 계산에 사용할 수 있고 함수 반환값이나 syscall 번호도 담는다. RSP는 현재 Stack 위치, RIP는 실행 위치를 나타낸다. RBP를 반드시 모든 함수의 Frame 기준으로 쓴다고 가정해서는 안 된다. Compiler가 Frame Pointer를 생략한 빌드에서는 Debug 정보와 Unwind 정보를 함께 읽어야 한다.
 
 함수 호출의 보존 약속도 실행 문맥 전체를 저장하는 규칙과 구별한다. System V x86-64 ABI의 RBX·RBP·R12–R15는 호출받은 함수가 보존하는 Callee-saved Register다. 호출 중 값을 자유롭게 바꿀 수 있는 Register와 달리 함수가 반환했을 때 호출자가 기대한 값을 돌려놓아야 한다. 이것만으로 Interrupt, Thread 전환, 주소 공간과 부동소수점 상태의 보존 범위까지 결정되는 것은 아니다.
+
+### RSP의 변화와 메모리 접근
+
+RSP는 x86-64의 64비트 Stack Pointer다. `push`로 값을 쌓을 때는 낮은 주소 쪽으로 움직인다. 다음 표는 적힌 명령이 정상적으로 완료될 때 RSP와 일반 Stack 메모리에서 일어나는 변화를 나타낸다. `call`은 같은 코드 Segment 안의 near call, `ret`은 추가 정리 크기를 지정하지 않은 near return을 뜻하며, `N`은 확보하거나 되돌릴 양수 바이트 수다.
+
+| 명령 | RSP와 Stack의 변화 |
+|---|---|
+| `push rax` | RSP를 8 내린 주소에 RAX의 8 Byte를 쓴다. |
+| `pop rax` | 현재 RSP에서 8 Byte를 RAX로 읽고 RSP를 8 올린다. |
+| `call func` | 다음 명령의 주소 8 Byte를 Stack에 쌓아 RSP를 8 내리고, 호출 대상으로 이동한다. |
+| `ret` | 현재 RSP의 반환 주소로 돌아가며 RSP를 8 올린다. |
+| `sub rsp, N` | RSP를 N만큼 내린다. 그 주소에 데이터를 쓰지는 않는다. |
+| `add rsp, N` | RSP를 N만큼 올린다. 남아 있는 메모리 바이트를 지우지는 않는다. |
+
+push/pop이 RSP를 바꾸는 양은 operand 크기에 따라 달라진다. 64-bit 모드에서도 16-bit operand를 쓰는 `push ax`·`pop ax`는 RSP를 2 Byte씩 바꾼다. 표의 RAX 대신 RSP 자신이나 메모리를 operand로 쓰는 형식, `ret imm16`의 추가 정리는 각각 해당 명령 규칙을 확인한다. [Intel SDM의 PUSH operand와 Stack Pointer](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-2b-manual.pdf#page=513), [POP의 16·64-bit 동작](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-2b-manual.pdf#page=389)
+
+`sub rsp, N`으로 값을 낮췄다는 사실만으로 Page가 새로 할당되거나 그 주소에서 Page Fault가 발생하지는 않는다. 이후 명령이 그 주소의 메모리를 읽거나 쓸 때 Mapping과 접근 조건을 검사한다. 이 차이는 [스택 성장 판단](/wiki/computer-systems-network-topic-5cebdbc10ddf/#스택-근처라고-모두-새-페이지를-만들지는-않는다)에서 중요하다.
+
+호출 시 RSP를 어디에 맞출지는 ABI의 약속이다. System V AMD64의 호출 직전 정렬, 반환 주소가 쌓인 함수 진입, ELF 프로세스의 최초 진입은 [인자 전달의 정렬 비교](/wiki/computer-systems-network-topic-1217820258bd/#8바이트-정렬과-함수-호출의-16바이트-정렬)로 이어진다. PintOS의 초기 RSP와 가짜 반환 주소는 [Thread의 시작 문맥](/wiki/computer-systems-network-topic-aebc87b0fcf5/#rsp에서-현재-thread를-찾는-이유)에서 실제 복원 경로와 함께 읽는다.
 
 ## write에 전달되는 네 값
 
@@ -150,5 +169,7 @@ SYSCALL mask=0x47700, mask 적용=0x2
 ## 멈춘 CPU와 저장된 Frame
 
 `syscall_handler(struct intr_frame *f)` 안에서는 현재 RAX와 `f->R.rax`가 다를 수 있다. 앞의 값은 handler를 실행하다 멈춘 CPU 상태이고, 뒤의 값은 Assembly가 메모리에 저장한 syscall 번호다. Handler가 `f->R.rax`에 반환값을 쓰면 같은 필드는 이제 복귀할 값을 담는다. 저장된 Frame도 생성 이후 언제 읽었는지 확인해야 한다.
+
+RSP가 어느 Stack을 가리키는지도 중단 위치에 따라 다르다. [SYSCALL 진입 직후](/wiki/computer-systems-network-topic-3cc26725c1cb/#진입-주소에-도착해도-스택은-아직-사용자-것이다)에는 아직 User Stack이고, PintOS Assembly가 Kernel Stack으로 옮긴 뒤에야 Handler의 Frame을 쌓는다. [인터럽트와 syscall의 복귀](/wiki/computer-systems-network-topic-41565131cfca/#인터럽트와-시스템-콜은-복귀-경로가-다르다), [fork의 User RSP와 Kernel 실행 문맥](/wiki/computer-systems-network-topic-4af2e32913a4/#같은-가상-주소와-다른-프레임)을 구분하면 같은 Register 이름을 다른 Stack의 주소로 잘못 읽는 일을 피할 수 있다. QEMU에서 이 값을 전달하는 과정은 [Guest Register의 번호 변환](/wiki/computer-systems-network-qemu-b1366076be02/#gdb-번호와-regs-배열의-번호)에 연결되어 있다.
 
 RIP·RSP·Flag와 일부 GPR을 복원한다고 CPU의 모든 상태를 복원한 것은 아니다. 주소 공간을 고르는 CR3, FPU·SIMD, Debug Register 같은 상태는 별도 경로를 가진다. [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에서 `intr_frame`의 192 Byte 배치와 복원 코드를 읽고, [Debugger](/wiki/platform-delivery-operations-topic-f89d71c7eb29/)에서 현재 Frame과 저장된 Frame을 같은 중단점에서 비교한다. 다음에 Register 값이 이상해 보이면 먼저 값의 크기, 호출 규약, 관찰 시점을 각각 확인한다.
