@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: 8f195062c41f2a9e00ddd956f9a61ce7c4ea13ce7b105ea2cb9808cb4fe3c46c
+projection_sha256: 9cf916e157c8cd2ca8d4e31c0e0e7f69fae121674b80f2cc68457878379a9262
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
@@ -206,7 +206,7 @@ Guest 가상 주소를 페이지 테이블로 변환하는 것은 CPU의 MMU와 
 
 ## Guest의 물리 주소를 Host 메모리에 연결한다
 
-PintOS의 PTE에 들어 있는 물리 주소는 **Guest Physical Address(GPA)**다. QEMU 프로세스 안의 포인터인 Host Virtual Address(HVA)와도, Host OS가 관리하는 물리 주소(HPA)와도 다르다. Guest가 RAM을 접근하는 TCG 경로에서는 Guest VA를 GPA로 번역하고, QEMU가 그 GPA의 영역을 Host 메모리에 연결한다. 마지막 Host VA의 변환은 Host OS와 CPU가 담당한다. 물리 주소 공간에는 장치 영역도 있으므로 PA를 언제나 DRAM의 위치라고 읽을 수는 없다.
+PintOS의 PTE에 들어 있는 물리 주소는 **Guest Physical Address(GPA)**다. QEMU 프로세스 안의 포인터인 Host Virtual Address(HVA)와도, Host OS가 관리하는 물리 주소(HPA)와도 다르다. Guest가 RAM에 접근하는 TCG 경로에서는 Guest VA를 GPA로 번역하고, QEMU가 그 GPA의 영역을 Host 메모리에 연결한다. 마지막 Host VA의 변환은 Host OS와 CPU가 담당한다. 물리 주소 공간에는 장치 영역도 있으므로 PA를 언제나 DRAM의 위치라고 읽을 수는 없다.
 
 `palloc_get_page(PAL_USER)`가 반환하는 Kernel VA, PTE에 넣는 GPA, 프로세스가 사용하는 User VA의 관계는 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)의 두 VA 예제에서 확인할 수 있다. 그 계산에 QEMU의 RAMBlock을 더할 때는 먼저 GPA가 **어느 영역으로 번역되는지** 찾아야 한다.
 
@@ -240,6 +240,10 @@ QEMU v10.0.0의 `address_space_rw(as, addr, attrs, buf, len, is_write)`에서 `a
 이 버전의 `address_space_rw()`는 쓰기일 때 `address_space_write()`, 읽기일 때 `address_space_read_full()`을 호출한다. 이후 FlatView에서 Region과 그 내부 위치를 구한다. 한 요청이 영역 경계를 넘으면 남은 범위를 다시 번역해 처리한다. MMIO 접근은 장치가 지원하는 크기·정렬·Byte Order도 고려한다. [읽기·쓰기의 실제 분기](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L2920)
 
 직접 접근할 수 있는 RAM의 읽기는 Host 버퍼로 복사하고, 쓰기는 backing에 복사한 뒤 QEMU의 dirty tracking과 코드 무효화 처리를 한다. 일반 ROM 읽기와 ROM device 쓰기는 같은 경로가 아니며, Debug 접근에는 ROM 쓰기를 허용하는 별도 조건도 있다. `mr->ram` 하나만으로 모든 읽기·쓰기의 효과를 결정할 수는 없다. 장치 callback의 실패나 연결되지 않은 영역은 `MemTxResult`로 전달된다. 이 결과가 Guest에서 어떤 예외나 장치 동작으로 나타나는지는 호출 경로까지 확인해야 한다. [직접 접근의 조건](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/memory.h#L3015)
+
+`address_space_map()`은 선택한 주소 공간의 일부에 접근할 Host 포인터를 얻는다. 직접 접근 가능한 RAM이면 backing의 포인터를 돌려주지만, 그 밖의 경로에서는 임시 Bounce Buffer를 사용할 수 있다. 반환값을 언제나 RAM의 별칭으로 해석해서는 안 된다. 요청보다 짧은 범위만 제공하거나 자원 부족으로 NULL을 반환할 수 있으므로, 포인터와 갱신된 `plen`을 함께 확인한다. [Mapping의 반환 경로](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L3385-L3454)
+
+사용을 마치면 같은 `AddressSpace`와 포인터, 반환된 길이로 `address_space_unmap()`을 호출하고, `access_len`에는 실제 읽거나 쓴 길이를 전달한다. 쓰기 Mapping이면 직접 RAM의 dirty 상태를 반영하거나 Bounce Buffer의 내용을 주소 공간에 다시 쓴다. 이 API는 읽기 또는 쓰기 한 방향으로 사용하며, 같은 Mapping에서 값을 읽고 수정하는 read-modify-write 용도로 쓰지 않는다. [Map·Unmap 계약](https://github.com/qemu/qemu/blob/v10.0.0/include/exec/memory.h#L2923-L2953), [쓰기 반영과 자원 반환](https://github.com/qemu/qemu/blob/v10.0.0/system/physmem.c#L3456-L3493)
 
 ### 영역의 배치와 실제 조회 구조를 구별한다
 

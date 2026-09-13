@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: 8ce76e9a22a6ffd463f5ce4220c9fa7b87429a5012fdb4bdc2f6f6035d2db24e
+projection_sha256: 24ca77debebcf673a140901301a0f61347438bdd580b38e9189af6fbd780afc9
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -479,7 +479,9 @@ Kernel VA = Guest PA + KERN_BASE
 Guest PA  = Kernel VA - KERN_BASE
 ```
 
-`ptov()`는 첫 번째 계산으로 포인터를 만들고, `vtop()`은 Kernel 주소인지 ASSERT로 확인한 뒤 두 번째 계산을 한다. 이 산술 함수가 실제 메모리 접근 때 호출되어 CPU의 주소 번역을 대신하는 것은 아니다. CPU는 현재 Page Table과 TLB를 통해 주소를 번역하며, 직접 Mapping은 위 관계가 성립하도록 미리 구성된 Mapping이다. 변환 매크로만으로 해당 물리 주소에 RAM이 존재하거나 접근 권한이 있다고 증명할 수도 없다.
+`ptov()`는 첫 번째 계산으로 포인터를 만들고, `vtop()`은 Kernel 주소인지 ASSERT로 확인한 뒤 두 번째 계산을 한다. 이 주소 계산이 CPU의 주소 번역을 대신하는 것은 아니다. CPU는 현재 Page Table과 TLB를 통해 주소를 번역하며, 직접 Mapping은 위 관계가 성립하도록 미리 구성된 Mapping이다. 변환 매크로만으로 해당 물리 주소에 RAM이 존재하거나 접근 권한이 있다고 증명할 수도 없다.
+
+예를 들어 PA `0xa000`에 대응하는 KVA는 `0x800400a000`이다. `0xa000`은 40 KiB이며, 4 KiB 페이지를 0부터 세면 Frame 번호는 10, 순서로는 열한 번째 페이지다. 이는 주소 관계를 보여 주는 계산 예시다. 이 주소를 `palloc_get_page(PAL_USER)`가 실제로 반환했다고 보거나, 변환 결과만으로 할당 가능한 Frame이라고 판단해서는 안 된다.
 
 [`pml4_set_page()`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c)는 `upage`에 해당하는 leaf PTE를 찾거나 만들고 다음 값을 기록한다.
 

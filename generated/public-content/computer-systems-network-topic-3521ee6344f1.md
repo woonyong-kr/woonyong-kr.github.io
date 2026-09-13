@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3521ee6344f1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3521ee6344f1
-projection_sha256: 68904fdd97ae3bb28325d5f2624a137834d97d6d1ef3efe4389b9b7d5f095e2a
+projection_sha256: 4bdf4d02c061849844d04a9a1260ded09de184ecc89d8e49a4f1c51e7a83313b
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -40,6 +40,10 @@ x86-64의 4단계 Paging에서는 bit 47을 상위 16비트로 부호 확장한 
 
 Canonical 주소라도 Mapping이 없거나 권한이 맞지 않으면 접근할 수 없다. 반대로 낮은 canonical 범위 안에 Kernel을 놓을 수도 있다. Linux x86-64의 전형적인 배치는 낮은 범위에 프로세스의 Mapping을, 높은 범위에 Kernel의 직접 Mapping·vmalloc·vmemmap·실행 이미지 등을 둔다. KASLR과 빌드 설정에 따라 일부 기준 주소가 달라지며, PTI를 사용하면 User와 Kernel 실행 때 사용하는 Page Table도 구분된다. 아래 PintOS의 `KERN_BASE`를 Linux의 `PAGE_OFFSET`으로 바꿔 끼우면 같은 주소 계산이 되지 않는다. [Linux 6.16의 주소 배치](https://docs.kernel.org/6.16/arch/x86/x86_64/mm.html), [PTI](https://docs.kernel.org/6.16/arch/x86/pti.html)
 
+Linux 6.16 문서의 기본 x86-64 주소 배치에서 직접 Mapping에 배정한 가상 영역은 4단계 Page Table일 때 64 TiB, 5단계일 때 32 PiB다. 이는 설치된 RAM 용량이나 모든 실행의 실제 Mapping 범위를 뜻하지 않는다. 4단계의 기본 기준 주소는 `0xffff888000000000`이지만, `CONFIG_RANDOMIZE_MEMORY`와 KASLR 활성 상태에 따라 부팅 때 위치와 범위가 조정될 수 있다. [Linux 6.16의 기본 주소 배치](https://docs.kernel.org/6.16/arch/x86/x86_64/mm.html), [KASLR의 영역 조정](https://github.com/torvalds/linux/blob/v6.16/arch/x86/mm/kaslr.c#L100-L168)
+
+같은 버전의 `__va(pa)`는 `PAGE_OFFSET`을 더하지만, `__pa(kva)`를 모든 Kernel 주소에서 그 상수를 빼는 함수로 설명하면 안 된다. 비디버그 구현의 `__phys_addr_nodebug()`는 직접 Mapping 주소와 Kernel 실행 이미지 주소를 구분하며, 후자에는 `__START_KERNEL_map`과 `phys_base`를 사용한다. PintOS의 고정 오프셋 변환과 비교할 때도 주소가 어느 영역에 속하는지 먼저 확인해야 한다. [변환 매크로](https://github.com/torvalds/linux/blob/v6.16/arch/x86/include/asm/page.h#L40-L59), [x86-64의 물리 주소 계산](https://github.com/torvalds/linux/blob/v6.16/arch/x86/include/asm/page_64.h#L22-L39)
+
 ## 실행 파일에서 메모리로
 
 Linux의 ELF 실행 파일을 예로 들어 `g`의 경로를 따라가 보자. 컴파일러와 어셈블러는 소스를 기계어와 데이터, 심볼 정보가 있는 목적 파일로 바꾼다. 링커는 목적 파일들을 결합하면서 심볼 참조를 해결하고 실행 파일의 배치를 정한다. 일반적인 구성에서 쓰기 가능한 전역 변수의 초기값 42는 `.data`에 들어간다. 실제 배치는 최적화와 Linker 설정에 따라 달라질 수 있다.
@@ -48,7 +52,7 @@ Linux의 ELF 실행 파일을 예로 들어 `g`의 경로를 따라가 보자. �
 
 `execve()`로 새 프로그램을 실행하면 Kernel은 기존 주소 공간의 Mapping을 새 실행 이미지에 맞게 바꾼다. 동적 링크 ELF라면 `PT_INTERP`가 지정한 인터프리터도 관여해 필요한 공유 라이브러리를 준비한다. 실행 파일에 있는 내용을 모두 먼저 읽어야만 프로그램이 시작되는 것은 아니다. [Linux의 `execve()`](https://man7.org/linux/man-pages/man2/execve.2.html)
 
-프로그램이 `g`를 처음 읽는 순간에도 여러 경로가 가능하다. 같은 페이지를 이미 접근했거나 로딩 과정에서 준비했다면 곧바로 읽을 수 있다. 페이지가 아직 현재 프로세스에 연결되지 않았지만 파일 내용이 Page Cache에 있다면 디스크를 읽지 않는 Minor Fault로 처리할 수 있다. 저장 장치에서 내용을 가져와야 하는 경우에는 Major Fault가 발생할 수 있다. 따라서 ‘변수의 첫 접근 → Page Fault → 디스크 읽기’가 언제나 성립하는 것은 아니다. Fault의 종류와 처리 경로는 [Page Fault](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 이어진다.
+프로그램이 `g`를 처음 읽는 순간에도 여러 경로가 가능하다. 같은 페이지에 이미 접근했거나 로딩 과정에서 준비했다면 곧바로 읽을 수 있다. 페이지가 아직 현재 프로세스에 연결되지 않았지만 파일 내용이 Page Cache에 있다면 디스크를 읽지 않는 Minor Fault로 처리할 수 있다. 저장 장치에서 내용을 가져와야 하는 경우에는 Major Fault가 발생할 수 있다. 따라서 ‘변수의 첫 접근 → Page Fault → 디스크 읽기’가 언제나 성립하는 것은 아니다. Fault의 종류와 처리 경로는 [Page Fault](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 이어진다.
 
 ### 파일에 없는 0은 어디서 오는가
 
