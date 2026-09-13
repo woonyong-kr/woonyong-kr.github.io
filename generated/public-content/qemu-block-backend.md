@@ -6,7 +6,7 @@ permalink: /wiki/qemu-block-backend/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/computer-systems-network/os/pintos/qemu/block-backend
-projection_sha256: a9b9399dd4156239489beca33a006725e99c9dece42ae898ef9f5d1288097a58
+projection_sha256: e18e0d60e436d8f45729da65ba374d9e6c247ccac483444c6cd80e79aa853a2b
 parent: QEMU
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
@@ -47,6 +47,8 @@ Raw 이미지가 Host의 일반 파일에 저장된 구성이라면 다음 계�
 ## Sector 42를 쓰면 무엇이 바뀌는가
 
 PintOS가 `disk_write(swap_disk, 42, buffer)`를 호출하면 현재 Driver는 LBA 42와 512바이트를 Secondary Slave로 보낸다. QEMU IDE의 `ide_sector_write()`는 LBA에 `BDRV_SECTOR_BITS`인 9만큼 왼쪽 Shift를 적용한다. 바이트 오프셋은 **21,504, 즉 `0x5400`**이다.
+
+QEMU v10.0.0의 `cmd_write_pio()`는 한 번에 받을 Sector 수를 1로 정하고, 512바이트를 받을 버퍼와 `ide_sector_write()` Callback을 등록한다. Guest가 PIO로 데이터를 보낸 뒤 이 Callback이 Sector 번호를 읽고 I/O Vector를 준비해 `blk_aio_pwritev()`를 호출한다. 따라서 명령을 해석하는 시점과 데이터를 Backend에 쓰는 시점은 구분해야 한다. [PIO 쓰기의 시작](https://github.com/qemu/qemu/blob/v10.0.0/hw/ide/core.c#L1554-L1572), [Sector 데이터의 Backend 전달](https://github.com/qemu/qemu/blob/v10.0.0/hw/ide/core.c#L1075-L1102)
 
 QEMU v10.0.0의 해당 쓰기는 `blk_aio_pwritev()`에 오프셋, I/O Vector, Flag와 완료 Callback을 전달한다. 읽기는 `ide_sector_read()`에서 `ide_buffered_readv()`를 거쳐 `blk_aio_preadv()`로 이어진다. Guest가 IDE 요청을 동기적으로 기다려도 QEMU는 이 인터페이스에서 비동기 완료를 다룬다. [IDE 읽기·쓰기 코드](https://github.com/qemu/qemu/blob/v10.0.0/hw/ide/core.c)
 
@@ -95,6 +97,18 @@ Scratch와 Swap은 모두 Secondary Channel에 연결된다. `d->channel->reg_ba
 ## Guest와 Host를 따로 관찰한다
 
 PintOS를 원격 디버깅하는 GDB는 Guest Kernel의 Symbol을 읽는다. QEMU 자체의 `ide_sector_write()`에 Breakpoint를 걸려면 QEMU Debug Symbol을 가진 Host Debugger가 별도로 필요하다. Guest GDB에 QEMU 함수 이름을 입력한다고 같은 실행 문맥을 관찰할 수 있는 것은 아니다.
+
+QEMU의 디버그 심볼을 가진 Host GDB에서는 다음 진입점을 따라갈 수 있다. 아래 명령은 관찰 지점이며 실제 실행 로그가 아니다.
+
+```gdb
+break cmd_write_pio
+break ide_sector_write
+break blk_aio_pwritev
+```
+
+`cmd_write_pio()`에서는 `s->req_nb_sectors`가 대입된 뒤 값을 읽는다. `ide_sector_write()`에서는 `sector_num = ide_get_sector(s)`와 I/O Vector 초기화를 지난 뒤 `sector_num`, `s->qiov.size`를 확인한다. `blk_aio_pwritev()`에 들어가면 `info args`로 인자를 보고 `offset`과 `qiov->size`를 읽는다. `sector_num`은 이 마지막 함수의 지역 변수가 아니다.
+
+요청의 `blk`가 조사 중인 Swap 이미지와 연결된 Backend인지도 함께 확인해야 파일 시스템 쓰기를 Swap 쓰기로 오인하지 않는다. Sector 24 한 개를 보내는 경우 비교할 값은 오프셋 `0x3000`과 길이 512바이트다. [BlockBackend의 쓰기 인자](https://github.com/qemu/qemu/blob/v10.0.0/block/block-backend.c#L1716-L1724)
 
 Guest에서는 `disk_write()`의 장치·Sector·버퍼와 Call Stack을 확인한다. 그다음 Host에서 해당 Raw 이미지의 같은 범위를 읽어 비교할 수 있다. 아래 명령은 **실제 이미지 경로를 확인한 뒤**, 이미지가 더 이상 바뀌지 않는 시점이나 일관된 복사본에서 사용하는 로컬 읽기 명령이다.
 

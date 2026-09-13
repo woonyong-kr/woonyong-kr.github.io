@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-swap-11630540adf8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-swap-11630540adf8
-projection_sha256: 803d7786a3e4960823b005c50d6681e4c81e301c80de5ddb0b0c1d1e39f4968d
+projection_sha256: 29fd2b4f50ee54ee178f9074f3528583f9275a491f4b8801cc5ea010108dc0cf
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -55,6 +55,28 @@ ANON Page는 먼저 UNINIT으로 등록된 뒤 타입별 초기화를 거친다.
 예를 들어 Slot 5는 Sector 40–47에 저장된다. 논리 디스크에서의 시작 Offset은 20,480바이트다. 이 값을 QEMU 이미지 파일의 물리적인 저장 위치와 항상 같다고 가정할 수는 없다. 이미지 형식과 Block Backend가 그 사이의 변환을 담당한다.
 
 `vm_anon_init()`은 장치의 전체 Sector 수를 8로 나눈 몫만큼 Bitmap을 만든다. 1 MiB 장치라면 256개, 4 MiB 장치라면 1,024개 Slot에 해당한다. 장치가 없거나 Bitmap을 만들지 못하면 Swap 입출력을 처리할 수 없다. Slot 개수는 실제 연결한 디스크로부터 구하며, 고정된 기본 용량을 전제로 하지 않는다.
+
+`swap-anon`은 20 MiB 배열에 4 KiB 간격으로 한 바이트씩, 총 5,120곳에 접근하며, `Make.tests`는 이 테스트에 `MEMORY=10`, `SWAP_DISK=30`, `TIMEOUT=180`을 지정한다. 여기서 `SWAP_DISK=30`을 정확히 30 MiB라고 읽어서는 안 된다. 이 실행기는 정수 크기로 임시 디스크를 만들 때 `0xfc000 × 크기`바이트를 기록한다. 아래 계산은 이 생성식과 4 KiB Page를 기준으로 하며, 실제 연결된 디스크를 읽거나 테스트를 실행하지 않는다. [swap-anon 설정](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/Make.tests#L127-L129), [임시 디스크 생성식](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/utils/pintos#L42-L55)
+
+```run-python
+swap_disk_option = 30
+array_mib = 20
+page_bytes = 4096
+sector_bytes = 512
+assert isinstance(swap_disk_option, int) and swap_disk_option > 0
+assert isinstance(array_mib, int) and array_mib > 0
+
+image_bytes = 0xfc000 * swap_disk_option
+sector_count = image_bytes // sector_bytes
+slot_count = sector_count // (page_bytes // sector_bytes)
+access_count = array_mib * 1024 * 1024 // page_bytes
+print("이미지 바이트:", image_bytes)
+print("Sector 수:", sector_count, "Slot 수:", slot_count)
+print("4 KiB 간격의 접근 수:", access_count)
+assert slot_count * page_bytes <= image_bytes < (slot_count + 1) * page_bytes
+```
+
+기본값으로 계산하면 이미지 30,965,760바이트, Sector 60,480개, Slot 7,560개다. 4 KiB 간격의 접근 5,120회가 Slot 수보다 적다는 사실만으로 테스트 통과나 특정 Page의 Swap Out을 증명할 수는 없다. 실제 Frame 공급량과 다른 Page의 사용량, 교체 정책도 영향을 준다. 4 KiB 간격으로 한 바이트씩 비교하는 테스트의 범위는 [페이지 교체의 테스트 관찰](/wiki/computer-systems-network-topic-163345dd1b02/#gdb로-선택과-재사용을-따라가기)에서 이어서 살펴본다.
 
 페이지 안의 바이트와 디스크의 Sector가 어떻게 대응하는지 계산해 보자. 아래에서 `slot`을 바꾸면 같은 페이지가 다른 Slot에 저장될 때의 범위를 볼 수 있다. 메모리 주소는 이 계산에 들어가지 않는다.
 
@@ -208,6 +230,8 @@ print("PintOS 비트 배열의 데이터 크기:", len(words) * 8, "바이트")
 
 이미 Swap에 있는 부모 Page의 복사도 별도로 검토해야 한다. 이 버전의 SPT 복사에서 새 자식 Page를 Claim하는 것만으로 부모의 Swap 내용을 복원해 복제하는 절차가 완성되지는 않는다. Frame이 있는 Page의 COW 분기와 디스크에만 데이터가 남은 Page는 입력 상태가 다르다. 자세한 복사 경로는 [프로세스 생성](/wiki/computer-systems-network-topic-4af2e32913a4/)에서 다룬다.
 
+W11 기준 커밋 `09390dd`는 Bitmap과 별도로 `size_t` 참조 수 배열을 할당하고 모든 원소를 0으로 초기화한다. 초기화 중 Swap 장치, Bitmap 또는 참조 수 배열을 확보하지 못하면 각각 Panic으로 멈춘다. 이후 `swap_slot_alloc()`이 빈 비트를 점유하면서 해당 카운터를 1로 바꾸고, `swap_slot_ref()`·`swap_slot_unref()`는 Slot 범위를 검사하고, 같은 Lock 안에서 점유 비트와 양수 참조 수를 확인한 뒤 증감한다. 현재 학습 레포의 Bitmap만 사용하는 구현과 구분해야 한다. [W11 Slot 관리 초기화와 참조 수](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L39-L97)
+
 Slot 공유를 설계하려면 한쪽이 복원했다고 다른 쪽의 복구 데이터까지 해제하지 않도록 해야 한다. 아래는 이 수명 조건만 보여 주는 별도 모델이다. 현재 PintOS가 구현한 기능을 실행하는 코드는 아니다.
 
 참조 카운트를 별도 배열로 두는 설계라면 비트 배열 외의 저장 공간도 필요하다. 예를 들어 1,024개 Slot마다 64비트 카운터를 둔다면 카운터 배열만 8 KiB다. 이는 현재 구현의 메모리 사용량이 아니라 그 설계를 추가했을 때의 계산이다.
@@ -246,6 +270,8 @@ Linux에서는 Block 계층의 BIO에 페이지와 그 안의 범위를 연결�
 이 코드에서 빈 Slot 없음이나 Swap 장치 없음은 `false` 반환으로 이어질 수 있다. 반면 `disk_read()`·`disk_write()`는 Sector별 성공 여부를 `bool`로 돌려주는 API가 아니다. 여덟 번 중 일부만 끝난 디스크 오류를 Swap 함수가 원자적으로 되돌린다고 보장할 수 없다. 정상 반환의 의미와 전원 손실 뒤의 영속성도 같은 조건이 아니다.
 
 ## GDB에서 Page와 Bitmap을 관찰하기
+
+`vm_anon_init()`에서는 `disk_get()` 결과를 대입한 줄을 지난 뒤 `swap_disk`가 NULL이 아닌지 확인하고 `swap_disk->name`을 읽는다. 현재 학습 레포의 Bitmap은 생성 이후 `swap_table`에서 관찰한다. W11의 `disk_bitmap`·`swap_slot_count`·`swap_ref_count`는 참조 수 배열의 초기화까지 끝난 뒤 대조한다.
 
 해당 Revision을 디버그 정보와 함께 빌드하고 실행 중인 PintOS에 GDB를 연결한 상태에서 다음 함수에 멈출 수 있다. 아래는 관찰 절차이며 실제 실행 로그는 아니다.
 

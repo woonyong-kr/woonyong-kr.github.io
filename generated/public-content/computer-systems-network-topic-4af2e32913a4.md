@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: 93778e3289db01073baa09b4cf0736dba9b0f2c4383c3ae3956912bd612e408c
+projection_sha256: d092691808e095066e5b1e436b7393dbae37e64893d4688434e70627aacf325a
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -447,7 +447,9 @@ print("같은 데이터 참조, 별도 위치와 닫힘 상태")
 
 현재 `multi-oom`의 기준 상수는 10이다. 첫 실행 깊이를 구한 뒤 10회 더 반복하며, 각 반복의 깊이가 첫 값보다 작으면 실패한다. 파일 앞의 “최소 28개” 또는 “항상 같은 깊이”라는 오래된 주석보다 실제 상수와 `< first_run_depth` 조건을 기준으로 읽는다. 별도 비정상 종료 자식도 만들지만, 이 테스트 하나로 모든 실패 분기의 해제 횟수가 정확하다고 증명할 수는 없다.
 
-`swap-fork`와 `page-parallel`은 자식이 fork 직후 새 프로그램을 exec하는 테스트다. `swap-fork`는 자식 10개가 `child-swap`을 실행하고 모두 0으로 종료하는지 확인한다. `child-swap`의 주석에는 5MB라고 쓰여 있지만, 실제 배열은 1 MiB이며 4 KiB Page 256개의 첫 바이트에만 값을 쓰고 다시 비교한다. `page-parallel`은 자식 4개가 `child-linear`를 실행하게 하고, 각 자식은 1 MiB 버퍼를 암호화·복호화한 뒤 모든 바이트가 0인지 검사하여 `0x42`를 반환한다. 따라서 두 테스트가 통과해도 부모의 swapped Page를 자식이 exec 없이 직접 읽어 복제 내용을 확인했다고 볼 수는 없다. 실제 Swap In·Out 발생 여부와 Slot 소유권은 실행 설정과 해당 경로의 관찰로 따로 확인해야 한다. [swap-fork의 자식 실행](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-fork.c#L10-L31), [child-swap의 검사 범위](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-swap.c#L12-L37), [page-parallel의 자식 수와 종료 값](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/page-parallel.c#L7-L25), [child-linear의 바이트 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-linear.c#L10-L35)
+`swap-fork`와 `page-parallel`은 자식이 fork 직후 새 프로그램을 exec하는 테스트다. `swap-fork`는 자식 10개가 `child-swap`을 실행하고 모두 0으로 종료하는지 확인한다. `child-swap`의 주석에는 5MB라고 쓰여 있지만, 실제 배열은 1 MiB이며 배열에 4 KiB 간격으로 한 바이트씩 256곳에 값을 쓰고 다시 비교한다. `page-parallel`은 자식 4개가 `child-linear`를 실행하게 하고, 각 자식은 1 MiB 버퍼를 암호화·복호화한 뒤 모든 바이트가 0인지 검사하여 `0x42`를 반환한다. 따라서 두 테스트가 통과해도 부모의 swapped Page를 자식이 exec 없이 직접 읽어 복제 내용을 확인했다고 볼 수는 없다. 실제 Swap In·Out 발생 여부와 Slot 소유권은 실행 설정과 해당 경로의 관찰로 따로 확인해야 한다. [swap-fork의 자식 실행](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-fork.c#L10-L31), [child-swap의 검사 범위](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-swap.c#L12-L37), [page-parallel의 자식 수와 종료 값](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/page-parallel.c#L7-L25), [child-linear의 바이트 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-linear.c#L10-L35)
+
+`child-swap`은 모든 자식에서 배열의 같은 위치 `i × PAGE_SIZE`에 같은 값 `(char)i`를 기록한다. 따라서 서로 다른 자식의 같은 위치를 잘못된 Page에 연결해도, 비교하는 바이트가 같다면 이 검사에서 오류가 드러나지 않을 수 있다. 자식별 격리 검사를 보강할 때는 프로세스마다 구분되는 데이터를 사용하고 각 SPT·Page·Slot의 대응도 함께 확인해야 한다. 이는 현재 테스트의 쓰기·비교식을 바탕으로 판단한 검사 한계이며, 잘못된 공유를 실제 Kernel에서 재현한 결과는 아니다. [child-swap의 쓰기와 비교](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-swap.c#L26-L36)
 
 학습 레포의 `Make.tests`는 `swap-fork`에 `MEMORY=40`, `SWAP_DISK=200`, `TIMEOUT=600`을 지정한다. 이 테스트별 설정을 모든 실행의 기본값으로 일반화하지 않는다. [swap-fork의 실행 설정](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/Make.tests#L136-L138)
 

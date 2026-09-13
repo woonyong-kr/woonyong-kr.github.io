@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-163345dd1b02/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-163345dd1b02
-projection_sha256: ecf0f61d36a5ec90be9cf81bc80d2d04754f2aa9b2e027018b7183319ee82366
+projection_sha256: 0a4246ec57b2eda70239c68c22cf6cd82393569e3444e15c3ad43afe178e1faa
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -152,7 +152,7 @@ assert reused['kva'] == original['kva'] and reused['page'] != original['page']
 print('같은 Frame의 새 용도:', reused)
 ```
 
-`frame_lock`은 후보 목록을 순회하고 선택하는 구간을 보호하며 `vm_get_victim()`을 반환할 때 해제된다. 이어지는 Swap I/O 전체를 그 Lock이 보호한다고 설명할 수는 없다. 동시성까지 검증하려면 선택한 Frame의 수명과 재진입, 다른 Thread의 변경 가능성을 별도로 추적해야 한다.
+`frame_lock`은 후보 목록을 순회하고 선택하는 구간을 보호하며 `vm_get_victim()`이 반환할 때 해제된다. 이어지는 Swap I/O 전체를 그 Lock이 보호한다고 설명할 수는 없다. 동시성까지 검증하려면 선택한 Frame의 수명과 재진입, 다른 Thread의 변경 가능성을 별도로 추적해야 한다.
 
 ## COW와 Accessed Bit의 관찰 범위
 
@@ -210,9 +210,13 @@ NRU나 Enhanced Clock 계열에서는 Accessed와 Dirty를 함께 고려할 수 
 
 Linux는 메모리 압력에 따라 `kswapd`가 비동기로 회수하거나, 할당을 수행하는 흐름에서 Direct Reclaim을 진행한다. Page Cache와 익명 메모리는 복원 방법이 다르며, 모든 Kernel Page나 DMA 버퍼를 같은 방식으로 재사용할 수 있는 것도 아니다. NUMA 환경에서는 Node와 Zone별 상태도 영향을 준다. PintOS의 단일 Frame 목록과 즉시 교체 흐름을 Linux의 전체 정책으로 옮겨 설명하지 않는다. [Linux 메모리 회수](https://docs.kernel.org/admin-guide/mm/concepts.html#reclaim)
 
+Linux cgroup v2에서는 메모리 회수의 압력과 Swap 사용 한도도 그룹별로 제어한다. `memory.high`를 넘으면 해당 그룹의 실행을 늦추고 회수를 유도하며, `memory.swap.max`는 Swap 사용량의 상한을 둔다. 따라서 전체 RAM과 Swap의 빈 공간만으로 특정 프로세스가 사용할 수 있는 양을 판단하기는 어렵다. [Linux v6.12 cgroup의 메모리 제어](https://docs.kernel.org/6.12/admin-guide/cgroup-v2.html#memory)
+
 전통적인 Active/Inactive LRU 계열과 Multi-Gen LRU도 구분해야 한다. Multi-Gen LRU는 접근 시기가 비슷한 페이지를 세대로 관리하는 대안이며, 사용 여부는 Kernel Build와 실행 설정에 따라 달라진다. 실행 환경을 비교할 때는 활성화된 정책과 페이지별 최근 접근 정보를 함께 확인해야 한다. [Multi-Gen LRU](https://docs.kernel.org/admin-guide/mm/multigen_lru.html)
 
 Windows에서는 프로세스의 Working Set에서 페이지를 제거해도 그 내용이 곧바로 RAM에서 사라지는 것은 아니다. 모든 Working Set에서 빠진 뒤에도 다시 참조되거나 다른 용도로 재사용될 때까지 Transition 상태로 남을 수 있다. 수정된 내용은 재사용 전에 Backing Store에 보존해야 한다. 이미 메모리에 남은 페이지로 해결하는 Soft Fault와 파일·Pagefile을 읽어야 하는 Hard Fault도 구분한다. PintOS의 즉시 Frame 재사용과 Windows의 Working Set 조정을 같은 한 단계로 대응시키기 어려운 이유다. [Windows Working Set](https://learn.microsoft.com/en-us/windows/win32/memory/working-set)
+
+메모리 압축도 디스크로 내보내기와 구분한다. Linux의 zswap은 Swap으로 보낼 Page를 압축해 RAM의 Cache에 보관할 수 있고, Windows 10의 메모리 압축도 내용을 압축한 채 RAM에 유지하는 경로를 제공한다. 압축에는 CPU 작업이 필요하므로, 줄어드는 메모리와 디스크 I/O뿐 아니라 복원 비용도 함께 살펴야 한다. [Linux v6.12 zswap](https://docs.kernel.org/6.12/admin-guide/mm/zswap.html), [Windows 10 메모리 압축](https://learn.microsoft.com/en-us/shows/seth-juarez/memory-compression-in-windows-10-rtm)
 
 페이지 수와 I/O 비용을 계산할 때도 단위를 먼저 고른다. PintOS의 교체 순회에 들어가는 `N`은 그 시점의 `frame_table` 원소 수다. 총 RAM을 4 KiB로 나눈 값과는 다르다. ANON Page 하나를 내보내는 경로는 512바이트 Sector 쓰기 여덟 번이며, File Page의 Writeback 범위는 `page_read_bytes`다. 이 호출 횟수는 QEMU나 호스트 디스크의 실제 I/O 횟수나 지연 시간을 뜻하지 않는다. Swap 용량·Bitmap 크기의 계산은 [Swap](/wiki/computer-systems-network-swap-11630540adf8/)에 이어진다.
 
@@ -235,7 +239,11 @@ continue
 
 데이터 경로까지 볼 때는 `disk_write`, `disk_read`에 멈춰 `info args`로 실제 인자 이름과 Sector 번호를 확인한다. 파일 Writeback에서는 `page_read_bytes`와 반환한 바이트 수를 비교한다. 이후 `vm_do_claim_page()`에서 같은 `kva`가 새 Page에 연결되는지를 따라가면 ‘선택됨’과 ‘재사용 완료’를 구분할 수 있다.
 
-실제 테스트도 이름이나 오래된 주석 대신 수행하는 연산을 읽어 골라야 한다. 같은 Revision의 [`page-linear.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/page-linear.c)는 5 MiB를 채우고 읽은 뒤 두 차례 변환해 원래 값이 유지되는지 검사한다. [`swap-anon.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-anon.c)는 20 MiB 배열의 각 페이지 첫 바이트를 기록하고 다시 비교한다. 반면 [`swap-file.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-file.c)의 본문은 읽기 전용 mmap 데이터와 파일 끝부분의 0 채움을 검사하며, 주석에 적힌 익명 페이지로 메모리 채우기 단계는 없다. 이 파일만 보고 Dirty Writeback과 실제 교체가 검증됐다고 주장할 수 없다. 여기서는 테스트 코드를 대조했으며, Kernel 테스트의 통과 결과를 제시하지 않는다.
+실제 테스트도 이름이나 오래된 주석 대신 수행하는 연산을 읽어 골라야 한다. 같은 Revision의 [`page-linear.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/page-linear.c)는 5 MiB를 채우고 읽은 뒤 두 차례 변환해 원래 값이 유지되는지 검사한다.
+
+[`swap-anon.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-anon.c)는 20 MiB 배열에 4 KiB 간격으로 한 바이트씩 기록하고 다시 비교한다. 배열이 Page 경계에 정렬돼 있다는 조건은 이 소스에 없으며, 이 PintOS의 8비트 `char`에 저장한 패턴은 `i`가 256 늘어날 때마다 반복된다. 따라서 같은 패턴을 저장한 위치끼리 바뀌는 오류는 이 비교만으로 놓칠 수 있다.
+
+반면 [`swap-file.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-file.c)의 본문은 읽기 전용 mmap 데이터와 파일 끝부분의 0 채움을 검사하며, 주석에 적힌 익명 페이지로 메모리 채우기 단계는 없다. 이 파일만 보고 Dirty Writeback과 실제 교체가 검증됐다고 주장할 수 없다. 여기서는 테스트 코드를 대조했으며, Kernel 테스트의 통과 결과를 제시하지 않는다.
 
 QEMU의 책임은 Guest 명령과 장치의 동작을 제공하는 것이다. 교체 대상 선택과 Swap Bitmap 관리는 PintOS 코드가 수행한다. Guest의 Accessed/Dirty 관찰, QEMU의 주소 변환 Cache, 디스크 Backend를 하나의 처리 단계처럼 섞지 않도록 [IDE Controller](/wiki/ide-controller/)와 [QEMU Block Backend](/wiki/qemu-block-backend/)의 경계를 함께 살펴본다.
 
