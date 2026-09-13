@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: 8c82a9f1c12bdb903bb175b732e4a4b7d84f362e60b2d59ac5bfb4ac7f5715fa
+projection_sha256: 8ce76e9a22a6ffd463f5ce4220c9fa7b87429a5012fdb4bdc2f6f6035d2db24e
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -437,7 +437,7 @@ offset이 `0x300`이면 현재 페이지에 남은 바이트 수는 `4096-768=33
 
 같은 내림 연산도 사용하는 목적은 다르다. SPT 검색은 fault 주소를 페이지 시작으로 정규화한다. `running_thread()`는 **Kernel Stack에서 실행 중인 RSP**가 `struct thread`와 같은 페이지에 놓인다는 배치 규칙을 이용한다. 임의의 User RSP를 내렸다고 Kernel의 thread 객체를 얻는 것은 아니다. Stack growth도 정렬만으로 허용하지 않는다. 현재 코드는 원래 fault 주소가 User Stack 최대 범위 안에 있고 기준 RSP의 32바이트 아래 이상인지 확인한 뒤 페이지를 확보한다. [SPT와 Stack growth](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [현재 Thread의 Stack 배치](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/thread.c)
 
-TLB는 변환을 재사용하지만 VPN과 PFN 두 숫자만 저장하는 단순 표로 이해하면 부족하다. 접근 종류와 권한, 주소 공간의 문맥도 관계된다. QEMU 10.0의 TCG 코드도 MMU index와 읽기·쓰기·명령어 접근을 구분하고, 직접 RAM을 접근할 수 있는 경로에서는 Guest VA에 `addend`를 더해 Host 포인터를 구한다. 모든 접근이 `mmu_translate()` 호출 하나를 거친다거나 TLB 태그의 하위 비트가 항상 0이라는 설명은 맞지 않는다. 이 Host 포인터 계산과 앞서 구한 Guest PA도 구별한다. [QEMU의 TLB 처리](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cputlb.c)
+TLB는 변환을 재사용하지만 VPN과 PFN 두 숫자만 저장하는 단순 표로 이해하면 부족하다. 접근 종류와 권한, 주소 공간의 문맥도 관계된다. QEMU 10.0의 TCG 코드도 MMU index와 읽기·쓰기·명령어 접근을 구분하고, RAM에 직접 접근할 수 있는 경로에서는 Guest VA에 `addend`를 더해 Host 포인터를 구한다. 모든 접근이 `mmu_translate()` 호출 하나를 거친다거나 TLB 태그의 하위 비트가 항상 0이라는 설명은 맞지 않는다. 이 Host 포인터 계산과 앞서 구한 Guest PA도 구별한다. [QEMU의 TLB 처리](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/cputlb.c)
 
 GDB에서 이미 멈춘 대상의 주소를 분해할 때는 다음처럼 64비트 마스크를 쓸 수 있다. 아래는 대상에 연결한 뒤 사용하는 관찰 명령이며 이 문서에서 실행한 GDB 결과는 아니다.
 
@@ -816,6 +816,34 @@ x/16xb (char *)upage + $page_byte_offset
 ```
 
 비교할 것은 PTE의 Frame 주소와 `kpage-KERN_BASE`, 두 Mapping이 가리키는 offset, 그리고 실제 바이트다. 서로 다른 두 Frame에 우연히 같은 데이터가 들어 있을 수도 있으므로 Dump 값이 같다는 사실 하나만으로 주소 별칭이 입증되지는 않는다. 프레임 번호와 유효한 Mapping을 함께 확인해야 한다.
+
+### 바이트 비교를 자동화할 때
+
+같은 Frame의 같은 offset을 읽더라도 비교 사이에 데이터나 Mapping이 바뀌면 결과가 달라질 수 있다. 관련 CPU를 멈추고, 같은 주소 공간과 가상 주소 모드에서 RAM을 비교한다. 덤프가 다르면 주소·offset·페이지 경계와 관찰 시점을 먼저 확인한다. 두 덤프가 모두 0이라는 사실만으로 적재 실패를 판단할 수도 없다. 원래 0이어야 하는 구간인지, 파일에서 읽어야 하는 구간인지에 따라 기대하는 값이 다르다.
+
+Mapping 확인과 적재 결과 확인도 시점을 나눠야 한다. 현재 PintOS의 `vm_do_claim_page()`는 `pml4_set_page()`가 성공한 **뒤에** `swap_in()`을 호출한다. 위 Breakpoint에서 PTE를 기록한 직후에는 파일 데이터가 아직 준비되지 않았을 수 있다. 적재 결과를 확인할 때는 로더가 끝난 지점에서 유효한 Frame을 다시 확인하고, 예상 파일 바이트와 zero-fill 범위를 대조한다. 파일 offset이나 초기화가 잘못되어도 같은 Frame을 보는 두 덤프는 똑같이 잘못된 값을 보여 줄 수 있다. [현재 claim 순서](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c)
+
+Python을 지원하는 GDB에서는 위 비교를 자동화할 수 있다. 다음 명령은 앞 절처럼 `pml4_set_page()` 안에 멈춘 상태에서 사용한다. `upage`·`kpage`가 유효하고 PTE 기록을 마쳤는지 먼저 확인한다. `$page_byte_offset`은 비교할 페이지 안의 위치다. 이 명령은 연결한 Guest의 메모리를 읽으므로 별도의 Python 실행기에서 실행하지 않는다. 실제 GDB 세션에서 얻은 출력은 이 문서에 기록하지 않았다. [`read_memory()`와 현재 Inferior](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-In-Python.html), [GDB 표현식 읽기](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Basic-Python.html)
+
+```gdb
+python
+import gdb
+
+offset = int(gdb.parse_and_eval("$page_byte_offset"))
+assert 0 <= offset < 4096
+length = min(16, 4096 - offset)
+user_address = int(gdb.parse_and_eval("(unsigned long long)upage")) + offset
+kernel_address = int(gdb.parse_and_eval("(unsigned long long)kpage")) + offset
+inferior = gdb.selected_inferior()
+user_bytes = bytes(inferior.read_memory(user_address, length))
+kernel_bytes = bytes(inferior.read_memory(kernel_address, length))
+print("same bytes:", user_bytes == kernel_bytes)
+print("user:", user_bytes.hex())
+print("kernel:", kernel_bytes.hex())
+end
+```
+
+offset이 `0xff8`이면 이번 페이지에서 읽을 수 있는 범위는 8바이트다. 다음 페이지까지 비교하려면 그 페이지의 Mapping과 Frame을 따로 확인해야 한다. `same bytes: True`는 이번에 읽은 바이트가 같다는 뜻이며, Frame의 동일성·User 접근 권한·적재 데이터의 정확성을 대신 검증하지 않는다. 주소를 읽지 못하면 GDB의 오류를 확인하고 멈춘 위치와 Mapping을 다시 살핀다.
 
 ### PTE의 권한과 접근 비트
 
