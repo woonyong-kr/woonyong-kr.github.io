@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-mlfqs-db815d97f954/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mlfqs-db815d97f954
-projection_sha256: dfad4ac4b7e550569fca7d5fe473659531a163d821c25cdedc518d246d50716f
+projection_sha256: 894f05a1fc2076a7a726b5d72cee533a7eb568370766aa7de90819b5cf575eba
 parent: 스레드 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-936b351311c8
@@ -39,7 +39,9 @@ priority = PRI_MAX - trunc(recent_cpu / 4) - 2 × nice
 
 `ready_threads`에는 Ready Queue의 Thread 수와 현재 실행 중인 일반 Thread를 포함한다. Idle은 제외한다. CPU를 사용할 수 없는 BLOCKED Thread를 부하의 실행 후보 수에 넣지는 않지만, 그 Thread의 `recent_cpu`도 주기적 감쇠 계산 대상이다. 그래서 전체 Thread를 잇는 `all_list`가 필요하다.
 
-현재 코드에서 `priority`는 0–63 범위로 제한하고, `nice`는 -20–20을 받는다. CPU를 최근 많이 사용하거나 `nice`가 커지면 우선순위가 내려간다. 음수 `nice`에서는 `recent_cpu`도 음수가 될 수 있으므로 이를 임의로 0으로 자르면 원래 계산과 달라진다. [MLFQS 계산과 전체 목록 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c#L825)
+현재 코드에서 `priority`는 0–63 범위로 제한하고, `nice`는 -20–20을 받는다. CPU를 최근 많이 사용하거나 `nice`가 커지면 우선순위가 내려간다. 음수 `nice`에서는 `recent_cpu`도 음수가 될 수 있으므로 이를 임의로 0으로 자르면 원래 계산과 달라진다. -20–20은 스케줄러가 정한 정책 범위이며 2의 보수의 표현 범위에서 나온 제한이 아니다. [MLFQS 계산과 전체 목록 갱신](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c#L825)
+
+다른 입력을 고정했을 때 `nice=-20`이면 `nice × 2`는 -40이며 32 Bit 2의 보수 표현은 `0xFFFFFFD8`이다. `nice=20`이면 40, `0x00000028`이다. 우선순위 식에서 이 값을 빼므로 범위 제한 전의 계산에는 각각 +40과 -40으로 기여한다. 최종 우선순위에는 0–63 제한이 적용되므로, 실제 우선순위가 항상 정확히 40씩 변한다는 뜻은 아니다.
 
 ## 같은 tick에서 갱신 순서도 중요하다
 

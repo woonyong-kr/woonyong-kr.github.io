@@ -6,7 +6,7 @@ permalink: /wiki/platform-delivery-operations-topic-f89d71c7eb29/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/platform-delivery-operations-topic-f89d71c7eb29
-projection_sha256: 8b21e4d887f6b7d980a638dcd4f28cccac810424d109fc49cca0f56fddf04ec9
+projection_sha256: 0351452269eef1fad68fd4985719c8fc00917148bc3bb88fd0581027e79c30ac
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/platform-delivery-operations-topic-eb212956fe45
@@ -74,11 +74,17 @@ p/x f->rsp
 
 현재 RDI는 C 함수 인자 `f`를 전달하는 데 사용됐을 수 있다. 사용자 syscall의 첫 인자는 `f->R.rdi`에 저장되어 있다. Handler가 `f->R.rax`에 반환값을 기록한 뒤에는 같은 필드를 더 이상 최초 syscall 번호로 읽을 수 없다. CPU와 메모리의 차이뿐 아니라 Frame이 만들어진 뒤 값이 변경된 시점도 따라간다.
 
-`p *f`는 Debug 타입에 따라 구조체를 해석하고, `x/192bx f`는 그 주소부터 192 Byte를 읽는다. 현재 PintOS의 배치와 복귀 순서는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에서 확인할 수 있다. `do_iret` 안의 임의 명령 위치에서 RDI가 계속 Frame 주소일 것이라고 가정하거나, `thread_current()` 같은 Guest 함수를 호출하는 관찰을 단순 Memory 읽기로 취급하지 않는다.
+`p *f`는 Debug 타입에 따라 구조체를 해석한다. 같은 주소를 `x/192bx f`로 읽으면 Byte 192개, `x/24gx f`로 읽으면 8 Byte 값 24개를 본다. GPR만 보려면 `x/15gx &f->R`로 120 Byte를 읽는다. `x/16gx &f->R`는 그 뒤의 ES slot까지 포함하므로 16개 Register의 출력으로 읽으면 안 된다.
+
+이 PintOS의 `gp_registers`와 `intr_frame`은 `packed`로 선언돼 있지만 `es`·`ds`·`cs`·`ss` 뒤에는 명시적인 Padding 필드가 있다. `packed`라는 이름만으로 모든 빈 공간이 사라지거나 Assembly와 C의 배치가 자동으로 일치한다고 판단하지 않는다. 선언의 필드 순서와 진입·복귀 코드의 Offset을 함께 맞춰야 한다. [GCC의 packed 속성](https://gcc.gnu.org/onlinedocs/gcc/Common-Attributes.html), [현재 PintOS의 Frame 배치](/wiki/computer-systems-network-topic-41565131cfca/#intr_frame에-담긴-실행-상태)
+
+`do_iret` 안의 임의 명령 위치에서 RDI가 계속 Frame 주소일 것이라고 가정하거나, `thread_current()` 같은 Guest 함수를 호출하는 관찰을 단순 Memory 읽기로 취급하지 않는다.
 
 ## Memory의 주소와 단위를 명시한다
 
-`x`는 Debug 타입 대신 지정한 형식으로 Memory를 읽는다. `x/16bx`는 Byte 16개를, `x/16gx`는 8 Byte 값 16개를 Hex로 보여 준다. 둘의 요청 범위는 16 Byte와 128 Byte로 다르다. `x/16x`처럼 단위를 생략하면 이전 설정에 영향을 받으므로 Byte 덤프라고 단정하지 않는다.
+`x`는 Debug 타입 대신 지정한 형식으로 Memory를 읽는다. `x/16bx`는 Byte 16개를, `x/16gx`는 8 Byte 값 16개를 Hex로 보여 준다. 둘의 요청 범위는 16 Byte와 128 Byte로 다르다. `x/16x`처럼 단위를 생략하면 이전 설정에 영향을 받으므로 Byte 덤프라고 단정하지 않는다. [표시 형식과 단위의 차이](/wiki/computer-systems-network-topic-e647548deca2/#gdb에서-크기와-표시-형식을-지정한다)는 데이터 표현에서 이어서 확인한다.
+
+메모리에 반복되는 값이 보이면 사용 중인 버전과 할당기의 정의를 먼저 확인한다. Linux v6.12의 `poison.h`는 `0x5a`를 `POISON_INUSE`, `0x6b`를 `POISON_FREE`, 마지막 표시 바이트 `0xa5`를 `POISON_END`로 정의한다. `0x5a`를 해제 표시로, `0xa5` 반복을 모든 유효하지 않은 메모리의 공통 표시로 읽으면 맞지 않는다. 같은 파일의 `0xdeadbeef`는 ATM용 `ATM_POISON`이다. `0xdead`로 시작하는 주소만 보고 KASAN 문제라고 판단할 수도 없다. List Poison 주소에는 설정에 따른 `POISON_POINTER_DELTA`가 더해질 수 있다. 관찰한 패턴은 원인을 좁히는 단서이며, 객체의 수명과 실제 오류 경로까지 함께 대조해야 한다. [Linux v6.12의 Poison 정의](https://github.com/torvalds/linux/blob/v6.12/include/linux/poison.h)
 
 | 관찰 목적 | 명령 예시 | 확인할 조건 |
 |---|---|---|

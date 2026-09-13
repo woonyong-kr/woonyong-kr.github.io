@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-cpu-4b05d739f0f6/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-cpu-4b05d739f0f6
-projection_sha256: e75c7d66fff13457a173634fefea38563ebb0f945a4077ec0fd4c65aa3ba4a09
+projection_sha256: e653a0b952ac8801a067dc5c6f757c95db8c7bba05cfaf5dcd7eed995f671d56
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
@@ -37,9 +37,15 @@ RAX는 x86-64에서 64 Bit 값을 담는 범용 Register다. EAX는 그중 아�
 
 64 Bit 모드에서 EAX에 값을 쓰면 RAX의 위쪽 32 Bit가 0이 된다. 반면 AX나 AL에 쓰는 일반적인 정수 명령은 나머지 Bit를 보존한다. 그래서 RAX가 `0x123456789abcdeff`일 때 AL에 1을 쓰면 `0x123456789abcde01`이 되고, EAX에 1을 쓰면 전체 RAX가 1이 된다. AH처럼 다른 부분을 가리키는 이름과 개별 명령의 예외까지 이 규칙 하나로 확장하지 않는다.
 
+전통적인 32비트 x86의 GPR은 EAX·EBX·ECX·EDX·ESI·EDI·EBP·ESP의 8개다. 이 글에서 다루는 기본 x86-64에서는 각 Register가 64비트로 확장되고 R8–R15가 더해져 16개가 된다. 한 Register에 담을 수 있는 unsigned 정수의 최댓값은 32비트에서 `2^32-1`, 64비트에서 `2^64-1`이다. 이는 덧셈이 그 범위를 넘지 않는다는 보장이 아니라 결과를 담는 폭이다. 넘친 결과와 CF·OF는 아래에서 따로 읽는다.
+
+Register 폭, 가상 주소 폭, 물리 주소 폭은 같아야 하는 값이 아니다. 바이트 주소를 32비트로 표현하면 가능한 값은 `2^32`, 즉 4 GiB이고 64비트라면 이론상 16 EiB다. 실제 x86-64의 4단계·5단계 Paging이 사용하는 주소 형태는 각각 48비트·57비트 조건을 따르며, 그 크기가 설치된 RAM이나 프로세스가 실제 사용할 수 있는 영역을 뜻하지는 않는다. [주소 형태와 OS의 영역 배치](/wiki/computer-systems-network-topic-3521ee6344f1/#주소의-형태와-접근-권한은-서로-다른-조건이다)를 함께 확인한다.
+
 범용 Register의 용도도 이름에 고정되어 있지 않다. RAX는 산술 계산에 사용할 수 있고 함수 반환값이나 syscall 번호도 담는다. RSP는 현재 Stack 위치, RIP는 실행 위치를 나타낸다. RBP를 반드시 모든 함수의 Frame 기준으로 쓴다고 가정해서는 안 된다. Compiler가 Frame Pointer를 생략한 빌드에서는 Debug 정보와 Unwind 정보를 함께 읽어야 한다.
 
 함수 호출의 보존 약속도 실행 문맥 전체를 저장하는 규칙과 구별한다. System V x86-64 ABI의 RBX·RBP·R12–R15는 호출받은 함수가 보존하는 Callee-saved Register다. 호출 중 값을 자유롭게 바꿀 수 있는 Register와 달리 함수가 반환했을 때 호출자가 기대한 값을 돌려놓아야 한다. 이것만으로 Interrupt, Thread 전환, 주소 공간과 부동소수점 상태의 보존 범위까지 결정되는 것은 아니다.
+
+인자 위치도 CPU가 64비트라는 이유만으로 결정되지 않는다. Microsoft의 32비트 x86 `__cdecl`은 인자를 오른쪽부터 Stack에 놓고 호출자가 정리한다. System V AMD64의 INTEGER 분류 인자는 RDI·RSI·RDX·RCX·R8·R9의 사용 가능한 Register를 차례로 쓰지만, Windows x64의 처음 네 인자 위치는 타입에 따라 RCX·RDX·R8·R9 또는 XMM0–XMM3를 사용한다. 부동소수점·구조체·가변 인자의 규칙과 Stack으로 넘어가는 조건도 ABI마다 다르다. Register가 늘었다는 사실만으로 모든 프로그램이 빨라진다고 판단하지 않는다. [32비트 x86의 __cdecl](https://learn.microsoft.com/en-us/cpp/cpp/cdecl?view=msvc-170), [System V AMD64의 인자 분류](https://gitlab.com/x86-psABIs/x86-64-ABI/-/blob/ab2062ad5653913c39124548943b1177330e34c8/x86-64-ABI/low-level-sys-info.tex), [Windows x64 호출 규약](https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170)
 
 ### RSP의 변화와 메모리 접근
 
@@ -81,6 +87,8 @@ RSI에는 `hello`의 다섯 글자가 한꺼번에 들어 있지 않다. 커널�
 
 8 Bit에서 `0xff + 1`은 0이 된다. 저장할 수 있는 범위를 넘어간 Bit는 결과에 들어가지 않지만, Carry Flag인 CF에는 그 사실을 남길 수 있다. 같은 크기에서 `0x7f + 1`은 `0x80`이다. 부호 있는 정수로 읽으면 127 다음에 음수 범위로 넘어갔으므로 Overflow Flag인 OF가 켜진다. CF와 OF가 서로 다른 질문에 답하는 이유다.
 
+x86의 `ADD`는 같은 크기의 입력 Bit에 대해 하나의 덧셈 결과를 만들고, signed 해석의 Overflow와 unsigned 해석의 Carry를 OF·CF에 남긴다. 8 Bit의 `5 + (-3)`은 `0000 0101 + 1111 1101 = 1 0000 0010`이므로 저장되는 결과는 2다. 이때 CF는 1, OF는 0이다. 하위 8 Bit 결과를 취한다고 Carry 정보까지 항상 무시하는 것은 아니다. 2의 보수에서는 음수도 이 덧셈 경로로 처리할 수 있다. 아래 `add_flags()`에 `0x05`, `0xfd`를 넣어 같은 조건을 살펴볼 수 있다. [Intel SDM Volume 2A, ADD](https://cdrdv2-public.intel.com/922480/253666-092-sdm-vol-2a.pdf#page=132)
+
 RFLAGS는 64 Bit Register이고 EFLAGS는 아래 32 Bit 부분을 가리킨다. 어떤 명령이 어느 Flag를 변경하는지는 명령별로 다르다. 특히 값을 옮기는 MOV가 아래 산술 Flag를 모두 새로 계산한다고 생각해서는 안 된다.
 
 | Flag | 이 값으로 확인하는 것 |
@@ -96,6 +104,12 @@ RFLAGS는 64 Bit Register이고 EFLAGS는 아래 32 Bit 부분을 가리킨다. 
 | TF | 명령 단위 Debug 예외에 관여하는 상태 |
 
 SF만 보고 모든 값이 음수라고 결론 내리지 않는다. 같은 Bit를 unsigned 값으로 읽으면 해석이 달라진다. 또한 IF가 0이라고 Page Fault나 NMI까지 차단되는 것은 아니다. TF에 따른 Debug 예외에는 명령과 이벤트별 조건이 있으므로, GDB의 한 번의 `stepi`와 언제나 동일한 구현이라고 설명할 수도 없다. Flag의 정식 정의는 [Intel SDM의 Basic Architecture](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html)에서 Register와 명령별 규칙을 함께 확인한다.
+
+비교 뒤 어떤 조건을 읽을지도 부호 해석에 따라 달라진다. signed 비교의 `JG`는 `ZF=0`이면서 `SF=OF`인지, unsigned 비교의 `JA`는 `CF=0`이면서 `ZF=0`인지 확인한다. 같은 결과 Bit에 붙인 signed·unsigned 타입 이름이 CPU에 따로 저장되는 것은 아니다. [Intel SDM Volume 2A, Jcc](https://cdrdv2-public.intel.com/922480/253666-092-sdm-vol-2a.pdf#page=617)
+
+CPU의 Bit 연산과 C 표현식의 계약은 별개다. C의 signed 산술 결과가 해당 타입의 표현 범위를 벗어나면 Undefined Behavior이며, CPU가 하위 Bit를 남길 수 있다는 사실로 언어 차원의 Wraparound를 보장할 수는 없다. C의 정수 승격 때문에 작은 정수 타입끼리 쓴 식도 반드시 8 Bit 연산인 것은 아니다. [C11 초안, 6.3.1.1·6.5](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
+
+빌드 옵션을 바꾼 경우에는 그 계약을 따로 확인한다. Linux v6.12의 Makefile은 `-fno-strict-overflow`를 사용하며, GCC 문서에서 이 옵션은 `-fwrapv`와 `-fwrapv-pointer`를 함의한다. `-fwrapv`가 정하는 것은 signed 덧셈·뺄셈·곱셈의 2의 보수 Wraparound다. 확인한 PintOS의 `Make.config`에는 `-fno-strict-overflow`나 `-fwrapv`를 명시하지 않는다. 이 파일 확인을 실제 실행 바이너리의 모든 옵션 검증으로 확대하거나, `-O0`만으로 signed Overflow를 허용한다고 해석하지 않는다. [Linux v6.12 빌드 설정](https://github.com/torvalds/linux/blob/v6.12/Makefile), [GCC의 Overflow 옵션](https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html), [PintOS Make.config](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/Make.config)
 
 ## 초기 Flag와 커널 진입
 

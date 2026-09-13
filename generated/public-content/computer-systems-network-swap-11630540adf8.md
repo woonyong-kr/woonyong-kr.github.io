@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-swap-11630540adf8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-swap-11630540adf8
-projection_sha256: 29fd2b4f50ee54ee178f9074f3528583f9275a491f4b8801cc5ea010108dc0cf
+projection_sha256: 4b5088c95cfb2bc343f279716666f6f0aca308a92cc6095c2117179473f457ad
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -287,5 +287,7 @@ continue
 Bitmap을 확인하려고 `bitmap_scan_and_flip()`을 직접 호출하면 빈 Slot을 실제로 점유해 프로그램 상태가 바뀐다. 관찰할 때는 이미 저장된 상태를 읽거나 함수가 반환한 Slot을 확인해야 한다. `swap_table`이 존재하고 Slot이 범위 안에 있는지 확인한 뒤에는 디버그 정보의 `bit_cnt`와 `bits`를 읽어 Bitmap의 해당 비트를 따라갈 수 있다.
 
 Swap Out 전후에는 Slot 점유와 데이터 저장을, Swap In 뒤에는 Slot 반환과 `in_swap` 해제를, 미복원 종료에서는 읽기 없이 Slot을 반환하는지 구분해서 살펴본다. Frame 교체와 PTE 정리는 이 함수들 바깥의 [가상 메모리 구현](/wiki/computer-systems-network-topic-83f24986336f/)까지 이어서 확인한다.
+
+저장한 내용과 복원한 내용을 비교할 때는 동일 Page의 대응하는 저장·복원 시점을 잡는다. 4 KiB Page와 512 Byte Sector를 사용하는 이 PintOS에서 Slot 3은 Sector 24부터 시작한다. Raw 이미지가 별도 기준 오프셋 없이 연결되어 있다면 파일의 바이트 오프셋은 `24 * 512 = 12,288`이다. 이 계산의 이미지 형식 조건은 [QEMU의 Raw 오프셋](/wiki/computer-systems-network-qemu-b1366076be02/#raw-이미지의-직접-오프셋은-조건이-있다), 바이트 덤프의 읽기 범위는 [Paging의 비교 절차](/wiki/computer-systems-network-topic-dbd836d1a044/#gdb로-mapping과-데이터를-함께-확인한다)에서 확인한다. 해당 Page의 전체 4,096바이트를 비교하고, 비교 사이에 내용이 변경되거나 Slot이 재사용되지 않았는지도 확인한다. 전체가 같다는 결과는 비교한 Page의 해당 복원을 뒷받침하며, 모든 Swap I/O의 정확성을 증명하지는 않는다.
 
 부모의 저장 내용을 자식이 그대로 읽는지는 자식이 `exec()`하지 않는 별도 흐름에서 확인한다. fork 전에 부모 Page가 실제로 ANON 타입이고 Frame 없이 유효한 Slot을 가리키는지 확인하고, 저장한 바이트를 비교 기준으로 남긴다. W11의 Slot 공유 경로라면 fork 뒤에는 서로 다른 Page 객체가 같은 Slot을 참조해야 한다. 부모가 먼저 Swap In하거나 종료한 뒤 자식이 해당 VA를 읽는 순서와, 자식이 먼저 읽는 순서를 각각 관찰한다. 남은 참조가 있는 동안 Slot이 재사용되지 않고 자식이 기준 바이트를 얻는지가 확인할 조건이다. 큰 배열을 썼다는 사실만으로 특정 Page의 Swap Out을 증명할 수는 없으며, 자식이 먼저 `exec()`하면 상속받은 주소 공간을 새 프로그램으로 바꾸므로 이 비교를 할 수 없다. [W11 슬롯 참조와 복원](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L59-L150), [구현별 Slot 복제의 차이](/wiki/computer-systems-network-topic-4af2e32913a4/#현재-학습-레포와-w11-작업본은-소유권을-다르게-기록한다)

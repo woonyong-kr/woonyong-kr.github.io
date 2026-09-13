@@ -8,7 +8,7 @@ const REQUIRED_FIELDS = ['layout', 'title', 'nav_order', 'permalink', 'publicati
 const OPTIONAL_FIELDS = ['has_toc', 'parent', 'grand_parent', 'ancestor', 'content_status', 'public_parent_id', 'search_terms'];
 const REDIRECT_FIELDS = ['layout', 'permalink', 'redirect_target', 'nav_exclude', 'search_exclude', 'sitemap'];
 const PUBLIC_URL = /^\/wiki\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/u;
-const LEGACY_PUBLIC_PATH = /^\/wiki\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/|\.html)$/u;
+const LEGACY_PUBLIC_PATH = /^\/wiki\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9가-힣]+(?:-[a-z0-9가-힣]+)*(?:\/|\.html)$/u;
 const PRIVATE_ROUTE_SEGMENTS = new Set(['private', 'sources', 'catalog', 'personal', 'local-only']);
 
 function legacyPublicPath(value) {

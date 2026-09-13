@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3cc26725c1cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3cc26725c1cb
-projection_sha256: c7e011e3fd9d7b31c53296c7fcc953bd1715a721c51076567e843a4e9f0558c0
+projection_sha256: 5077c3bf2d2d976921938748cadc89b553f60be2e7f54b2b82a162acf338398c
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -199,6 +199,10 @@ RAX·EAX·AX는 독립된 저장소가 아니라 같은 Register의 서로 다�
 각 호출의 오류 처리도 확인할 필요가 있다. 현재 `read()`와 `write()`는 크기가 0이면 0을 반환하고, 유효하지 않은 파일 fd와 메모리 할당 실패 등은 각 경로의 실패값으로 처리한다. 이미 일부 바이트를 처리한 뒤 다음 조각에서 실패하면 일부 처리량을 반환할 수 있다. 사용자 주소 자체를 검증하지 못한 경로는 `exit(-1)`로 이어진다. [버퍼 검사·복사·파일 I/O 구현](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c)
 
 테스트의 이름만으로 실패 원인을 정하지 않는다. `bad-read.c`와 `bad-write.c`는 사용자 코드에서 NULL을 직접 읽고 쓰며, Kernel 주소 `0x8004000000`에 접근하는 것은 `bad-read2.c`와 `bad-write2.c`다. 이 네 테스트의 `.ck`는 `exit(-1)`을 기대한다. 반면 `open-bad-ptr.c`는 `0x20101234`를 파일 이름으로, `read-bad-ptr.c`는 `0xc0100000`을 123바이트 출력 버퍼로 전달한다. 두 값은 이 PintOS의 `KERN_BASE`보다 작으므로 Kernel 주소 차단만으로 설명할 수 없다. 또한 두 `.c`의 의도와 달리 `.ck`에는 정상 종료 출력도 허용되어 있다. 테스트 통과 여부만으로 어떤 포인터 검사가 실행됐는지 단정하지 말고, 소스와 허용된 출력, 실제 호출 경로를 함께 확인한다. 이는 테스트 파일을 대조한 결과이며 새 실행 기록은 아니다. [포인터 테스트와 기대 출력](https://github.com/woonyong-kr/lrn-pintos/tree/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/userprog)
+
+경계를 넘는 정상 버퍼는 `read-boundary`와 `write-boundary`에서 다룬다. `boundary.c`는 8,192바이트 정적 배열 안에서 양쪽에 최소 2,048바이트의 수정 가능한 공간이 있는 페이지 경계를 고른다. 두 테스트는 그 경계에 걸치도록 sample을 읽을 버퍼나 쓸 문자열을 배치한다. `read-boundary.c`는 반환 크기와 읽은 내용을 확인하고, `write-boundary.c`는 반환 크기를 확인한다. 두 `.ck`는 정상 종료 `exit(0)`을 기대한다. 이것은 정상 범위의 경계 통과를 확인하는 테스트이며, 뒤쪽 페이지가 유효하지 않거나 쓰기 권한이 없는 입력까지 차단한다는 증거는 아니다. [경계 입력과 read/write 테스트](https://github.com/woonyong-kr/lrn-pintos/tree/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/userprog)
+
+쓰기 권한은 `pt-write-code2`가 별도로 다룬다. 이 테스트는 `read(handle, (void *) test_main, 1)`로 코드 주소에 한 바이트를 쓰도록 요청하며, `.ck`는 `exit(-1)`을 기대한다. User Buffer에 쓰는 쪽이 `read()`라는 점을 확인하는 사례다. 현재 주소 검사에서 거부될 수도 있으므로 이 종료값만으로 실제 Kernel Page Fault가 발생했다고 판단하지 않는다. 코드 Page의 쓰기 거부와, 논리적으로 쓰기를 허용한 COW Page의 복구도 구분해야 한다. 이 비교는 테스트 소스와 기대 출력의 검토이며 새 테스트 실행 기록은 아니다. [코드 주소로 read 요청](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-write-code2.c), [기대 종료값](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/pt-write-code2.ck)
 
 접근 전 검사와 접근 중 Fault 복구는 함께 사용할 수 있다. 검사 뒤 다른 Thread가 Mapping이나 접근 권한을 바꿀 수 있으므로, 앞서 통과한 검사가 이후 접근의 성공을 보장하지 않는다. Fault를 처리할 수 있다는 사실도 복사 도중의 버퍼 내용 변경을 막거나 일관된 Snapshot을 보장한다는 뜻은 아니다. 메모리 접근 실패를 다루는 일과 데이터의 동시 변경을 다루는 일은 구분해야 한다. [접근 중 변경과 예외 처리](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/using-neither-buffered-nor-direct-i-o)
 

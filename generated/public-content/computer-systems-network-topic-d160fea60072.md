@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-d160fea60072/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
-projection_sha256: 09da32c5bb0f18b51509d93b3a861e639d25921349dfd22f3d8abf0c2e457c00
+projection_sha256: 7f5777162f83168f85c6eebf421382d668b5acc3662e105dce1c2be515164969
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -443,7 +443,9 @@ Pool의 `base`는 0번 비트가 나타내는 페이지의 Kernel VA다. `uint8_
 
 예를 들어 `base=0x8004b00000`, `page_idx=5`이면 반환 주소는 `0x8004b05000`이다. 같은 주소를 반환할 때는 `pg_no(pages)-pg_no(base)`로 인덱스 5를 얻는다. `page_from_pool()`은 주소가 Pool의 반개구간에 속하는지 검사할 뿐, 그 호출자가 해당 할당의 소유자인지까지 증명하지 않는다.
 
-`palloc_free_multiple()`은 페이지 정렬을 검사하고, `NULL`이나 개수 0이면 종료한다. 나머지 경로에서는 Pool을 찾고 디버그 빌드의 메모리를 `0xcc`로 채운 뒤, 비트들이 모두 사용 중인지 확인하여 free로 바꾼다. 실제 순서는 덮어쓰기가 `bitmap_all()` 검사보다 먼저다. 이 API는 유효한 할당의 주소와 크기를 넘긴다는 계약이 필요하며, 해제가 잘못된 포인터나 이중 해제를 안전하게 처리해 주는 인터페이스는 아니다. `palloc_get_page/free_page`는 이 다중 페이지 API에 개수 1을 넘기는 Wrapper다.
+`palloc_free_multiple()`은 페이지 정렬을 검사하고, `NULL`이나 개수 0이면 종료한다. 나머지 경로에서는 Pool을 찾고 디버그 빌드의 메모리를 `0xcc`로 채운 뒤, 비트들이 모두 사용 중인지 확인하여 free로 바꾼다. 실제 순서는 덮어쓰기가 `bitmap_all()` 검사보다 먼저다. 이 API는 유효한 할당의 주소와 크기를 넘긴다는 계약이 필요하며, 해제가 잘못된 포인터나 이중 해제를 안전하게 처리해 주는 인터페이스는 아니다. `palloc_get_page/free_page`는 이 다중 페이지 API에 개수 1을 넘기는 Wrapper다. `malloc()`으로 받은 블록은 `free()`로 반환하며, 페이지 할당에 블록용 해제 함수를 섞어 쓰지 않는다.
+
+같은 PintOS Kernel의 `free()`도 `NDEBUG`가 정의되지 않았을 때 작은 블록을 `0xcc`로 채운다. 이후 빈 블록 목록의 링크를 그 블록 안에 쓰므로 해제된 모든 바이트가 계속 `0xcc`로 남는 것은 아니다. 큰 할당은 `palloc_free_multiple()`로 반환하고, 이 페이지 해제 경로의 채움도 `NDEBUG` 조건에 따른다. 이 값은 디버깅 단서일 뿐 Use After Free를 모두 검출하거나 즉시 Fault를 일으키는 장치는 아니다. [PintOS의 블록 반환](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/malloc.c#L256-L318), [페이지 반환](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/palloc.c#L327-L363)
 
 할당으로 받은 KVA를 프로세스의 User VA와 연결하는 과정은 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)에서 이어진다. 프레임을 예약하는 일과 Page Table에 Mapping을 설치하는 일은 별도의 단계다.
 

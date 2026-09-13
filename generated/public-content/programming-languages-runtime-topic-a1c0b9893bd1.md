@@ -6,7 +6,7 @@ permalink: /wiki/programming-languages-runtime-topic-a1c0b9893bd1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/programming-languages-runtime-topic-a1c0b9893bd1
-projection_sha256: d2ba9085067889cd159d1ff0691e4782a14f1f235c716f44bbc0a83f40b98991
+projection_sha256: eb05ed7f81c2312313ee37b75765f1954d816373c7bc8a45ffed3a5331b6a64c
 parent: C
 content_status: ready
 public_parent_id: Wiki/programming-languages-runtime/c
@@ -95,7 +95,7 @@ Memory Leak은 필요 없어진 할당을 회수하지 못하고 보유하는 �
 
 두 문제는 서로 반대되는 방향의 수명 불일치다. Dangling Pointer는 끝난 객체를 계속 사용하려 하고, 누수는 끝내야 할 할당을 남겨둔다. 지역 포인터의 수명이 끝나도 동적 할당이 자동으로 해제되는 것은 아니다.
 
-해제 뒤 `p = NULL`로 대입하면 그 변수로 같은 포인터를 다시 넘기는 실수를 줄일 수 있다. 그러나 `q = p`로 복사해 둔 별칭까지 바뀌지는 않는다. `free(p); p = NULL;` 뒤에도 q로 해제된 객체에 접근하면 잘못이다. Null 대입만으로 소유권 문제를 해결할 수는 없다.
+해제 뒤 `p = NULL`로 대입하면 그 변수로 같은 포인터를 다시 넘기는 실수를 줄일 수 있다. 그러나 `q = p`로 복사해 둔 별칭까지 바뀌지는 않는다. `free(p); p = NULL;` 뒤에도 q로 해제된 객체에 접근하면 잘못이다. Null 대입만으로 소유권 문제를 해결할 수는 없다. Null Pointer를 역참조하는 것도 Undefined Behavior이므로, NULL 대입을 즉시 Crash하게 만드는 탐지 장치로 삼을 수는 없다. [C 작업 초안 N3096, 6.5.3.2](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3096.pdf)
 
 ### 구조체를 복사해도 문자열 할당은 늘어나지 않는다
 
@@ -134,5 +134,9 @@ struct Node b = a;
 `malloc()`의 초기화되지 않은 내용이 이전과 같아 보이는 것은 그 값을 사용해도 된다는 근거가 아니다. 할당기가 같은 프로세스 안의 해제된 블록을 재사용하는 경우와 OS가 다른 프로세스의 메모리를 제공하는 경우를 구분해야 한다. ‘이전 내용이 남을 수 있다’를 ‘다른 프로세스의 비밀을 그대로 받는다’로 일반화해서는 안 된다.
 
 잘못된 접근은 즉시 실패할 수도 있지만, 다른 객체나 할당기의 관리 정보를 손상시킨 뒤 한참 나중에 드러날 수도 있다. 할당기의 오류 진단에 따른 중단, 접근 권한을 위반한 주소에서의 Fault, 손상된 데이터로 계산을 이어가는 상황은 서로 다른 결과다. 이런 손상이 보안 문제로 이어질 수 있어도, 모든 잘못된 `free()`가 같은 공격이나 Crash로 이어지는 것은 아니다. 오류의 발생 지점과 관찰된 실패 지점을 나눠 추적해야 한다.
+
+AddressSanitizer는 컴파일러가 넣은 검사와 Runtime으로 Use After Free 같은 잘못된 메모리 접근을 찾는다. Linux의 Generic KASAN도 Shadow Memory에 기록한 접근 가능 상태를 검사하며, Tag를 사용하는 KASAN 모드도 있다. 검사 범위와 보고 뒤 실행을 중단할지는 도구·모드·설정에 따라 확인해야 한다. 해제된 영역에 특정 바이트를 써 두는 것만으로 이 검사가 이루어지거나 모든 오류가 즉시 Crash하는 것은 아니다. [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html), [KASAN의 검사 방식과 보고 설정](https://docs.kernel.org/dev-tools/kasan.html)
+
+누수에는 별도 진단이 필요하다. 지원되는 환경에서는 LeakSanitizer를 단독으로 쓰거나 AddressSanitizer와 함께 사용할 수 있고, Valgrind의 Memcheck도 남은 할당의 도달 가능성을 조사한다. Linux의 kmemleak은 추적하는 Kernel 할당 중 참조를 찾지 못한 객체를 누수 후보로 보고하며, 그 메모리를 자동으로 해제하지 않는다. 오탐과 미탐이 있으므로 보고 내용은 실제 소유권·회수 경로와 대조해야 한다. 이런 도구가 PintOS에 기본 제공된다는 뜻은 아니다. [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html), [Memcheck의 누수 검사](https://valgrind.org/docs/manual/mc-manual.html#mc-manual.leaks), [kmemleak](https://docs.kernel.org/dev-tools/kmemleak.html)
 
 객체 수명과 실제 Stack·Heap 배치의 차이는 [주소 공간](/wiki/computer-systems-network-topic-3521ee6344f1/)에서, 빈 블록의 분할·병합과 Arena 구현은 [OS의 메모리 관리](/wiki/computer-systems-network-topic-d160fea60072/)에서 이어진다.

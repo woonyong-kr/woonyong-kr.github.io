@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-63b969bafddd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-63b969bafddd
-projection_sha256: 8119ff99d1925f4eba8123fa8d6f7166b8fa8e7785cef031d9f718abc4d43aa3
+projection_sha256: befd0fd78cb73472c8d5262be0c812ca48c668177cceee6b0bd84619437bb9fa
 parent: OS
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/os
@@ -21,7 +21,15 @@ ancestor: CS 기초
 
 커널은 주소 변환·입출력·보호·스케줄링 같은 OS의 핵심 기능을 수행한다. 스케줄러는 실행 가능한 흐름 가운데 다음에 CPU를 사용할 대상을 고르는 커널 기능이다. OS에는 이런 커널 기능을 이용하는 셸과 시스템 유틸리티도 포함된다. 한 논리 CPU에서는 실행 대상을 시간에 따라 바꿀 수 있고, 여러 논리 CPU에서는 서로 다른 흐름이 동시에 실행될 수 있다. 이 구분을 Linux의 자원 공유와 PintOS의 실제 전환 코드로 이어서 살펴본다.
 
+시분할은 실행 가능한 흐름에 CPU 시간을 나누어 대화형 작업에도 응답 기회를 만드는 방식이다. I/O를 기다리는 작업을 Block시키고 다른 작업을 실행하는 다중프로그래밍은 배치 처리에서도 가능하다. 따라서 배치 처리라면 언제나 한 작업만 진행하고 I/O 대기 중 CPU도 논다고 설명하지 않는다. 시분할의 동시성은 여러 CPU에서 실제로 함께 실행하는 병렬성과도 구분한다.
+
+선점형 스케줄링은 실행 중인 프로그램의 자발적인 양보에만 의존하지 않는다. Timer IRQ가 판단 기회를 주고, 더 높은 우선순위의 작업이 준비되는 사건도 재선택의 계기가 된다. 실행 조각을 짧게 하면 응답 기회가 늘 수 있지만 전환과 Cache 영향도 커질 수 있다. 실제 응답 시간과 처리량은 작업 부하와 정책으로 확인하며, PintOS의 4 tick은 모든 작업이 공평하게 40ms씩 받는다는 약속이 아니다. [타이머에서 양보까지](/wiki/computer-systems-network-topic-c19e34701c6c/#irq0을-처리한-뒤-cpu를-양보하기까지), [다음 후보를 고르는 정책](/wiki/computer-systems-network-topic-6276ce481024/#ready-queue에서-무엇을-먼저-고르는가)에서 각각의 역할을 읽는다.
+
 ## 주소 공간과 실행 상태를 나누어 보기
+
+OS는 메모리에는 가상 주소, 저장 장치에는 파일·경로·offset, CPU에는 프로세스 자원과 Thread의 실행 상태라는 인터페이스를 둔다. 하드웨어의 배치를 감추는 추상화와 다른 프로그램의 접근을 막는 보호는 함께 필요하다. 추상화만 있다고 격리가 자동으로 생기지는 않는다. 주소 변환과 접근 검사는 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/), 권한 경계는 [커널과 사용자 영역](/wiki/computer-systems-network-topic-41565131cfca/)에서 이어진다.
+
+여기서 MMU·Timer·TSS·DMA를 모든 추상화의 필수 부품으로 나열하지는 않는다. MMU가 제공하는 주소 변환·보호와 소프트웨어가 주소를 해석하는 방식은 구현 경계가 다르고, 파일 인터페이스가 DMA를 반드시 요구하는 것도 아니다. TSS는 x86의 특정 커널 진입에 관여하는 구조이며 모든 OS의 스케줄러 자체를 뜻하지 않는다. PintOS의 자료구조와 정책을 실행하는 Guest와 CPU·장치를 제공하는 [QEMU system emulation](/wiki/computer-systems-network-qemu-b1366076be02/#먼저-실행-모드를-구분한다)을 구별하면 이 경계를 확인할 수 있다.
 
 x86-64에서 실행을 이해할 때 다음 레지스터가 출발점이 된다. CPU는 커널의 `struct thread`를 직접 해석해서 스케줄링하지 않는다. 커널이 메모리에 보관한 상태를 레지스터에 반영하면 CPU가 그 상태에 따라 실행한다.
 

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-c19e34701c6c/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-c19e34701c6c
-projection_sha256: e9dcff0dd2b086c8bc0d24a6fa2b83a7779b333c706e0806f5dc42405e6aced7
+projection_sha256: e0a310a23e25f25c749be82be0f37a4e3521a708d505e3d9203a3a5c0e825e5d
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -122,6 +122,8 @@ if (yield_on_return)
 
 `TIME_SLICE`는 목표 100Hz의 tick 4개, 명목상 약 40ms다. Thread가 tick 사이에서 선택될 수도 있고, IRQ 수락이 늦어지거나 스스로 일찍 Block할 수도 있다. 이 값을 모든 실행의 최대 연속 시간이나 정확한 Wall-clock Quantum으로 해석하지 않는다. 더 높은 우선순위의 Thread가 깨어났을 때의 선택은 [우선순위 스케줄링](/wiki/computer-systems-network-topic-6276ce481024/)에서 별도로 살펴본다.
 
+명령 수를 계산하려면 CPU의 실행률까지 가정해야 한다. 가령 100 MHz에서 Cycle당 명령 한 개를 완료하는 IPC 1을 가정하면 `100,000,000 × 0.04 × 1 = 4,000,000`개다. 4 tick만으로 이 수가 정해지지는 않는다. 실제 IPC, 메모리 대기, 인터럽트 처리, TCG 번역 비용과 Host 실행 시간을 고려하지 않은 이 계산을 PintOS의 처리량으로 쓰면 안 된다.
+
 | 통계 분류 | 현재 구현의 검사 |
 |---|---|
 | `idle_ticks` | 현재 Thread가 `idle_thread`인지 |
@@ -194,6 +196,8 @@ QEMU v10.0.0의 PIT는 `QEMU_CLOCK_VIRTUAL`을 기준으로 다음 출력 변화
 TCG의 64비트 Interrupt 진입은 `target/i386/tcg/seg_helper.c`의 `do_interrupt64()`에서 확인할 수 있다. 이 함수는 `env->idt.base + vector * 16`을 Kernel Memory 접근 함수로 읽고, Gate를 검사한 뒤 Guest Stack에 복귀 상태를 쓴다. IDTR을 물리 주소로 간주해 Host 포인터로 역참조하는 과정이 아니다. [QEMU의 IDT 진입](https://github.com/qemu/qemu/blob/v10.0.0/target/i386/tcg/seg_helper.c#L925-L1060)
 
 Linux의 `NO_HZ` 설정은 Idle CPU나 조건을 만족하는 CPU의 불필요한 Scheduling Tick을 줄인다. 따라서 모든 OS의 선점을 PintOS의 고정 4 tick과 같은 방식으로 계산할 수는 없다. Windows의 DPC 역시 ISR의 후처리를 더 낮은 IRQL로 미루는 수단이며, PintOS의 양보 플래그와 구현이 같은 것은 아니다. [Linux NO_HZ](https://docs.kernel.org/timers/no_hz.html), [Windows DPC](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/introduction-to-dpc-objects)
+
+Linux v6.12에서 해당 주기 처리 함수의 이름은 `sched_tick()`이다. 이 함수는 Run Queue의 시간을 갱신하고 현재 Task의 `sched_class->task_tick()`을 호출한다. 모든 Task의 고정 잔여 시간을 하나씩 줄이고 그 자리에서 RIP를 교환하는 공통 루틴은 아니다. 재스케줄링 요청과 실제 전환은 별도 경로이며, Fair Scheduler의 EEVDF 선택과 다른 정책의 차이는 [우선순위 스케줄링의 OS 비교](/wiki/computer-systems-network-topic-6276ce481024/#linux와-windows를-비교하는-기준)에서 이어진다. [Linux v6.12 sched_tick](https://github.com/torvalds/linux/blob/v6.12/kernel/sched/core.c#L5584-L5614)
 
 ## GDB에서는 저장된 Frame부터 읽는다
 

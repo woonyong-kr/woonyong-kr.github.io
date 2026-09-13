@@ -132,6 +132,7 @@ for (const [name, change] of [
   ["boolean navigation order", (text) => text.replace("nav_order: 1", "nav_order: true")],
   ["YAML alias", (text) => text.replace("title: Public example", "title: &name Public example\nparent: *name")],
   ["reserved permalink", (text) => text.replace("/wiki/example/", "/assets/example/")],
+  ["Korean canonical permalink", (text) => text.replace("/wiki/example/", "/wiki/바이트/")],
 ]) {
   test(`rejects ${name}`, async () => {
     await withFixture(change(publicDocument()), async (root) => {
@@ -204,11 +205,13 @@ test("public redirects stay outside document identities and counts", async () =>
   });
 });
 
-test("explicit legacy category paths preserve slash and html URLs", async () => {
+test("explicit ASCII and Korean legacy category paths preserve slash and html URLs", async () => {
   await withFixture(publicDocument(), async root => {
     const paths = [
       ['/wiki/algorithm/linear-data-structures/', 'algorithm/linear-data-structures/index.html'],
       ['/wiki/algorithm/linear-data-structures.html', 'algorithm/linear-data-structures.html'],
+      ['/wiki/os/바이트-버퍼와-캐스팅-실험/', 'os/바이트-버퍼와-캐스팅-실험/index.html'],
+      ['/wiki/os/바이트-버퍼와-캐스팅-실험.html', 'os/바이트-버퍼와-캐스팅-실험.html'],
     ];
     for (const [url, path] of paths) {
       const file = resolve(root, `generated/public-content/legacy-paths/${path}`);
@@ -219,6 +222,7 @@ test("explicit legacy category paths preserve slash and html URLs", async () => 
     const bundle = await readPublicProjectionBundle(root);
     assert.equal(bundle.documents.length, 1);
     assert.deepEqual(bundle.redirects.map(item => item.permalink).sort(), paths.map(([url]) => url).sort());
+    assert.equal((await validatePublicProjection(root)).redirects, paths.length);
   });
 });
 
@@ -227,7 +231,11 @@ for (const path of [
   'https://example.com/wiki/a/b/', '/wiki/algorithm/a/?q=x', '/wiki/algorithm/a/#x',
   '/wiki/algorithm/a\\b/', '/wiki/private/item/', '/wiki/algorithm/private.html',
   '/wiki/algorithm/a//', '/wiki/algorithm/a.html/',
+  '/wiki/운영체제/바이트/', '/wiki/private/바이트/', '/wiki/os/바이트/추가/',
+  '/wiki/os/%EB%B0%94%EC%9D%B4%ED%8A%B8/', '/wiki/os/바이트.버퍼/',
+  '/wiki/os/바이트/?q=x', '/wiki/os/바이트/#x', '/wiki/os/바이트//',
 ]) test(`legacy path rejects unsafe route ${path}`, async () => {
+  assert.throws(() => publicOutputPath(path), /Invalid public output path/u);
   await withFixture(publicDocument(), async root => {
     const file = resolve(root, 'generated/public-content/legacy-paths/algorithm/unsafe.html');
     await mkdir(resolve(file, '..'), { recursive: true });

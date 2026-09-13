@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-e647548deca2/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-e647548deca2
-projection_sha256: 6cc3013847490cd95a3dd6c7aa6e047dbe1dda6a0fb8993ee020f64cbabb3ff5
+projection_sha256: 37cdff33402c0015b832ecc5e95f99d48e51d306f9042a8515cc99f000b299f2
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
@@ -95,6 +95,20 @@ Byte가 달라진 것이 아니라 필드 경계를 달리 잡은 것이다. 같
 
 부호도 별도의 조건이다. `ff ff ff ff`를 32 Bit unsigned 정수로 읽으면 `2³² - 1`, 즉 4,294,967,295다. 같은 Bit를 2의 보수 signed 정수로 읽으면 -1이다. n Bit signed 정수는 최상위 Bit가 1일 때 unsigned 값에서 `2ⁿ`을 빼서 해석한다. Endianness는 Byte의 순서이고, signed 여부는 그렇게 모은 Bit의 의미다.
 
+12시간 시계에서 3시보다 5시간 전인 위치는 10시다. 12로 나눈 나머지에서 -2와 10이 같은 위치이듯, 8 Bit에서 -1은 255와 같은 하위 Bit를 갖는다. 이를 음수로 해석하는 규칙이 2의 보수다.
+
+음수의 표현 규칙을 8 Bit로 비교하면 다음과 같다. 표는 패딩 없이 부호와 값을 배치한 개념 비교다.
+
+| 표현 | +5 | -5 | +0 | -0 |
+| --- | --- | --- | --- | --- |
+| 부호-절대값, Sign-Magnitude | `0000 0101` | `1000 0101` | `0000 0000` | `1000 0000` |
+| 1의 보수, Ones' Complement | `0000 0101` | `1111 1010` | `0000 0000` | `1111 1111` |
+| 2의 보수, Two's Complement | `0000 0101` | `1111 1011` | `0000 0000` | `0000 0000` |
+
+부호-절대값은 MSB에 부호를 두고 나머지에 크기를 담으므로, 덧셈에서도 부호와 크기를 나누어 처리해야 한다. 1의 보수는 모든 Bit를 뒤집으며, 덧셈의 최상위 Carry를 결과에 다시 더하는 End-around Carry가 필요하다. 두 방식에는 0의 표현이 둘 있지만 2의 보수에는 하나다. C99·C11에서 모든 signed 정수 타입이 무조건 2의 보수라고 가정하지는 않는다. [C11 초안의 정수 표현 규칙, 6.2.6.2](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
+
+N Bit에서 크기 x의 Bit를 뒤집으면 `(2^N - 1) - x`이고, 1을 더한 `2^N - x`의 하위 N Bit가 -x의 2의 보수 표현이다. 8 Bit의 -5는 `256 - 5 = 251`, 즉 `1111 1011`이다. 이 표현에서는 패딩 없는 N Bit의 범위가 `-2^(N-1)`부터 `2^(N-1)-1`까지다. 8 Bit는 -128~127, 32 Bit는 -2,147,483,648~2,147,483,647이며, 0이 비음수 쪽의 한 자리를 차지해 음수 쪽이 하나 더 많다. 같은 덧셈으로 음수를 다루는 과정은 [CPU의 결과 Bit와 Flag](/wiki/computer-systems-network-cpu-4b05d739f0f6/#계산이-남기는-flag)로 이어진다.
+
 아래 예제는 실제 메모리 주소에 접근하는 대신 Byte Buffer를 만든다. `integer()`는 시작 위치·크기·Byte Order·부호를 명시해 읽는다. Python의 Slice는 범위를 넘어도 잘린 결과를 반환하므로, 필요한 Byte가 전부 있는지 먼저 검사한다. 마지막 PTE 예제는 같은 정수를 Flag와 주소 필드로 나누는 경우다. [int.from_bytes()](https://docs.python.org/3/library/stdtypes.html#int.from_bytes)
 
 ```run-python
@@ -172,6 +186,10 @@ PTE: 0x000000000800b067 = 134,262,887
 
 `fields`의 다섯 번째 Byte를 `03`에서 `01`로 바꾸면 8 Byte 결과는 `5 + 2³²`가 된다. 이 변화는 처음 4 Byte의 값 5를 바꾸지 않는다. `negative`의 마지막 Byte를 `7f`로 바꾸면 최상위 Bit가 0이 되므로 signed와 unsigned 결과가 같아진다. 출력 식과 Byte 위치를 함께 보며 확인할 수 있다.
 
+같은 방식으로 `48 c7 c7 01 00 00 00`의 7 Byte를 Little-endian unsigned 정수로 읽으면 `0x1c7c748`이다. `68 65 6c 6c 6f`의 5 Byte는 ASCII로 `hello`, 같은 방식의 정수로는 `0x6f6c6c6568`이며 NUL은 포함하지 않는다. 여기에 `00 00 00`을 이어 붙인 8 Byte는 `0x0000006f6c6c6568`이다. 앞에서부터 2 Byte씩 두 칸을 읽으면 `0x6568`과 `0x6c6c`가 되고, 문자열로 읽으면 첫 NUL에서 끝난다.
+
+위 예제의 `integer()`는 1·2·4·8 Byte 읽기만 허용하므로 7·5 Byte 해석을 그대로 인자로 넣는 예는 아니다. 이처럼 표시 형식을 바꾸는 것과 C에서 다른 타입의 포인터로 접근하는 것은 구분해야 한다. Cast만으로 객체의 타입·정렬·수명이 맞아지는 것은 아니다. [Pointer의 변환과 접근 조건](/wiki/programming-languages-runtime-topic-ef71fd296666/#타입을-지운-주소와-다시-읽을-타입)을 함께 확인한다. 정수 값이 나왔다는 사실만으로 유효한 포인터가 되는 것은 아니며, 명령어로 해석하려면 실행 모드와 올바른 시작 경계를 정한 Disassembly가 필요하다.
+
 ## GDB에서 크기와 표시 형식을 지정한다
 
 GDB의 `x` 명령은 프로그램의 자료형과 별개로 메모리를 읽는다. `x/nfu addr`에서 `n`은 읽을 단위의 개수, `f`는 표시 형식, `u`는 단위 크기다. `b`, `h`, `w`, `g`는 각각 1·2·4·8 Byte를 뜻한다. GDB의 `w`는 4 Byte이므로 x86 문서에서 2 Byte를 가리키는 word와 혼동하지 않아야 한다. [GDB 메모리 조회](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Memory.html)
@@ -185,7 +203,7 @@ GDB의 `x` 명령은 프로그램의 자료형과 별개로 메모리를 읽는�
 | `x/1wu addr` | 4 Byte 하나를 unsigned 10진수로 표시한다. |
 | `x/1gd addr` | 8 Byte 하나를 signed 10진수로 표시한다. |
 
-표의 `addr`에는 현재 디버깅 대상의 유효한 주소를 넣는다. 여기서는 GDB Session을 실행하지 않았으며, 명령의 읽기 범위를 설명한 것이다. `x`, `d`, `u` 외에 `t`는 2진수, `o`는 8진수 표시다. 생략한 형식과 크기는 앞선 명령의 영향을 받으므로, 값을 비교할 때는 명시하는 편이 낫다.
+표의 `addr`에는 현재 디버깅 대상의 유효한 주소를 넣는다. 여기서는 GDB Session을 실행하지 않았으며, 명령의 읽기 범위를 설명한 것이다. `x`, `d`, `u` 외에 `t`는 2진수, `o`는 8진수 표시다. `a`, `c`, `s`, `i`는 각각 주소·문자·문자열·명령어를 표시한다. 명령어 형식 `i`에서는 단위 크기를 무시한다. 생략한 형식과 크기는 앞선 명령의 영향을 받으므로, 값을 비교할 때는 명시하는 편이 낫다.
 
 예를 들어 앞서 만든 4096의 배열을 실제 대상 메모리에 놓았다면 `x/8bx`와 `x/1gx`는 같은 8 Byte를 각각 나누거나 묶어서 보여 준다. `x/1gd`로 표시를 바꾸어도 메모리에 저장된 Bit는 변하지 않는다.
 
@@ -206,9 +224,15 @@ GDB의 `x` 명령은 프로그램의 자료형과 별개로 메모리를 읽는�
 
 선언은 [thread.h](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/thread.h), [off_t.h](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/filesys/off_t.h), [disk.h](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/devices/disk.h)에서 확인할 수 있다. 종료 상태의 저장과 전달은 [process.c](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/process.c), System Call 번호는 [syscall-nr.h](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/lib/syscall-nr.h)에 있다.
 
+운영체제의 ID 타입도 모두 signed는 아니다. Linux의 `pid_t`와 `off_t`는 signed지만, Linux v6.12의 일반 정의에서 `uid_t`는 `__kernel_uid32_t`를 거쳐 `unsigned int`로 이어진다. 오류나 특수값으로 -1을 쓴다는 관례만으로 필드의 부호를 정하지 않는다. [pid_t의 계약](https://man7.org/linux/man-pages/man3/pid_t.3type.html), [off_t의 계약](https://man7.org/linux/man-pages/man3/off_t.3type.html), [Linux uid_t](https://github.com/torvalds/linux/blob/v6.12/include/linux/types.h#L33), [기본 UID 타입](https://github.com/torvalds/linux/blob/v6.12/include/uapi/asm-generic/posix_types.h#L45-L48)
+
 `THREAD_RUNNING`, `THREAD_READY`, `THREAD_BLOCKED`, `THREAD_DYING`은 차례로 0·1·2·3이다. 따라서 앞 예제의 두 번째 값 3을 이 Enum으로 읽으면 `THREAD_DYING`이다. Byte를 제대로 읽어도 이름을 잘못 대응시키면 해석은 틀린다. 종료 상태 역시 이 구현에서는 `int` 값이 저장되고 `process_wait()`로 전달된다. Shell에서 흔히 보는 종료 코드 범위를 이 필드의 저장 범위로 대신할 수 없다.
 
 구조체의 Offset도 실행 파일과 맞춰 확인한다. 이 버전의 `struct thread`에는 `tid`, `status`, `priority`, `base_priority`, `wake_tick` 순으로 필드가 선언되어 있다. 그러나 실제 Byte Offset과 Padding은 대상 ABI와 컴파일 조건까지 반영한 결과다. Little-endian이라는 사실만으로 구조체 배치가 정해지지는 않는다.
+
+C Struct에서 비트 필드가 아닌 멤버는 선언 순서대로 주소가 증가하지만, 멤버 사이와 Struct 끝에는 Padding이 들어갈 수 있다. 크기와 정렬은 같은 값이 아니다. 예를 들어 `int`의 크기·정렬이 4 Byte이고 포인터의 크기·정렬이 8 Byte인 ABI를 가정하자. 별도 packing 없이 첫 멤버인 `int`를 offset 0에, 바로 다음 포인터를 offset 8에 두는 배치에서는 둘 사이에 4 Byte의 Padding이 들어간다. 구조체 시작부터 해당 멤버까지의 거리는 `offsetof`, 객체 전체 크기는 `sizeof`, 타입의 정렬 조건은 `_Alignof`로 확인한다. 크기를 단순히 더한 값으로 배열 원소의 간격이나 다음 필드의 위치를 정하지 않는다. [C11 초안의 Struct 배치 규칙](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf#page=133), [offsetof로 필드 위치를 확인하는 예제](/wiki/programming-languages-runtime-topic-ef71fd296666/#멤버의-위치에서-구조체-찾기)
+
+Union은 멤버들이 저장 공간을 겹쳐 사용하며, 가장 큰 멤버를 담을 수 있어야 한다. 끝의 Padding도 허용되므로 크기를 항상 멤버 크기의 최댓값과 같다고 단정하지 않는다. PintOS의 `page`를 읽을 때는 크기뿐 아니라 현재 `operations->type`에 맞는 멤버를 골라야 한다. UNINIT의 바이트를 ANON의 Slot 번호로 읽으면 그럴듯한 숫자가 나와도 현재 페이지 상태를 설명하지 못한다. 현재 ANON의 필드는 `swap_slot`과 `in_swap`이며, 옛 `swap_index` 한 개짜리 선언으로 크기를 계산할 수는 없다. [Operations와 Union 멤버를 함께 읽는 절차](/wiki/computer-systems-network-topic-aa5da5d73167/#gdb에서-두-상태를-나란히-확인한다), [현재 ANON 선언](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/vm/anon.h)
 
 Debug Symbol을 읽은 GDB에서는 아래 명령으로 필드 Offset과 크기를 확인할 수 있다. 이는 실행할 명령의 예이며 이 글에서 확인한 GDB 출력은 아니다.
 
@@ -221,11 +245,15 @@ ptype /o struct child_status
 
 `ptype /o`는 필드의 Offset·크기와 Padding을 보여 준다. 이 정보로 경계를 잡은 뒤 필요한 주소를 `x`로 읽는다. Linux의 `task_struct`나 파일시스템 자료구조를 읽을 때도 해당 빌드의 선언과 Debug Symbol을 확인하는 순서가 같다. PintOS의 필드 위치를 그대로 적용할 수는 없다. [GDB 자료형과 필드 배치](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbols.html)
 
+정수 상수의 값과 타입도 나누어 읽어야 한다. C99·C11에서 접미사 없는 10진 정수 상수의 타입은 `int → long → long long` 중 값을 표현할 수 있는 첫 타입이다. `-2147483648`은 단항 마이너스와 상수 `2147483648`의 조합이며, 그 상수가 32 Bit `int`를 넘는다고 자동으로 unsigned가 되지는 않는다. `int`가 32 Bit일 때 LP64처럼 `long`이 64 Bit이면 `long`, `long`도 32 Bit인 ILP32·LLP64이면 `long long`이 된다. 값 -2,147,483,648 자체가 틀린 것은 아니지만 표현식의 타입이 의도한 `int`와 다를 수 있다. [C99 통합 초안 N1256, 6.4.4.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf), [C11 초안 N1570, 6.4.4.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
+
+PintOS의 `stdint.h`는 `int32_t`를 `signed int`로 선언하고 `INT32_MAX`를 `2147483647`, `INT32_MIN`을 `(-INT32_MAX - 1)`로 정의한다. `limits.h`의 `INT_MIN`도 `(-INT_MAX - 1)`이다. 이 저장소가 전제한 32 Bit `int`에서는 중간 계산과 최종 값이 모두 그 타입의 범위 안에 남는다. 헤더의 매크로 값과 실제 Compiler·ABI의 타입 크기는 구분해서 확인해야 한다. [PintOS stdint.h](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/stdint.h#L12-L18), [limits.h](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/limits.h#L22-L31)
+
 ## 정수에서 Flag와 주소를 분리한다
 
-예제의 PTE `0x000000000800B067`을 10진수로 쓰면 134,262,887이다. 이 큰 수 자체보다 어떤 Bit가 켜져 있는지가 필요하다. 하위 값 `0x067`에는 Present·Writable·User·Accessed·Dirty에 해당하는 Bit 0·1·2·5·6이 설정되어 있다. 각 Flag는 `pte & mask`가 0인지로 검사한다. [PintOS의 PTE Flag](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/pte.h)
+예제의 PTE `0x000000000800B067`을 10진수로 쓰면 134,262,887이다. 이 큰 수 자체보다 어떤 Bit가 켜져 있는지가 필요하다. 하위 값 `0x067`에는 Present·Writable·User·Accessed·Dirty에 해당하는 Bit 0·1·2·5·6이 설정되어 있다. 각 Flag는 `pte & mask`가 0인지로 검사한다. 같은 4 KiB leaf 예시에서 P·W·U만 켠 `0x12345007`의 Little-endian Byte는 `07 50 34 12 00 00 00 00`이다. 주소 `0x12345000`과 하위 Flag `0x007`을 하나의 정수에 담았으며 A·D는 꺼져 있다. [PintOS의 PTE Flag](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/pte.h)
 
-여기서는 상위 제어 Bit가 없는 4 KiB 페이지의 leaf PTE 값을 사용했다. 주소 부분 `0x0800B000`을 12 Bit 오른쪽으로 이동하면 물리 Frame 번호 `0x800B`가 된다. 다시 4096을 곱하면 Frame 시작 주소로 돌아간다. 이 주소는 페이지 안의 특정 Byte 주소와는 다르며, 실제 접근 주소를 얻으려면 해당 Offset을 더해야 한다.
+여기서는 상위 제어 Bit가 없는 4 KiB 페이지의 leaf PTE 값을 사용했다. 첫 예제의 주소 부분 `0x0800B000`을 12 Bit 오른쪽으로 이동하면 물리 Frame 번호 `0x800B`가 된다. 다시 4096을 곱하면 Frame 시작 주소로 돌아간다. 이 주소는 페이지 안의 특정 Byte 주소와는 다르며, 실제 접근 주소를 얻으려면 해당 Offset을 더해야 한다.
 
 이 한 값을 분해한 것이 모든 PTE 형식을 검증했다는 뜻은 아니다. 물리 주소의 지원 폭과 상위 제어 Bit, 큰 페이지 여부는 별도로 확인해야 한다. 특히 모든 상위 Bit를 주소로 간주해서는 안 된다. 단계별 주소 변환과 권한 판단은 [Paging](/wiki/computer-systems-network-topic-dbd836d1a044/)에서 이어서 다룬다.
 

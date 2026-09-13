@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4a1a79029429/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4a1a79029429
-projection_sha256: 1f40485fb79bddad995cfd52c58fb509015b6496563236ee98f4f9df9b026938
+projection_sha256: 9f31ed58162675c3aa8e70c5b2ec4abc4e7be87910a43b4ed810cdac22ccebe8
 parent: 컴퓨터 구조
 content_status: ready
 public_parent_id: Wiki/computer-systems-network/computer-architecture
@@ -260,6 +260,8 @@ length=16: start >= 0, 1 <= length <= 15
 | `fb` | `sti` | IF를 올린다. 활성화 시점의 규칙도 함께 적용된다. |
 
 `lib/user/syscall.c`의 래퍼는 인자와 System Call 번호를 Register에 넣고 `syscall`을 실행한다. `threads/thread.c`의 idle 경로에는 `sti; hlt`가, `do_iret()`에는 `iretq`가 있다. `intr_disable()`과 `intr_enable()`은 각각 `cli`와 `sti`를 사용한다. [System Call 래퍼](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/lib/user/syscall.c), [Thread 구현](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/thread.c), [Interrupt 제어](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/interrupt.c)
+
+명령 길이를 비교할 때는 같은 이름의 다른 인코딩도 구분한다. Intel SDM에 정의된 접두사 없는 `90`은 1바이트 `nop`이며, 여러 바이트를 쓰는 NOP 형식도 있다. 앞의 `48 c7 c7 01 00 00 00`이 `0x4000b0`에서 정상적으로 끝나고 분기·인터럽트·예외가 없다면 다음 위치는 7바이트 뒤인 `0x4000b7`이다. 길이 1의 NOP, 길이 2의 SYSCALL, 길이 7의 이 MOV를 같은 고정 폭으로 세면 실행 위치를 잘못 읽게 된다. [Intel SDM Volume 2B, NOP](https://cdrdv2-public.intel.com/922481/253667-092-sdm-vol-2b.pdf#page=168)
 
 ### syscall_entry의 첫 세 명령어
 

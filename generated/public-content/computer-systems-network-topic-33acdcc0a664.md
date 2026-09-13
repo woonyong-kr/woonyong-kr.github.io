@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-33acdcc0a664/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-33acdcc0a664
-projection_sha256: 7696b1fd4b312979d03d16f51b225f57a4b88dc4383f4314cf5753784c48ebce
+projection_sha256: 52c9ce266a51c0b819b01a191dbe573da6332cbca8415c4a0f8c9d19787d4e7c
 parent: 파일 시스템 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
@@ -98,6 +98,10 @@ PintOS의 `EFILESYS` 경로에는 FAT를 위한 별도 구조가 준비돼 있�
 
 **현재 revision의 `fat_fs_init()`, `fat_put()`, `fat_get()`, `cluster_to_sector()`와 체인 할당·해제는 `TODO`로 남아 있다.** 따라서 앞의 흐름은 코드에 마련된 호출 구조다. FAT 포맷이나 파일 확장이 실제로 완성돼 동작했다는 뜻은 아니다. 특히 `ROOT_DIR_CLUSTER = 1`을 그대로 Sector 1에 넘겨 읽으면 FAT 영역을 루트 데이터로 착각하게 된다.
 
+FAT의 빈 Cluster 표시와 다음 Cluster 번호, Chain 끝 표시는 서로 다른 뜻이다. 현재 Header의 `EOChain` 값은 `0x0fffffff`이며 Little Endian 바이트는 `ff ff ff 0f`다. 마지막 바이트가 `0f`라고 정수 값을 `0xffffff0f`로 읽지 않는다. `ROOT_DIR_CLUSTER=1`도 Cluster 번호이지 디스크 Sector 1이라는 뜻은 아니다. `data_start`와 Cluster 크기를 사용해 변환해야 한다.
+
+예를 들어 `2 → 5 → 3 → EOChain`은 파일의 첫 세 Cluster가 저장된 순서를 나타낸다. 이 체인을 늘리려면 빈 Cluster를 찾고 새 끝과 이전 끝의 연결을 갱신해야 한다. 실제 구현에서는 할당 실패나 중간 쓰기 실패에 남는 연결도 처리해야 한다. 현재 `fat_create_chain()`·`fat_remove_chain()`·`fat_get()`·`fat_put()`의 `TODO`를 완성된 할당기로 간주하지 않는다. 표준 FAT32와 PintOS의 학습용 FAT 포맷 역시 별개다. [FAT 상수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/filesys/fat.h)
+
 ## Superblock은 파일 시스템의 전체 구조를 설명한다
 
 inode가 개별 파일을 설명한다면 **Superblock은 파일 시스템 전체를 해석할 정보**를 담는다. 형식 식별 값, 전체 크기와 기능 설정 등이 여기에 속한다. UUID, 마운트 관련 정보나 Journal 정보까지 담는 형식도 있다. 구체적인 필드와 배치는 파일 시스템마다 다르다. [ext4 Superblock 필드](https://www.kernel.org/doc/html/latest/filesystems/ext4/super.html)
@@ -177,6 +181,10 @@ for length in (4096, 3050):
 ```
 
 파일 길이가 4,096이면 `(35, 440, 72)`, `(36, 0, 28)` 두 조각으로 100바이트를 읽는다. 길이가 3,050이면 파일 끝에서 멈추므로 `(35, 440, 50)`만 읽는다. Sector 읽기 횟수와 호출자가 요청한 바이트 수를 구분해야 Bounce Buffer의 동작도 설명할 수 있다.
+
+첫 데이터 Sector가 10이고 파일 길이가 충분할 때, offset 1,500부터 100바이트를 읽는 경우도 위 예제로 계산할 수 있다. `1,500 // 512 = 2`, 나머지는 476이므로 Sector 12에서 36바이트, Sector 13에서 64바이트를 읽는다. `file_read()`였다면 위치는 1,600으로 이동하지만 `file_read_at()`은 핸들의 위치를 바꾸지 않는다.
+
+512바이트 경계에 맞지 않는 위치에서 정확히 4,096바이트를 읽으면 Sector 아홉 개에 걸친다. 처음과 마지막은 부분 읽기이고 가운데 일곱 개는 전체 Sector 읽기다. 정렬된 위치에서 시작해야 전체 Sector 여덟 개가 된다. 이는 파일 길이가 충분하고 요청이 끝까지 성공한 조건의 계산이다. 실제 시스템 호출은 사용자 버퍼 검증과 Kernel 버퍼를 통한 복사도 거치므로, inode의 부분 Sector용 Bounce Buffer와 사용자 주소 보호를 같은 작업으로 취급하지 않는다.
 
 ### Swap Slot 안의 한 바이트 찾기
 

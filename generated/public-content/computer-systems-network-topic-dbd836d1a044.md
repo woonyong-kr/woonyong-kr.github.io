@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: 549b158170d51a86f47cb01969fa949c3eed754ceaaae3495288657ff8c4df56
+projection_sha256: c1e06c6e4dade3067453b61ae72c1018da9f05c9579cec7ba9aa8173aa83c9fa
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -248,6 +248,16 @@ Python 3.9.6에서 실행한 결과다.
 주소가 두 개라는 조건은 같아도 테이블 저장량은 16 KiB에서 28 KiB까지 달라진다. 반대로 루트만 있고 매핑이 없으면 루트의 4 KiB만 필요하다. 주소가 가리키는 데이터 Frame을 더하면 비용이 늘지만, 여러 VA가 같은 Frame을 공유할 수도 있으므로 주소 개수만으로 Frame 수까지 정하지 않는다. 출력의 512 GiB 전체 매핑은 4 KiB 데이터 페이지 512³개를 빈틈없이 붙이는 가정이다. 이때 테이블은 루트 1장, PDPT 1장, PD 512장, PT 512²장이다. 실제 PintOS의 사용량을 측정한 값은 아니다.
 
 `pml4_create()`의 복사량이 4 KiB로 정해져 있다는 사실도 전체 실행 시간이 일정하다는 뜻은 아니다. [`palloc_get_multiple()`](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/threads/palloc.c#L291)은 Bitmap을 탐색한다. 이 경로를 확인하지 않고 할당을 O(1)로 가정하거나 고정된 Cycle 수를 붙이지 않는다.
+
+### 32비트 Paging과 비교하기
+
+전통적인 비PAE 32비트 x86에서 4 KiB 페이지는 `10(PD) + 10(PT) + 12(offset)`로 주소를 나눈다. 4바이트 Entry 1,024개가 4 KiB Table 하나에 들어간다. PAE를 사용한 32비트 구조에서는 최상위 4개와 아래 두 단계의 각 512개 Entry를 거치는 `2 + 9 + 9 + 12` 형태가 되며 Entry는 8바이트다. 따라서 “32비트는 항상 2단계”라고 일반화할 수 없다. 여기서 비교한 단계 수는 4 KiB 페이지의 경로이며 큰 페이지는 중간 단계에서 변환을 끝낼 수 있다. [Linux v6.12의 비PAE 구조](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/pgtable-2level_types.h), [PAE 구조](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/pgtable-3level_types.h)
+
+### 같은 Mapping을 주소 값으로 확인하기
+
+4 KiB 페이지와 현재의 4단계 변환에서 VA `0x400000`의 인덱스는 `0 / 0 / 2 / 0`이다. 초기 사용자 Stack Page의 주소 `0x4747f000`은 `0 / 1 / 0x3a / 0x7f`로 나뉜다. 앞의 주소 분해 예제에 값을 바꾸어 넣어 확인할 수 있다. Kernel VA `0x8004123000`은 이 PintOS의 `KERN_BASE=0x8004000000`을 빼면 PA `0x123000`이 된다. 사용자 VA에서 같은 뺄셈으로 Frame을 구하는 방식은 사용할 수 없다. VA `0x400000`을 PA `0x200000`에 연결했다고 가정하면 그 주소의 offset이 0이므로 접근할 PA도 `0x200000`이다. 인덱스 계산은 어느 PTE를 찾을지만 정하며, 그 PTE가 가리키는 Frame은 별도로 설치한 Mapping에 달려 있다.
+
+`install_page()`는 이미 연결된 사용자 Page가 없는지 검사한 뒤 `pml4_set_page()`를 호출한다. 반면 하위 함수가 그 중복 검사를 모두 대신해 주지는 않는다. 호출자는 사용자 주소·Frame 주소의 Page 정렬과 `writable`을 확인해야 한다. 테이블을 만드는 `palloc_get_page(PAL_ZERO)` 중단점에는 다른 0 초기화 할당도 걸릴 수 있으므로, 호출 Stack과 `pml4_set_page()`의 인자를 함께 보아야 현재 Mapping을 위한 할당인지 알 수 있다. [Mapping 설치 함수](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c), [Page Table 생성과 PTE 기록](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/mmu.c)
 
 ## CR3의 주소 필드와 전환 조건
 
@@ -607,6 +617,8 @@ QEMU 10.0의 TCG도 `target/i386/tcg/system/excp_helper.c`에서 변환 경로�
 
 PintOS의 PTE에서 P·W·U는 bit 0·1·2(`0x1/0x2/0x4`)이며, 각각 Mapping의 Present 상태, 쓰기 허용, User 접근 허용을 나타낸다. A·D가 접근의 흔적이라면 W·U는 접근 전에 검사할 조건이다. `0x12345007`은 Frame 주소 `0x12345000`에 P·W·U가 켜진 예다. A·D까지 켜지면 `0x12345067`이 된다. 이 숫자에서 W와 D를 혼동하면 쓰기가 가능한 상태와 쓰기가 기록된 상태를 구별할 수 없다.
 
+같은 조건에서 `0x0000000012345025`를 상위 제어 Bit가 없는 4 KiB leaf PTE 예시로 읽으면 물리 Frame 주소는 `0x12345000`, 하위 Flag는 `0x025`다. P·U·A는 켜져 있고 W는 꺼져 있다. 이런 present Mapping에서 `pml4_get_page()`가 포인터를 반환해도 쓰기 허가까지 확인된 것은 아니다. 다만 W=0만으로 불법 쓰기라고 확정하지 않는다. 뒤의 COW 설명처럼 SPT의 논리적 쓰기 권한과 복구 가능성도 확인해야 한다. 이 예시의 주소 분리를 상위 제어 Bit가 있는 모든 PTE에 `~0xfff`만 적용하는 규칙으로 확대하지 않는다.
+
 4단계 Paging에서 User 접근을 허용하려면 변환 경로의 모든 엔트리가 present이고 U=1이어야 한다. User 쓰기는 모든 단계의 W도 1이어야 한다. 최종 PTE가 `...007`이어도 상위 PDE의 U=0이면 User 접근을 허용하지 않는다. Supervisor 쓰기에 W=0을 적용할지는 CR0.WP도 결정한다. WP=1이면 Supervisor에도 쓰기 보호가 적용되고, WP=0이면 기본적인 R/W 검사에서 Supervisor 쓰기가 허용될 수 있다. P=0까지 무시한다는 뜻은 아니다. [Intel SDM 092, Vol. 3A §5.6](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf)
 
 U=1 역시 Kernel의 모든 접근을 허용한다는 뜻은 아니다. SMEP는 Supervisor가 User 페이지에서 명령어를 가져오는 것을 제한하고, SMAP은 User 페이지에 대한 Supervisor의 데이터 접근을 제한한다. SMAP의 명시적 접근 예외에는 EFLAGS.AC 등이 관계된다. 명령어 실행에는 NX, 접근에는 protection key 같은 조건도 있으므로 P·W·U만으로 x86-64의 전체 권한 규칙을 구현할 수 없다.
@@ -814,11 +826,13 @@ VM 빌드에서는 앞선 SPT 정리가 Mapping의 P를 내리고 공유 Frame�
 
 ## 실행 파일의 적재와 VM의 지연 적재
 
+현재 `load_program_headers()`가 `PT_LOAD`를 넘기면 `load_loadable_segment()`는 `phdr->p_flags & PF_W`로 `writable`을 정해 `load_segment()`에 전달한다. 따라서 코드가 놓인 주소라는 이유만으로 읽기 전용이라고 단정하지 않고, ELF의 권한과 현재 Mapping을 확인한다. [ELF 권한의 전달](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1002-L1061)
+
 [`process.c`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c)의 VM을 사용하지 않는 `load_segment()`는 프레임을 먼저 확보한다. 페이지에 해당하는 파일 바이트를 `file_read_at(file,kpage,page_read_bytes,ofs)`로 읽고, 남은 `page_zero_bytes`를 0으로 채운 다음 `install_page(upage,kpage,writable)`로 연결한다. 읽기나 Mapping 설치가 실패하면 확보한 프레임을 반환한다.
 
 `install_page()`는 `pml4_get_page()`로 기존 Mapping이 없는지 검사한 뒤 `pml4_set_page()`를 호출한다. 현재 `pml4_set_page()` 자체는 leaf가 이미 present인지 검사하지 않으므로, 상위 호출자의 중복 검사와 하위 함수의 역할을 나누어 읽어야 한다.
 
-VM 빌드의 `load_segment()`는 파일·offset·읽을 길이·0으로 채울 길이를 aux에 담고 `vm_alloc_page_with_initializer()`로 등록한다. 아직 모든 프레임을 읽어 오는 단계는 아니다. 나중에 프레임을 확보하면 `lazy_load_segment()`가 `page->frame->kva`에 파일 내용을 읽고 나머지를 0으로 채운다. aux와 파일 참조의 반환은 이 페이지의 초기화 수명에 속한다. Eager 적재의 코드 조각을 모든 VM 실행 경로의 순서라고 일반화하면 안 된다.
+VM 빌드의 `load_segment()`는 파일·offset·읽을 길이·0으로 채울 길이를 aux에 담고 `vm_alloc_page_with_initializer()`로 등록한다. 이때 `writable`은 `page->writable`로 보관한다. [VM 페이지에 권한 저장](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L95-L139) 아직 모든 프레임을 읽어 오는 단계는 아니다. 나중에 프레임을 확보하면 `lazy_load_segment()`가 `page->frame->kva`에 파일 내용을 읽고 나머지를 0으로 채운다. aux와 파일 참조의 반환은 이 페이지의 초기화 수명에 속한다. Eager 적재의 코드 조각을 모든 VM 실행 경로의 순서라고 일반화하면 안 된다.
 
 현재 `vm_do_claim_page()`는 `pml4_set_page()`로 PTE를 설치한 **뒤에** `swap_in()`을 호출한다. 후자의 실패 때 이 함수에서 PTE를 되돌리는 코드는 없으므로, P=1만 보고 초기화 성공이나 안전한 재시도를 판단하면 안 된다. `PTE_W`도 항상 켜는 것이 아니라 `page->writable`에 따라 정한다. 등록, Frame 확보, 내용 준비와 원래 명령으로의 복귀는 [페이지 폴트](/wiki/computer-systems-network-topic-5cebdbc10ddf/)의 현재 코드 흐름에서 이어서 확인한다.
 

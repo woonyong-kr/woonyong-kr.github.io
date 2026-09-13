@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-c76b83867c50/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-c76b83867c50
-projection_sha256: 23ab7f701eb1d0f263f1c978bb2257e93acda445d601af391cbcf9a7f303fc7f
+projection_sha256: 0cba2e5408b6f26ad9e699bd2ba3fca6846a07d9d1b2e0773d9cf43a555393bb
 parent: PintOS
 content_status: ready
 public_parent_id: Wiki/projects/pintos
@@ -124,6 +124,8 @@ print("new file offset:", offset)
 이름을 제거하는 경로는 `filesys_remove()`에서 Directory 항목의 `in_use`를 지우고 `inode_remove()`로 `removed`를 설정한다. 이때 이미 열린 fd의 슬롯을 지우지는 않는다. 열린 파일로 계속 읽고 쓸 수 있으며, 마지막 `inode_close()`에서 참조 수가 0이 되었을 때 삭제 표시를 확인해 inode Sector와 데이터 Sector를 Free Map에 반환한다. 이름을 제거하지 않은 파일은 마지막으로 닫혀도 디스크 내용이 유지된다.
 
 [`syn-remove` 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/filesys/base/syn-remove.c)는 1,234바이트 파일을 만든 뒤 이름을 제거하고, 열린 fd로 쓰기·처음 위치로 이동·읽기·내용 비교를 수행한다. 이 코드는 이름과 열린 참조의 수명이 다르다는 조건을 검사한다. 현재 문서에서는 테스트 본문을 읽었으며 새 커널 실행 결과로 제시하지 않는다.
+
+현재 `inode_disk`에는 Hard Link 수를 영구 저장하는 `nlink`가 없고, `open_cnt`는 메모리의 열린 참조 수다. Directory에 같은 inode를 가리키는 이름 하나를 추가하는 것만으로 Hard Link를 구현하면, 한쪽 이름을 지운 뒤 다른 이름이 살아 있는데도 공간을 회수할 수 있다. 디스크의 Link 수, Directory 변경과 실패 복구, 마지막 열린 참조의 정리 조건을 함께 바꾸어야 한다. 디스크 구조를 바꾸면 기존 포맷과의 호환성도 검토해야 한다. Symbolic Link에는 경로 저장과 경로 탐색 규칙이 추가로 필요하다. 일반적인 두 Link의 동작은 [File](/wiki/computer-systems-network-topic-23d09155893b/)에서 실제 임시 파일로 비교한다.
 
 ## 실행 파일의 쓰기를 막는 이유
 

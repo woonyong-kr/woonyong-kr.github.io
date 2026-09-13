@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-41565131cfca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41565131cfca
-projection_sha256: e79b5cd498e78587aa513d5384be6f1aa359d9f3e6bba4afc19a8ce921513adb
+projection_sha256: a3c6ee715e3ec80aa3cbdd2a6cd72e950b17e3b80796803032cf9d691fa1ff8a
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -77,13 +77,21 @@ print(f'새 사용자 문맥의 RFLAGS: 0x{flags:x}')
 | 명령 | 바꾸거나 사용하는 상태 | 권한 조건 |
 |---|---|---|
 | `mov cr3, rax` | Page Table의 루트 | CPL 0 필요 |
-| `wrmsr` | LSTAR 등을 포함한 MSR | CPL 0 필요 |
+| `wrmsr` | LSTAR 등을 포함한 MSR 쓰기 | CPL 0 필요 |
+| `rdmsr` | MSR 읽기 | CPL 0 필요 |
+| `ltr`·`lldt` | Task Register·LDTR에 Selector 적재 | CPL 0 필요 |
 | `hlt` | CPU 실행 정지 | CPL 0 필요 |
 | `lgdt`·`lidt` | GDT·IDT의 위치와 limit | CPL 0 필요 |
+| `invlpg`·`invpcid` | TLB 등 주소 변환 Cache의 무효화 | CPL 0과 명령별 기능 지원 필요 |
+| `wbinvd` | Cache의 write-back·무효화 | CPL 0 필요 |
 | `in`·`out` | I/O Port | CPL과 IOPL을 비교하고, 필요하면 TSS의 I/O Permission Bitmap 검사 |
 | `cli`·`sti` | Maskable Interrupt를 허용하는 IF | 이 PintOS의 일반 64비트 실행에서는 CPL ≤ IOPL 필요 |
 
-앞의 네 종류는 CPL 3에서 실행하면 `#GP`가 된다. CPL 0이라는 조건을 만족해도 잘못된 operand·지원하지 않는 기능 등의 검사까지 사라지는 것은 아니다.
+표에서 CPL 0을 요구하는 명령은 해당 명령과 실행 모드를 지원하는 조건에서 CPL 3의 권한 위반으로 `#GP`를 일으킨다. CPL 0이라는 조건을 만족해도 잘못된 operand·지원하지 않는 기능 등의 검사까지 사라지는 것은 아니다.
+
+`RDMSR`은 읽기 명령이어도 일반적인 보호 모드에서 CPL 0을 요구한다. `RDTSC`로 Time-Stamp Counter를 읽을 수 있다는 사실을 임의의 MSR을 읽어도 된다는 뜻으로 확대하지 않는다. `RDTSC`는 CR4.TSD가 0이면 모든 CPL에서, 1이면 CPL 0에서 실행할 수 있다. 제어 Register도 CR0–CR4의 다섯 개라고 세면 틀린다. CR1은 예약되어 있고, 64비트 모드에서는 CR8도 사용한다. CR3를 쓸 때의 무효화 범위는 명령과 제어 비트에 달려 있다. [Intel SDM의 RDMSR](https://cdrdv2-public.intel.com/922481/253667-092-sdm-vol-2b.pdf#page=552), [RDTSC](https://cdrdv2-public.intel.com/922481/253667-092-sdm-vol-2b.pdf#page=567), [Control Register 접근](https://cdrdv2-public.intel.com/922481/253667-092-sdm-vol-2b.pdf#page=40)
+
+`CPUID`도 모든 환경에서 무조건 허용되는 조회라고 설명하지 않는다. Linux의 기본 설정에서는 실행할 수 있지만, CPU가 CPUID faulting을 지원하면 `arch_prctl(ARCH_SET_CPUID, 0)`으로 호출한 Thread의 사용을 막을 수 있고 이후 실행은 SIGSEGV로 이어진다. ISA의 명령별 조건, OS가 설정한 제어 값, 가상화의 실행 제어를 함께 읽어야 한다. [Linux의 CPUID 실행 설정](https://man7.org/linux/man-pages/man2/arch_prctl.2.html)
 
 IOPL(I/O Privilege Level)은 RFLAGS의 bit 12~13이다. `IN/OUT`은 CPL ≤ IOPL이면 이 권한 검사를 통과하고, CPL > IOPL이면 TSS의 bitmap에서 해당 Port가 허용됐는지 확인한다. 접근 크기에 해당하는 bit 중 하나라도 1이거나 bitmap을 읽는 범위가 TSS limit 밖이면 `#GP`가 된다. `INS/OUTS`도 Port 권한을 검사한다. Bitmap은 `CLI/STI`를 허용하는 수단이 아니다. [Intel SDM의 I/O 권한과 bitmap](https://cdrdv2-public.intel.com/868137/325462-089-sdm-vol-1-2abcd-3abcd-4.pdf)
 
@@ -108,6 +116,10 @@ TLB hit에서는 Cache에 보관한 변환과 권한 정보를 사용하고, mis
 ## CPU의 예외와 OS의 처리 정책
 
 CPU가 `#GP`나 `#PF`를 전달하는 것과 OS가 프로세스를 종료하는 것은 다른 단계다. 현재 PintOS의 `exception_init()`은 vector 13인 `#GP`를 `kill()`에 연결한다. `kill()`은 저장된 `f->cs`가 `SEL_UCSEG`이면 진단 뒤 `thread_exit()`을 호출하고, `SEL_KCSEG`이면 Kernel bug로 `PANIC`한다. `#PF`는 별도의 `page_fault()`로 들어가므로 복구 가능한 VM fault까지 무조건 종료한다고 설명하지 않는다. [예외 등록과 kill 분기](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/exception.c#L33-L128), [Page Fault 복구](/wiki/computer-systems-network-topic-5cebdbc10ddf/#pintos는-예외-프레임을-보존한-채-vm에-복구를-맡긴다)
+
+`#GP`의 Error Code가 0인 단순 권한 위반과 Descriptor 선택에 관련된 오류도 나눈다. 관련 Descriptor가 있으면 Error Code가 테이블과 index 정보를 담을 수 있지만, 그 값을 원래 Selector와 언제나 같다고 읽지는 않는다. `IRETQ` 역시 모든 경우를 CPL 0 전용 명령으로 묶기보다 현재 권한과 복귀 Frame의 검사 조건을 따라 읽는다. [Intel SDM의 General-Protection Exception과 복귀 검사](https://cdrdv2-public.intel.com/922487/253668-092-sdm-vol-3a.pdf)
+
+Linux v6.12의 `exc_general_protection()`은 복구 분기를 먼저 시도하고, 처리하지 못한 사용자 예외를 `gp_user_force_sig_segv()`로 보내 SIGSEGV를 전달한다. 이를 언제나 SIGILL이나 실제 core 파일 생성으로 이어지는 경로라고 단정하지 않는다. Windows에서는 `EXCEPTION_PRIV_INSTRUCTION`이 `STATUS_PRIVILEGED_INSTRUCTION`에 대응하며 SEH에서 예외 코드를 확인할 수 있다. 특정 빌드의 `KiTrap0D`라는 내부 이름을 모든 버전에 고정하지 않는다. [Linux v6.12의 #GP 처리](https://github.com/torvalds/linux/blob/v6.12/arch/x86/kernel/traps.c#L684-L725), [Windows 예외 코드](https://learn.microsoft.com/en-us/windows/win32/debug/getexceptioncode)
 
 사용자 실행 중 커널로 들어오는 계기도 구분해야 한다. 다음 표는 이 PintOS에서 다루는 진입 경로이며 x86의 모든 호출·실행 모드를 나열한 표가 아니다.
 

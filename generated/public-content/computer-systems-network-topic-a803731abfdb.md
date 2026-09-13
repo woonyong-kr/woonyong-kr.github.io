@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a803731abfdb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a803731abfdb
-projection_sha256: 1031abf808938fcecd48d35b3776aed2c9c3a9379a03390335c91996d5f13312
+projection_sha256: ea5b80c67b32ea67d72089661a062d2c30fda1953faa8668fbd7d1068a4242e1
 parent: 파일 시스템
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-2f8a1e4d5189
@@ -90,7 +90,7 @@ with tempfile.TemporaryDirectory() as directory:
             os.close(fd)
 ```
 
-첫 번째 fd는 `AB`, 복제한 fd는 이어서 `CD`를 읽는다. 별도의 `open()`으로 얻은 fd는 처음부터 `AB`를 읽으므로 offset은 각각 `4`, `4`, `2`가 된다. 실행 환경이 먼저 연 fd가 있을 수 있어 실제 번호를 3이나 4로 고정하지 않는다.
+첫 번째 fd는 `AB`, 복제한 fd는 이어서 `CD`를 읽는다. 별도의 `open()`으로 얻은 fd는 처음부터 `AB`를 읽으므로 offset은 각각 `4`, `4`, `2`가 된다. 실행 환경에서 먼저 연 fd가 있을 수 있어 실제 번호를 3이나 4로 고정하지 않는다.
 
 뒤쪽의 `close()`와 `unlink()`가 바꾸는 대상은 아래에서 구분한다.
 

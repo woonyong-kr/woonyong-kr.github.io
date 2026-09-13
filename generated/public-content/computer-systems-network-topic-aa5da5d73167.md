@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aa5da5d73167/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aa5da5d73167
-projection_sha256: fdf8d6e0f70bc3ac848c1f1b68f60800ba9bf367e59c7efc22e5c25cf78b1332
+projection_sha256: 54acf9a5d382e705d11ef2e712a3f6f29b9174bbecc4772c227eab27f83a7b14
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -69,6 +69,55 @@ Page를 등록할 때는 VA가 Page 경계에 맞는지, 같은 주소가 이미
 `vm_alloc_page_with_initializer()`는 Page를 할당한 뒤 지원하는 타입을 찾지 못하거나 SPT 삽입에 실패하면 그 Page를 해제한다. 이때 전달받은 `aux`와 파일 참조는 해제하지 않으므로, 등록 실패를 받은 ELF·mmap 호출자가 자신이 준비한 자원을 정리한다. [Page 등록과 실패 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L95-L138), [ELF 호출자](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1360-L1378), [mmap 호출자](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/file.c#L153-L179)
 
 이미 등록된 VA로 다시 호출하면 `spt_find_page()` 검사에서 거절하므로 새 Page의 할당과 `uninit_new()`·`spt_insert_page()` 호출까지 도달하지 않는다. 기존 Page는 SPT에 그대로 남는다. 따라서 같은 VA를 두 번 등록하는 요청으로 중복 거절은 확인할 수 있지만, Hash 삽입 실패 뒤의 정리 분기를 시험했다고 볼 수는 없다.
+
+## Hash 값과 Bucket의 수
+
+현재 `hash_bytes()`는 64비트 값에 FNV Prime을 곱한 뒤 입력 바이트를 XOR한다. 순서가 **곱셈 → XOR**이므로 FNV-1 방식이며, XOR를 먼저 하는 FNV-1a와 다르다. 초기값은 `0xcbf29ce484222325`, Prime은 `0x100000001b3`다. `page_hash()`는 `va` 포인터 자체의 바이트를 입력으로 쓴다. 현재 x86-64의 8바이트 Little Endian 표현을 기준으로 읽어야 한다. [Hash 함수와 Rehash](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/lib/kernel/hash.c)
+
+Bucket의 수는 2의 거듭제곱이다. `find_bucket()`은 `hash & (bucket_cnt - 1)`로 Bucket을 고르고, 그 안의 Doubly Linked List를 순회한다. 충돌한 원소를 버리거나 다음 빈 Bucket으로 옮기는 Open Addressing 방식이 아니다. 두 Key의 동등성은 `less(a, b)`와 `less(b, a)`가 모두 거짓인지로 판단한다.
+
+Hash Table은 처음에 Bucket 네 개를 만든다. 삽입·교체·삭제 뒤의 `rehash()`는 원소 수를 2로 나눈 몫 이하의 가장 큰 2의 거듭제곱을 구하고, 최소 네 개를 유지한다. 새 Bucket 배열 할당이 성공한다면 원소 15개에서는 4개, 16개에서는 8개, 100개에서는 32개가 된다. 소스의 `MIN_ELEMS_PER_BUCKET`·`MAX_ELEMS_PER_BUCKET` 상수가 직접 확장 조건에 쓰이는 것은 아니다.
+
+다음 코드는 그 주소 Hash와 Bucket 수 계산을 실행한다. 실제 PintOS의 메모리를 읽거나 조회 시간을 측정하는 예제는 아니다.
+
+```run-python
+MASK = (1 << 64) - 1
+
+def page_hash(address):
+    if not 0 <= address <= MASK:
+        raise ValueError("64비트 주소가 필요하다.")
+    value = 0xcbf29ce484222325
+    for byte in address.to_bytes(8, "little"):
+        value = ((value * 0x100000001b3) & MASK) ^ byte
+    return value
+
+def target_buckets(count):
+    if count < 0:
+        raise ValueError("원소 수는 음수일 수 없다.")
+    target = max(4, count // 2)
+    return 1 << (target.bit_length() - 1)
+
+for count in (0, 15, 16, 32, 64, 65, 100):
+    buckets = target_buckets(count)
+    print(f"pages={count}, buckets={buckets}, load={count / buckets:g}")
+
+for address in (0x400000, 0x401000, 0x8048000):
+    value = page_hash(address)
+    print(f"VA={address:#x}, hash={value:#018x}, bucket(8)={value & 7}")
+
+assert target_buckets(15) == 4 and target_buckets(16) == 8
+assert target_buckets(64) == target_buckets(65) == 32
+assert target_buckets(100) == 32
+assert page_hash(0) == (0xcbf29ce484222325 * pow(0x100000001b3, 8, 1 << 64)) & MASK
+```
+
+16개에서 하나를 삭제하면 목표 Bucket 수가 다시 4개로 줄어든다. 이 경계에서 삽입과 삭제를 반복하면 Rehash도 반복될 수 있다. 새 배열을 할당하지 못하면 기존 테이블을 그대로 사용하므로, 목표 크기와 실제 현재 크기도 구별한다. 평균 조회 비용과 최악의 Chain 순회 비용은 [Hash Table](/wiki/computer-science-topic-c3f2953a97c2/)의 조건을 따른다. Page Fault 전체의 비용에는 Frame 확보와 파일·Swap I/O도 포함된다.
+
+`struct hash_elem` 안에는 List 연결이 들어 있고, Bucket 배열의 각 항목은 Head와 Tail을 가진 `struct list`다. 현재 x86-64 구조에서는 포인터 두 개의 `list_elem`이 16바이트, Sentinel 두 개의 `list`가 32바이트이므로 초기 Bucket 배열만 128바이트다. Hash 객체와 Page·할당기 Metadata는 별도다. `hash_entry()`는 `offsetof`를 이용해 포함한 Page의 주소로 돌아간다. Hash 멤버가 Page의 첫 필드라고 가정해서 주소를 변환하면 안 된다. [Hash 구조체](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/kernel/hash.h), [List 구조체](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/kernel/list.h)
+
+실제 성장을 조사하려면 `rehash()`에서 `h->elem_cnt`와 `h->bucket_cnt`를 비교하고, 할당 실패 여부와 Bucket의 Chain을 함께 살핀다. 함수가 반환된 뒤에도 주소를 쓸 계획이라면 유효한 인자 `h`를 먼저 Debugger 변수에 보관한다. `args-many` 같은 테스트의 로딩 과정은 관찰 대상으로 삼을 수 있지만, 소스만 읽고 특정 Chain 길이나 실행 시간을 결과로 쓰지는 않는다.
+
+정확한 Page 한 개를 찾는 일에는 Hash가 어울리지만 범위 검색과 정렬 순회가 중요하면 균형 Tree 등 다른 구조를 고려할 수 있다. Linked List는 단순한 대신 순차 검색이 필요하고, 정렬 배열은 조회와 삽입·삭제 비용의 균형이 다르다. 자료구조의 이름 하나로 Cache 효율이나 실제 성능의 우열을 확정할 수는 없다.
 
 ## 4단계 Page Table과 주소 계산
 

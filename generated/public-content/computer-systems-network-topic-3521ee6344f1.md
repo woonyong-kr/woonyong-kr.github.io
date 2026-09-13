@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3521ee6344f1/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3521ee6344f1
-projection_sha256: 4bdf4d02c061849844d04a9a1260ded09de184ecc89d8e49a4f1c51e7a83313b
+projection_sha256: f9b919a0d1bbaf738ddc8ed0dc1bb6ee69aac3c00cdb17e9abf73e72990d56d0
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -51,6 +51,8 @@ Linux의 ELF 실행 파일을 예로 들어 `g`의 경로를 따라가 보자. �
 여기서 **Section**과 **Segment**를 구분해야 한다. `.text`, `.data`, `.bss` 같은 Section은 파일 안의 내용을 종류별로 나눈다. 실행할 때 로딩할 범위와 권한은 Program Header가 나타내며, 그중 `PT_LOAD` Segment가 메모리에 적재할 영역을 기술한다. Section 하나마다 별도의 Mapping이 생기는 것은 아니다. `.bss`는 보통 `SHT_NOBITS` Section으로 표현하므로 크기는 있어도 그 크기만큼의 초기값을 파일에 저장하지 않는다. 명시적으로 0을 대입한 정적 객체도 이 영역에 놓일 수 있다. [ELF의 Section과 Program Header](https://man7.org/linux/man-pages/man5/elf.5.html)
 
 `execve()`로 새 프로그램을 실행하면 Kernel은 기존 주소 공간의 Mapping을 새 실행 이미지에 맞게 바꾼다. 동적 링크 ELF라면 `PT_INTERP`가 지정한 인터프리터도 관여해 필요한 공유 라이브러리를 준비한다. 실행 파일에 있는 내용을 모두 먼저 읽어야만 프로그램이 시작되는 것은 아니다. [Linux의 `execve()`](https://man7.org/linux/man-pages/man2/execve.2.html)
+
+이 학습 저장소의 PintOS 사용자 프로그램은 `Makefile.userprog`의 `-static` 옵션으로 링크하며, 필요한 Library 코드를 실행 파일에 포함한다. `load_program_headers()`도 `PT_DYNAMIC`·`PT_INTERP`·`PT_SHLIB`를 만나면 적재를 거부한다. Linux에서 Dynamic Linker가 공유 라이브러리를 준비하는 경로가 이 로더에도 있다고 가정할 수는 없다. 공유 라이브러리의 파일 페이지와 사적 쓰기를 구분하는 원리는 [메모리 매핑](/wiki/computer-systems-network-topic-aad7c9c2b57f/#같은-파일을-읽어도-쓰기의-의미는-달라진다)에서 확인한다. [사용자 프로그램의 정적 링크](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/Makefile.userprog), [지원하는 Program Header](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1032-L1062)
 
 프로그램이 `g`를 처음 읽는 순간에도 여러 경로가 가능하다. 같은 페이지에 이미 접근했거나 로딩 과정에서 준비했다면 곧바로 읽을 수 있다. 페이지가 아직 현재 프로세스에 연결되지 않았지만 파일 내용이 Page Cache에 있다면 디스크를 읽지 않는 Minor Fault로 처리할 수 있다. 저장 장치에서 내용을 가져와야 하는 경우에는 Major Fault가 발생할 수 있다. 따라서 ‘변수의 첫 접근 → Page Fault → 디스크 읽기’가 언제나 성립하는 것은 아니다. Fault의 종류와 처리 경로는 [Page Fault](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 이어진다.
 
@@ -216,5 +218,7 @@ candidate=0x8000000000: below_KERN_BASE=True, PML4_index=1
 User Stack은 이 Kernel Stack과 별개다. 이 저장소는 `USER_STACK`을 `0x47480000`으로 정의하며, 사용자 프로그램의 Stack을 그 아래에 준비한다. 초기 Stack에 넣는 내용은 [인자 전달](/wiki/computer-systems-network-topic-1217820258bd/)에서, Project 3의 Fault 기반 성장 조건은 [Page Fault](/wiki/computer-systems-network-topic-5cebdbc10ddf/)에서 확인할 수 있다. 이 주소와 성장 규칙을 일반적인 Linux 기본값으로 옮겨 해석하지 않는다.
 
 Kernel 함수에서 큰 지역 배열이 필요하다면 제한된 Stack을 얼마나 차지하는지 먼저 확인한다. 수명이 호출 범위를 넘거나 크기가 크면 `malloc()` 또는 `palloc_get_page()` 같은 동적 할당을 고려하고, 성공 여부와 반환 책임을 함께 처리한다. 이 PintOS의 Kernel `malloc()`은 `palloc` 위에서 작은 블록과 Arena를 관리한다. 사용자 프로그램의 `malloc()`이 같은 함수를 직접 호출한다고 보면 안 된다.
+
+이 저장소의 시스템 콜 목록에는 `brk`나 `sbrk`가 없다. VM 빌드의 `mmap()`은 유효한 파일 fd와 파일 offset을 받아 매핑하며, Linux의 익명 Mapping과 같은 API가 아니다. 따라서 User Heap을 설명하면서 Linux의 `brk`·`mmap`이나 PintOS의 Kernel `malloc()`을 그대로 대응시키지 않는다. [시스템 콜 목록](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/include/lib/syscall-nr.h), [파일 기반 mmap의 입력 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c#L404-L435)
 
 작은 블록을 묶는 Descriptor와 Arena, 페이지를 추적하는 Pool·Bitmap의 구체적인 구현은 [메모리 관리](/wiki/computer-systems-network-topic-d160fea60072/)에 정리되어 있다. Kernel Pool과 User Pool은 예약 영역 등을 제외하고 할당에 사용할 물리 메모리를 나누며, 시스템 RAM 전체를 단순히 반씩 가진다는 뜻은 아니다. 두 Pool을 나누면 사용자 페이지 요청이 Kernel Pool을 직접 소진하는 일을 제한할 수 있지만, 모든 Kernel 할당의 성공을 보장하지는 않는다.

@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-qemu-b1366076be02/
 publication_state: publish
 has_toc: false
 projection_id: Wiki/keywords/computer-systems-network-qemu-b1366076be02
-projection_sha256: 9cf916e157c8cd2ca8d4e31c0e0e7f69fae121674b80f2cc68457878379a9262
+projection_sha256: 41cf4f06879c1ea9f695a1e2c4e2d5a078df076bf3c81074b7ae5be26382dde0
 parent: 개발 환경
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-327968e136ec
@@ -55,6 +55,8 @@ Guest 명령어를 실행할 때 TCG는 대상 명령을 중간 표현으로 바
 
 Linux에서 사용할 수 있는 KVM은 Linux 커널의 가상화 기능이다. QEMU의 커널 모듈을 뜻하지 않는다. QEMU는 `/dev/kvm`의 API로 VM과 vCPU를 만들고, 지원되는 Host CPU의 가상화 기능으로 Guest 코드를 실행한다. 장치 접근 중 일부는 QEMU로 돌아오지만, 커널 내부 장치 모델이나 vhost, 장치 직접 연결을 사용하는 경로도 있으므로 모든 I/O가 반드시 QEMU 사용자 공간을 거친다고 단정할 수 없다. [KVM API](https://www.kernel.org/doc/html/latest/virt/kvm/api.html), [QEMU의 장치 실행 경로](https://www.qemu.org/docs/master/system/introduction.html#feature-overview)
 
+VM exit와 QEMU 사용자 공간으로의 반환은 같은 사건이 아니다. 가상화 설정이 선택한 사건으로 하드웨어가 Guest 실행을 벗어나도 KVM 커널에서 처리한 뒤 다시 실행할 수 있다. QEMU가 `KVM_RUN`에서 돌아와 처리할 이유와 Guest 커널이 받을 예외를 구분해야 한다. Guest의 `#PF`나 CPL 0의 CR3·MSR 접근이 언제나 QEMU로 전달된다는 규칙은 없다. [KVM_RUN과 반환 상태](https://docs.kernel.org/virt/kvm/api.html#kvm-run)
+
 | 확인할 항목 | TCG | KVM |
 |---|---|---|
 | Guest CPU 실행 | Guest 명령을 번역한 Host 코드를 실행 | 호환되는 CPU 가상화 기능으로 실행 |
@@ -74,6 +76,8 @@ TB는 시작 PC만으로 찾지 않는다. QEMU v10.0.0의 `tb_htable_lookup()`�
 분기나 `SYSCALL`처럼 다음 실행 상태를 바꾸는 명령은 TB의 경계가 된다. 번역할 명령 수의 상한과 디버깅 조건도 경계에 영향을 준다. TB의 경계는 C 함수의 경계와 일치하지 않으며, 포함하는 명령 수도 달라질 수 있다. [`tb_gen_code()`의 번역 한도](https://github.com/qemu/qemu/blob/v10.0.0/accel/tcg/translate-all.c#L290)
 
 번역한 코드를 재사용하는 것과 다음 TB로 직접 이동하는 것도 다르다. `goto_tb + exit_tb` 방식은 처음에는 메인 루프로 돌아와 다음 TB를 찾고, 이후 분기 슬롯을 연결해 그 경로를 줄인다. 이 방식은 같은 페이지 안에서 목적지를 정할 수 있는 직접 분기라는 조건을 요구한다. `lookup_and_goto_ptr`는 현재 상태에 맞는 TB 주소를 조회해 이동하는 별도 경로다. 인터럽트를 새로 받을 수 있는 상태 변화 뒤에는 메인 루프로 돌아가 인터럽트를 다시 확인해야 한다. [TB 연결의 조건](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg.rst#direct-block-chaining)
+
+이 연결 때문에 Host에서 읽은 `env->eip`가 Guest 명령마다 매번 갱신된다고 가정해서는 안 된다. `goto_tb`가 아직 연결되지 않았을 때는 다음 PC 등 상태를 기록하고 메인 루프로 나가지만, 연결된 뒤에는 그 경로를 건너뛰어 다음 TB로 갈 수 있다. 예외가 발생한 위치는 Host PC와 Guest 명령의 대응 정보로 복원한다. 따라서 모든 TB 경계에서 같은 필드를 무조건 갱신한다고 그리지 않고, 상태가 필요한 이탈·복원 지점을 확인한다. [QEMU v10.0.0의 TB 연결과 예외 복원](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg.rst)
 
 Guest 코드의 바이트를 바꾸면 해당 코드를 번역한 TB와 연결도 무효화해야 한다. 주소 변환 Cache와 코드 Cache는 보관하는 정보가 다르므로 PTE 변경이나 CR3 전환이 모든 TB의 폐기를 뜻하지는 않는다. 같은 코드 Frame과 상태로 돌아왔을 때 기존 TB를 재사용할 여지가 있도록 물리 위치를 함께 관리한다. [코드 변경과 무효화](https://github.com/qemu/qemu/blob/v10.0.0/docs/devel/tcg.rst#self-modifying-code-and-translated-code-invalidation)
 

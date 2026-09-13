@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a6a32eb78db0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a6a32eb78db0
-projection_sha256: e34dbd79d677254184605aebb5999a5e8636120c8b4b98451e1774a9c877a5f7
+projection_sha256: 6798aeb19e10810ca310f367f1153ec1730815a6685db76ccf59133104fbc37f
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -190,6 +190,21 @@ for name, offset, va, filesz, memsz in cases:
 `inside a page`에서는 Segment의 파일 데이터가 13바이트지만 페이지 경계부터 304바이트를 읽는다. 이 가운데 앞의 291바이트는 정렬 때문에 함께 읽는 범위다. BSS는 8바이트이며 나머지는 페이지 여백이다.
 
 파일 크기를 `0x2a00`으로 바꾸면 4,096·4,096·2,560바이트로 나뉘고 마지막 페이지의 1,536바이트를 0으로 채운다. 두 Segment가 각각 5페이지와 1페이지이고 Stack 1페이지를 즉시 적재한다면 사용자 데이터 Frame은 7개, 28 KiB다. 이 계산에는 Page Table, 커널 객체, 파일 상태의 메모리가 포함되지 않는다.
+
+### Segment 끝과 Page 끝은 다르다
+
+`p_memsz - p_filesz`는 Segment 안에서 파일에 없는 바이트의 수다. 페이지를 모두 채우기 위해 0으로 만드는 양은 이보다 클 수 있다. 위 `page_plan()`에 다음 값을 넣어 비교할 수 있다. 표의 크기와 주소는 계산을 위한 입력이며 실제 바이너리를 측정한 값은 아니다.
+
+| `p_offset` / `p_vaddr` | `p_filesz` / `p_memsz` | 페이지별 read | 페이지별 zero |
+|---|---|---|---|
+| `0x3000` / `0x404000` | `0xA30` / `0x1800` | 2,608 / 0 | 1,488 / 4,096 |
+| `0x3020` / `0x8043020` | `0x100` / `0x200` | 288 | 3,808 |
+| `0x1000` / `0x400000` | `0x2800` / `0x2800` | 4,096 / 4,096 / 2,048 | 0 / 0 / 2,048 |
+| `0x4000` / `0x600000` | `0x100` / `0x3000` | 256 / 0 / 0 | 3,840 / 4,096 / 4,096 |
+
+첫 행에서 Segment 자체의 0 초기화 영역은 `6,144 - 2,608 = 3,536`바이트다. 페이지 단위 zero 합계 5,584바이트에는 Segment 끝 이후의 2,048바이트도 포함된다. 둘째 행의 read 288바이트에는 정렬을 맞추기 위해 앞에서 읽는 32바이트가 들어 있다. 파일에 들어 있는 Segment의 크기는 여전히 256바이트다. 셋째 행은 `p_memsz == p_filesz`라 BSS가 없어도 마지막 Page의 남는 공간을 0으로 채운다.
+
+명시적으로 초기화하지 않은 정적 저장 기간의 `int counter`나 `static char buffer[1024]`는 C의 초기화 규칙에 따라 0으로 초기화되며, 일반적인 ELF 도구에서는 이런 데이터를 BSS에 배치한다. 반면 `int answer = 42`는 보통 초기값을 파일에 저장한다. C의 언어 규칙과 ELF Section 배치는 다른 층의 약속이다. 모든 프로그램이 정확히 두 개의 `PT_LOAD`를 갖거나, BSS가 독립된 Loadable Segment여야 하는 것은 아니다.
 
 ## 적재 전에 검사하는 범위
 

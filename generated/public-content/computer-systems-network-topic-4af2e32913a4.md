@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: d092691808e095066e5b1e436b7393dbae37e64893d4688434e70627aacf325a
+projection_sha256: 587159f42c74fa5f47a7ee460490a9583d1d4271737aadad4a049f7b610808ad
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -328,6 +328,12 @@ sema_up(&cs->fork_sema);
 따라서 현재 실패 경로를 “PML4·SPT를 모두 파괴한 뒤 실패를 통지한다”는 그림으로 바꾸면 호출 순서가 틀린다. 실패 알림을 받은 부모가 먼저 실행될 수 있고, 자식의 자원 정리는 그 뒤에 이어질 수 있다. 초기화 실패라는 결과와 모든 메모리 반환이 끝난 시점은 같다기보다 별도 사건이다.
 
 정상 인자로 만들어진 자식에 대해서는 성공 또는 일반 초기화 실패 중 한 경로에서 알림 한 번이 필요하다. 다만 `__do_fork()` 앞부분의 NULL 인자 방어 경로는 바로 종료한다. 내부 호출 계약이 깨지는 경우까지 “어떤 실패에서도 반드시 알린다”고 단정하지 않는다.
+
+첫 User 프로세스를 만드는 `process_create_initd()`에서는 명령줄용 Page, `child_status`, `initd_args`를 차례로 확보한다. `child_status`는 `args`를 할당하기 전에 부모 목록에 등록한다. 뒤의 할당이나 `thread_create()`가 실패해 `done`으로 오면, 확보한 `args`와 명령줄 Page를 반환하고 등록된 상태 항목을 제거해 해제한다. 아직 확보하지 않은 객체까지 해제하거나, 어느 실패 지점에서나 바로 반환하면 된다고 생각해서는 안 된다. [initd 생성과 실패 정리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L65-L133)
+
+성공 경로에서는 `args->file_name`과 `args->cs`를 채워 `initd()`로 넘긴다. `initd()`는 상태 객체를 `self_status`에 연결하고 인자 객체를 해제한다. 명령줄 Page는 `process_exec()`가 `load()`의 결과를 받은 뒤 반환한다. 그 뒤에도 필요한 상태 객체의 수명과 해제 주체는 [부모의 wait와 부모·자식의 종료 순서](/wiki/computer-systems-network-topic-93ebb5bf7e48/)에 따라 따로 관리한다. 이 생성 단계의 회수만으로 전체 종료 경로가 안전하다고 결론 내릴 수는 없다. [initd의 인자 인계](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L139-L166), [명령줄 Page 반환](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L413-L461)
+
+실패한 호출마다 4 KiB Page 한 장을 반환하지 않는다고 가정하면, 100회 누수량은 `4096 × 100 = 409600 B = 400 KiB`다. 이는 회수 누락이 누적되는 크기를 설명하는 계산이며, 실제 Kernel Pool 크기나 고갈 시점을 측정한 값은 아니다. 누수량을 판단할 때는 [용량과 실제 회수량의 차이](/wiki/computer-systems-network-topic-93ebb5bf7e48/)도 함께 확인한다.
 
 ### 실행 순서와 실패 지점을 바꿔 본다
 
