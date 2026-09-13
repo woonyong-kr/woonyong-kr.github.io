@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: 596a4de36a5579f38379beae6ee2dda8bacb53c213a610c4097cea8ba18381a1
+projection_sha256: d2b00884ae0d72d2f42601b2bbc3d9b1e2a0c7b3e6239258c2d1f09c4df5bd51
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -156,6 +156,10 @@ non-VM의 `duplicate_pte()`는 User Frame을 새로 할당해 4096바이트를 �
 
 그런데 `supplemental_page_table_copy()`는 이 반환 값에 `VM_UNINIT`을 비교해 `spt_copy_uninit_page()`를 호출한다. 최종 타입이 ANON 또는 FILE로 등록된 일반적인 UNINIT Page는 이 조건에 들어가지 않는다. helper에 aux 복사와 `file_reopen()`이 구현되어 있다는 사실과 실제 분기가 그 helper에 도달한다는 사실은 별개다.
 
+Helper 자체는 부모의 `aux`가 있으면 새 `lazy_load_arg`에 값을 복사하고, 파일 포인터가 있으면 `file_reopen()`으로 별도 파일 객체를 얻는다. 자식 Page의 등록에는 부모의 VA·쓰기 권한·예정 타입·초기화 Callback을 전달한다. 파일 참조가 있는 Lazy Page의 복사를 확인할 때는 부모와 자식이 같은 Offset·읽기 길이·0 채움 길이를 가지면서도 Page·`aux`·파일 객체의 주소는 분리되는지 본다. 파일 내용 전체를 복제하는 것은 아니며 두 파일 객체는 같은 Inode를 참조할 수 있다. 재열기나 등록에 실패하면 Helper가 새로 만든 자원만 정리한다. [UNINIT 복사 Helper의 정의](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L592-L627)
+
+다른 설계로는 `aux`와 파일 참조를 공유하면서 마지막 참조까지 수명을 유지하거나, fork 때 미초기화 Page를 먼저 적재한 뒤 복사하는 방법이 있다. 전자는 공유를 전제로 한 정리 계약이 필요하고, 후자는 아직 필요하지 않은 파일 읽기와 데이터 복사 비용을 fork 시점에 치른다. 현재 Helper의 독립 복사와 이런 대안을 섞어서 단순한 포인터 대입을 안전한 복제로 해석하지 않는다.
+
 Swap에 있는 ANON Page도 따로 살펴봐야 한다. 현재 분기에서 Frame이 없으면 자식 Page를 할당·claim하지만, 부모의 `swap_slot` 내용을 읽어 복사하는 처리가 없다. 마지막 `memcpy()`도 부모 Frame이 있을 때만 실행한다. 따라서 이 경로를 “Swap Slot snapshot 복사”라고 설명할 근거가 없다. 새 Page의 초기화 방식에 따라 값이 달라질 수 있으므로, 부모 데이터를 읽지 않았다는 코드 관찰을 임의의 바이트 결과나 재현한 Kernel 오류로 바꾸지 않는다. [타입 조회와 SPT 복제 분기](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c)
 
 | 부모 Page의 상태 | 현재 복제 분기에서 읽히는 경로 |
@@ -234,6 +238,10 @@ W11 작업본의 공유 익명 Frame을 swap-out하면 내용을 슬롯 하나�
 W11 작업본의 `anon_swap_out()`은 데이터를 저장한 뒤 `list_pop_front(&frame->owners)`로 owner 연결을 하나씩 꺼낸다. 각 Page에 `swapped=true`와 같은 `swap_idx`를 기록하고 `page->frame=NULL`로 바꾼 다음, 해당 PTE를 지우고 owner 객체를 해제한다. Page 객체는 SPT에 남아 슬롯 위치를 기억한다. 저장과 매핑 정리가 성공하면 `vm_evict_frame()`이 그 victim Frame을 반환해 다른 Page에 재사용하므로, `page->frame=NULL`은 이전 Page와 Frame의 연결이 끊겼다는 뜻이다.
 
 이와 달리 현재 학습 레포의 swap 메타데이터는 `swap_slot/in_swap`이고, 공유 Frame은 교체 후보에서 제외한다. 앞의 VM 복제 경계에서 확인한 Lazy·Swap·VM_FILE의 제한도 그대로 적용된다. W11의 타입별 `file_copy()`·`uninit_copy()`는 소스에서 확인했으며, 파일·Lazy 복제의 실행 검증은 별도로 필요하다. [현재 교체 조건](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [W11의 타입별 분기](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/vm.c)
+
+W11 기준 커밋은 `supplemental_page_table_copy()`에서 각 Page의 `operations->copy`를 호출한다. 현재 Operations가 `uninit_ops`이면 `uninit_copy()`로 들어가므로, 이 경로는 예정 타입을 조회한 뒤 `VM_UNINIT`과 비교하지 않는다. `aux`의 값과 파일 참조를 복제한 뒤 부모의 VA·쓰기 권한·예정 타입·Callback으로 자식 Page를 등록한다. `page_initializer`는 예정 타입에 맞춰 등록 함수가 다시 고른다. [W11 SPT 순회](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/vm.c#L472-L485), [타입별 Copy 호출](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/include/vm/vm.h#L77-L89)
+
+다만 이 버전의 `uninit_copy()`는 `malloc()` 결과를 검사하지 않고 `memcpy()`에 넘긴다. 파일 재열기 실패 때는 새 `aux`를 해제하지만, Page 등록이 실패한 뒤 새 `aux`와 파일 참조를 정리하는 처리는 빠져 있다. `uninit_destroy()`도 비어 있어, 등록 뒤 초기화되지 않은 채 제거되는 Page의 남은 자원 정리를 보장하지 않는다. 따라서 타입별 Copy 함수가 연결되어 있다는 사실만으로 실패 경로나 전체 수명 관리까지 완성됐다고 볼 수 없다. [W11 UNINIT 복사와 Destroy](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/uninit.c#L65-L99)
 
 ### PTE 갱신과 실패 경로도 함께 읽는다
 
@@ -449,7 +457,9 @@ make -C pintos/userprog check \
 
 Linux v6.12의 `kernel_clone()`은 호출한 쪽에서 `copy_process()`로 새 Task와 자원 관계를 준비한 뒤 `wake_up_new_task()`로 자식을 실행 가능하게 만든다. PintOS처럼 자식 Thread가 복제를 끝냈다는 Semaphore 알림을 부모가 기다리는 구조와는 다르다. Copy-on-Write는 데이터 Page의 복사를 늦추지만 Task와 Page Table 준비까지 없어지는 것은 아니다. “COW이므로 즉시 반환하고 동기화도 없다”는 표현은 생성 비용과 내부 보호를 지나치게 생략한다. [Linux 생성 경로](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c)
 
-같은 함수의 `CLONE_VFORK` 경로는 별도의 Completion을 만들고 `wait_for_vfork_done()`으로 기다린다. 이것은 일반 fork의 생성 준비와 다른 대기다. Linux fork의 부모 반환은 자식 PID, 자식 반환은 0이며 실패는 부모에게 `-1`과 `errno`로 전달된다. fd는 복사되지만 해당 Open File Description의 offset과 상태 Flag를 공유한다. [Linux fork API](https://man7.org/linux/man-pages/man2/fork.2.html)
+주소 공간을 복제할 때도 VMA와 PTE는 별도로 준비한다. Linux v6.12의 `dup_mmap()`은 복제 대상 VMA를 만들고 파일 매핑의 참조를 유지한다. `copy_page_range()`는 나중의 Fault로 올바르게 채울 수 있는 PTE의 복사를 생략할 수 있다. 이 판단은 단순히 부모가 아직 접근하지 않았는지가 아니라 `userfaultfd` 쓰기 보호, 특수 매핑 Flag와 `anon_vma` 상태 등을 확인한다. 자식의 후속 접근도 Page Cache를 사용할 수 있으므로, 독립 주소 공간을 만들었다고 파일 내용을 반드시 디스크에서 다시 읽는 것은 아니다. [Linux VMA 복제](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c#L663-L746), [PTE 복사를 생략하는 조건](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L1328-L1369), [파일 매핑과 Page Cache](/wiki/computer-systems-network-topic-0a62f7f28b03/#linuxwindows와-qemu에서-대응되는-부분)
+
+`kernel_clone()`의 `CLONE_VFORK` 경로는 별도의 Completion을 만들고 `wait_for_vfork_done()`으로 기다린다. 이것은 일반 fork의 생성 준비와 다른 대기다. Linux fork의 부모 반환은 자식 PID, 자식 반환은 0이며 실패는 부모에게 `-1`과 `errno`로 전달된다. fd는 복사되지만 해당 Open File Description의 offset과 상태 Flag를 공유한다. [Linux fork API](https://man7.org/linux/man-pages/man2/fork.2.html)
 
 Windows의 `CreateProcessW()`는 실행 파일로 새 프로세스와 초기 Thread를 만든다. 부모의 실행 지점에서 같은 호출이 두 번 반환되는 fork 모델과는 다르다. 더구나 함수의 성공 반환이 새 프로그램의 초기화까지 모두 끝났음을 뜻하지 않는다. 필요한 DLL을 찾거나 초기화하는 데 뒤늦게 실패하면 새 프로세스가 종료될 수 있다. 따라서 PintOS의 `fork_success`를 모든 OS의 애플리케이션 준비 완료 신호로 대응시키지 않는다. [Microsoft CreateProcessW](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw)
 

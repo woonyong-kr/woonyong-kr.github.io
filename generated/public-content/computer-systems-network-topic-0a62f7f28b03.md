@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-0a62f7f28b03/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0a62f7f28b03
-projection_sha256: 0f637b1d7e71bdab9c325111c80101402fd6b0f99312aba5df900b697b2b3213
+projection_sha256: 3306aa21ffa9cd01f36c83ec13912288458a87a904db3eeeedfdcbcca25e0df4
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -167,5 +167,9 @@ continue
 원시 바이트를 비교하려면 타입 초기화 전후에 같은 Page의 Union 시작 주소를 확인하고, 현재 빌드의 타입 정보로 읽을 범위를 정한 뒤 [바이트 단위 메모리 조회](/wiki/platform-delivery-operations-topic-f89d71c7eb29/#memory의-주소와-단위를-명시한다)로 덤프를 남긴다. 원시 덤프와 현재 타입의 필드 해석을 구별하고, `uninit_initialize()`의 호출 프레임에 보관한 `init`·`aux`의 포인터 값도 따로 확인한다. Callback 뒤 해제된 `aux`는 역참조하지 않는다.
 
 GDB의 `return false`는 선택한 함수의 실행을 중단하고 반환 상태를 만들며, 남은 함수 본문을 실행하지 않는다. `lazy_load_segment()`의 `done` 경로 전에 강제 반환하면 파일 닫기와 `aux` 해제도 건너뛰므로 실제 `file_read_at()` 읽기 실패의 정리 경로를 검증한 결과가 아니다. 실패 경로를 검증할 때는 원래 분기가 정리 코드까지 실행되는지와 호출자에게 전달된 실패 결과를 따로 확인한다. [GDB의 강제 반환](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Returning.html), [현재 ELF Callback의 정리 경로](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1300-L1327)
+
+임시 계측으로 읽기 반환값을 저장한 뒤 요청량보다 하나 작은 값으로 바꾸면 Callback의 실패 분기와 정리 코드를 확인할 수 있다. 그러나 이미 Buffer에 기록된 바이트까지 되돌리지는 않으므로 실제로 파일을 덜 읽은 상황을 재현한 결과와 구분한다. 이 방식은 읽기 요청량이 0인 Page를 제외하고 적용해야 한다.
+
+해제 횟수를 셀 때는 할당부터 해제까지 한 객체의 수명을 기준으로 삼는다. 대상 `aux`와 파일 포인터를 해제 전에 기록하고, 그 객체에 대한 실제 `free()`·`file_close()` 호출을 확인한다. 정리 Helper 진입에서 올린 Counter만으로는 해제가 실행됐다고 볼 수 없다. 같은 주소가 다음 할당에 재사용될 수도 있으므로 서로 다른 객체의 수명을 한 번의 집계에 섞지 않는다.
 
 등록 함수의 Breakpoint 적중 횟수는 현재 살아 있는 UNINIT Page 수와 다르다. 실패한 등록, 이미 초기화된 Page, 제거된 Page가 섞일 수 있다. 현재 개수가 필요하면 SPT에 남은 각 Page의 실제 Operations 타입을 세어야 한다. Fork Helper가 전혀 호출되지 않는 결과도 앞서 설명한 타입 판정과 함께 해석한다.
