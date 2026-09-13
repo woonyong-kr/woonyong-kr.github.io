@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-1217820258bd/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-1217820258bd
-projection_sha256: 6b68002ea66ad1eb707a319b9db9bdfc8c61e005af742269b8f2d33f39fd19fe
+projection_sha256: a7f0a1f23476fd55047eb54736fb27647518750f7b8ae1c4e3ff5d8a5013eb4d
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -348,6 +348,7 @@ QEMU에서 이 주소들은 Guest 가상 주소다. TCG로 실행할 때 메모�
 | 테스트 | 확인할 인자 |
 |---|---|
 | `args-none` | 실행 파일 이름만 있으므로 `argc = 1` |
+| `args-single` | `onearg` 하나를 더해 `argc = 2`, `argv[1] = "onearg"`, `argv[2] = NULL`인지 확인 |
 | `args-multiple` | `some arguments for you!`를 더해 `argc = 5` |
 | `args-dbl-space` | `two  spaces!`의 연속 공백을 건너뛰어 `argc = 3` |
 | `args-many` | `a`부터 `v`까지 22개 인자와 실행 파일 이름으로 `argc = 23` |

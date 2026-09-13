@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aad7c9c2b57f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aad7c9c2b57f
-projection_sha256: effb5a25138e36d940291d4abc09925d6c8d050b5eaa9782e1e502594897dc71
+projection_sha256: 56dfc0957fa2b031406512e1d2bc6365ca7a6ad54751d0bac4bd08b11af8bf31
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -114,7 +114,7 @@ Linux에서는 매핑을 만든 뒤 File Descriptor를 닫아도 매핑이 유�
 
 Windows에서도 파일 Handle을 닫는 것과 `UnmapViewOfFile()`로 View를 해제하는 것을 구분한다. 시스템은 마지막 View가 해제될 때까지 해당 파일을 열어 둔다. View가 사라진 뒤에는 그 주소 범위를 다른 할당에 사용할 수 있다. [Microsoft UnmapViewOfFile](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-unmapviewoffile)
 
-해제하는 범위도 API마다 다르다. Linux의 `munmap(addr, length)`는 시작 주소와 길이를 받아 기존 매핑의 일부를 해제할 수 있다. Windows의 `UnmapViewOfFile()`은 전달한 주소를 포함하는 View 전체를 해제한다. View 안쪽 주소를 넘겨도 그 지점 이후의 일부만 해제하는 호출이 아니다. PintOS의 `munmap(addr)`는 매핑 시작 주소를 받아 그 매핑 전체를 제거한다. 인자 개수만 보고 세 API의 동작을 같게 해석하지 않는다.
+해제하는 범위도 API마다 다르다. Linux의 `munmap(addr, length)`는 시작 주소와 길이를 받아 기존 매핑의 일부를 해제할 수 있다. Windows의 `UnmapViewOfFile()`에는 `MapViewOfFile` 계열이 반환한 시작 주소를 그대로 넘겨야 하며, 해당 View 전체가 해제된다. PintOS의 `munmap(addr)`는 매핑 시작 주소를 받아 그 매핑 전체를 제거한다. 인자 개수만 보고 세 API의 동작을 같게 해석하지 않는다.
 
 파일 끝이 Page 경계와 맞지 않으면 마지막 Page의 남은 부분은 0으로 채워진다. 이 꼬리 부분의 수정은 파일 내용으로 기록되지 않는다. 파일 끝을 넘는 Page에 접근하거나 매핑 중 파일이 잘리는 상황은 별도로 다뤄야 한다. Linux에서는 파일 크기를 벗어난 Page 접근이 `SIGBUS`로 이어질 수 있다. [Linux mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
 

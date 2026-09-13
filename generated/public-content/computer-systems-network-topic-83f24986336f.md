@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-83f24986336f/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
-projection_sha256: e12dcab944e85b226255dd76c19faa6ca75c56a5a13111b623c5de73a5c55a0c
+projection_sha256: e0433d53b8ad42ddc12f67ed1ea7401cd34939930389d5bb4a32052e9421f484
 parent: PintOS
 content_status: ready
 public_parent_id: Wiki/projects/pintos
@@ -240,6 +240,8 @@ assert (frame_units, sectors_per_page, slots) == (8192, 8, 1024)
 Linux의 VMA는 연속된 가상 주소 영역의 정책을, `struct page`와 Folio는 물리 페이지·페이지 묶음의 관리를 설명할 때 등장한다. 주소 공간, 물리 메모리와 타입별 동작을 나눈다는 관점은 비교할 수 있지만 PintOS의 Page와 VMA를 같은 크기의 객체로 대응시키지는 않는다. Linux의 Zone과 Allocator도 단순한 User Pool 하나보다 넓은 물리 메모리 관리 문제를 다룬다. [Linux 물리 메모리](https://docs.kernel.org/6.12/mm/physical_memory.html), [메모리 관리 API](https://docs.kernel.org/6.12/core-api/mm-api.html)
 
 Linux에서 영역별 동작은 `vm_operations_struct`의 `fault`·`map_pages` 같은 Callback으로 연결된다. 함수 테이블로 구현을 선택한다는 점은 PintOS의 `page_operations`와 비교할 수 있지만, 두 구조체가 담당하는 단위와 Callback 계약은 다르다. [Linux 6.12 `vm_operations_struct`](https://github.com/torvalds/linux/blob/v6.12/include/linux/mm.h#L556-L623)
+
+파일의 Page Cache 입출력은 별도의 `address_space_operations`가 맡으며, Linux 6.12는 여기에 `read_folio`, `writepages`, `release_folio` 등의 함수 포인터를 연결한다. [Linux VFS의 Address Space Operations](https://docs.kernel.org/6.12/filesystems/vfs.html#struct-address-space-operations)
 
 Windows의 VAD와 PFN 역시 구분해서 본다. WinDbg의 `!vad`는 가상 주소 Descriptor와 범위를, `!pfn`은 물리 Page Frame의 상태를 확인하는 데 사용한다. Working Set은 프로세스가 현재 물리 메모리에 유지하는 페이지를 다루는 관점이다. 이 이름들을 모두 `palloc`과 일대일로 대응시키거나 Windows의 교체 정책을 하나의 고정 알고리즘으로 단정하지 않는다. [WinDbg VAD](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-vad), [WinDbg PFN](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-pfn), [Working Set](https://learn.microsoft.com/en-us/windows/win32/memory/working-set)
 

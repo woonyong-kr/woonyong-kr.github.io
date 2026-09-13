@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-0a62f7f28b03/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-0a62f7f28b03
-projection_sha256: c6df5b48fab9b3e0cc85dc883ba82350f0784001852ebb239fa117e197596be9
+projection_sha256: 0f637b1d7e71bdab9c325111c80101402fd6b0f99312aba5df900b697b2b3213
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -43,6 +43,8 @@ VM 경로의 `load_segment()`는 페이지마다 읽을 바이트와 0으로 채
 등록 함수에는 `VM_ANON`과 `lazy_load_segment` Callback을 전달한다. `vm_alloc_page_with_initializer()`가 내부에서 UNINIT Page를 만든다는 뜻이지 호출자가 최종 타입으로 `VM_UNINIT`을 전달한다는 뜻은 아니다. 실제 코드는 `VM_TYPE(type) != VM_UNINIT`을 Assert한다. 등록이 성공하면 SPT에 Page가 있지만 `page->frame`은 `NULL`이며 이 사용자 주소의 Mapping도 아직 없다. [등록과 ELF 적재](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1344-L1389)
 
 UNINIT의 저장 공간에는 최종 타입, 내용 초기화 Callback `init`, 그 인자인 `aux`, 타입별 초기화 함수 `page_initializer`가 들어간다. 이들은 [가상 메모리 구현](/wiki/computer-systems-network-topic-83f24986336f/)에서 설명한 Page의 Union을 사용한다. 파일을 처음 읽는다는 이유만으로 최종 타입이 반드시 FILE이 되는 것은 아니다. 이 ELF 경로는 파일의 초기 바이트를 읽은 뒤 ANON으로 관리한다.
+
+현재의 Callback·정리 계약에서는 Page마다 별도의 `aux`를 할당해 등록한 파일 Offset과 길이를 유지한다. 하나의 `aux`를 여러 Page에 등록한 채 다음 반복에서 값을 바꾸면 앞 Page도 뒤 Page의 읽기 정보를 보게 되고, 한 Page가 그 `aux`를 소비·해제한 뒤에는 다른 Page에 해제된 포인터가 남는다.
 
 아래 값은 분할 계산을 위한 예시다. 특정 빌드의 `args-none` ELF를 측정한 결과가 아니다. 첫 구간은 파일에서 `0x1a78`바이트를 읽고, 두 번째 구간은 `0x10`바이트를 읽도록 정했다.
 
@@ -161,5 +163,9 @@ continue
 ```
 
 등록 함수에서 `type`, `upage`, `init`, `aux`를 보고, `uninit_initialize()`에서는 진입 시의 `page->operations->type`, `page->uninit.type`, `page->uninit.aux`, `page->frame`을 비교한다. Step으로 타입 초기화를 지난 뒤에는 Union을 다시 `uninit`으로 읽지 않는다. 미접근 종료는 `uninit_destroy()`, 내용 초기화 뒤의 정리는 `lazy_load_segment()`의 종료 부분을 따른다.
+
+원시 바이트를 비교하려면 타입 초기화 전후에 같은 Page의 Union 시작 주소를 확인하고, 현재 빌드의 타입 정보로 읽을 범위를 정한 뒤 [바이트 단위 메모리 조회](/wiki/platform-delivery-operations-topic-f89d71c7eb29/#memory의-주소와-단위를-명시한다)로 덤프를 남긴다. 원시 덤프와 현재 타입의 필드 해석을 구별하고, `uninit_initialize()`의 호출 프레임에 보관한 `init`·`aux`의 포인터 값도 따로 확인한다. Callback 뒤 해제된 `aux`는 역참조하지 않는다.
+
+GDB의 `return false`는 선택한 함수의 실행을 중단하고 반환 상태를 만들며, 남은 함수 본문을 실행하지 않는다. `lazy_load_segment()`의 `done` 경로 전에 강제 반환하면 파일 닫기와 `aux` 해제도 건너뛰므로 실제 `file_read_at()` 읽기 실패의 정리 경로를 검증한 결과가 아니다. 실패 경로를 검증할 때는 원래 분기가 정리 코드까지 실행되는지와 호출자에게 전달된 실패 결과를 따로 확인한다. [GDB의 강제 반환](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Returning.html), [현재 ELF Callback의 정리 경로](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1300-L1327)
 
 등록 함수의 Breakpoint 적중 횟수는 현재 살아 있는 UNINIT Page 수와 다르다. 실패한 등록, 이미 초기화된 Page, 제거된 Page가 섞일 수 있다. 현재 개수가 필요하면 SPT에 남은 각 Page의 실제 Operations 타입을 세어야 한다. Fork Helper가 전혀 호출되지 않는 결과도 앞서 설명한 타입 판정과 함께 해석한다.

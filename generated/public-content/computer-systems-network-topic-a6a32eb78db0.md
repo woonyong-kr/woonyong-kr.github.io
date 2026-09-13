@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-a6a32eb78db0/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-a6a32eb78db0
-projection_sha256: fb5aee7336cbb428511b008009c62404649a54909effebc2bcfb25bf4fab0bfc
+projection_sha256: e34dbd79d677254184605aebb5999a5e8636120c8b4b98451e1774a9c877a5f7
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -441,6 +441,8 @@ p/x tf->R.rsi
 Linux의 `execve()`는 현재 프로세스의 프로그램 이미지를 바꾸며, 성공하면 이전 호출 위치로 돌아오지 않는다. 동적 링크 ELF에서는 `PT_INTERP`가 가리키는 Interpreter가 공유 라이브러리 적재와 연결에 참여한다. Linux의 프로세스 이미지를 설명할 때는 Demand Paging, ASLR, 환경 변수와 Auxiliary Vector, Signal·Thread·권한 상태의 변경도 함께 고려한다. 구체적인 주소 상한, ASLR 설정과 프로그램 Header 수 제한을 모든 Linux 환경에서 같은 상수로 보지 않는다. [Linux execve](https://www.man7.org/linux/man-pages/man2/execve.2.html)
 
 Linux v6.12의 `load_elf_binary()`는 주 실행 파일의 진입점을 `e_entry + load_bias`로 계산한다. `PT_INTERP`가 있으면 최초 제어는 Interpreter의 적재 주소와 그 ELF의 `e_entry`를 합한 위치로 넘기고, 주 프로그램 진입점은 Auxiliary Vector의 `AT_ENTRY`로 전달한다. Interpreter가 없으면 주 프로그램 진입점을 사용한다. 정적 링크 여부만으로 Load Bias가 항상 0이라고 판단할 수는 없으며, ET_EXEC와 ET_DYN, ASLR 적용 조건도 확인해야 한다. [Linux ELF 진입점 계산](https://github.com/torvalds/linux/blob/v6.12/fs/binfmt_elf.c)
+
+같은 버전에서 파일 바이트가 있는 `PT_LOAD`는 `elf_load()` → `elf_map()` → `vm_mmap()`으로 매핑한다. 파일 크기보다 큰 메모리 범위를 준비할 때, 마지막 파일 페이지의 꼬리에서 필요한 0 채움은 `padzero()`가 처리하고 그 뒤 페이지 범위는 `vm_brk_flags()`로 마련한다. `padzero()`는 사용자 주소에 직접 0을 쓰므로, 모든 데이터 준비가 첫 사용자 명령까지 미뤄지는 것은 아니다. [Linux 6.12의 Segment 매핑과 0 채움](https://github.com/torvalds/linux/blob/v6.12/fs/binfmt_elf.c#L356-L446), [padzero의 사용자 메모리 쓰기](https://github.com/torvalds/linux/blob/v6.12/fs/binfmt_elf.c#L118-L129)
 
 Windows의 PE 이미지는 `MZ` Header와 `PE\0\0` Signature, COFF·Optional Header, Section 정보를 사용한다. 진입점의 `AddressOfEntryPoint`는 실제 적재 Base를 기준으로 더하는 RVA이며 파일 offset과 다르다. Header의 `ImageBase`는 선호 주소이므로 실제 적재 주소와 항상 같다고 전제하지 않는다. PE 진입점의 계산만으로 OS Loader를 포함한 최초 Thread 시작 절차 전체를 설명할 수는 없다. Import, Relocation과 DLL 처리가 필요한 것도 단순한 파일 복사로 설명할 수 없는 이유다. `CreateProcess`로 새 프로세스를 만드는 API와 Linux의 `execve()`로 기존 이미지를 교체하는 API도 구분한다. [Microsoft PE 명세](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
 

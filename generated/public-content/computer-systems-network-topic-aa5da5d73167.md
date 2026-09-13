@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-aa5da5d73167/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-aa5da5d73167
-projection_sha256: 32e9f7b5da01522280f84924043e00937f93d523918dc3d0652bbdf3e4589554
+projection_sha256: cb5563a3da7a300f08053bf69fbe0ba860a50b35ca9235257526a7677aa72451
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -65,6 +65,8 @@ assert spt.get(0x402000) is None
 이 Python Dictionary는 주소를 정렬하는 규칙을 보여 주는 모델이다. PintOS Hash Table의 충돌 처리나 실행 시간을 재현하지 않는다. Hash 조회의 평균 비용은 분포와 Load Factor 등의 조건을 함께 고려해야 하며, 단순히 평균 O(1)이라는 이유만으로 실제 조회 지연을 측정한 것처럼 쓰지 않는다.
 
 Page를 등록할 때는 VA가 Page 경계에 맞는지, 같은 주소가 이미 있는지, 객체 할당과 Hash 삽입이 성공했는지 확인한다. 타입별 Frame 연결과 콜백은 [가상 메모리 구현](/wiki/computer-systems-network-topic-83f24986336f/)에서 다룬다.
+
+`vm_alloc_page_with_initializer()`는 Page를 할당한 뒤 지원하는 타입을 찾지 못하거나 SPT 삽입에 실패하면 그 Page를 해제한다. 이때 전달받은 `aux`와 파일 참조는 해제하지 않으므로, 등록 실패를 받은 ELF·mmap 호출자가 자신이 준비한 자원을 정리한다. [Page 등록과 실패 처리](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c#L95-L138), [ELF 호출자](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c#L1360-L1378), [mmap 호출자](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/file.c#L153-L179)
 
 ## 4단계 Page Table과 주소 계산
 
