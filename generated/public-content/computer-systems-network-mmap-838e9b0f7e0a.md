@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-mmap-838e9b0f7e0a/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-mmap-838e9b0f7e0a
-projection_sha256: 9859a1dcd4742549c9b6ddd409dfc0b0034b7a6de99e03bf040b3dc744d89757
+projection_sha256: 77ac8c8cc0cf56320b9de66b5e95330c8924ff3f18ef33ff74e0750244fdc6fb
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -577,7 +577,15 @@ assert not spt and all(ref["closed"] for ref in refs.values())
 
 현재 `supplemental_page_table_copy()`는 `page_get_type(src_page) == VM_FILE`이면 복사하지 않고 다음 Page로 넘어간다. 아직 `VM_UNINIT` 상태여도 최종 타입이 `VM_FILE`이면 같은 분기에 들어간다. 따라서 이 구현의 파일 매핑은 fork 직후부터 자식 SPT에 복사되지 않는다. `process_exec()`는 별도로 현재 주소 공간을 정리하고 SPT를 다시 초기화한 뒤 새 실행 파일을 적재한다. fork에서 무엇을 복사하는지와 exec에서 무엇을 없애는지는 각각 확인해야 한다. [현재 SPT 복사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [현재 exec](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/process.c)
 
-`mmap-inherit`는 부모가 `0x54321000`에 읽기 전용 매핑을 만든 뒤 fork하고, 자식이 `child-inherit`를 exec하게 한다. 자식은 같은 주소에 쓰기를 시도하며, 부모는 자식의 종료 코드와 자신의 매핑 내용이 유지되는지 확인한다.
+W11 기준 커밋 `09390dd`의 `file_copy()`는 자식 Page를 등록하고 Claim한 뒤, 상주 부모 Frame의 바이트를 복사한다. 이 등록에는 파일을 준비할 Callback과 `aux`가 없고, 해당 버전의 `file_backed_initializer()`는 Operations만 바꾼다. 자식의 파일·Offset·읽기 길이를 복사하거나 파일을 다시 여는 호출도 없다. 따라서 Frame의 바이트가 같아지는 것만으로 자식의 파일 매핑 정보와 수명이 준비됐다고 볼 수 없다. [W11 FILE 초기화](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/file.c#L32-L49), [FILE 복사 함수](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/file.c#L165-L179)
+
+같은 함수의 `swapped` 분기는 파일의 내용을 자식 Frame이 아니라 `src_page->frame->kva`로 읽는다. 부모 Page가 Eviction으로 Frame 연결을 잃은 상태라면 이 포인터를 역참조할 수 없다. 이를 “파일에서 자식 Frame으로 복원하는 구현”이라고 설명하면 읽기 대상과 수명 조건을 모두 놓친다. 기준 커밋의 FILE swap-out은 Dirty 내용을 파일에 쓰지만 반환 길이를 검사하지 않은 채 `swapped`를 기록한다. 이 경로는 쓰기 완료와 실패 복구도 따로 검증해야 한다. [W11 FILE swap-out](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/file.c#L52-L62), [Frame 연결 해제](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/vm.c#L205-L217)
+
+아직 UNINIT인 FILE Page는 W11의 `uninit_copy()`로 복제한다. [프로세스 생성의 W11 복사 경계](/wiki/computer-systems-network-topic-4af2e32913a4/#현재-학습-레포와-w11-작업본은-소유권을-다르게-기록한다)에서 본 Page별 파일 재열기는 매핑 전체를 해제하는 조건과도 맞아야 한다. W11의 `do_mmap()`은 파일을 한 번 다시 열어 여러 Page의 `aux`에 같은 포인터를 넣지만, `do_munmap()`은 인접 Page의 파일 포인터가 같은 동안만 제거한다. 두 UNINIT Page를 fork하고 자식에서 모두 정상 초기화했다고 가정하면, 각 Page의 파일 객체가 달라 첫 Page에서 시작한 해제가 둘째 Page 앞에서 멈출 수 있다. 이는 포인터 비교 조건을 따라간 소스상의 판단이며 실행으로 재현한 결과는 아니다. 현재 학습 레포의 `map_start`를 이용한 매핑 범위 관리와 구별해야 한다. [W11 매핑 등록과 해제](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/file.c#L76-L133)
+
+복제를 관찰할 때는 등록 직후의 UNINIT과 초기화 뒤의 FILE 상태를 먼저 나눈다. 실제 SPT 순회와 `file_copy()`에서 유효한 부모·자식 Page를 찾고, 같은 VA의 파일·Offset·읽기 길이와 Frame 연결을 비교한다. 복제 경로가 성공한 뒤 두 Frame이 유효한 경우에만 파일 유효 영역과 0 채움을 포함한 전체 `PGSIZE` 바이트를 비교한다. 매핑 범위의 Page를 VA별로 빠짐없이 확인하고, PTE의 쓰기 권한·Dirty 상태는 바이트 일치와 파일 반영 정책을 구분해 읽는다. 함수가 false를 반환했다면 어느 호출에서 실패했는지 확인한다. false만으로 파일 재열기 실패라고 판단할 수는 없다. W11의 `mmap-read`는 파일 내용과 뒤의 0 채움을 검사하지만 fork를 호출하지 않으므로, 위 복제 경로의 검증 결과로 사용할 수 없다. [mmap-read의 확인 범위](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/tests/vm/mmap-read.c)
+
+현재 학습 레포의 `mmap-inherit`는 부모가 `0x54321000`에 읽기 전용 매핑을 만든 뒤 fork하고, 자식이 `child-inherit`를 exec하게 한다. 자식은 같은 주소에 쓰기를 시도하며, 부모는 자식의 종료 코드와 자신의 매핑 내용이 유지되는지 확인한다.
 
 이 테스트의 자식이 쓰기에 실패했다는 사실만으로 SPT Entry가 없었다고 단정할 수는 없다. 잘못 남은 읽기 전용 매핑에서도 쓰기는 실패할 수 있기 때문이다. 주소 공간에서 매핑이 제거됐는지까지 확인하려면 exec 이후 SPT와 PTE를 확인하거나, 해당 주소의 읽기도 실패하는 별도 검증이 필요하다. fork 직후 상태를 확인하는 테스트도 따로 있어야 한다. [mmap-inherit 테스트](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/mmap-inherit.c)
 

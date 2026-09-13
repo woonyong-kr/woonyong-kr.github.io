@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-4af2e32913a4/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-4af2e32913a4
-projection_sha256: d2b00884ae0d72d2f42601b2bbc3d9b1e2a0c7b3e6239258c2d1f09c4df5bd51
+projection_sha256: 93778e3289db01073baa09b4cf0736dba9b0f2c4383c3ae3956912bd612e408c
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -229,11 +229,15 @@ W11 작업본의 `vm_frame_add_owner()`는 Page와 Thread를 담은 owner 항목
 
 W11의 `8712916`에서는 swap된 부모 Page를 fork할 때 자식 Page를 `vm_claim_page()`로 준비하고, 부모 슬롯의 데이터를 `disk_read()`로 읽었다. 다음 커밋 `f90c5d9`는 이 분기를 ANON 상태 복사와 `swap_slot_ref()`로 바꿨다. 이 변경으로 해당 Page의 데이터 읽기가 fork 이후의 접근 시점으로 미뤄졌다. [W11의 swapped Page 복제 변경](https://github.com/Jungle-12-303/wk11_7/commit/f90c5d9eb2913e17b396c59d23a257fe52e5f34c)
 
+Slot 공유 대신 부모의 저장 데이터를 읽어 자식 전용 Frame이나 Slot에 보관하는 독립 복사도 설계할 수 있다. 이때 읽기 함수가 부모의 Slot 참조까지 반환하는지 확인해야 한다. 부모가 계속 사용할 저장 데이터를 먼저 해제하면 자식의 사본을 만드는 동안 원본을 잃을 수 있다. 부모를 먼저 Swap In한 뒤 Frame을 복사하는 방법도 있지만, 자식의 Frame을 확보하다가 다시 교체가 일어나면 방금 복원한 부모 Frame이 재사용될 수 있다. 따라서 복사가 끝날 때까지 원본 Frame의 수명을 보호하고, 도중에 실패하면 새로 확보한 Frame·Slot·Page를 정리하는 조건이 필요하다. 독립 복사의 I/O 비용뿐 아니라 추가 할당이 불러오는 교체와 실패 경로까지 함께 살펴야 하는 이유다. [Swap In의 참조 해제](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L114-L129), [Frame 할당과 교체](/wiki/computer-systems-network-topic-83f24986336f/#frame이-부족하면-기존-페이지를-내보낸다)
+
 swap된 Page를 복제하는 `anon_copy()` 분기는 자식의 `operations`를 `anon_ops`에 연결한 뒤 `dst_page->anon = src_page->anon`을 수행한다. `struct page`의 union 안에는 `struct anon_page anon`이 값 필드로 들어 있으므로, 이 대입은 `swapped`와 `swap_idx` 값을 복사한다. 부모와 자식은 서로 다른 Page 객체를 가지면서 같은 슬롯 번호로 저장 데이터를 참조한다. 각 Page의 타입에 맞는 union 멤버를 읽는 기준은 [SPT의 Page 상태 관찰](/wiki/computer-systems-network-topic-aa5da5d73167/#gdb에서-두-상태를-나란히-확인한다)에서 확인할 수 있다.
 
 W11 작업본의 공유 익명 Frame을 swap-out하면 내용을 슬롯 하나에 기록하고 소유 Page들에 같은 슬롯을 남긴다. 각 매핑을 끊은 뒤 Frame 공유 대신 슬롯 참조 수로 저장 데이터의 수명을 관리한다. 이미 swap된 Page를 fork할 때도 슬롯 참조가 하나 늘어난다. 나중에 각 Page가 claim·swap-in될 때는 별도 Frame으로 내용을 읽고 슬롯 참조를 줄이며, 마지막 참조가 사라져야 슬롯을 반환한다. 데이터 복사는 각 Page의 claim 시점까지 미뤄진다. [기준 커밋의 슬롯 수명 관리](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c)
 
 공유 중인 resident Page를 읽는 동안에는 Frame을 그대로 사용하지만, swap된 Page에서는 유효한 읽기 접근도 not-present fault를 일으켜 별도 Frame으로 복원한다. 예를 들어 A와 B가 슬롯 5를 참조하던 중 B가 읽으면, B의 Page만 Frame에 올라오고 슬롯의 참조 수는 2에서 1로 줄어 A의 복구 데이터가 남는다. 한쪽의 참조 해제 뒤에도 슬롯을 유지하고 마지막 참조에서 반환하는 조건은 [Swap의 기존 수명 모델](/wiki/computer-systems-network-swap-11630540adf8/#cow의-frame-공유와-slot-공유)로 확인할 수 있다.
+
+W11 기준 커밋의 Swap In은 Slot을 읽은 뒤 참조 수를 줄이고, 복원한 Page의 `swapped`와 `swap_idx`를 초기 상태로 돌린다. 그 Page를 다시 내보낼 때는 `swap_slot_alloc()`으로 빈 Slot을 확보한다. 다른 Page가 예전 Slot을 참조하는 동안에는 그 Slot의 Bitmap이 사용 중으로 남으므로, 새 내용이 다른 쪽의 복구 데이터를 덮어쓰지 않는다. 모든 참조가 사라진 뒤라면 같은 Slot 번호를 다시 사용할 수 있다. 번호 자체가 영구적으로 다른 것이 아니라, 살아 있는 참조의 데이터를 보존하는 것이 조건이다. 또한 `anon_copy()`의 Slot 공유 분기에 데이터 I/O가 없다는 관찰을 fork 전체의 I/O나 비용이 0이라는 결론으로 넓히지 않는다. [W11 Slot 할당과 참조 관리](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L59-L97), [복원 뒤 해제와 재할당](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L114-L150)
 
 W11 작업본의 `anon_swap_out()`은 데이터를 저장한 뒤 `list_pop_front(&frame->owners)`로 owner 연결을 하나씩 꺼낸다. 각 Page에 `swapped=true`와 같은 `swap_idx`를 기록하고 `page->frame=NULL`로 바꾼 다음, 해당 PTE를 지우고 owner 객체를 해제한다. Page 객체는 SPT에 남아 슬롯 위치를 기억한다. 저장과 매핑 정리가 성공하면 `vm_evict_frame()`이 그 victim Frame을 반환해 다른 Page에 재사용하므로, `page->frame=NULL`은 이전 Page와 Frame의 연결이 끊겼다는 뜻이다.
 
@@ -287,7 +291,7 @@ end
 
 ### 다른 OS의 COW와 비교할 때
 
-Linux v6.12의 `do_wp_page()`는 shared 매핑을 별도로 처리하고, private 익명 Page에서는 exclusive 상태와 folio 재사용 조건 등을 확인한다. 재사용 조건에는 참조 수와 매핑 수, 잠금·swapcache 상태 등이 함께 관여한다. 재사용할 수 없는 private Page는 `wp_page_copy()`로 이어진다. [Linux v6.12 쓰기 폴트](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L3376-L3529)
+Linux v6.12의 `do_wp_page()`는 shared 매핑을 별도로 처리하고, private 익명 Page에서는 exclusive 상태와 folio 재사용 조건 등을 확인한다. 재사용 조건에는 참조 수와 매핑 수, 잠금·swapcache 상태 등이 함께 관여한다. 재사용할 수 없는 private Page는 `wp_page_copy()`로 이어진다. [Linux v6.12 쓰기 폴트](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L3585-L3746)
 
 KSM은 지정한 익명 영역에서 내용이 같은 Page를 찾아 쓰기 보호된 하나의 Page로 합치는 별도 기능이다. fork의 공유와 출발점은 달라도, 나중의 사적인 쓰기를 위해 분리할 필요가 있다는 점이 이어진다. PCID와 메모리 압축은 이와 목적과 동작 경로가 다른 기능이다. [Linux KSM](https://docs.kernel.org/6.12/admin-guide/mm/ksm.html)
 
@@ -442,6 +446,10 @@ print("같은 데이터 참조, 별도 위치와 닫힘 상태")
 | `no-vm/multi-oom` | 재귀적으로 자식을 만들다가 실패하면 깊이를 전달한다. 이후 반복에서 도달 깊이가 줄어들지 않는지 확인한다 |
 
 현재 `multi-oom`의 기준 상수는 10이다. 첫 실행 깊이를 구한 뒤 10회 더 반복하며, 각 반복의 깊이가 첫 값보다 작으면 실패한다. 파일 앞의 “최소 28개” 또는 “항상 같은 깊이”라는 오래된 주석보다 실제 상수와 `< first_run_depth` 조건을 기준으로 읽는다. 별도 비정상 종료 자식도 만들지만, 이 테스트 하나로 모든 실패 분기의 해제 횟수가 정확하다고 증명할 수는 없다.
+
+`swap-fork`와 `page-parallel`은 자식이 fork 직후 새 프로그램을 exec하는 테스트다. `swap-fork`는 자식 10개가 `child-swap`을 실행하고 모두 0으로 종료하는지 확인한다. `child-swap`의 주석에는 5MB라고 쓰여 있지만, 실제 배열은 1 MiB이며 4 KiB Page 256개의 첫 바이트에만 값을 쓰고 다시 비교한다. `page-parallel`은 자식 4개가 `child-linear`를 실행하게 하고, 각 자식은 1 MiB 버퍼를 암호화·복호화한 뒤 모든 바이트가 0인지 검사하여 `0x42`를 반환한다. 따라서 두 테스트가 통과해도 부모의 swapped Page를 자식이 exec 없이 직접 읽어 복제 내용을 확인했다고 볼 수는 없다. 실제 Swap In·Out 발생 여부와 Slot 소유권은 실행 설정과 해당 경로의 관찰로 따로 확인해야 한다. [swap-fork의 자식 실행](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/swap-fork.c#L10-L31), [child-swap의 검사 범위](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-swap.c#L12-L37), [page-parallel의 자식 수와 종료 값](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/page-parallel.c#L7-L25), [child-linear의 바이트 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/child-linear.c#L10-L35)
+
+학습 레포의 `Make.tests`는 `swap-fork`에 `MEMORY=40`, `SWAP_DISK=200`, `TIMEOUT=600`을 지정한다. 이 테스트별 설정을 모든 실행의 기본값으로 일반화하지 않는다. [swap-fork의 실행 설정](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/vm/Make.tests#L136-L138)
 
 다음 명령은 x86-64 Linux의 PintOS Compiler와 QEMU 환경이 준비되었을 때 저장소 루트에서 실행할 수 있다. 여기서는 테스트 소스와 기대 파일을 읽었으며 Kernel 실행 결과를 새로 확인한 것은 아니다.
 

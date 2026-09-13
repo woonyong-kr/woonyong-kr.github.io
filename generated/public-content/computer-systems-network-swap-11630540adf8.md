@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-swap-11630540adf8/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-swap-11630540adf8
-projection_sha256: e095721aec2cbd5e5a3fadf38f0841be553371052dc5f238d8b421c7cca9842d
+projection_sha256: 803d7786a3e4960823b005c50d6681e4c81e301c80de5ddb0b0c1d1e39f4968d
 parent: 가상 메모리 구현
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-83f24986336f
@@ -231,6 +231,8 @@ assert not allocated
 
 Linux는 Swap 영역의 사용 상태를 `swap_map` 등으로 관리하며, Non-present PTE에 Swap의 Type과 Offset을 표현할 수 있다. `swap_map`에는 사용 수 이외에 Cache 상태나 추가 Count를 나타내는 비트도 있어 단순한 정수 배열 하나로 전부 설명할 수는 없다. 페이지 크기 역시 아키텍처와 구성에 따라 달라지므로 Linux에서도 항상 4 KiB라고 두지 않는다. [Linux Swap 상태](https://github.com/torvalds/linux/blob/v6.12/include/linux/swap.h), [Swap Entry 표현](https://github.com/torvalds/linux/blob/v6.12/include/linux/swapops.h)
 
+Linux v6.12의 `copy_nonpresent_pte()`는 일반 Swap Entry를 복제할 때 `swap_duplicate()`를 호출하고, 기존 Entry의 exclusive 표시가 있다면 공유 상태로 바꾼다. 후속 Swap Fault는 읽기 접근에서도 발생할 수 있다. `do_swap_page()`는 먼저 Swap Cache를 찾고, 필요한 경우 저장 데이터를 읽어 온다. 쓰기 접근도 해당 Folio를 사적으로 사용할 수 있는 조건이면 재사용할 수 있으므로, 언제나 임시 Frame을 읽고 다른 Frame을 하나 더 복사하는 순서로 설명할 수는 없다. Swap 데이터의 복원과 사적인 쓰기를 위한 COW를 각각 확인해야 한다. [Swap Entry의 복제](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L791-L820), [Swap Cache 조회와 적재](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L4200-L4326), [쓰기 권한과 후속 COW](https://github.com/torvalds/linux/blob/v6.12/mm/memory.c#L4536-L4604)
+
 ## 디스크 I/O와 실패의 범위
 
 PintOS가 Page 하나를 저장하거나 복원할 때 `disk_write()` 또는 `disk_read()`를 여덟 번 호출한다는 사실은 호스트 물리 디스크가 정확히 여덟 번 동작했다는 뜻이 아니다. Guest의 Sector I/O는 QEMU의 장치 에뮬레이션과 Block Backend를 거친다. 채널 번호와 IRQ를 고정해서 첫 번째 IDE 채널의 값으로 읽어서도 안 된다. 실제 장치 경로는 [IDE Controller](/wiki/ide-controller/), 이미지와 호스트 파일 경계는 [QEMU Block Backend](/wiki/qemu-block-backend/)에서 구분한다.
@@ -259,3 +261,5 @@ continue
 Bitmap을 확인하려고 `bitmap_scan_and_flip()`을 직접 호출하면 빈 Slot을 실제로 점유해 프로그램 상태가 바뀐다. 관찰할 때는 이미 저장된 상태를 읽거나 함수가 반환한 Slot을 확인해야 한다. `swap_table`이 존재하고 Slot이 범위 안에 있는지 확인한 뒤에는 디버그 정보의 `bit_cnt`와 `bits`를 읽어 Bitmap의 해당 비트를 따라갈 수 있다.
 
 Swap Out 전후에는 Slot 점유와 데이터 저장을, Swap In 뒤에는 Slot 반환과 `in_swap` 해제를, 미복원 종료에서는 읽기 없이 Slot을 반환하는지 구분해서 살펴본다. Frame 교체와 PTE 정리는 이 함수들 바깥의 [가상 메모리 구현](/wiki/computer-systems-network-topic-83f24986336f/)까지 이어서 확인한다.
+
+부모의 저장 내용을 자식이 그대로 읽는지는 자식이 `exec()`하지 않는 별도 흐름에서 확인한다. fork 전에 부모 Page가 실제로 ANON 타입이고 Frame 없이 유효한 Slot을 가리키는지 확인하고, 저장한 바이트를 비교 기준으로 남긴다. W11의 Slot 공유 경로라면 fork 뒤에는 서로 다른 Page 객체가 같은 Slot을 참조해야 한다. 부모가 먼저 Swap In하거나 종료한 뒤 자식이 해당 VA를 읽는 순서와, 자식이 먼저 읽는 순서를 각각 관찰한다. 남은 참조가 있는 동안 Slot이 재사용되지 않고 자식이 기준 바이트를 얻는지가 확인할 조건이다. 큰 배열을 썼다는 사실만으로 특정 Page의 Swap Out을 증명할 수는 없으며, 자식이 먼저 `exec()`하면 상속받은 주소 공간을 새 프로그램으로 바꾸므로 이 비교를 할 수 없다. [W11 슬롯 참조와 복원](https://github.com/Jungle-12-303/wk11_7/blob/09390ddf168688d60a148c910dfe800e541b5368/pintos/vm/anon.c#L59-L150), [구현별 Slot 복제의 차이](/wiki/computer-systems-network-topic-4af2e32913a4/#현재-학습-레포와-w11-작업본은-소유권을-다르게-기록한다)
