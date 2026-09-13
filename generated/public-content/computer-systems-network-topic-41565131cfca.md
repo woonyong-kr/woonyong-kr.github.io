@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-41565131cfca/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-41565131cfca
-projection_sha256: 55405bf3c4a957dbd746e420a031cd60bf7a13290d62abb73fcf0534111506d4
+projection_sha256: e79b5cd498e78587aa513d5384be6f1aa359d9f3e6bba4afc19a8ce921513adb
 parent: 커널 구조
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-5cd3e3706e06
@@ -97,7 +97,9 @@ IOPL(I/O Privilege Level)은 RFLAGS의 bit 12~13이다. `IN/OUT`은 CPL ≤ IOPL
 
 Paging의 P·R/W·U/S는 각각 bit 0·1·2이고, NX는 실행을 금지하는 bit 63이다. User 접근에는 변환 경로의 모든 Present·U/S 조건이, User 쓰기에는 모든 단계의 R/W 조건도 맞아야 한다. 마지막 PTE의 U/S 하나만 확인하는 것은 충분하지 않다. CR0.WP는 Supervisor 쓰기에 R/W 보호를 적용할지 결정하며, NX는 CPU의 기능 지원과 IA32_EFER.NXE 활성화를 전제로 한다. NXE=0일 때 Present 엔트리의 bit 63을 세우는 것은 정상적인 실행 금지 설정이 아니라 예약 비트 위반이 될 수 있다. [NX 활성화와 단계별 실행 금지](https://www.intel.com/content/dam/support/us/en/documents/processors/pentium4/sb/25366821.pdf), [NXE가 꺼진 엔트리의 예약 비트](https://cdrdv2-public.intel.com/835748/252046-sdm-change-document.pdf)
 
-Kernel의 User 페이지 접근을 제한하는 기능도 있다. CR4.SMEP는 Supervisor의 User 페이지 명령어 fetch를, CR4.SMAP은 User 페이지 데이터 접근을 제한한다. SMAP이 켜진 상태에서 의도적인 명시적 접근에는 EFLAGS.AC가 관여하며, 지원되는 커널 코드가 `stac`·`clac`으로 그 구간을 제어한다. AC를 바꾼다고 SMEP나 쓰기 보호까지 모두 꺼지는 것은 아니다. 인용한 PintOS 부트 코드에는 SMEP·SMAP·NXE를 켜는 명령이 없다. 실행 중인 제어 레지스터 값은 별도로 확인해야 한다. [Intel의 Supervisor 접근 조건](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf)
+Kernel의 User 페이지 접근을 제한하는 기능도 있다. CR4.SMEP(bit 20)는 Supervisor의 User 페이지 명령어 fetch를, CR4.SMAP(bit 21)은 User 페이지 데이터 접근을 제한한다. [Intel SDM의 CR4 정의](https://cdrdv2-public.intel.com/843836/325384-sdm-vol-3abcd-dec-24.pdf#page=75) SMAP이 켜진 상태에서 의도적인 명시적 접근에는 EFLAGS.AC가 관여하며, 지원되는 커널 코드가 `stac`·`clac`으로 그 구간을 제어한다. AC를 바꾼다고 SMEP나 쓰기 보호까지 모두 꺼지는 것은 아니다. 인용한 PintOS 부트 코드에는 SMEP·SMAP·NXE를 켜는 명령이 없다. 실행 중인 제어 레지스터 값은 별도로 확인해야 한다. [Intel의 Supervisor 접근 조건](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf)
+
+Intel의 세대로 보면 SMEP는 Ivy Bridge, SMAP은 Broadwell에서 지원되는 보호 기능이다. Intel의 2014년 소개 자료는 Ivy Bridge를 2012년, Broadwell-Y를 2014년으로 표시한다. 이 연혁은 지원 세대를 이해하는 단서이며, Guest에 노출된 CPU 기능이나 현재 CR4의 활성 상태를 뜻하지 않는다. [Ivy Bridge-EP의 SMEP](https://www.intel.com/content/dam/develop/external/us/en/documents/intel-xeon-processor-e5-2600-v2-product-family-technical-overview.pdf#page=5), [Broadwell의 SMAP 지원](https://xenbits.xen.org/xsa/advisory-183.html), [Intel의 세대 연혁](https://download.intel.com/newsroom/kits/14nm/pdfs/Intel_14nm_New_uArch.pdf#page=7)
 
 TLB hit에서는 Cache에 보관한 변환과 권한 정보를 사용하고, miss에서는 Page Table Walk로 정보를 얻는다. 매번 메모리의 최종 PTE 한 개를 다시 읽는 구조가 아니다. 권한 위반을 예외로 전달한다는 Architecture 규칙만으로 speculative side channel까지 모두 방지한다고 결론 내리지도 않는다. 실제 페이지 권한 조합과 KPTI의 별도 방어는 [Paging의 권한 검사](/wiki/computer-systems-network-topic-dbd836d1a044/#pte의-권한과-page-fault), 변환 Cache는 [TLB와 Page Table Walk](/wiki/computer-systems-network-topic-dbd836d1a044/#tlb에-변환이-없다는-것과-페이지가-없다는-것)에서 이어진다.
 

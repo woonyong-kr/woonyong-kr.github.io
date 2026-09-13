@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-3cc26725c1cb/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-3cc26725c1cb
-projection_sha256: 364ea7c3d8840c1d6fc85949addcdfdda76a4ac45e0887f070caf9f5c16581ad
+projection_sha256: c7e011e3fd9d7b31c53296c7fcc953bd1715a721c51076567e843a4e9f0558c0
 parent: 사용자 프로그램
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-63dd07ba6393
@@ -186,13 +186,33 @@ RAX·EAX·AX는 독립된 저장소가 아니라 같은 Register의 서로 다�
 
 이 버전의 `is_user_vaddr()`는 `KERN_BASE`인 `0x8004000000`보다 작은 주소인지 판단한다. 이 범위 검사만으로 페이지의 실제 매핑이나 접근 권한이 확인되는 것은 아니다. [사용자 주소 판정](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/vaddr.h), [경계 상수](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/include/threads/loader.h)
 
-현재 `validate_user_buffer()`는 크기가 0이면 바로 돌아온다. 그 외에는 NULL과 범위 덧셈의 Overflow를 검사하고, 버퍼가 걸치는 페이지를 따라 `validate_user_addr()`를 호출한다. `write`의 입력 버퍼는 읽을 수 있어야 하고, `read`의 출력 버퍼는 쓸 수 있어야 한다. VM을 사용하는 경우에는 주소·권한과 함께 Lazy Page를 실제로 확보할 수 있는지도 검사한다.
+`NULL`도 수치상 `KERN_BASE`보다 작으므로 범위 비교 자체는 통과한다. 현재 `try_claim_user_addr()`는 그보다 먼저 NULL과 현재 Thread·PML4의 부재를 거부한다.
+
+현재 `validate_user_buffer()`는 크기가 0이면 바로 돌아온다. 그 외에는 NULL을 거부하고, `uintptr_t`로 바꾼 시작 주소에서 계산한 마지막 바이트 주소 `start + size - 1`이 시작 주소보다 작아졌는지 확인한다. 이어 페이지 경계를 따라 `validate_user_addr()`를 호출한다. `write`의 입력 버퍼는 읽을 수 있어야 하고, `read`의 출력 버퍼는 쓸 수 있어야 한다. VM을 사용하는 경우에는 주소·권한과 함께 Lazy Page를 실제로 확보할 수 있는지도 검사한다.
+
+`try_claim_user_addr()`는 NULL·현재 Thread·PML4와 User 주소 범위를 확인한 뒤, leaf PTE의 Present와 요청한 쓰기 권한을 검사한다. 이 함수의 검사가 CPU의 모든 단계 권한 검사를 대신하는 것은 아니다. VM 빌드에서 이미 Present인 페이지의 쓰기가 거부되면 쓰기 보호 복구를 시도한다. 그 밖의 주소는 SPT의 페이지를 claim하거나 Stack 성장 조건을 검사하며, 준비 뒤에는 접근 가능 여부를 다시 확인한다. 준비에 실패하면 `validate_user_addr()`가 `exit(-1)`로 이어진다. `check_address()`는 같은 검사에 `write=false`, `f=NULL`을 전달한다. VM helper의 직접 호출과 실제 #PF, 호출 전의 RSP 조건은 [페이지 폴트의 사전 준비 경로](/wiki/computer-systems-network-topic-5cebdbc10ddf/#syscall이-보관한-rsp와-실제-폴트를-구별한다)에서 구분한다. [현재 주소 검사](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c#L444-L529)
 
 `copy_in()`과 `copy_out()`은 페이지 경계에서 복사 크기를 끊고 다음 페이지를 다시 확인한다. 파일 이름이나 명령 문자열은 `copy_in_string()`이 종료 문자를 찾아 Kernel Page에 복사한다. 복사한 문자열과 종료 문자가 한 커널 페이지에 들어와야 하므로, 4KiB 페이지에서는 종료 문자 이전 최대 길이가 4,095바이트다. 원래 사용자 문자열이 페이지 경계를 넘을 수 없다는 뜻은 아니다. 이 제한은 모든 OS의 문자열 길이 제한이 아니라 해당 구현의 선택이다.
 
 파일 연산에는 `filesys_lock`이 사용되지만 시스템 콜 전체를 하나의 Lock으로 감싼 구조는 아니다. 현재 `write()`는 사용자 데이터를 Kernel Buffer로 복사한 뒤 파일 쓰기 구간에 Lock을 건다. `read()`는 파일에서 Kernel Buffer로 읽는 구간의 Lock을 푼 다음 사용자 버퍼에 복사한다. 표준 입력 fd 0과 표준 출력 fd 1에도 별도 경로가 있다. 따라서 사용자 페이지 확보와 장치 대기를 모두 전역 Lock 안에서 처리한다고 설명하면 실제 순서와 달라진다.
 
 각 호출의 오류 처리도 확인할 필요가 있다. 현재 `read()`와 `write()`는 크기가 0이면 0을 반환하고, 유효하지 않은 파일 fd와 메모리 할당 실패 등은 각 경로의 실패값으로 처리한다. 이미 일부 바이트를 처리한 뒤 다음 조각에서 실패하면 일부 처리량을 반환할 수 있다. 사용자 주소 자체를 검증하지 못한 경로는 `exit(-1)`로 이어진다. [버퍼 검사·복사·파일 I/O 구현](https://github.com/woonyong-kr/lrn-pintos/blob/9d1b14cbdf41425ba8867af743c03cf32190ee9b/pintos/userprog/syscall.c)
+
+테스트의 이름만으로 실패 원인을 정하지 않는다. `bad-read.c`와 `bad-write.c`는 사용자 코드에서 NULL을 직접 읽고 쓰며, Kernel 주소 `0x8004000000`에 접근하는 것은 `bad-read2.c`와 `bad-write2.c`다. 이 네 테스트의 `.ck`는 `exit(-1)`을 기대한다. 반면 `open-bad-ptr.c`는 `0x20101234`를 파일 이름으로, `read-bad-ptr.c`는 `0xc0100000`을 123바이트 출력 버퍼로 전달한다. 두 값은 이 PintOS의 `KERN_BASE`보다 작으므로 Kernel 주소 차단만으로 설명할 수 없다. 또한 두 `.c`의 의도와 달리 `.ck`에는 정상 종료 출력도 허용되어 있다. 테스트 통과 여부만으로 어떤 포인터 검사가 실행됐는지 단정하지 말고, 소스와 허용된 출력, 실제 호출 경로를 함께 확인한다. 이는 테스트 파일을 대조한 결과이며 새 실행 기록은 아니다. [포인터 테스트와 기대 출력](https://github.com/woonyong-kr/lrn-pintos/tree/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/tests/userprog)
+
+접근 전 검사와 접근 중 Fault 복구는 함께 사용할 수 있다. 검사 뒤 다른 Thread가 Mapping이나 접근 권한을 바꿀 수 있으므로, 앞서 통과한 검사가 이후 접근의 성공을 보장하지 않는다. Fault를 처리할 수 있다는 사실도 복사 도중의 버퍼 내용 변경을 막거나 일관된 Snapshot을 보장한다는 뜻은 아니다. 메모리 접근 실패를 다루는 일과 데이터의 동시 변경을 다루는 일은 구분해야 한다. [접근 중 변경과 예외 처리](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/using-neither-buffered-nor-direct-i-o)
+
+현재 PintOS를 단일 CPU라는 이유만으로 경쟁 상태가 없는 구현이라고 설명할 수도 없다. 진입 Assembly는 저장된 IF가 켜져 있으면 C Handler를 호출하기 전에 `sti`를 실행한다. 파일 I/O의 Lock도 사용자 주소 검사·복사 전체를 하나로 묶지 않는다. 따라서 ‘시스템 콜에서는 항상 인터럽트를 끄므로 검사 뒤 주소가 변하지 않는다’는 전제는 이 코드와 맞지 않는다. 이는 소스의 순서를 확인한 것이며, 실제 경쟁 상태를 재현했다는 주장은 아니다. [조건부 인터럽트 복원](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall-entry.S#L41-L47)
+
+Linux와 비교할 때도 범위 판정과 실제 복사를 나누어 읽는다. v6.12 x86-64의 `__access_ok()`는 `USER_PTR_MAX`를 기준으로 주소를 검사한다. 컴파일 때 알 수 있는 Page 크기 이하의 요청은 Guard Page를 전제로 크기 검사를 줄이고, 그 밖의 경로는 주소와 크기의 합이 사용자 범위를 넘거나 정수에서 되감기지 않았는지 확인한다. 이를 단순한 `주소 + 크기 <= 상한`으로 옮기면 Overflow 조건을 잃는다. 검사를 통과했다는 사실만으로 모든 Page의 Mapping과 권한이 확인되는 것도 아니다. [x86-64의 범위 검사](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/uaccess_64.h#L55-L107)
+
+같은 버전의 `copy_from_user()` 경로에는 조건 분기 대신 포인터를 Masking하는 경로도 있으므로, 모든 복사가 `access_ok()`를 정확히 한 번 호출한다고 그릴 수는 없다. `copy_from_user()`와 `copy_to_user()`의 반환값은 **복사하지 못한 바이트 수**다. 이 함수를 호출한 쪽이 실패를 판단하므로 반환값을 곧바로 `-EFAULT`와 동일시하지 않는다. 일반 `copy_from_user()`는 짧게 복사한 경우 목적지의 남은 부분을 0으로 채우지만, `__copy_from_user()` 같은 하위 변형까지 같은 동작을 보장하지는 않는다. [User Copy의 반환값과 분기](https://github.com/torvalds/linux/blob/v6.12/include/linux/uaccess.h#L43-L231)
+
+실제 x86 복사 경로의 `copy_user_generic()`에는 `stac()`·`clac()`과 Exception Table 항목이 함께 있다. 전자는 지원되는 SMAP 기능에 맞춰 의도한 User 메모리 접근 구간을 열고 닫으며, 후자는 복사 중 예외를 처리할 복구 지점을 연결한다. 범위를 미리 검사하는 것과 실패한 접근에서 복구하는 것은 별개의 역할이다. [복사 명령과 예외 복구 지점](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/uaccess_64.h#L114-L149), [SMAP 조건부 명령](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/smap.h#L30-L40)
+
+Windows Driver의 `ProbeForRead()`는 길이가 0이 아닐 때 사용자 주소 범위와 시작 주소의 정렬을 검사하고, 잘못된 입력에는 예외를 발생시킨다. 길이가 0이면 주소 검사도 하지 않는다. 검사 뒤 다른 Thread가 Mapping이나 보호 속성을 바꿀 수 있으므로, Probe뿐 아니라 뒤따르는 실제 접근도 `try/except` 안에서 처리해야 한다. `ProbeForWrite()`는 각 Page에 접근하고 쓰는 추가 효과가 있어 현재 공식 문서는 새 코드에 사용하지 말고 `ProbeForRead()`를 쓰도록 안내한다. 검사를 통과했다고 메모리를 고정하거나 이후의 쓰기 성공까지 보장한 것은 아니다. [ProbeForRead의 검사와 예외 처리](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-probeforread), [ProbeForWrite의 현재 사용 지침](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-probeforwrite)
+
+Windows의 드라이버 I/O에서는 버퍼를 전달하는 방식도 구분한다. Buffered I/O는 별도의 nonpaged System Buffer를 만들고 사용자 버퍼와 데이터를 복사한다. Direct I/O는 사용자 버퍼의 페이지를 고정하고 MDL로 기술한다. Neither Buffered Nor Direct I/O는 원래 User VA를 전달하므로, 드라이버는 I/O를 요청한 Thread의 문맥에서 사용자 주소의 유효성과 접근 중 예외를 직접 다뤄야 한다. 모든 IRP가 같은 방식으로 버퍼를 전달하거나, Probe 호출 뒤 항상 페이지 고정까지 끝난다고 볼 수 없다. [버퍼 전달의 세 방식](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers), [Neither I/O의 문맥과 접근 조건](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/using-neither-buffered-nor-direct-i-o)
 
 ## 같은 write라도 표준 출력과 파일의 끝은 다르다
 
@@ -281,5 +301,20 @@ C Handler 실행 중의 CPU RAX는 임시 계산에 쓰일 수 있으므로, 저
 권한 왕복을 확인하려면 `syscall_entry` 첫 명령에서 `$cs & 3`, RSP·RCX·R11을 기록하고, 현재 빌드에서 찾은 `sysretq` 직전 값과 비교한다. 그 직전에는 아직 Kernel CPL 0이고, 복귀에 성공한 뒤 User CS가 적용된다. Kernel Stack인지 판단할 때는 임의의 주소 하한 대신 이 Thread의 `tss->rsp0`와 실제 Stack 범위를 사용한다. 같은 CPL의 IRQ라도 IST 사용 여부에 따라 Stack 선택이 달라지는 규칙은 [Interrupt의 진입 Stack](/wiki/computer-systems-network-topic-c19e34701c6c/#cpu와-assembly가-함께-만드는-frame)에서 확인한다.
 
 MSR 설정 자체를 관찰하려면 `disassemble /r syscall_init`으로 실제 `wrmsr` 위치를 찾고, 실행 직전 ECX의 번호와 EDX:EAX의 값을 함께 읽는다. 함수 진입·반환 메시지만 출력하는 Breakpoint로는 설정값을 확인할 수 없다. 이 절의 관찰 방법은 현재 빌드에서 실행할 절차이며, 새 GDB 실행 기록을 뜻하지 않는다.
+
+버퍼 검사 자체를 따라갈 때는 다음 중단점을 추가한다. 연결된 Kernel의 Debug Symbol이 맞아야 하며, 아래 명령은 실제 실행 출력이 아니다.
+
+```gdb
+break validate_user_buffer
+break try_claim_user_addr
+break exit if status == -1
+continue
+```
+
+`validate_user_buffer`에서는 `buffer`·`size`·`write`를, `try_claim_user_addr`에서는 `addr`·`write`·`f`를 확인한다. 크기가 0인 버퍼는 단일 주소 검사까지 가지 않는다. `is_user_vaddr`는 매크로이므로 일반 함수처럼 호출하는 대신, 이 버전에서는 `p (unsigned long long)addr < 0x8004000000ULL`로 범위 조건을 계산한다. 범위를 통과했다는 값과 PTE Present·쓰기 권한은 별개다. `user_page_accessible`의 실제 PTE 조회 뒤에 멈춘 경우에도 `pte`가 NULL이 아닌지 먼저 확인하고 값을 읽는다. 페이지 경계는 하위 12비트를 제외한 부분으로 비교하며, 크기 0에 `buffer + size - 1`을 적용하지 않는다. `exit`에서 `bt`를 읽을 때는 이미 반환한 `try_claim_user_addr`가 Stack에 남아 있다고 기대하지 않는다. 실패를 돌려준 순간은 그 함수의 반환 직전에서 확인한다.
+
+`validate_user_buffer()`의 지역변수 `addr`·`end`는 대입문을 지난 뒤에 읽는다. 크기가 0이면 그 대입문에 도달하지 않고 반환한다.
+
+`copy_in()`과 `copy_out()`의 진입에서는 `src`·`dst`·`size`·`f`를 확인한다. User 주소는 `copy_in()`에서는 `src`, `copy_out()`에서는 `dst`다. 지역변수 `user`는 초기화 뒤에, `chunk`는 페이지의 남은 공간과 남은 전체 크기 중 작은 값으로 제한한 뒤 `memcpy()` 직전에 읽어야 한다. 남은 크기가 0이면 이 복사 지점에 도달하지 않는다. 현재 빌드의 소스와 Disassembly로 그 위치를 찾으며 오래된 줄번호를 재사용하거나 포인터·`size_t`를 32비트로 잘라 출력하지 않는다. [버퍼와 복사 지역변수의 초기화 순서](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c#L532-L598)
 
 본문의 코드 기준은 `lrn-pintos@9d1b14c`다. W11 원본 `09390dd`와 진입 assembly·TSS·프레임 선언·파일 및 디스크 구현은 바이트가 같지만, `userprog/syscall.c`는 다르다. 따라서 W11 당시의 생략된 handler 예와 현재 버퍼 검증·복사 경로를 같은 실행 결과로 합치지 않는다. 이 대조는 코드 상태를 확인한 것이며 새 QEMU/GDB 실행이나 작성자별 기여 검증은 아니다.

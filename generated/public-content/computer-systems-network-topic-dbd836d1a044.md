@@ -6,7 +6,7 @@ permalink: /wiki/computer-systems-network-topic-dbd836d1a044/
 publication_state: publish
 has_toc: true
 projection_id: Wiki/keywords/computer-systems-network-topic-dbd836d1a044
-projection_sha256: 24ca77debebcf673a140901301a0f61347438bdd580b38e9189af6fbd780afc9
+projection_sha256: 549b158170d51a86f47cb01969fa949c3eed754ceaaae3495288657ff8c4df56
 parent: 메모리 관리
 content_status: ready
 public_parent_id: Wiki/keywords/computer-systems-network-topic-d160fea60072
@@ -434,6 +434,49 @@ B의 테이블을 수정해도 Cache에 남은 `0x23456123`이 먼저 반환된�
 VA `0x4001a03c`는 페이지 `0x4001a000` 안의 offset `0x3c`를 가리킨다. Frame 시작이 `0x12345000`이면 PA는 `0x1234503c`다. 페이지 크기만큼 정렬된 Frame에 offset을 더하므로 이 경우 덧셈과 OR의 결과가 같다. 같은 페이지 안의 주소들이 Frame을 공유한다는 것은 페이지 경계를 넘는 다음 바이트까지 같은 Frame에 있다는 뜻이 아니다.
 
 offset이 `0x300`이면 현재 페이지에 남은 바이트 수는 `4096-768=3328`이다. 현재 [`copy_in()`·`copy_out()`](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c)는 매번 주소를 검증하고 `min(남은 전체 크기,PGSIZE-pg_ofs(user))`만 복사한다. 다음 페이지에서는 다시 검증한다. 첫 페이지가 유효하다는 사실만으로 버퍼 전체의 접근을 허용하지 않는 이유다.
+
+버퍼의 시작과 마지막 주소가 모두 유효해도 그 사이의 페이지가 유효하다는 보장은 없다. 세 페이지 이상을 지나는 범위에서는 가운데 페이지의 Mapping이나 권한이 다를 수 있으므로, 양 끝만 검사하는 방식으로 페이지별 검사를 대신할 수 없다. 이 구현의 최초 검사 주소는 버퍼의 시작 주소이고, 다음 반복부터 페이지 경계로 이동한다. [실제 버퍼 순회](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/userprog/syscall.c#L532-L558)
+
+크기가 0인 버퍼가 차지하는 페이지 수는 0이다. 크기가 양수일 때의 페이지 수는 수학적으로 `floor((시작 offset + size - 1) / 4096) + 1`이며, 고정 폭 정수로 계산할 때는 먼저 입력 범위와 덧셈 Overflow를 확인해야 한다. `0x1FFF`부터 4,097바이트라면 마지막 바이트는 `0x2FFF`이고 끝 경계 `0x3000`은 포함되지 않는다. 따라서 `0x1000`과 `0x2000` 두 페이지에 걸친다.
+
+예를 들어 시작 주소가 `0x08048ff0`, 크기가 `0x30`이면 끝 경계는 `0x08049020`이고 마지막 바이트는 그보다 1 작은 주소다. 첫 페이지에서 16바이트, 다음 페이지에서 32바이트를 다룬다. 다음 코드는 Python 정수로 페이지별 구간을 계산한다. 마지막 바이트가 64비트 주소 범위 안에 드는지 확인하며, C의 끝 포인터 연산까지 검증하는 것은 아니다. PintOS의 PTE 조회·복사나 접근 권한을 실행하는 모형은 아니며, 아래 페이지 수만으로 실제 검사 함수의 호출 횟수를 정할 수는 없다. 앞선 페이지의 검사나 준비가 실패하면 다음 페이지에 도달하지 못할 수 있고, 버퍼 순회 뒤 실제 복사에서 같은 페이지를 다시 검사하기도 한다.
+
+```run-python
+PAGE_SIZE = 4096
+MAX_ADDRESS = (1 << 64) - 1
+
+
+def buffer_chunks(start, size):
+    if not 0 <= start <= MAX_ADDRESS or not 0 <= size <= (1 << 32) - 1:
+        raise ValueError("주소 또는 크기가 입력 범위를 벗어납니다")
+    if size == 0:
+        return []
+    if start == 0 or size - 1 > MAX_ADDRESS - start:
+        raise ValueError("NULL 또는 주소 덧셈 Overflow입니다")
+    chunks = []
+    while size:
+        page = start & ~(PAGE_SIZE - 1)
+        length = min(size, PAGE_SIZE - (start - page))
+        chunks.append((page, start, length))
+        start += length
+        size -= length
+    return chunks
+
+
+chunks = buffer_chunks(0x08048FF0, 0x30)
+assert chunks == [(0x08048000, 0x08048FF0, 16), (0x08049000, 0x08049000, 32)]
+assert buffer_chunks(0, 0) == []
+assert buffer_chunks(0x1000, PAGE_SIZE) == [(0x1000, 0x1000, PAGE_SIZE)]
+for start, size in [(0, 1), (MAX_ADDRESS, 2)]:
+    try:
+        buffer_chunks(start, size)
+    except ValueError:
+        continue
+    raise AssertionError("잘못된 범위를 허용했습니다")
+for page, address, length in chunks:
+    print(f"Page {page:#x}: {address:#x}부터 {length}바이트")
+print("페이지 수:", len(chunks), "전체 바이트:", sum(row[2] for row in chunks))
+```
 
 같은 내림 연산도 사용하는 목적은 다르다. SPT 검색은 fault 주소를 페이지 시작으로 정규화한다. `running_thread()`는 **Kernel Stack에서 실행 중인 RSP**가 `struct thread`와 같은 페이지에 놓인다는 배치 규칙을 이용한다. 임의의 User RSP를 내렸다고 Kernel의 thread 객체를 얻는 것은 아니다. Stack growth도 정렬만으로 허용하지 않는다. 현재 코드는 원래 fault 주소가 User Stack 최대 범위 안에 있고 기준 RSP의 32바이트 아래 이상인지 확인한 뒤 페이지를 확보한다. [SPT와 Stack growth](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/vm/vm.c), [현재 Thread의 Stack 배치](https://github.com/woonyong-kr/lrn-pintos/blob/5afaa6dc2f7e38f6178cc8fcecad8989518f2eb0/pintos/threads/thread.c)
 
